@@ -1,7 +1,7 @@
 services:
   - type: web
     name: artwalls-api
-    env: node
+    runtime: node
     rootDir: server
     buildCommand: npm install
     startCommand: npm start
@@ -19,10 +19,12 @@ services:
         sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
+
       - key: APP_URL
         value: https://artwalls.space
       - key: CORS_ORIGIN
         value: https://artwalls.space
+
       - key: CHECKOUT_SUCCESS_URL
         value: https://artwalls.space/#/purchase-success
       - key: CHECKOUT_CANCEL_URL
@@ -35,6 +37,7 @@ services:
         value: https://artwalls.space/#/dashboard
       - key: CONNECT_RETURN_URL
         value: https://artwalls.space/#/dashboard
+
       - key: FEE_BPS_FREE
         value: "2000"
       - key: FEE_BPS_STARTER
@@ -43,6 +46,7 @@ services:
         value: "1000"
       - key: FEE_BPS_ELITE
         value: "500"
+
       - key: STRIPE_SUB_PRICE_STARTER
         sync: false
       - key: STRIPE_SUB_PRICE_PRO
@@ -50,8 +54,9 @@ services:
       - key: STRIPE_SUB_PRICE_ELITE
         sync: false
 
-  - type: static
+  - type: web
     name: artwalls-web
+    runtime: static
     rootDir: .
     buildCommand: npm install && npm run build
     staticPublishPath: dist
@@ -59,3 +64,4 @@ services:
     envVars:
       - key: VITE_API_BASE_URL
         value: https://api.artwalls.space
+
