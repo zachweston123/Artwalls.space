@@ -1,0 +1,142 @@
+import { DollarSign, TrendingUp, Package } from 'lucide-react';
+import { mockSales } from '../../data/mockData';
+
+export function VenueSales() {
+  const totalEarnings = mockSales.reduce((sum, sale) => sum + sale.venueEarnings, 0);
+  const totalSales = mockSales.length;
+  const averageCommission = totalEarnings / totalSales;
+
+  return (
+    <div>
+      <div className="mb-8">
+        <h1 className="text-3xl mb-2 text-neutral-900 dark:text-neutral-50">Sales & Earnings</h1>
+        <p className="text-neutral-600 dark:text-neutral-300">Track artwork sales and your commission (10% of sales)</p>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center">
+              <DollarSign className="w-6 h-6 text-green-600 dark:text-green-400" />
+            </div>
+            <div>
+              <div className="text-sm text-neutral-600 dark:text-neutral-300">Total Earnings</div>
+              <div className="text-2xl">${totalEarnings.toFixed(2)}</div>
+            </div>
+          </div>
+          <div className="text-xs text-neutral-500 dark:text-neutral-400">10% commission</div>
+        </div>
+
+        <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
+              <Package className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+              <div className="text-sm text-neutral-600 dark:text-neutral-300">Artworks Sold</div>
+              <div className="text-2xl">{totalSales}</div>
+            </div>
+          </div>
+          <div className="text-xs text-neutral-500 dark:text-neutral-400">From your venue</div>
+        </div>
+
+        <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center">
+              <TrendingUp className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+            </div>
+            <div>
+              <div className="text-sm text-neutral-600 dark:text-neutral-300">Avg. Commission</div>
+              <div className="text-2xl">${averageCommission.toFixed(0)}</div>
+            </div>
+          </div>
+          <div className="text-xs text-neutral-500 dark:text-neutral-400">Per sale</div>
+        </div>
+      </div>
+
+      <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-hidden">
+        <div className="p-6 border-b border-neutral-200 dark:border-neutral-700">
+          <h2 className="text-xl text-neutral-900 dark:text-neutral-50">Sales History</h2>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-neutral-50 dark:bg-neutral-900">
+              <tr>
+                <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Artwork</th>
+                <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Artist</th>
+                <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Sale Price</th>
+                <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Your Commission</th>
+                <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Date</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-neutral-100 dark:divide-neutral-700">
+              {mockSales.map((sale) => (
+                <tr key={sale.id} className="hover:bg-neutral-50 dark:bg-neutral-900">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-neutral-100 dark:bg-neutral-800 rounded overflow-hidden">
+                        <img
+                          src={sale.artworkImage}
+                          alt={sale.artworkTitle}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <span className="text-sm">{sale.artworkTitle}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-neutral-600 dark:text-neutral-300">{sale.artistName}</td>
+                  <td className="px-6 py-4 text-sm">${sale.price.toFixed(2)}</td>
+                  <td className="px-6 py-4">
+                    <div className="text-sm">
+                      <span className="text-green-600 dark:text-green-400">${sale.venueEarnings.toFixed(2)}</span>
+                      <span className="text-xs text-neutral-500 dark:text-neutral-400 ml-1">(10%)</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-neutral-600 dark:text-neutral-300">
+                    {new Date(sale.saleDate).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                    })}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {mockSales.length === 0 && (
+          <div className="text-center py-16">
+            <div className="w-16 h-16 bg-neutral-100 dark:bg-neutral-800 rounded-full flex items-center justify-center mx-auto mb-4">
+              <DollarSign className="w-8 h-8 text-neutral-400 dark:text-neutral-500" />
+            </div>
+            <h3 className="text-xl mb-2 text-neutral-900 dark:text-neutral-50">No sales yet</h3>
+            <p className="text-neutral-600 dark:text-neutral-300">Sales will appear here once artwork is purchased</p>
+          </div>
+        )}
+      </div>
+
+      <div className="mt-6 bg-green-50 dark:bg-green-900/30 rounded-xl p-6">
+        <h3 className="text-lg mb-2 text-neutral-900 dark:text-neutral-50">Commission Structure</h3>
+        <p className="text-sm text-green-900 dark:text-green-200 mb-4">
+          You receive 10% commission on each artwork sold from your venue. Artists receive 80%, and Artwalls keeps 10% as a platform fee.
+        </p>
+        <div className="grid grid-cols-3 gap-4 text-sm">
+          <div className="bg-white dark:bg-neutral-800 rounded-lg p-3">
+            <div className="text-neutral-600 dark:text-neutral-300 mb-1">Artist</div>
+            <div className="text-xl text-blue-600 dark:text-blue-400">80%</div>
+          </div>
+          <div className="bg-white dark:bg-neutral-800 rounded-lg p-3">
+            <div className="text-neutral-600 dark:text-neutral-300 mb-1">Your Venue</div>
+            <div className="text-xl text-green-600 dark:text-green-400">10%</div>
+          </div>
+          <div className="bg-white dark:bg-neutral-800 rounded-lg p-3">
+            <div className="text-neutral-600 dark:text-neutral-300 mb-1">Platform</div>
+            <div className="text-xl text-neutral-600 dark:text-neutral-300">10%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

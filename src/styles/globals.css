@@ -1,0 +1,254 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* Root color tokens - Light mode */
+  :root {
+    /* Backgrounds */
+    --color-bg: 250 250 250; /* neutral-50 */
+    --color-surface: 255 255 255; /* white */
+    --color-surface-alt: 245 245 245; /* neutral-100 */
+    
+    /* Borders */
+    --color-border: 229 229 229; /* neutral-200 */
+    --color-border-subtle: 245 245 245; /* neutral-100 */
+    
+    /* Text */
+    --color-text-primary: 23 23 23; /* neutral-900 */
+    --color-text-secondary: 82 82 82; /* neutral-600 */
+    --color-text-muted: 163 163 163; /* neutral-400 */
+    
+    /* Artist Accent (Blue) */
+    --color-accent-artist: 37 99 235; /* blue-600 */
+    --color-accent-artist-hover: 29 78 216; /* blue-700 */
+    --color-accent-artist-bg: 239 246 255; /* blue-50 */
+    --color-accent-artist-subtle: 219 234 254; /* blue-100 */
+    --color-accent-artist-text: 29 78 216; /* blue-700 */
+    
+    /* Venue Accent (Green) */
+    --color-accent-venue: 22 163 74; /* green-600 */
+    --color-accent-venue-hover: 21 128 61; /* green-700 */
+    --color-accent-venue-bg: 240 253 244; /* green-50 */
+    --color-accent-venue-subtle: 220 252 231; /* green-100 */
+    --color-accent-venue-text: 21 128 61; /* green-700 */
+    
+    /* Status Colors */
+    --color-success: 22 163 74; /* green-600 */
+    --color-success-bg: 240 253 244; /* green-50 */
+    --color-success-text: 21 128 61; /* green-700 */
+    
+    --color-warning: 234 179 8; /* yellow-600 */
+    --color-warning-bg: 254 252 232; /* yellow-50 */
+    --color-warning-text: 161 98 7; /* yellow-700 */
+    
+    --color-danger: 220 38 38; /* red-600 */
+    --color-danger-bg: 254 242 242; /* red-50 */
+    --color-danger-text: 185 28 28; /* red-700 */
+    
+    --color-info: 37 99 235; /* blue-600 */
+    --color-info-bg: 239 246 255; /* blue-50 */
+    --color-info-text: 29 78 216; /* blue-700 */
+  }
+
+  /* Dark mode */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      /* Backgrounds - using deep neutrals, not pure black */
+      --color-bg: 23 23 23; /* neutral-900 */
+      --color-surface: 38 38 38; /* neutral-800 */
+      --color-surface-alt: 64 64 64; /* neutral-700 */
+      
+      /* Borders - subtle but visible */
+      --color-border: 64 64 64; /* neutral-700 */
+      --color-border-subtle: 38 38 38; /* neutral-800 */
+      
+      /* Text */
+      --color-text-primary: 250 250 250; /* neutral-50 */
+      --color-text-secondary: 212 212 212; /* neutral-300 */
+      --color-text-muted: 163 163 163; /* neutral-400 */
+      
+      /* Artist Accent (Blue) - slightly brighter for dark mode */
+      --color-accent-artist: 59 130 246; /* blue-500 */
+      --color-accent-artist-hover: 96 165 250; /* blue-400 */
+      --color-accent-artist-bg: 30 58 138; /* blue-900 */
+      --color-accent-artist-subtle: 37 99 235; /* blue-600 */
+      --color-accent-artist-text: 147 197 253; /* blue-300 */
+      
+      /* Venue Accent (Green) - slightly brighter for dark mode */
+      --color-accent-venue: 34 197 94; /* green-500 */
+      --color-accent-venue-hover: 74 222 128; /* green-400 */
+      --color-accent-venue-bg: 20 83 45; /* green-900 */
+      --color-accent-venue-subtle: 22 163 74; /* green-600 */
+      --color-accent-venue-text: 134 239 172; /* green-300 */
+      
+      /* Status Colors - adjusted for dark mode */
+      --color-success: 34 197 94; /* green-500 */
+      --color-success-bg: 20 83 45; /* green-900 */
+      --color-success-text: 134 239 172; /* green-300 */
+      
+      --color-warning: 250 204 21; /* yellow-400 */
+      --color-warning-bg: 113 63 18; /* yellow-900 */
+      --color-warning-text: 253 224 71; /* yellow-300 */
+      
+      --color-danger: 239 68 68; /* red-500 */
+      --color-danger-bg: 127 29 29; /* red-900 */
+      --color-danger-text: 252 165 165; /* red-300 */
+      
+      --color-info: 59 130 246; /* blue-500 */
+      --color-info-bg: 30 58 138; /* blue-900 */
+      --color-info-text: 147 197 253; /* blue-300 */
+    }
+  }
+
+  /* Typography defaults */
+  h1 {
+    @apply text-4xl;
+  }
+  h2 {
+    @apply text-2xl;
+  }
+  h3 {
+    @apply text-xl;
+  }
+  h4 {
+    @apply text-lg;
+  }
+  p {
+    @apply text-base;
+  }
+  
+  /* Body default */
+  body {
+    background-color: rgb(var(--color-bg));
+    color: rgb(var(--color-text-primary));
+  }
+}
+
+@layer utilities {
+  /* Background utilities */
+  .bg-app {
+    background-color: rgb(var(--color-bg));
+  }
+  .bg-surface {
+    background-color: rgb(var(--color-surface));
+  }
+  .bg-surface-alt {
+    background-color: rgb(var(--color-surface-alt));
+  }
+  
+  /* Border utilities */
+  .border-main {
+    border-color: rgb(var(--color-border));
+  }
+  .border-subtle {
+    border-color: rgb(var(--color-border-subtle));
+  }
+  
+  /* Text utilities */
+  .text-primary {
+    color: rgb(var(--color-text-primary));
+  }
+  .text-secondary {
+    color: rgb(var(--color-text-secondary));
+  }
+  .text-muted {
+    color: rgb(var(--color-text-muted));
+  }
+  
+  /* Artist accent utilities */
+  .bg-accent-artist {
+    background-color: rgb(var(--color-accent-artist));
+  }
+  .bg-accent-artist-hover:hover {
+    background-color: rgb(var(--color-accent-artist-hover));
+  }
+  .bg-accent-artist-subtle {
+    background-color: rgb(var(--color-accent-artist-bg));
+  }
+  .text-accent-artist {
+    color: rgb(var(--color-accent-artist));
+  }
+  .text-accent-artist-text {
+    color: rgb(var(--color-accent-artist-text));
+  }
+  .border-accent-artist {
+    border-color: rgb(var(--color-accent-artist));
+  }
+  
+  /* Venue accent utilities */
+  .bg-accent-venue {
+    background-color: rgb(var(--color-accent-venue));
+  }
+  .bg-accent-venue-hover:hover {
+    background-color: rgb(var(--color-accent-venue-hover));
+  }
+  .bg-accent-venue-subtle {
+    background-color: rgb(var(--color-accent-venue-bg));
+  }
+  .text-accent-venue {
+    color: rgb(var(--color-accent-venue));
+  }
+  .text-accent-venue-text {
+    color: rgb(var(--color-accent-venue-text));
+  }
+  .border-accent-venue {
+    border-color: rgb(var(--color-accent-venue));
+  }
+  
+  /* Status utilities */
+  .bg-success {
+    background-color: rgb(var(--color-success));
+  }
+  .bg-success-subtle {
+    background-color: rgb(var(--color-success-bg));
+  }
+  .text-success {
+    color: rgb(var(--color-success-text));
+  }
+  
+  .bg-warning {
+    background-color: rgb(var(--color-warning));
+  }
+  .bg-warning-subtle {
+    background-color: rgb(var(--color-warning-bg));
+  }
+  .text-warning {
+    color: rgb(var(--color-warning-text));
+  }
+  
+  .bg-danger {
+    background-color: rgb(var(--color-danger));
+  }
+  .bg-danger-subtle {
+    background-color: rgb(var(--color-danger-bg));
+  }
+  .text-danger {
+    color: rgb(var(--color-danger-text));
+  }
+  
+  .bg-info {
+    background-color: rgb(var(--color-info));
+  }
+  .bg-info-subtle {
+    background-color: rgb(var(--color-info-bg));
+  }
+  .text-info {
+    color: rgb(var(--color-info-text));
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
