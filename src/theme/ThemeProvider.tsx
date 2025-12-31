@@ -12,6 +12,11 @@ type ThemeContextValue = {
 
 const STORAGE_KEY = 'artwalls.theme';
 
+<ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+  {children}
+</ThemeProvider>
+
+
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 function getSystemTheme(): ResolvedTheme {
