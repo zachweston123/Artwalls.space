@@ -42,8 +42,8 @@ export function ArtistSales() {
 
         <div className="bg-white rounded-xl p-6 border border-neutral-200">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-purple-600" />
+            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
+              <TrendingUp className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
               <div className="text-sm text-neutral-600">Average Sale</div>

@@ -109,7 +109,7 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
   const getPlanBadgeColor = (plan: string) => {
     switch (plan) {
       case 'Growth':
-        return 'bg-purple-100 text-purple-700';
+        return 'bg-neutral-100 text-neutral-700';
       default:
         return 'bg-neutral-100 text-neutral-700';
     }

@@ -14,7 +14,7 @@ export function NotificationsList() {
       case 'pickup-reminder':
         return <Bell className="w-5 h-5 text-orange-600" />;
       case 'artwork-sold':
-        return <TrendingUp className="w-5 h-5 text-purple-600" />;
+        return <TrendingUp className="w-5 h-5 text-blue-600 dark:text-blue-400" />;
       default:
         return <Bell className="w-5 h-5 text-neutral-600" />;
     }

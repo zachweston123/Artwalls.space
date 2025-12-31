@@ -33,7 +33,7 @@ export function PlanBadge({ plan, size = 'md', showUpgrade = false, onUpgrade }:
     pro: {
       label: 'Pro',
       icon: Shield,
-      bg: 'bg-gradient-to-r from-blue-600 to-purple-600',
+      bg: 'bg-blue-600 dark:bg-blue-500',
       text: 'text-white',
       border: 'border-transparent',
     },
