@@ -529,7 +529,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
           <div className="bg-white rounded-xl border border-neutral-200 p-6">
             <h3 className="text-base mb-2 text-neutral-900">What's the revenue split on sales?</h3>
             <p className="text-sm text-neutral-700">
-              Artists receive 80% of the sale price, venues receive 10%, and Artwalls receives 10%. Your subscription plan determines the platform fee on top of this split.
+              Artists receive a percentage of the sale price based on their current subscription plan, while venues always receive 10%. The platform fee is determined by the artist's subscription plan and is applied in addition to this split.
             </p>
           </div>
         </div>
