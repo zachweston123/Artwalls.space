@@ -33,6 +33,7 @@ import { AdminAnnouncements } from './components/admin/AdminAnnouncements';
 import { AdminPromoCodes } from './components/admin/AdminPromoCodes';
 import { AdminActivityLog } from './components/admin/AdminActivityLog';
 import { AdminPasswordPrompt } from './components/admin/AdminPasswordPrompt';
+import { StripePaymentSetup } from './components/admin/StripePaymentSetup';
 
 export type UserRole = 'artist' | 'venue' | 'admin' | null;
 
@@ -170,6 +171,7 @@ export default function App() {
             {currentPage === 'admin-promo-codes' && (
               <AdminPromoCodes onCreatePromoCode={() => {/* TODO: Open modal */}} />
             )}
+            {currentPage === 'admin-stripe-payments' && <StripePaymentSetup onNavigate={handleNavigate} />}
             {currentPage === 'admin-activity-log' && <AdminActivityLog />}
           </main>
         </div>
@@ -256,6 +258,7 @@ export default function App() {
             {currentPage === 'admin-user-detail' && <AdminUserDetail onNavigate={handleNavigate} />}
             {currentPage === 'admin-announcements' && <AdminAnnouncements onNavigate={handleNavigate} />}
             {currentPage === 'admin-promo-codes' && <AdminPromoCodes onNavigate={handleNavigate} />}
+            {currentPage === 'admin-stripe-payments' && <StripePaymentSetup onNavigate={handleNavigate} />}
             {currentPage === 'admin-activity-log' && <AdminActivityLog onNavigate={handleNavigate} />}
           </>
         )}

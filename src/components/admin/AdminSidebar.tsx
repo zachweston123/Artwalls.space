@@ -6,7 +6,8 @@ import {
   Tag, 
   Activity, 
   Settings,
-  Shield
+  Shield,
+  CreditCard
 } from 'lucide-react';
 
 interface AdminSidebarProps {
@@ -19,6 +20,7 @@ export function AdminSidebar({ currentPage, onNavigate }: AdminSidebarProps) {
     { id: 'admin-dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'admin-users', label: 'Users', icon: Users },
     { id: 'admin-orders', label: 'Orders & Payments', icon: ShoppingCart },
+    { id: 'admin-stripe-payments', label: 'Stripe Payments', icon: CreditCard },
     { id: 'admin-announcements', label: 'Announcements', icon: Megaphone },
     { id: 'admin-promo-codes', label: 'Promo Codes', icon: Tag },
     { id: 'admin-activity-log', label: 'Activity Log', icon: Activity },
