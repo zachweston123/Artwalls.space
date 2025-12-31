@@ -120,7 +120,7 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
             <div className="space-y-2">
               <button 
                 onClick={() => onNavigate('artist-artworks')}
-              <button className="w-full text-left px-4 py-2 bg-neutral-50 text-neutral-700 rounded-lg hover:bg-neutral-100 transition-colors">
+                className="w-full text-left px-4 py-2 bg-neutral-50 text-neutral-700 rounded-lg hover:bg-neutral-100 transition-colors"
               >
                 Manage Artworks
               </button>
