@@ -10,4 +10,7 @@ createRoot(document.getElementById('root')!).render(
   <ThemeProvider>
     <App />
   </ThemeProvider>
+ 
+  document.documentElement.classList.remove("dark");
+
 );
