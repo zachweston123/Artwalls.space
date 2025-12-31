@@ -215,17 +215,17 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
           return (
             <div
               key={kpi.label}
-              className="bg-white dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700"
+              className="bg-white rounded-xl p-6 border border-neutral-200"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className={`w-12 h-12 ${kpi.iconBg} rounded-lg flex items-center justify-center`}>
                   <Icon className={`w-6 h-6 ${kpi.iconColor}`} />
                 </div>
               </div>
-              <div className="text-sm text-neutral-600 dark:text-neutral-400 mb-1">
+              <div className="text-sm text-neutral-600 mb-1">
                 {kpi.label}
               </div>
-              <div className="text-2xl mb-2 text-neutral-900 dark:text-neutral-50">
+              <div className="text-2xl mb-2 text-neutral-900">
                 {kpi.value}
               </div>
               <div className={`text-xs ${getDeltaColor(kpi.deltaType)}`}>
@@ -246,13 +246,13 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
               <button
                 key={action.label}
                 onClick={action.onClick}
-                className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl p-6 hover:shadow-lg hover:border-neutral-300 dark:hover:border-neutral-600 transition-all text-left group"
+                className="bg-white border border-neutral-200 rounded-xl p-6 hover:shadow-lg hover:border-neutral-300 transition-all text-left group"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-neutral-100 dark:bg-neutral-700 rounded-lg flex items-center justify-center group-hover:bg-neutral-900 dark:group-hover:bg-neutral-100 transition-colors">
-                    <Icon className="w-5 h-5 text-neutral-600 dark:text-neutral-400 group-hover:text-white dark:group-hover:text-neutral-900" />
+                  <div className="w-10 h-10 bg-neutral-100 rounded-lg flex items-center justify-center group-hover:bg-neutral-900 transition-colors">
+                    <Icon className="w-5 h-5 text-neutral-600 group-hover:text-white" />
                   </div>
-                  <span className="text-neutral-900 dark:text-neutral-50">{action.label}</span>
+                  <span className="text-neutral-900">{action.label}</span>
                 </div>
               </button>
             );
@@ -267,16 +267,16 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
             <div className="p-6 border-b border-neutral-200 dark:border-neutral-700">
               <h2 className="text-xl">Recent Activity</h2>
             </div>
-            <div className="divide-y divide-neutral-100 dark:divide-neutral-700">
+            <div className="divide-y divide-neutral-100">
               {recentActivity.map((activity) => (
-                <div key={activity.id} className="p-6 hover:bg-neutral-50 dark:hover:bg-neutral-700/50 transition-colors">
+                <div key={activity.id} className="p-6 hover:bg-neutral-50 transition-colors">
                   <div className="flex items-start gap-3">
                     <div className="mt-0.5">{getActivityIcon(activity.status)}</div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-neutral-900 dark:text-neutral-50 mb-1">
+                      <p className="text-sm text-neutral-900 mb-1">
                         {activity.description}
                       </p>
-                      <div className="flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+                      <div className="flex items-center gap-2 text-xs text-neutral-500">
                         <span>{activity.user}</span>
                         <span>•</span>
                         <span>{activity.timestamp}</span>
@@ -286,10 +286,10 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                 </div>
               ))}
             </div>
-            <div className="p-4 border-t border-neutral-200 dark:border-neutral-700">
+            <div className="p-4 border-t border-neutral-200">
               <button
                 onClick={() => onNavigate('admin-activity-log')}
-                className="w-full text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-50 transition-colors"
+                className="w-full text-sm text-neutral-600 hover:text-neutral-900 transition-colors"
               >
                 View all activity →
               </button>

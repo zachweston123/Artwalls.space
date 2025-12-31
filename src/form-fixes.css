@@ -1,15 +1,1 @@
-/* Form control dark-mode fixes.
-   Figma exports often miss explicit input backgrounds/text, which can create low-contrast fields. */
-
-.dark input:not([type='checkbox']):not([type='radio']):not([type='range']),
-.dark textarea,
-.dark select {
-  background-color: var(--color-neutral-900);
-  color: var(--color-neutral-50);
-  border-color: var(--color-neutral-600);
-}
-
-.dark input::placeholder,
-.dark textarea::placeholder {
-  color: var(--color-neutral-500);
-}
+/* Dark mode form fixes removed - light mode only */

@@ -45,14 +45,14 @@ export function ArtistProfileEdit({ onSave, onCancel }: ArtistProfileEditProps) 
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-6">
-      <div className="bg-white dark:bg-neutral-800 rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
+      <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 p-6 flex items-center justify-between">
+        <div className="sticky top-0 bg-white border-b border-neutral-200 p-6 flex items-center justify-between">
           <h2 className="text-2xl">Edit Profile</h2>
           <button
             onClick={onCancel}
-            className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg transition-colors"
+            className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -65,7 +65,7 @@ export function ArtistProfileEdit({ onSave, onCancel }: ArtistProfileEditProps) 
               Profile Photo
             </label>
             <div className="flex items-center gap-6">
-              <div className="w-24 h-24 rounded-full overflow-hidden bg-neutral-100 dark:bg-neutral-900 border-4 border-neutral-200 dark:border-neutral-700">
+              <div className="w-24 h-24 rounded-full overflow-hidden bg-neutral-100 border-4 border-neutral-200">
                 {formData.avatar ? (
                   <img
                     src={formData.avatar}
@@ -80,7 +80,7 @@ export function ArtistProfileEdit({ onSave, onCancel }: ArtistProfileEditProps) 
               </div>
               <button
                 type="button"
-                className="flex items-center gap-2 px-4 py-2 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-neutral-100 text-neutral-700 rounded-lg hover:bg-neutral-200 transition-colors"
               >
                 <Upload className="w-4 h-4" />
                 Upload Photo
@@ -120,7 +120,7 @@ export function ArtistProfileEdit({ onSave, onCancel }: ArtistProfileEditProps) 
               placeholder="Tell venues about your artistic practice, style, and what makes your work unique..."
               required
             />
-            <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+            <p className="text-xs text-neutral-500 mt-1">
               {formData.bio.length}/500 characters
             </p>
           </div>
@@ -147,11 +147,11 @@ export function ArtistProfileEdit({ onSave, onCancel }: ArtistProfileEditProps) 
           </div>
 
           {/* Open to Placements Toggle */}
-          <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-100 dark:border-blue-800">
+          <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
                 <label className="block text-sm mb-1">Open to new placements</label>
-                <p className="text-xs text-neutral-600 dark:text-neutral-400">
+                <p className="text-xs text-neutral-600">
                   Let venues know you're actively seeking display opportunities. You'll appear in discovery searches.
                 </p>
               </div>
@@ -160,8 +160,8 @@ export function ArtistProfileEdit({ onSave, onCancel }: ArtistProfileEditProps) 
                 onClick={() => setFormData({ ...formData, openToNew: !formData.openToNew })}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                   formData.openToNew
-                    ? 'bg-blue-600 dark:bg-blue-500'
-                    : 'bg-neutral-300 dark:bg-neutral-600'
+                    ? 'bg-blue-600'
+                    : 'bg-neutral-300'
                 }`}
               >
                 <span
@@ -174,17 +174,17 @@ export function ArtistProfileEdit({ onSave, onCancel }: ArtistProfileEditProps) 
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3 pt-4 border-t border-neutral-200 dark:border-neutral-700">
+          <div className="flex gap-3 pt-4 border-t border-neutral-200">
             <button
               type="button"
               onClick={onCancel}
-              className="flex-1 px-4 py-2 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition-colors"
+              className="flex-1 px-4 py-2 bg-neutral-100 text-neutral-700 rounded-lg hover:bg-neutral-200 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-400 transition-colors"
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               Save Changes
             </button>

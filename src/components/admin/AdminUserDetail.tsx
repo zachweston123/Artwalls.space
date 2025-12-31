@@ -23,8 +23,8 @@ interface AdminUserDetailProps {
 
 // Simple role badge component for admin use
 function RoleBadge({ role }: { role: 'artist' | 'venue' }) {
-  const artistClasses = 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300';
-  const venueClasses = 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300';
+  const artistClasses = 'bg-blue-100 text-blue-700';
+  const venueClasses = 'bg-green-100 text-green-700';
   
   return (
     <span className={`px-2 py-1 rounded-full text-xs capitalize ${role === 'artist' ? artistClasses : venueClasses}`}>
@@ -109,22 +109,22 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
   const getPlanBadgeColor = (plan: string) => {
     switch (plan) {
       case 'Growth':
-        return 'bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300';
+        return 'bg-purple-100 text-purple-700';
       default:
-        return 'bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300';
+        return 'bg-neutral-100 text-neutral-700';
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'On display':
-        return 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300';
+        return 'bg-green-100 text-green-700';
       case 'Sold':
-        return 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300';
+        return 'bg-blue-100 text-blue-700';
       case 'Paid':
-        return 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300';
+        return 'bg-green-100 text-green-700';
       default:
-        return 'bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300';
+        return 'bg-neutral-100 text-neutral-700';
     }
   };
 
@@ -134,7 +134,7 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
       <div className="mb-8">
         <button
           onClick={onBack}
-          className="flex items-center gap-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-50 mb-4 transition-colors"
+          className="flex items-center gap-2 text-neutral-600 hover:text-neutral-900 mb-4 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Users
@@ -147,7 +147,7 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
               <span className={`px-2 py-1 rounded-full text-xs ${getPlanBadgeColor(user.plan)}`}>
                 {user.plan}
               </span>
-              <span className="px-2 py-1 bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 rounded-full text-xs">
+              <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">
                 {user.status}
               </span>
             </div>
@@ -155,15 +155,15 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
           
           {/* Quick Actions */}
           <div className="flex gap-2">
-            <button className="px-4 py-2 bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-900 transition-colors text-sm flex items-center gap-2">
+            <button className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm flex items-center gap-2">
               <AlertTriangle className="w-4 h-4" />
               Suspend
             </button>
-            <button className="px-4 py-2 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition-colors text-sm flex items-center gap-2">
+            <button className="px-4 py-2 bg-neutral-100 text-neutral-700 rounded-lg hover:bg-neutral-200 transition-colors text-sm flex items-center gap-2">
               <LogOut className="w-4 h-4" />
               Force Logout
             </button>
-            <button className="px-4 py-2 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition-colors text-sm flex items-center gap-2">
+            <button className="px-4 py-2 bg-neutral-100 text-neutral-700 rounded-lg hover:bg-neutral-200 transition-colors text-sm flex items-center gap-2">
               <Key className="w-4 h-4" />
               Reset Password
             </button>
@@ -172,7 +172,7 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-neutral-200 dark:border-neutral-700 mb-6">
+      <div className="border-b border-neutral-200 mb-6">
         <div className="flex gap-6">
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -182,8 +182,8 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors ${
                   activeTab === tab.id
-                    ? 'border-neutral-900 dark:border-neutral-100 text-neutral-900 dark:text-neutral-50'
-                    : 'border-transparent text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-50'
+                    ? 'border-neutral-900 text-neutral-900'
+                    : 'border-transparent text-neutral-600 hover:text-neutral-900'
                 }`}
               >
                 <Icon className="w-4 h-4" />
@@ -198,46 +198,46 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
       {activeTab === 'overview' && (
         <div className="space-y-6">
           {/* Identity Card */}
-          <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700">
+          <div className="bg-white rounded-xl p-6 border border-neutral-200">
             <h2 className="text-xl mb-4">Identity</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="flex items-start gap-3">
                 <User className="w-5 h-5 text-neutral-400 mt-0.5" />
                 <div>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400">Name</p>
-                  <p className="text-neutral-900 dark:text-neutral-50">{user.name}</p>
+                  <p className="text-sm text-neutral-600">Name</p>
+                  <p className="text-neutral-900">{user.name}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <Mail className="w-5 h-5 text-neutral-400 mt-0.5" />
                 <div>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400">Email</p>
-                  <p className="text-neutral-900 dark:text-neutral-50">{user.email}</p>
+                  <p className="text-sm text-neutral-600">Email</p>
+                  <p className="text-neutral-900">{user.email}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-neutral-400 mt-0.5" />
                 <div>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400">City</p>
-                  <p className="text-neutral-900 dark:text-neutral-50">{user.city}</p>
+                  <p className="text-sm text-neutral-600">City</p>
+                  <p className="text-neutral-900">{user.city}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <Calendar className="w-5 h-5 text-neutral-400 mt-0.5" />
                 <div>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400">Member Since</p>
-                  <p className="text-neutral-900 dark:text-neutral-50">{user.createdAt}</p>
+                  <p className="text-sm text-neutral-600">Member Since</p>
+                  <p className="text-neutral-900">{user.createdAt}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 {user.agreementAccepted ? (
-                  <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" />
+                  <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
                 ) : (
-                  <XCircle className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5" />
+                  <XCircle className="w-5 h-5 text-red-600 mt-0.5" />
                 )}
                 <div>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400">Agreement</p>
-                  <p className="text-neutral-900 dark:text-neutral-50">
+                  <p className="text-sm text-neutral-600">Agreement</p>
+                  <p className="text-neutral-900">
                     {user.agreementAccepted ? `Accepted ${user.agreementDate}` : 'Not accepted'}
                   </p>
                 </div>
@@ -246,20 +246,20 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
           </div>
 
           {/* Artist Stats */}
-          <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700">
+          <div className="bg-white rounded-xl p-6 border border-neutral-200">
             <h2 className="text-xl mb-4">Artist Stats</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               <div>
-                <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-1">Artworks</p>
-                <p className="text-2xl text-neutral-900 dark:text-neutral-50">{user.artworksCount}</p>
+                <p className="text-sm text-neutral-600 mb-1">Artworks</p>
+                <p className="text-2xl text-neutral-900">{user.artworksCount}</p>
               </div>
               <div>
-                <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-1">Active Displays</p>
-                <p className="text-2xl text-neutral-900 dark:text-neutral-50">{user.activeDisplays}</p>
+                <p className="text-sm text-neutral-600 mb-1">Active Displays</p>
+                <p className="text-2xl text-neutral-900">{user.activeDisplays}</p>
               </div>
               <div>
-                <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-1">Protected Artworks</p>
-                <p className="text-2xl text-neutral-900 dark:text-neutral-50">{user.protectionPlanActive}</p>
+                <p className="text-sm text-neutral-600 mb-1">Protected Artworks</p>
+                <p className="text-2xl text-neutral-900">{user.protectionPlanActive}</p>
               </div>
             </div>
           </div>
@@ -267,43 +267,43 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
       )}
 
       {activeTab === 'placements' && (
-        <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-hidden">
+        <div className="bg-white rounded-xl border border-neutral-200 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-neutral-50 dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-700">
+              <thead className="bg-neutral-50 border-b border-neutral-200">
                 <tr>
-                  <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Artwork</th>
-                  <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Venue</th>
-                  <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Status</th>
-                  <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Install Date</th>
-                  <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">End Date</th>
-                  <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Duration</th>
-                  <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Protection</th>
-                  <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Actions</th>
+                  <th className="text-left px-6 py-3 text-sm text-neutral-600">Artwork</th>
+                  <th className="text-left px-6 py-3 text-sm text-neutral-600">Venue</th>
+                  <th className="text-left px-6 py-3 text-sm text-neutral-600">Status</th>
+                  <th className="text-left px-6 py-3 text-sm text-neutral-600">Install Date</th>
+                  <th className="text-left px-6 py-3 text-sm text-neutral-600">End Date</th>
+                  <th className="text-left px-6 py-3 text-sm text-neutral-600">Duration</th>
+                  <th className="text-left px-6 py-3 text-sm text-neutral-600">Protection</th>
+                  <th className="text-left px-6 py-3 text-sm text-neutral-600">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-100 dark:divide-neutral-700">
+              <tbody className="divide-y divide-neutral-100">
                 {mockPlacements.map((placement) => (
-                  <tr key={placement.id} className="hover:bg-neutral-50 dark:hover:bg-neutral-700/50">
-                    <td className="px-6 py-4 text-sm text-neutral-900 dark:text-neutral-50">{placement.artwork}</td>
-                    <td className="px-6 py-4 text-sm text-neutral-600 dark:text-neutral-400">{placement.venue}</td>
+                  <tr key={placement.id} className="hover:bg-neutral-50">
+                    <td className="px-6 py-4 text-sm text-neutral-900">{placement.artwork}</td>
+                    <td className="px-6 py-4 text-sm text-neutral-600">{placement.venue}</td>
                     <td className="px-6 py-4">
                       <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(placement.status)}`}>
                         {placement.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-neutral-600 dark:text-neutral-400">{placement.installDate}</td>
-                    <td className="px-6 py-4 text-sm text-neutral-600 dark:text-neutral-400">{placement.endDate}</td>
-                    <td className="px-6 py-4 text-sm text-neutral-600 dark:text-neutral-400">{placement.duration} days</td>
+                    <td className="px-6 py-4 text-sm text-neutral-600">{placement.installDate}</td>
+                    <td className="px-6 py-4 text-sm text-neutral-600">{placement.endDate}</td>
+                    <td className="px-6 py-4 text-sm text-neutral-600">{placement.duration} days</td>
                     <td className="px-6 py-4 text-sm">
                       {placement.protection ? (
-                        <span className="text-green-600 dark:text-green-400">On</span>
+                        <span className="text-green-600">On</span>
                       ) : (
                         <span className="text-neutral-500">Off</span>
                       )}
                     </td>
                     <td className="px-6 py-4">
-                      <button className="px-3 py-1 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded text-xs hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors">
+                      <button className="px-3 py-1 bg-neutral-900 text-white rounded text-xs hover:bg-neutral-800 transition-colors">
                         View
                       </button>
                     </td>
@@ -316,35 +316,35 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
       )}
 
       {activeTab === 'orders' && (
-        <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-hidden">
+        <div className="bg-white rounded-xl border border-neutral-200 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-neutral-50 dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-700">
+              <thead className="bg-neutral-50 border-b border-neutral-200">
                 <tr>
-                  <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Order ID</th>
-                  <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Artwork</th>
-                  <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Amount</th>
-                  <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Status</th>
-                  <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Stripe Session</th>
-                  <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Date</th>
-                  <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Actions</th>
+                  <th className="text-left px-6 py-3 text-sm text-neutral-600">Order ID</th>
+                  <th className="text-left px-6 py-3 text-sm text-neutral-600">Artwork</th>
+                  <th className="text-left px-6 py-3 text-sm text-neutral-600">Amount</th>
+                  <th className="text-left px-6 py-3 text-sm text-neutral-600">Status</th>
+                  <th className="text-left px-6 py-3 text-sm text-neutral-600">Stripe Session</th>
+                  <th className="text-left px-6 py-3 text-sm text-neutral-600">Date</th>
+                  <th className="text-left px-6 py-3 text-sm text-neutral-600">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-100 dark:divide-neutral-700">
+              <tbody className="divide-y divide-neutral-100">
                 {mockOrders.map((order) => (
-                  <tr key={order.id} className="hover:bg-neutral-50 dark:hover:bg-neutral-700/50">
-                    <td className="px-6 py-4 text-sm text-neutral-900 dark:text-neutral-50 font-mono">{order.id}</td>
-                    <td className="px-6 py-4 text-sm text-neutral-600 dark:text-neutral-400">{order.artwork}</td>
-                    <td className="px-6 py-4 text-sm text-neutral-900 dark:text-neutral-50">${order.amount}</td>
+                  <tr key={order.id} className="hover:bg-neutral-50">
+                    <td className="px-6 py-4 text-sm text-neutral-900 font-mono">{order.id}</td>
+                    <td className="px-6 py-4 text-sm text-neutral-600">{order.artwork}</td>
+                    <td className="px-6 py-4 text-sm text-neutral-900">${order.amount}</td>
                     <td className="px-6 py-4">
                       <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(order.status)}`}>
                         {order.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-neutral-600 dark:text-neutral-400 font-mono">{order.stripeSessionId}</td>
-                    <td className="px-6 py-4 text-sm text-neutral-600 dark:text-neutral-400">{order.date}</td>
+                    <td className="px-6 py-4 text-sm text-neutral-600 font-mono">{order.stripeSessionId}</td>
+                    <td className="px-6 py-4 text-sm text-neutral-600">{order.date}</td>
                     <td className="px-6 py-4">
-                      <button className="px-3 py-1 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded text-xs hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors">
+                      <button className="px-3 py-1 bg-neutral-900 text-white rounded text-xs hover:bg-neutral-800 transition-colors">
                         Details
                       </button>
                     </td>
@@ -358,25 +358,25 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
 
       {activeTab === 'subscriptions' && (
         <div className="space-y-6">
-          <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700">
+          <div className="bg-white rounded-xl p-6 border border-neutral-200">
             <h2 className="text-xl mb-4">Current Plan</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
               <div>
-                <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-1">Tier</p>
-                <p className="text-2xl text-neutral-900 dark:text-neutral-50">{user.plan}</p>
+                <p className="text-sm text-neutral-600 mb-1">Tier</p>
+                <p className="text-2xl text-neutral-900">{user.plan}</p>
               </div>
               <div>
-                <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-1">Stripe Status</p>
-                <span className="px-2 py-1 bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 rounded-full text-sm">
+                <p className="text-sm text-neutral-600 mb-1">Stripe Status</p>
+                <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-sm">
                   Active
                 </span>
               </div>
             </div>
             <div className="flex gap-3">
-              <button className="px-4 py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors text-sm">
+              <button className="px-4 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition-colors text-sm">
                 Open Stripe Customer
               </button>
-              <button className="px-4 py-2 bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-900 transition-colors text-sm">
+              <button className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm">
                 Cancel Subscription
               </button>
             </div>
@@ -387,10 +387,10 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
       {activeTab === 'notes' && (
         <div className="space-y-6">
           {/* Add Note */}
-          <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700">
+          <div className="bg-white rounded-xl p-6 border border-neutral-200">
             <h2 className="text-xl mb-4">Add Internal Note</h2>
             <div className="space-y-4">
-              <select className="w-full px-4 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-50 focus:outline-none focus:ring-2 focus:ring-neutral-500">
+              <select className="w-full px-4 py-2 rounded-lg border border-neutral-300 bg-white text-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-500">
                 <option>Support</option>
                 <option>Billing</option>
                 <option>Safety</option>
@@ -398,32 +398,32 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
               <textarea
                 rows={4}
                 placeholder="Add your note here..."
-                className="w-full px-4 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-50 focus:outline-none focus:ring-2 focus:ring-neutral-500"
+                className="w-full px-4 py-2 rounded-lg border border-neutral-300 bg-white text-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-500"
               />
-              <button className="px-6 py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors">
+              <button className="px-6 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition-colors">
                 Save Note
               </button>
             </div>
           </div>
 
           {/* Notes Timeline */}
-          <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700">
+          <div className="bg-white rounded-xl p-6 border border-neutral-200">
             <h2 className="text-xl mb-4">Notes History</h2>
             <div className="space-y-4">
               {mockNotes.map((note) => (
-                <div key={note.id} className="p-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg">
+                <div key={note.id} className="p-4 bg-neutral-50 rounded-lg">
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-neutral-900 dark:text-neutral-50">{note.author}</span>
-                      <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-full text-xs">
+                      <span className="text-sm text-neutral-900">{note.author}</span>
+                      <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs">
                         {note.tag}
                       </span>
                     </div>
-                    <span className="text-xs text-neutral-500 dark:text-neutral-400">{note.timestamp}</span>
+                    <span className="text-xs text-neutral-500">{note.timestamp}</span>
                   </div>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-300">{note.content}</p>
+                  <p className="text-sm text-neutral-600">{note.content}</p>
                 </div>
-              ))}
+              ))}}
             </div>
           </div>
         </div>

@@ -161,13 +161,13 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl mb-2">Users</h1>
-        <p className="text-neutral-600 dark:text-neutral-300">
+        <p className="text-neutral-600">
           Manage and support platform users
         </p>
       </div>
 
       {/* Search & Filters */}
-      <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700 mb-6">
+      <div className="bg-white rounded-xl p-6 border border-neutral-200 mb-6">
         {/* Search Bar */}
         <div className="flex gap-3 mb-4">
           <div className="flex-1 relative">
@@ -177,26 +177,26 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by name, email, venue name, or user ID..."
-              className="w-full pl-12 pr-4 py-3 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-50 focus:outline-none focus:ring-2 focus:ring-neutral-500 dark:focus:ring-neutral-400"
+              className="w-full pl-12 pr-4 py-3 rounded-lg border border-neutral-300 bg-white text-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-500"
             />
           </div>
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={`px-6 py-3 rounded-lg border-2 transition-all flex items-center gap-2 ${
               showFilters || hasActiveFilters
-                ? 'border-neutral-900 dark:border-neutral-100 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900'
-                : 'border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 hover:border-neutral-400 dark:hover:border-neutral-500'
+            ? 'border-neutral-900 bg-neutral-900 text-white'
+            : 'border-neutral-300 bg-white text-neutral-700 hover:border-neutral-400'
             }`}
           >
             <Filter className="w-5 h-5" />
             Filters
             {hasActiveFilters && (
-              <span className="ml-1 px-2 py-0.5 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-50 text-xs rounded-full">
+              <span className="ml-1 px-2 py-0.5 bg-white text-neutral-900 text-xs rounded-full">
                 Active
               </span>
             )}
           </button>
-          <button className="px-6 py-3 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors flex items-center gap-2">
+          <button className="px-6 py-3 rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 transition-colors flex items-center gap-2">
             <Download className="w-5 h-5" />
             Export
           </button>
@@ -204,7 +204,7 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
 
         {/* Filter Panel */}
         {showFilters && (
-          <div className="pt-4 border-t border-neutral-200 dark:border-neutral-700">
+          <div className="pt-4 border-t border-neutral-200">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
               {/* Role Filter */}
               <div>
@@ -294,7 +294,7 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
             {hasActiveFilters && (
               <button
                 onClick={clearFilters}
-                className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-50 transition-colors"
+                className="text-sm text-neutral-600 hover:text-neutral-900 transition-colors"
               >
                 Clear all filters
               </button>

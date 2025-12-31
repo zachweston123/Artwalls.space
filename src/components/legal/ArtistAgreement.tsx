@@ -59,7 +59,7 @@ export function ArtistAgreement({ onNavigate, onAccept, hasAccepted = false }: A
       {/* Back Button */}
       <button
         onClick={() => onNavigate('policies')}
-        className="flex items-center gap-2 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:text-neutral-50 mb-6 transition-colors"
+        className="flex items-center gap-2 text-neutral-600 hover:text-neutral-900 mb-6 transition-colors"
       >
         <ArrowLeft className="w-5 h-5" />
         <span>Back to Policies</span>
@@ -68,16 +68,16 @@ export function ArtistAgreement({ onNavigate, onAccept, hasAccepted = false }: A
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Main Content */}
         <div className="flex-1 max-w-3xl">
-          <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 p-6 sm:p-8 mb-6">
+          <div className="bg-white rounded-xl border border-neutral-200 p-6 sm:p-8 mb-6">
             <div className="mb-6">
-              <h1 className="text-3xl mb-2 text-neutral-900 dark:text-neutral-50">Artwalls Artist Agreement</h1>
-              <p className="text-sm text-neutral-500 dark:text-neutral-400">Last updated: December 25, 2024</p>
+              <h1 className="text-3xl mb-2 text-neutral-900">Artwalls Artist Agreement</h1>
+              <p className="text-sm text-neutral-500">Last updated: December 25, 2024</p>
             </div>
 
             {/* Summary */}
-            <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-5 mb-8 border border-blue-100 dark:border-blue-900">
-              <h2 className="text-base text-blue-900 dark:text-blue-200 mb-2 text-neutral-900 dark:text-neutral-50">Summary (non-binding)</h2>
-              <p className="text-sm text-blue-700 dark:text-blue-300">
+            <div className="bg-blue-50 rounded-lg p-5 mb-8 border border-blue-100">
+              <h2 className="text-base text-blue-900 mb-2 text-neutral-900">Summary (non-binding)</h2>
+              <p className="text-sm text-blue-700">
                 This agreement explains how artists list, display, and sell artwork through Artwalls venues. 
                 The "Terms" below are binding; this summary is for convenience only.
               </p>
@@ -87,13 +87,13 @@ export function ArtistAgreement({ onNavigate, onAccept, hasAccepted = false }: A
             <div className="lg:hidden mb-6">
               <button
                 onClick={() => setShowTOC(!showTOC)}
-                className="w-full flex items-center justify-between p-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-700"
+                className="w-full flex items-center justify-between p-4 bg-neutral-50 rounded-lg border border-neutral-200"
               >
                 <span className="text-sm">On this page</span>
                 {showTOC ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
               </button>
               {showTOC && (
-                <div className="mt-2 p-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-700">
+                <div className="mt-2 p-4 bg-neutral-50 rounded-lg border border-neutral-200">
                   {sections.map((section) => (
                     <button
                       key={section.id}
@@ -101,7 +101,7 @@ export function ArtistAgreement({ onNavigate, onAccept, hasAccepted = false }: A
                         scrollToSection(section.id);
                         setShowTOC(false);
                       }}
-                      className="block w-full text-left text-sm text-neutral-700 dark:text-neutral-300 hover:text-blue-600 dark:text-blue-400 py-2 transition-colors"
+                      className="block w-full text-left text-sm text-neutral-700 hover:text-blue-600 py-2 transition-colors"
                     >
                       {section.title}
                     </button>
@@ -113,16 +113,16 @@ export function ArtistAgreement({ onNavigate, onAccept, hasAccepted = false }: A
             {/* Agreement Content */}
             <div className="space-y-8 prose prose-sm max-w-none">
               <section id="parties">
-                <h2 className="text-xl mb-3 text-neutral-900 dark:text-neutral-50">1. Parties</h2>
-                <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed">
+                <h2 className="text-xl mb-3 text-neutral-900">1. Parties</h2>
+                <p className="text-neutral-700 leading-relaxed">
                   This Artist Agreement ("Agreement") is between the artist account holder ("Artist," "you") 
                   and Artwalls ("Artwalls," "we," "us").
                 </p>
               </section>
 
               <section id="overview">
-                <h2 className="text-xl mb-3 text-neutral-900 dark:text-neutral-50">2. Program Overview</h2>
-                <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed">
+                <h2 className="text-xl mb-3 text-neutral-900">2. Program Overview</h2>
+                <p className="text-neutral-700 leading-relaxed">
                   Artwalls connects artists with participating venues ("Venues") that host rotating physical wall art 
                   for display and potential sale. Artworks may be displayed in public spaces and purchased by customers 
                   via QR code checkout.
@@ -130,8 +130,8 @@ export function ArtistAgreement({ onNavigate, onAccept, hasAccepted = false }: A
               </section>
 
               <section id="ownership">
-                <h2 className="text-xl mb-3 text-neutral-900 dark:text-neutral-50">3. Ownership and Responsibility</h2>
-                <ul className="list-disc list-inside space-y-2 text-neutral-700 dark:text-neutral-300 leading-relaxed">
+                <h2 className="text-xl mb-3 text-neutral-900">3. Ownership and Responsibility</h2>
+                <ul className="list-disc list-inside space-y-2 text-neutral-700 leading-relaxed">
                   <li>You retain ownership of your artwork until it is sold to a customer.</li>
                   <li>
                     You are responsible for your artwork's readiness for public display and for accurate listing 
@@ -145,8 +145,8 @@ export function ArtistAgreement({ onNavigate, onAccept, hasAccepted = false }: A
               </section>
 
               <section id="readiness">
-                <h2 className="text-xl mb-3 text-neutral-900 dark:text-neutral-50">4. Artwork Readiness Requirements</h2>
-                <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed mb-3">
+                <h2 className="text-xl mb-3 text-neutral-900">4. Artwork Readiness Requirements</h2>
+                <p className="text-neutral-700 leading-relaxed mb-3">
                   You agree that any artwork you place through Artwalls will be reasonably prepared for public 
                   display, including:
                 </p>
@@ -161,8 +161,8 @@ export function ArtistAgreement({ onNavigate, onAccept, hasAccepted = false }: A
               </section>
 
               <section id="installation">
-                <h2 className="text-xl mb-3 text-neutral-900 dark:text-neutral-50">5. Installation and Pickup</h2>
-                <ul className="list-disc list-inside space-y-2 text-neutral-700 dark:text-neutral-300 leading-relaxed">
+                <h2 className="text-xl mb-3 text-neutral-900">5. Installation and Pickup</h2>
+                <ul className="list-disc list-inside space-y-2 text-neutral-700 leading-relaxed">
                   <li>
                     You will coordinate installation and pickup during the Venue's posted weekly install/pickup 
                     window (or another mutually agreed schedule).
@@ -175,8 +175,8 @@ export function ArtistAgreement({ onNavigate, onAccept, hasAccepted = false }: A
               </section>
 
               <section id="risk">
-                <h2 className="text-xl mb-3 text-neutral-900 dark:text-neutral-50">6. Display Risk; Damage, Loss, or Theft</h2>
-                <ul className="list-disc list-inside space-y-2 text-neutral-700 dark:text-neutral-300 leading-relaxed">
+                <h2 className="text-xl mb-3 text-neutral-900">6. Display Risk; Damage, Loss, or Theft</h2>
+                <ul className="list-disc list-inside space-y-2 text-neutral-700 leading-relaxed">
                   <li>
                     You acknowledge that displaying artwork in public venues carries inherent risk (e.g., accidental 
                     contact, spills, theft, or vandalism).
@@ -196,8 +196,8 @@ export function ArtistAgreement({ onNavigate, onAccept, hasAccepted = false }: A
               </section>
 
               <section id="sales">
-                <h2 className="text-xl mb-3 text-neutral-900 dark:text-neutral-50">7. Sales and "All Sales Final"</h2>
-                <ul className="list-disc list-inside space-y-2 text-neutral-700 dark:text-neutral-300 leading-relaxed">
+                <h2 className="text-xl mb-3 text-neutral-900">7. Sales and "All Sales Final"</h2>
+                <ul className="list-disc list-inside space-y-2 text-neutral-700 leading-relaxed">
                   <li>All artwork sales processed through Artwalls are final. No returns or refunds are offered by default.</li>
                   <li>
                     You agree to describe artwork accurately and disclose material issues. Material misrepresentation 
@@ -207,50 +207,50 @@ export function ArtistAgreement({ onNavigate, onAccept, hasAccepted = false }: A
               </section>
 
               <section id="subscriptions">
-                <h2 className="text-xl mb-3 text-neutral-900 dark:text-neutral-50">8. Subscriptions, Fees, Active Displays, and Protection Plan</h2>
+                <h2 className="text-xl mb-3 text-neutral-900">8. Subscriptions, Fees, Active Displays, and Protection Plan</h2>
                 
-                <h3 className="text-base mb-2 mt-4 text-neutral-900 dark:text-neutral-50">Plans</h3>
-                <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed mb-3">
+                <h3 className="text-base mb-2 mt-4 text-neutral-900">Plans</h3>
+                <p className="text-neutral-700 leading-relaxed mb-3">>
                   Artists may use Artwalls on a Free plan or a paid subscription plan (Starter, Growth, Pro). 
                   Plan features, limits, pricing, and overage rules are shown on the Plans & Pricing page and may 
                   be updated from time to time.
                 </p>
 
-                <h3 className="text-base mb-2 mt-4 text-neutral-900 dark:text-neutral-50">Platform fee on sales</h3>
-                <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed mb-2">
+                <h3 className="text-base mb-2 mt-4 text-neutral-900">Platform fee on sales</h3>
+                <p className="text-neutral-700 leading-relaxed mb-2">>
                   For sales processed through Artwalls, Artwalls charges a platform fee that depends on your plan:
                 </p>
-                <ul className="list-disc list-inside space-y-2 text-neutral-700 dark:text-neutral-300 leading-relaxed mb-3">
+                <ul className="list-disc list-inside space-y-2 text-neutral-700 leading-relaxed mb-3">
                   <li>Free: 15% platform fee</li>
                   <li>Starter: 10% platform fee</li>
                   <li>Growth: 8% platform fee</li>
                   <li>Pro: 6% platform fee</li>
                 </ul>
 
-                <h3 className="text-base mb-2 mt-4 text-neutral-900 dark:text-neutral-50">Revenue split on completed sales</h3>
-                <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed mb-2">
+                <h3 className="text-base mb-2 mt-4 text-neutral-900">Revenue split on completed sales</h3>
+                <p className="text-neutral-700 leading-relaxed mb-2">
                   Artist 80% / Venue 10% / Artwalls 10% (with plan-based fee adjustments as shown above).
                 </p>
-                <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed mb-3">
+                <p className="text-neutral-700 leading-relaxed mb-3">
                   Payment processing fees may apply as disclosed at checkout or in your dashboard.
                 </p>
 
-                <h3 className="text-base mb-2 mt-4 text-neutral-900 dark:text-neutral-50">Active displays and overage pricing</h3>
-                <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed mb-3">
+                <h3 className="text-base mb-2 mt-4 text-neutral-900">Active displays and overage pricing</h3>
+                <p className="text-neutral-700 leading-relaxed mb-3">
                   Plans include a number of "active displays" (artworks currently displayed at venues). If you exceed 
                   your included active displays, overage charges may apply as shown on the Plans & Pricing page (e.g., 
                   Starter additional active displays billed monthly; Growth additional active displays billed monthly). 
                   Artwalls may pause new placements if unpaid overages accrue.
                 </p>
 
-                <h3 className="text-base mb-2 mt-4 text-neutral-900 dark:text-neutral-50">Payout timing</h3>
-                <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed mb-3">
+                <h3 className="text-base mb-2 mt-4 text-neutral-900">Payout timing</h3>
+                <p className="text-neutral-700 leading-relaxed mb-3">
                   Payout timing may vary by plan. The Free plan may be paid out on a weekly schedule; paid plans may 
                   receive standard or faster payouts as disclosed in your dashboard.
                 </p>
 
-                <h3 className="text-base mb-2 mt-4 text-neutral-900 dark:text-neutral-50">Artwork Protection Plan</h3>
-                <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed mb-2">
+                <h3 className="text-base mb-2 mt-4 text-neutral-900">Artwork Protection Plan</h3>
+                <p className="text-neutral-700 leading-relaxed mb-2">
                   Artwalls offers an optional "Artwork Protection Plan" to help reimburse certain covered incidents 
                   while artwork is displayed through Artwalls placements:
                 </p>
@@ -269,11 +269,11 @@ export function ArtistAgreement({ onNavigate, onAccept, hasAccepted = false }: A
                   </li>
                 </ul>
 
-                <h3 className="text-base mb-2 mt-4 text-neutral-900 dark:text-neutral-50">Protection Plan Requirements</h3>
-                <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed mb-2">
+                <h3 className="text-base mb-2 mt-4 text-neutral-900">Protection Plan Requirements</h3>
+                <p className="text-neutral-700 leading-relaxed mb-2">
                   Coverage eligibility requires:
                 </p>
-                <ul className="list-disc list-inside space-y-2 text-neutral-700 dark:text-neutral-300 leading-relaxed mb-3">
+                <ul className="list-disc list-inside space-y-2 text-neutral-700 leading-relaxed mb-3">
                   <li>Declared value per artwork</li>
                   <li>Condition report at install (2–4 photos + confirmation)</li>
                   <li>Venue wallspace safety checklist completion</li>
@@ -281,31 +281,31 @@ export function ArtistAgreement({ onNavigate, onAccept, hasAccepted = false }: A
                   <li>7-day waiting period before coverage begins</li>
                 </ul>
 
-                <h3 className="text-base mb-2 mt-4 text-neutral-900 dark:text-neutral-50">Exclusions</h3>
-                <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed mb-2">
+                <h3 className="text-base mb-2 mt-4 text-neutral-900">Exclusions</h3>
+                <p className="text-neutral-700 leading-relaxed mb-2">
                   Protection does not cover:
                 </p>
-                <ul className="list-disc list-inside space-y-2 text-neutral-700 dark:text-neutral-300 leading-relaxed mb-3">
+                <ul className="list-disc list-inside space-y-2 text-neutral-700 leading-relaxed mb-3">
                   <li>Improper mounting/hardware failure caused by the artist</li>
                   <li>Normal wear and tear</li>
                   <li>Damage from risks disclosed and accepted by the artist (e.g., direct sun disclosed)</li>
                   <li>Intentional damage or fraud</li>
                 </ul>
 
-                <h3 className="text-base mb-2 mt-4 text-neutral-900 dark:text-neutral-50">Claim limits</h3>
-                <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed mb-3">
+                <h3 className="text-base mb-2 mt-4 text-neutral-900">Claim limits</h3>
+                <p className="text-neutral-700 leading-relaxed mb-3">
                   Artwalls may limit claims per year by plan tier (e.g., Free/Starter up to 2, Growth up to 3, Pro up to 4).
                 </p>
 
-                <h3 className="text-base mb-2 mt-4 text-neutral-900 dark:text-neutral-50">All Sales Final</h3>
-                <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed">
+                <h3 className="text-base mb-2 mt-4 text-neutral-900">All Sales Final</h3>
+                <p className="text-neutral-700 leading-relaxed">
                   All artwork sales processed through Artwalls are final and non-refundable.
                 </p>
               </section>
 
               <section id="prohibited">
-                <h2 className="text-xl mb-3 text-neutral-900 dark:text-neutral-50">9. Prohibited Content and Conduct</h2>
-                <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed">
+                <h2 className="text-xl mb-3 text-neutral-900">9. Prohibited Content and Conduct</h2>
+                <p className="text-neutral-700 leading-relaxed">
                   You agree not to list or display artwork that includes unlawful content, harassment, hate symbols, 
                   or content that violates applicable laws. Venues may also set content preferences (e.g., family-friendly). 
                   Artwalls may remove listings or suspend accounts for violations.
@@ -313,8 +313,8 @@ export function ArtistAgreement({ onNavigate, onAccept, hasAccepted = false }: A
               </section>
 
               <section id="account">
-                <h2 className="text-xl mb-3 text-neutral-900 dark:text-neutral-50">10. Account Actions and Removal</h2>
-                <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed">
+                <h2 className="text-xl mb-3 text-neutral-900">10. Account Actions and Removal</h2>
+                <p className="text-neutral-700 leading-relaxed">
                   Artwalls may remove your listings or suspend/restrict your account for repeated policy violations, 
                   non-compliance with installation rules, misrepresentation, or harassment. You may remove your artwork 
                   from the program subject to any active placements and reasonable notice to the Venue.
@@ -322,8 +322,8 @@ export function ArtistAgreement({ onNavigate, onAccept, hasAccepted = false }: A
               </section>
 
               <section id="limitation">
-                <h2 className="text-xl mb-3 text-neutral-900 dark:text-neutral-50">11. Limitation of Platform Responsibility</h2>
-                <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed">
+                <h2 className="text-xl mb-3 text-neutral-900">11. Limitation of Platform Responsibility</h2>
+                <p className="text-neutral-700 leading-relaxed">
                   Artwalls provides a marketplace platform and payment coordination. Artwalls is not a gallery and does 
                   not assume custody of artwork by default. Except where prohibited by law, Artwalls is not liable for 
                   indirect damages, lost profits, or consequential losses related to venue display.
@@ -331,8 +331,8 @@ export function ArtistAgreement({ onNavigate, onAccept, hasAccepted = false }: A
               </section>
 
               <section id="contact">
-                <h2 className="text-xl mb-3 text-neutral-900 dark:text-neutral-50">12. Contact and Notices</h2>
-                <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed">
+                <h2 className="text-xl mb-3 text-neutral-900">12. Contact and Notices</h2>
+                <p className="text-neutral-700 leading-relaxed">
                   You agree to maintain an accurate email address and respond to scheduling or incident notifications 
                   within a reasonable time.
                 </p>
@@ -341,9 +341,9 @@ export function ArtistAgreement({ onNavigate, onAccept, hasAccepted = false }: A
           </div>
 
           {/* Accept Agreement Card */}
-          <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 p-6 sm:p-8">
-            <h2 className="text-xl mb-1 text-neutral-900 dark:text-neutral-50">Accept Agreement</h2>
-            <p className="text-sm text-neutral-600 dark:text-neutral-300 mb-6">
+          <div className="bg-white rounded-xl border border-neutral-200 p-6 sm:p-8">
+            <h2 className="text-xl mb-1 text-neutral-900">Accept Agreement</h2>
+            <p className="text-sm text-neutral-600 mb-6">
               You must accept this agreement to use Artwalls artist features.
             </p>
 
@@ -354,29 +354,29 @@ export function ArtistAgreement({ onNavigate, onAccept, hasAccepted = false }: A
                   type="checkbox"
                   checked={agreed}
                   onChange={(e) => setAgreed(e.target.checked)}
-                  className="mt-1 w-5 h-5 rounded border-neutral-300 dark:border-neutral-600 text-blue-600 dark:text-blue-400 focus:ring-2 focus:ring-blue-500"
+                  className="mt-1 w-5 h-5 rounded border-neutral-300 text-blue-600 focus:ring-2 focus:ring-blue-500"
                 />
-                <span className="text-sm text-neutral-700 dark:text-neutral-300">
+                <span className="text-sm text-neutral-700">
                   I have read and agree to the Artwalls Artist Agreement
                 </span>
               </label>
 
               {/* Name Input */}
               <div>
-                <label className="block text-sm text-neutral-700 dark:text-neutral-300 mb-2">Your Full Name</label>
+                <label className="block text-sm text-neutral-700 mb-2">Your Full Name</label>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Enter your full name"
-                  className="w-full px-4 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 rounded-lg border border-neutral-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               {/* Date */}
               <div>
-                <label className="block text-sm text-neutral-700 dark:text-neutral-300 mb-2">Date</label>
-                <div className="px-4 py-2 bg-neutral-100 dark:bg-neutral-800 rounded-lg text-neutral-600 dark:text-neutral-300">
+                <label className="block text-sm text-neutral-700 mb-2">Date</label>
+                <div className="px-4 py-2 bg-neutral-100 rounded-lg text-neutral-600">
                   {today}
                 </div>
               </div>
@@ -391,13 +391,13 @@ export function ArtistAgreement({ onNavigate, onAccept, hasAccepted = false }: A
                   <CheckCircle className="w-5 h-5" />
                   <span>Accept Agreement</span>
                 </button>
-                <button className="flex items-center justify-center gap-2 px-6 py-3 bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:bg-neutral-700 transition-colors">
+                <button className="flex items-center justify-center gap-2 px-6 py-3 bg-neutral-100 text-neutral-700 rounded-lg hover:bg-neutral-200 transition-colors">
                   <Download className="w-5 h-5" />
                   <span>Download PDF</span>
                 </button>
               </div>
 
-              <p className="text-xs text-neutral-500 dark:text-neutral-400 text-center">
+              <p className="text-xs text-neutral-500 text-center">
                 By accepting, you agree to be bound by the terms of this agreement.
               </p>
             </div>
@@ -407,14 +407,14 @@ export function ArtistAgreement({ onNavigate, onAccept, hasAccepted = false }: A
         {/* Desktop TOC Sidebar */}
         <div className="hidden lg:block w-64 flex-shrink-0">
           <div className="sticky top-8">
-            <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 p-5">
-              <h3 className="text-sm text-neutral-500 dark:text-neutral-400 mb-3">On this page</h3>
+            <div className="bg-white rounded-xl border border-neutral-200 p-5">
+              <h3 className="text-sm text-neutral-500 mb-3">On this page</h3>
               <nav className="space-y-2">
                 {sections.map((section) => (
                   <button
                     key={section.id}
                     onClick={() => scrollToSection(section.id)}
-                    className="block w-full text-left text-sm text-neutral-700 dark:text-neutral-300 hover:text-blue-600 dark:text-blue-400 py-1 transition-colors"
+                    className="block w-full text-left text-sm text-neutral-700 hover:text-blue-600 py-1 transition-colors"
                   >
                     {section.title}
                   </button>

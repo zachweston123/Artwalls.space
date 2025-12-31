@@ -34,17 +34,17 @@ export function ActiveDisplaysMeter({
   };
 
   return (
-    <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 p-6">
+    <div className="bg-white rounded-xl border border-neutral-200 p-6">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
           <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-            isOverage ? 'bg-orange-100' : 'bg-blue-100 dark:bg-blue-900'
+            isOverage ? 'bg-orange-100' : 'bg-blue-100'
           }`}>
-            <TrendingUp className={`w-5 h-5 ${isOverage ? 'text-orange-600' : 'text-blue-600 dark:text-blue-400'}`} />
+            <TrendingUp className={`w-5 h-5 ${isOverage ? 'text-orange-600' : 'text-blue-600'}`} />
           </div>
           <div>
-            <h3 className="text-base mb-1 text-neutral-900 dark:text-neutral-50">Active Displays</h3>
-            <p className="text-xs text-neutral-600 dark:text-neutral-300">
+            <h3 className="text-base mb-1 text-neutral-900">Active Displays</h3>
+            <p className="text-xs text-neutral-600">
               {isUnlimited ? 'Unlimited displays' : `${currentDisplays} / ${includedDisplays} included`}
             </p>
           </div>
@@ -53,7 +53,7 @@ export function ActiveDisplaysMeter({
           <div className="text-right">
             <p className="text-2xl">
               {currentDisplays}
-              <span className="text-sm text-neutral-500 dark:text-neutral-400">
+              <span className="text-sm text-neutral-500">
                 /{includedDisplays === 'unlimited' ? '∞' : includedDisplays}
               </span>
             </p>
@@ -63,7 +63,7 @@ export function ActiveDisplaysMeter({
 
       {!isUnlimited && (
         <div className="mb-4">
-          <div className="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-3 overflow-hidden">
+          <div className="w-full bg-neutral-200 rounded-full h-3 overflow-hidden">
             <div
               className={`h-full ${getProgressColor()} transition-all duration-300`}
               style={{ width: `${percentage}%` }}
@@ -93,8 +93,8 @@ export function ActiveDisplaysMeter({
       )}
 
       {isUnlimited && (
-        <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg p-4 mb-4">
-          <p className="text-sm text-green-900 dark:text-green-200">
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+          <p className="text-sm text-green-900">
             ✓ <strong>Unlimited displays</strong> — Display as many artworks as you want with no overage charges.
           </p>
         </div>
@@ -104,7 +104,7 @@ export function ActiveDisplaysMeter({
         {onManage && (
           <button
             onClick={onManage}
-            className="flex-1 px-4 py-2 bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:bg-neutral-700 transition-colors text-sm"
+            className="flex-1 px-4 py-2 bg-neutral-100 text-neutral-700 rounded-lg hover:bg-neutral-200 transition-colors text-sm"
           >
             Manage Displays
           </button>
@@ -120,7 +120,7 @@ export function ActiveDisplaysMeter({
       </div>
 
       {!isUnlimited && percentage > 80 && !isOverage && (
-        <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-3 text-center">
+        <p className="text-xs text-yellow-700 mt-3 text-center">
           ⚠️ You're nearing your display limit. Consider upgrading to avoid overage charges.
         </p>
       )}

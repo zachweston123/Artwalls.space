@@ -39,11 +39,11 @@ export function ArtistProfileView({
   return (
     <div>
       {/* Profile Header */}
-      <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700 mb-6">
+      <div className="bg-white rounded-xl p-6 border border-neutral-200 mb-6">
         <div className="flex flex-col sm:flex-row gap-6">
           {/* Avatar */}
           <div className="flex-shrink-0">
-            <div className="w-32 h-32 rounded-full overflow-hidden bg-neutral-100 dark:bg-neutral-900 border-4 border-neutral-200 dark:border-neutral-700">
+            <div className="w-32 h-32 rounded-full overflow-hidden bg-neutral-100 border-4 border-neutral-200">
               <img
                 src={artist.avatar}
                 alt={artist.name}
@@ -57,7 +57,7 @@ export function ArtistProfileView({
             <div className="flex items-start justify-between mb-3">
               <div>
                 <h1 className="text-3xl mb-2">{artist.name}</h1>
-                <div className="flex items-center gap-2 text-neutral-600 dark:text-neutral-300 mb-2">
+                <div className="flex items-center gap-2 text-neutral-600 mb-2">
                   <MapPin className="w-4 h-4" />
                   <span className="text-sm">{artist.location}</span>
                 </div>
@@ -66,7 +66,7 @@ export function ArtistProfileView({
               {isOwnProfile && (
                 <button
                   onClick={onEdit}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-400 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   <Edit className="w-4 h-4" />
                   Edit Profile
@@ -76,7 +76,7 @@ export function ArtistProfileView({
 
             {/* Status Badge */}
             {artist.openToNew && (
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 dark:bg-green-900/50 text-green-700 dark:text-green-300 rounded-full text-sm mb-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 rounded-full text-sm mb-4">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                 Open to new placements
               </div>
@@ -85,12 +85,12 @@ export function ArtistProfileView({
             {/* Quick Stats */}
             <div className="flex flex-wrap gap-6 text-sm">
               <div>
-                <span className="text-neutral-600 dark:text-neutral-400">Active Displays:</span>
-                <span className="ml-2 text-neutral-900 dark:text-neutral-50">{artist.activeDisplays}</span>
+                <span className="text-neutral-600">Active Displays:</span>
+                <span className="ml-2 text-neutral-900">{artist.activeDisplays}</span>
               </div>
               <div>
-                <span className="text-neutral-600 dark:text-neutral-400">Total Sales:</span>
-                <span className="ml-2 text-neutral-900 dark:text-neutral-50">{artist.totalSales}</span>
+                <span className="text-neutral-600">Total Sales:</span>
+                <span className="ml-2 text-neutral-900">{artist.totalSales}</span>
               </div>
             </div>
           </div>
@@ -98,13 +98,13 @@ export function ArtistProfileView({
       </div>
 
       {/* Bio */}
-      <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700 mb-6">
+      <div className="bg-white rounded-xl p-6 border border-neutral-200 mb-6">
         <h2 className="text-xl mb-3">About</h2>
-        <p className="text-neutral-600 dark:text-neutral-300 leading-relaxed">{artist.bio}</p>
+        <p className="text-neutral-600 leading-relaxed">{artist.bio}</p>
       </div>
 
       {/* Art Types */}
-      <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700 mb-6">
+      <div className="bg-white rounded-xl p-6 border border-neutral-200 mb-6">
         <h2 className="text-xl mb-4">Art Types</h2>
         <div className="flex flex-wrap gap-2">
           {allArtTypes.map((type) => (
@@ -122,7 +122,7 @@ export function ArtistProfileView({
       <div className="mb-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl">Portfolio</h2>
-          <span className="text-sm text-neutral-600 dark:text-neutral-400">
+          <span className="text-sm text-neutral-600">
             {mockArtworks.length} artworks
           </span>
         </div>
@@ -132,9 +132,9 @@ export function ArtistProfileView({
             <button
               key={artwork.id}
               onClick={() => onViewArtwork?.(artwork.id)}
-              className="bg-white dark:bg-neutral-800 rounded-xl overflow-hidden border border-neutral-200 dark:border-neutral-700 hover:shadow-lg transition-all group text-left"
+              className="bg-white rounded-xl overflow-hidden border border-neutral-200 hover:shadow-lg transition-all group text-left"
             >
-              <div className="aspect-square bg-neutral-100 dark:bg-neutral-900 overflow-hidden">
+              <div className="aspect-square bg-neutral-100 overflow-hidden">
                 <img
                   src={artwork.imageUrl}
                   alt={artwork.title}
@@ -142,15 +142,15 @@ export function ArtistProfileView({
                 />
               </div>
               <div className="p-4">
-                <h3 className="mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                <h3 className="mb-1 group-hover:text-blue-600 transition-colors">
                   {artwork.title}
                 </h3>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-neutral-600 dark:text-neutral-300">
+                  <span className="text-sm text-neutral-600">
                     ${artwork.price}
                   </span>
                   {artwork.status === 'active' && (
-                    <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 rounded-full">
+                    <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">
                       On display
                     </span>
                   )}
@@ -161,12 +161,12 @@ export function ArtistProfileView({
         </div>
 
         {mockArtworks.length === 0 && (
-          <div className="text-center py-16 bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700">
-            <div className="w-16 h-16 bg-neutral-100 dark:bg-neutral-800 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="text-center py-16 bg-white rounded-xl border border-neutral-200">
+            <div className="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Eye className="w-8 h-8 text-neutral-400" />
             </div>
             <h3 className="text-xl mb-2">No portfolio pieces yet</h3>
-            <p className="text-neutral-600 dark:text-neutral-300">
+            <p className="text-neutral-600">
               {isOwnProfile ? 'Upload your first artwork to get started' : 'This artist hasn\'t added any work yet'}
             </p>
           </div>
@@ -175,17 +175,17 @@ export function ArtistProfileView({
 
       {/* Actions */}
       {!isOwnProfile && (
-        <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700">
+        <div className="bg-white rounded-xl p-6 border border-neutral-200">
           <div className="flex flex-wrap gap-3">
             {currentUser.role === 'venue' && (
               <button
                 onClick={onInviteToApply}
-                className="flex-1 px-6 py-3 bg-green-600 dark:bg-green-500 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-400 transition-colors"
+                className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
               >
                 Invite to Apply
               </button>
             )}
-            <button className="flex items-center gap-2 px-6 py-3 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-50 transition-colors">
+            <button className="flex items-center gap-2 px-6 py-3 text-neutral-600 hover:text-neutral-900 transition-colors">
               <Flag className="w-4 h-4" />
               <span className="text-sm">Report</span>
             </button>

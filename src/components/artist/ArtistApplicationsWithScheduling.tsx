@@ -48,9 +48,9 @@ export function ArtistApplicationsWithScheduling() {
 
   const getStatusBadge = (status: string) => {
     const styles = {
-      pending: { bg: 'bg-yellow-100 dark:bg-yellow-900 dark:bg-yellow-900', text: 'text-yellow-700 dark:text-yellow-300 dark:text-yellow-300', label: 'Pending' },
-      approved: { bg: 'bg-green-100 dark:bg-green-900 dark:bg-green-900', text: 'text-green-700 dark:text-green-300 dark:text-green-300', label: 'Approved' },
-      rejected: { bg: 'bg-red-100 dark:bg-red-900 dark:bg-red-900', text: 'text-red-700 dark:text-red-300 dark:text-red-300', label: 'Rejected' },
+      pending: { bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'Pending' },
+      approved: { bg: 'bg-green-100', text: 'text-green-700', label: 'Approved' },
+      rejected: { bg: 'bg-red-100', text: 'text-red-700', label: 'Rejected' },
     };
     const style = styles[status as keyof typeof styles];
     return (
@@ -66,8 +66,8 @@ export function ArtistApplicationsWithScheduling() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl mb-2 text-neutral-900 dark:text-neutral-50">My Applications</h1>
-        <p className="text-neutral-600 dark:text-neutral-300">
+        <h1 className="text-3xl mb-2 text-neutral-900">My Applications</h1>
+        <p className="text-neutral-600">
           {pendingCount} pending • {approvedCount} approved
         </p>
       </div>
@@ -76,9 +76,9 @@ export function ArtistApplicationsWithScheduling() {
         {applications.map((application) => (
           <div
             key={application.id}
-            className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-hidden hover:shadow-lg transition-shadow"
+            className="bg-white rounded-xl border border-neutral-200 overflow-hidden hover:shadow-lg transition-shadow"
           >
-            <div className="h-48 bg-neutral-100 dark:bg-neutral-800 overflow-hidden">
+            <div className="h-48 bg-neutral-100 overflow-hidden">
               <img
                 src={application.artworkImage}
                 alt={application.artworkTitle}
@@ -88,13 +88,13 @@ export function ArtistApplicationsWithScheduling() {
             <div className="p-6">
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <h3 className="text-lg mb-1 text-neutral-900 dark:text-neutral-50">{application.artworkTitle}</h3>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-300">{application.venueName}</p>
+                  <h3 className="text-lg mb-1 text-neutral-900">{application.artworkTitle}</h3>
+                  <p className="text-sm text-neutral-600">{application.venueName}</p>
                 </div>
                 {getStatusBadge(application.status)}
               </div>
 
-              <div className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-300 mb-4">
+              <div className="flex items-center gap-2 text-sm text-neutral-600 mb-4">
                 <Calendar className="w-4 h-4" />
                 Applied {new Date(application.appliedDate).toLocaleDateString('en-US', {
                   month: 'short',
@@ -108,24 +108,24 @@ export function ArtistApplicationsWithScheduling() {
                 <div>
                   {/* Display Duration Info */}
                   {(application as any).approvedDuration && (
-                    <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/30 rounded-lg border border-green-200 dark:border-green-800">
+                    <div className="mb-4 p-4 bg-green-50 rounded-lg border border-green-200">
                       <div className="flex flex-wrap items-center gap-3 mb-2">
-                        <span className="text-sm text-green-900 dark:text-green-200">Display term:</span>
+                        <span className="text-sm text-green-900">Display term:</span>
                         <DurationBadge duration={(application as any).approvedDuration} size="md" />
                       </div>
-                      <p className="text-xs text-green-700 dark:text-green-300">
+                      <p className="text-xs text-green-700">
                         You'll rotate or pick up the artwork during the venue's weekly window after the end date.
                       </p>
                     </div>
                   )}
 
                   {!scheduledInstalls[application.id] ? (
-                    <div className="bg-green-50 dark:bg-green-900/30 rounded-lg p-4 mb-4">
+                    <div className="bg-green-50 rounded-lg p-4 mb-4">
                       <div className="flex items-start gap-3 mb-3">
-                        <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+                        <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
                         <div>
-                          <h4 className="text-sm text-green-900 dark:text-green-200 mb-1">Application Approved!</h4>
-                          <p className="text-xs text-green-700 dark:text-green-300">
+                          <h4 className="text-sm text-green-900 mb-1">Application Approved!</h4>
+                          <p className="text-xs text-green-700">
                             Install window: {mockVenueSchedule.dayOfWeek}s, {formatTime(mockVenueSchedule.startTime)} – {formatTime(mockVenueSchedule.endTime)}
                           </p>
                         </div>
@@ -138,19 +138,19 @@ export function ArtistApplicationsWithScheduling() {
                       </button>
                     </div>
                   ) : (
-                    <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-4 mb-4">
+                    <div className="bg-blue-50 rounded-lg p-4 mb-4">
                       <div className="flex items-start gap-3 mb-3">
-                        <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                        <Clock className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                         <div>
-                          <h4 className="text-sm text-blue-900 dark:text-blue-200 mb-1">Install Scheduled</h4>
-                          <p className="text-blue-700 dark:text-blue-300">
+                          <h4 className="text-sm text-blue-900 mb-1">Install Scheduled</h4>
+                          <p className="text-blue-700">
                             <strong>{scheduledInstalls[application.id]}</strong>
                           </p>
                         </div>
                       </div>
                       <button
                         onClick={() => handleScheduleInstall(application)}
-                        className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:text-blue-300 underline"
+                        className="text-sm text-blue-600 hover:text-blue-700 underline"
                       >
                         Reschedule
                       </button>
@@ -164,7 +164,7 @@ export function ArtistApplicationsWithScheduling() {
 
               {/* Pending */}
               {application.status === 'pending' && (
-                <div className="bg-yellow-50 dark:bg-yellow-900/30 rounded-lg p-4">
+                <div className="bg-yellow-50 rounded-lg p-4">
                   <div className="flex items-center gap-2 text-sm text-yellow-800">
                     <Clock className="w-4 h-4" />
                     <span>Awaiting venue review</span>
@@ -174,7 +174,7 @@ export function ArtistApplicationsWithScheduling() {
 
               {/* Rejected */}
               {application.status === 'rejected' && (
-                <div className="bg-red-50 dark:bg-red-900/30 rounded-lg p-4">
+                <div className="bg-red-50 rounded-lg p-4">
                   <div className="flex items-center gap-2 text-sm text-red-800">
                     <XCircle className="w-4 h-4" />
                     <span>Application not approved</span>
@@ -188,11 +188,11 @@ export function ArtistApplicationsWithScheduling() {
 
       {applications.length === 0 && (
         <div className="text-center py-16">
-          <div className="w-16 h-16 bg-neutral-100 dark:bg-neutral-800 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Calendar className="w-8 h-8 text-neutral-400 dark:text-neutral-500" />
+          <div className="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Calendar className="w-8 h-8 text-neutral-400" />
           </div>
-          <h3 className="text-xl mb-2 text-neutral-900 dark:text-neutral-50">No applications yet</h3>
-          <p className="text-neutral-600 dark:text-neutral-300 mb-6">Apply to display your artwork at local venues</p>
+          <h3 className="text-xl mb-2 text-neutral-900">No applications yet</h3>
+          <p className="text-neutral-600 mb-6">Apply to display your artwork at local venues</p>
           <button className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
             Browse Venues
           </button>

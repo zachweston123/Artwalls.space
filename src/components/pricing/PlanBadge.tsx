@@ -12,22 +12,22 @@ export function PlanBadge({ plan, size = 'md', showUpgrade = false, onUpgrade }:
     free: {
       label: 'Free',
       icon: Sparkles,
-      bg: 'bg-neutral-100 dark:bg-neutral-800',
-      text: 'text-neutral-700 dark:text-neutral-300',
-      border: 'border-neutral-200 dark:border-neutral-700',
+      bg: 'bg-neutral-100',
+      text: 'text-neutral-700',
+      border: 'border-neutral-200',
     },
     starter: {
       label: 'Starter',
       icon: TrendingUp,
-      bg: 'bg-blue-100 dark:bg-blue-900',
-      text: 'text-blue-700 dark:text-blue-300',
+      bg: 'bg-blue-100',
+      text: 'text-blue-700',
       border: 'border-blue-200',
     },
     growth: {
       label: 'Growth',
       icon: Zap,
-      bg: 'bg-blue-100 dark:bg-blue-900',
-      text: 'text-blue-700 dark:text-blue-300',
+      bg: 'bg-blue-100',
+      text: 'text-blue-700',
       border: 'border-blue-200',
     },
     pro: {
@@ -65,7 +65,7 @@ export function PlanBadge({ plan, size = 'md', showUpgrade = false, onUpgrade }:
       {showUpgrade && plan !== 'pro' && (
         <button
           onClick={onUpgrade}
-          className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:text-blue-300 underline"
+          className="text-xs text-blue-600 hover:text-blue-700 underline"
         >
           Upgrade
         </button>

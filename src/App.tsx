@@ -77,15 +77,15 @@ export default function App() {
       <div>
         <Login onLogin={handleLogin} />
         {/* Demo link to simulate QR code scan */}
-        <div className="fixed bottom-6 right-6 bg-white dark:bg-white rounded-lg shadow-lg p-4 border border-neutral-200 dark:border-neutral-200">
-          <p className="text-sm text-neutral-600 dark:text-neutral-600 mb-2">Demo QR Purchase Page:</p>
+        <div className="fixed bottom-6 right-6 bg-white rounded-lg shadow-lg p-4 border border-neutral-200">
+          <p className="text-sm text-neutral-600 mb-2">Demo QR Purchase Page:</p>
           <button
             onClick={() => setCurrentPage('purchase-1')}
             className="text-sm text-blue-600 hover:text-blue-700 underline mb-2 block"
           >
             View Customer Purchase Page
           </button>
-          <p className="text-sm text-neutral-600 dark:text-neutral-600 mb-2 pt-2 border-t">Admin Demo:</p>
+          <p className="text-sm text-neutral-600 mb-2 pt-2 border-t">Admin Demo:</p>
           <button
             onClick={() => handleLogin({ id: 'admin-1', name: 'Admin User', email: 'admin@artwalls.com', role: 'admin' })}
             className="text-sm text-neutral-900 hover:text-neutral-700 underline"
@@ -100,7 +100,7 @@ export default function App() {
   // Admin Console Layout (different from main app)
   if (currentUser.role === 'admin') {
     return (
-      <div className="flex min-h-screen bg-neutral-50 dark:bg-neutral-900">
+      <div className="flex min-h-screen bg-neutral-50">
         <AdminSidebar currentPage={currentPage} onNavigate={handleNavigate} />
         <div className="flex-1 flex flex-col">
           <main className="flex-1 p-8 overflow-y-auto">
@@ -125,7 +125,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900">
+    <div className="min-h-screen bg-neutral-50">
       <Navigation 
         user={currentUser} 
         onNavigate={handleNavigate}

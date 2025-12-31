@@ -58,9 +58,9 @@ export function VenueApplications() {
 
   const getStatusBadge = (status: string) => {
     const styles = {
-      pending: { bg: 'bg-yellow-100 dark:bg-yellow-900', text: 'text-yellow-700 dark:text-yellow-300', icon: Clock },
-      approved: { bg: 'bg-green-100 dark:bg-green-900', text: 'text-green-700 dark:text-green-300', icon: Check },
-      rejected: { bg: 'bg-red-100 dark:bg-red-900', text: 'text-red-700 dark:text-red-300', icon: X },
+      pending: { bg: 'bg-yellow-100', text: 'text-yellow-700', icon: Clock },
+      approved: { bg: 'bg-green-100', text: 'text-green-700', icon: Check },
+      rejected: { bg: 'bg-red-100', text: 'text-red-700', icon: X },
     };
     const style = styles[status as keyof typeof styles];
     const Icon = style.icon;
@@ -78,8 +78,8 @@ export function VenueApplications() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl mb-2 text-neutral-900 dark:text-neutral-50">Artist Applications</h1>
-          <p className="text-neutral-600 dark:text-neutral-300">
+          <h1 className="text-3xl mb-2 text-neutral-900">Artist Applications</h1>
+          <p className="text-neutral-600">
             {pendingCount} pending application{pendingCount !== 1 ? 's' : ''} to review
           </p>
         </div>
@@ -89,7 +89,7 @@ export function VenueApplications() {
             className={`px-4 py-2 rounded-lg transition-colors ${
               filter === 'all'
                 ? 'bg-green-600 text-white'
-                : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:bg-neutral-700'
+                : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
             }`}
           >
             All
@@ -99,7 +99,7 @@ export function VenueApplications() {
             className={`px-4 py-2 rounded-lg transition-colors ${
               filter === 'pending'
                 ? 'bg-green-600 text-white'
-                : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:bg-neutral-700'
+                : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
             }`}
           >
             Pending
@@ -109,7 +109,7 @@ export function VenueApplications() {
             className={`px-4 py-2 rounded-lg transition-colors ${
               filter === 'approved'
                 ? 'bg-green-600 text-white'
-                : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:bg-neutral-700'
+                : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
             }`}
           >
             Approved
@@ -119,7 +119,7 @@ export function VenueApplications() {
             className={`px-4 py-2 rounded-lg transition-colors ${
               filter === 'rejected'
                 ? 'bg-green-600 text-white'
-                : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:bg-neutral-700'
+                : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
             }`}
           >
             Rejected
@@ -131,10 +131,10 @@ export function VenueApplications() {
         {filteredApplications.map((application) => (
           <div
             key={application.id}
-            className="bg-white dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700 hover:shadow-md transition-shadow"
+            className="bg-white rounded-xl p-6 border border-neutral-200 hover:shadow-md transition-shadow"
           >
             <div className="flex gap-6">
-              <div className="w-48 h-48 bg-neutral-100 dark:bg-neutral-800 rounded-lg overflow-hidden flex-shrink-0">
+              <div className="w-48 h-48 bg-neutral-100 rounded-lg overflow-hidden flex-shrink-0">
                 <img
                   src={application.artworkImage}
                   alt={application.artworkTitle}
@@ -145,15 +145,15 @@ export function VenueApplications() {
               <div className="flex-1">
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <h3 className="text-xl mb-1 text-neutral-900 dark:text-neutral-50">{application.artworkTitle}</h3>
-                    <p className="text-neutral-600 dark:text-neutral-300">by {application.artistName}</p>
+                    <h3 className="text-xl mb-1 text-neutral-900">{application.artworkTitle}</h3>
+                    <p className="text-neutral-600">by {application.artistName}</p>
                   </div>
                   {getStatusBadge(application.status)}
                 </div>
 
                 <div className="space-y-2 mb-6">
-                  <div className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-300">
-                    <span className="text-neutral-500 dark:text-neutral-400">Applied:</span>
+                  <div className="flex items-center gap-2 text-sm text-neutral-600">
+                    <span className="text-neutral-500">Applied:</span>
                     {new Date(application.appliedDate).toLocaleDateString('en-US', {
                       month: 'long',
                       day: 'numeric',
@@ -173,7 +173,7 @@ export function VenueApplications() {
                     </button>
                     <button
                       onClick={() => handleReject(application.id)}
-                      className="flex items-center gap-2 px-6 py-2 bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:bg-neutral-700 transition-colors"
+                      className="flex items-center gap-2 px-6 py-2 bg-neutral-100 text-neutral-700 rounded-lg hover:bg-neutral-200 transition-colors"
                     >
                       <X className="w-4 h-4" />
                       Decline
@@ -182,12 +182,12 @@ export function VenueApplications() {
                 )}
 
                 {application.status === 'approved' && (
-                  <div className="p-4 bg-green-50 dark:bg-green-900/30 rounded-lg">
-                    <p className="text-sm text-green-900 dark:text-green-200 mb-2">
+                  <div className="p-4 bg-green-50 rounded-lg">
+                    <p className="text-sm text-green-900 mb-2">
                       Application approved. Artist will schedule installation during your weekly window.
                     </p>
                     {(application as any).approvedDuration && (
-                      <p className="text-xs text-green-700 dark:text-green-300">
+                      <p className="text-xs text-green-700">
                         Display term: <strong>{(application as any).approvedDuration} days</strong>
                       </p>
                     )}
@@ -195,8 +195,8 @@ export function VenueApplications() {
                 )}
 
                 {application.status === 'rejected' && (
-                  <div className="p-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg">
-                    <p className="text-sm text-neutral-600 dark:text-neutral-300">This application was declined.</p>
+                  <div className="p-4 bg-neutral-50 rounded-lg">
+                    <p className="text-sm text-neutral-600">This application was declined.</p>
                   </div>
                 )}
               </div>
@@ -207,11 +207,11 @@ export function VenueApplications() {
 
       {filteredApplications.length === 0 && (
         <div className="text-center py-16">
-          <div className="w-16 h-16 bg-neutral-100 dark:bg-neutral-800 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Clock className="w-8 h-8 text-neutral-400 dark:text-neutral-500" />
+          <div className="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Clock className="w-8 h-8 text-neutral-400" />
           </div>
-          <h3 className="text-xl mb-2 text-neutral-900 dark:text-neutral-50">No applications</h3>
-          <p className="text-neutral-600 dark:text-neutral-300">
+          <h3 className="text-xl mb-2 text-neutral-900">No applications</h3>
+          <p className="text-neutral-600">
             {filter === 'all'
               ? "You don't have any applications yet"
               : `No ${filter} applications`}
@@ -222,18 +222,18 @@ export function VenueApplications() {
       {/* Approval Modal */}
       {showApprovalModal && selectedApplication && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-neutral-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 p-6">
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-neutral-200 p-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <h2 className="text-2xl mb-1 text-neutral-900 dark:text-neutral-50">Approve Application</h2>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-300">
+                  <h2 className="text-2xl mb-1 text-neutral-900">Approve Application</h2>
+                  <p className="text-sm text-neutral-600">
                     {selectedApplication.artworkTitle} by {selectedApplication.artistName}
                   </p>
                 </div>
                 <button
                   onClick={() => setShowApprovalModal(false)}
-                  className="p-2 hover:bg-neutral-100 dark:bg-neutral-800 rounded-lg transition-colors"
+                  className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -242,8 +242,8 @@ export function VenueApplications() {
 
             <div className="p-6 space-y-6">
               {/* Artwork Preview */}
-              <div className="flex gap-4 p-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg">
-                <div className="w-24 h-24 bg-neutral-100 dark:bg-neutral-800 rounded-lg overflow-hidden flex-shrink-0">
+              <div className="flex gap-4 p-4 bg-neutral-50 rounded-lg">
+                <div className="w-24 h-24 bg-neutral-100 rounded-lg overflow-hidden flex-shrink-0">
                   <img
                     src={selectedApplication.artworkImage}
                     alt={selectedApplication.artworkTitle}
@@ -251,9 +251,9 @@ export function VenueApplications() {
                   />
                 </div>
                 <div>
-                  <h3 className="text-base mb-1 text-neutral-900 dark:text-neutral-50">{selectedApplication.artworkTitle}</h3>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-300 mb-2">by {selectedApplication.artistName}</p>
-                  <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                  <h3 className="text-base mb-1 text-neutral-900">{selectedApplication.artworkTitle}</h3>
+                  <p className="text-sm text-neutral-600 mb-2">by {selectedApplication.artistName}</p>
+                  <p className="text-xs text-neutral-500">
                     Applied: {new Date(selectedApplication.appliedDate).toLocaleDateString('en-US', {
                       month: 'short',
                       day: 'numeric',
@@ -267,12 +267,12 @@ export function VenueApplications() {
               <div>
                 <label className="block text-sm mb-2">
                   <MapPin className="w-4 h-4 inline mr-1" />
-                  Wall Space <span className="text-red-600 dark:text-red-400">*</span>
+                  Wall Space <span className="text-red-600">*</span>
                 </label>
                 <select
                   value={approvalData.wallspace}
                   onChange={(e) => setApprovalData({ ...approvalData, wallspace: e.target.value })}
-                  className="w-full px-4 py-2 border border-neutral-200 dark:border-neutral-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+                  className="w-full px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
                 >
                   <option value="Main Wall">Main Wall</option>
                   <option value="Back Wall">Back Wall</option>
@@ -291,9 +291,9 @@ export function VenueApplications() {
                   type="date"
                   value={approvalData.startDate.toISOString().split('T')[0]}
                   onChange={(e) => setApprovalData({ ...approvalData, startDate: new Date(e.target.value) })}
-                  className="w-full px-4 py-2 border border-neutral-200 dark:border-neutral-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+                  className="w-full px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
                 />
-                <p className="text-xs text-neutral-600 dark:text-neutral-300 mt-1">
+                <p className="text-xs text-neutral-600 mt-1">
                   Artist will schedule installation during your next install window after this date
                 </p>
               </div>
@@ -309,10 +309,10 @@ export function VenueApplications() {
             </div>
 
             {/* Footer Actions */}
-            <div className="sticky bottom-0 bg-white dark:bg-neutral-800 border-t border-neutral-200 dark:border-neutral-700 p-6 flex gap-3">
+            <div className="sticky bottom-0 bg-white border-t border-neutral-200 p-6 flex gap-3">
               <button
                 onClick={() => setShowApprovalModal(false)}
-                className="flex-1 px-6 py-3 bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:bg-neutral-700 transition-colors"
+                className="flex-1 px-6 py-3 bg-neutral-100 text-neutral-700 rounded-lg hover:bg-neutral-200 transition-colors"
               >
                 Cancel
               </button>
