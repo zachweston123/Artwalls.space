@@ -56,7 +56,12 @@ export default function App() {
   // Listen for keyboard shortcut to access admin login (Ctrl+Shift+A)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.shiftKey && e.key === 'A') {
+      // Check for Ctrl+Shift+A (Windows/Linux) or Cmd+Shift+A (Mac)
+      const isCtrlOrCmd = e.ctrlKey || e.metaKey;
+      const isShift = e.shiftKey;
+      const isKeyA = e.key === 'A' || e.key === 'a';
+      
+      if (isCtrlOrCmd && isShift && isKeyA) {
         e.preventDefault();
         if (!currentUser) {
           setShowAdminPasswordPrompt(true);
