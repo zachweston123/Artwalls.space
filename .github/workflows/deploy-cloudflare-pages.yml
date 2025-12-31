@@ -1,0 +1,72 @@
+name: Deploy to Cloudflare Pages
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - name: Install dependencies
+        run: npm ci
+      - name: Build
+        run: npm run build
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: ${{ secrets.CLOUDFLARE_PROJECT_NAME }}
+          directory: ./dist
+````markdown name=CLOUDFLARE_PAGES.md
+# Deploying Artwalls Web to Cloudflare Pages
+
+This repo's frontend is a Vite app that builds to `dist` and can be hosted on Cloudflare Pages.
+
+Quick setup (recommended):
+
+1. Cloudflare Pages project settings
+   - Build command: `npm ci && npm run build` (or `npm run build` if you prefer)
+   - Build output directory: `dist`
+   - Branch: `main` (or the branch you use)
+
+2. Environment variables for the Pages project
+   - VITE_API_BASE_URL = https://api.artwalls.space
+
+   Add any other `VITE_*` variables your app expects in the Pages project UI under "Variables & Secrets".
+
+3. Deploy via GitHub Actions (optional, provided in this repo)
+   - This repo includes `.github/workflows/deploy-cloudflare-pages.yml` which builds and deploys on push to `main`.
+   - You must set these GitHub repository secrets:
+     - `CLOUDFLARE_API_TOKEN` — a scoped API token with permissions to deploy Pages sites.
+     - `CLOUDFLARE_ACCOUNT_ID` — your Cloudflare account ID.
+     - `CLOUDFLARE_PROJECT_NAME` — the Pages project name (the slug shown in the Pages dashboard).
+
+   Creating a token: In the Cloudflare dashboard go to "My Profile" → "API Tokens" → "Create Token". Use an appropriate Pages/Account scope that allows deployments (follow Cloudflare docs for precise permissions).
+
+4. Notes
+   - The frontend build script is already in `package.json` (`npm run build` uses Vite). It outputs to `dist` by default.
+   - If you prefer to connect Pages directly to the GitHub repo (recommended for simple static sites), you can skip the GitHub Action and configure the build command & output directory in the Pages UI.
+   - For preview deployments you can add preview environment variables in the Pages dashboard.
+
+If you want, I can also:
+- Add a short README section noting the Node API remains in `server/` and suggesting you keep it on Render (or elsewhere) for now.
+- Produce a single patch/commit message you can run locally to add these files.
+
+Local verification
+- Run locally to verify the build:
+  - npm ci
+  - npm run build
+  - confirm `dist` contains the built site
+
+What I need from you (pick one)
+- I can create a commit/PR and push these files for you if you grant me repository write access; or
+- You can add the two files above and commit with the message: "Add Cloudflare Pages deployment workflow and docs"
+
+If you want, I can also produce a single patch file (git format-patch) or exact git commands to run locally to create the commit — tell me which you prefer.
