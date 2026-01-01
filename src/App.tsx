@@ -96,18 +96,14 @@ export default function App() {
   const handleAdminPasswordVerified = () => {
     setShowAdminPasswordPrompt(false);
     setAdminPasswordVerified(true);
-    
-    // If there was a pending admin access, log in the admin user
-    if (pendingAdminAccess) {
-      setCurrentUser({
-        id: 'admin-1',
-        name: 'Admin User',
-        email: 'admin@artwalls.com',
-        role: 'admin'
-      });
-      setCurrentPage('admin-dashboard');
-      setPendingAdminAccess(false);
-    }
+    setCurrentUser({
+      id: 'admin-1',
+      name: 'Admin User',
+      email: 'admin@artwalls.com',
+      role: 'admin'
+    });
+    setCurrentPage('admin-dashboard');
+    setPendingAdminAccess(false);
   };
 
   const handleCancelAdminPassword = () => {
