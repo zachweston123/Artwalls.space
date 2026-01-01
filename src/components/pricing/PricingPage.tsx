@@ -222,71 +222,161 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
         </p>
       </div>
 
-      {/* Break-Even Calculator */}
+      {/* Earnings Calculator */}
       <div className="max-w-4xl mx-auto mb-12">
-        <div className="bg-blue-600 dark:bg-blue-500 rounded-xl p-8 text-white">
-          <h2 className="text-2xl mb-2 text-white">Which plan pays for itself?</h2>
+        <div className="bg-gradient-to-br from-blue-600 to-green-600 dark:from-blue-700 dark:to-green-700 rounded-xl p-8 text-white">
+          <h2 className="text-2xl mb-2 text-white flex items-center gap-3">
+            <Calculator className="w-7 h-7" />
+            Earnings Calculator
+          </h2>
           <p className="text-sm text-white/90 mb-6">
-            Use this calculator to see which plan saves you the most money based on your monthly sales.
+            See how much profit you'll keep from a sale with each plan
           </p>
           
           <div className="bg-white dark:bg-neutral-900 backdrop-blur rounded-lg p-6 mb-6">
-            <label className="block text-sm text-neutral-900 dark:text-neutral-50 mb-3">Your monthly sales</label>
+            <label className="block text-sm text-neutral-900 dark:text-neutral-50 font-semibold mb-3">Sale Value ($)</label>
             <div className="flex items-center gap-4 mb-4">
               <input
                 type="range"
                 min="0"
                 max="2000"
-                step="50"
-                value={monthlySales}
-                onChange={(e) => setMonthlySales(Number(e.target.value))}
-                className="flex-1 h-2 bg-neutral-300 dark:bg-neutral-600 rounded-lg appearance-none cursor-pointer"
+                step="10"
+                value={saleValue}
+                onChange={(e) => setSaleValue(Number(e.target.value))}
+                className="flex-1 h-2 bg-neutral-300 dark:bg-neutral-600 rounded-lg appearance-none cursor-pointer accent-green-500"
               />
               <input
                 type="number"
-                value={monthlySales}
-                onChange={(e) => setMonthlySales(Number(e.target.value))}
-                className="w-24 px-3 py-2 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-50 text-center"
+                value={saleValue}
+                onChange={(e) => setSaleValue(Number(e.target.value))}
+                className="w-24 px-3 py-2 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-50 text-center font-bold"
               />
             </div>
-            <p className="text-2xl text-neutral-900 dark:text-neutral-50 mb-1">${monthlySales.toLocaleString()}/month</p>
+            <p className="text-xs text-neutral-600 dark:text-neutral-400">Adjust the slider to see how your profit changes across plans</p>
           </div>
+
+          <p className="text-sm text-white/90 mb-3 font-semibold">Click a plan to see your profit breakdown:</p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white dark:bg-neutral-900 backdrop-blur rounded-lg p-4">
-              <p className="text-xs text-neutral-700 dark:text-neutral-400 mb-1">Free</p>
-              <p className="text-xl text-neutral-900 dark:text-neutral-50 mb-1">${freeFee.toFixed(0)}</p>
-              <p className="text-xs text-neutral-600 dark:text-neutral-400">total cost/mo</p>
-            </div>
-            <div className="bg-white dark:bg-neutral-900 backdrop-blur rounded-lg p-4">
-              <p className="text-xs text-neutral-700 dark:text-neutral-400 mb-1">Starter</p>
-              <p className="text-xl text-neutral-900 dark:text-neutral-50 mb-1">${starterFee.toFixed(0)}</p>
-              <p className="text-xs text-neutral-600 dark:text-neutral-400">total cost/mo</p>
-            </div>
-            <div className="bg-white dark:bg-neutral-900 backdrop-blur rounded-lg p-4">
-              <p className="text-xs text-neutral-700 dark:text-neutral-400 mb-1">Growth</p>
-              <p className="text-xl text-neutral-900 dark:text-neutral-50 mb-1">${growthFee.toFixed(0)}</p>
-              <p className="text-xs text-neutral-600 dark:text-neutral-400">total cost/mo</p>
-            </div>
-            <div className="bg-white dark:bg-neutral-900 backdrop-blur rounded-lg p-4">
-              <p className="text-xs text-neutral-700 dark:text-neutral-400 mb-1">Pro</p>
-              <p className="text-xl text-neutral-900 dark:text-neutral-50 mb-1">${proFee.toFixed(0)}</p>
-              <p className="text-xs text-neutral-600 dark:text-neutral-400">total cost/mo</p>
-            </div>
+            {[
+              { id: 'free', name: 'Free', fee: 15, price: 0, profit: freeProfit },
+              { id: 'starter', name: 'Starter', fee: 10, price: 9, profit: starterProfit },
+              { id: 'growth', name: 'Growth', fee: 8, price: 19, profit: growthProfit },
+              { id: 'pro', name: 'Pro', fee: 6, price: 39, profit: proProfit }
+            ].map((plan) => {
+              const isSelected = selectedPlanId === plan.id || (!selectedPlanId && plan.id === 'starter');
+              return (
+                <button
+                  key={plan.id}
+                  onClick={() => setSelectedPlanId(plan.id)}
+                  className={`p-4 rounded-lg border-2 transition-all text-left ${
+                    isSelected
+                      ? 'border-white bg-white/20 ring-2 ring-white shadow-lg'
+                      : 'border-white/30 hover:border-white/60 bg-white/5'
+                  }`}
+                >
+                  <div className="font-semibold text-white mb-2">{plan.name}</div>
+                  <div className="text-3xl font-bold text-white">
+                    ${plan.profit.profit.toFixed(0)}
+                  </div>
+                  <div className="text-xs text-white/80 mt-1">
+                    you keep
+                  </div>
+                </button>
+              );
+            })}
           </div>
 
-          <div className="bg-white dark:bg-neutral-900 backdrop-blur rounded-lg p-4 mb-4">
-            <p className="text-sm text-neutral-900 dark:text-neutral-50 mb-2">
-              💡 <strong>Recommended plan:</strong> {getRecommendedPlan()}
-            </p>
-            <p className="text-xs text-neutral-700 dark:text-neutral-400">
-              Approximate break-evens: Starter ≈ $180/mo sales • Growth ≈ $272/mo • Pro ≈ $433/mo
-            </p>
-          </div>
+          {selectedPlanId && (
+            <div className="bg-white dark:bg-neutral-900 backdrop-blur rounded-lg p-6">
+              <h3 className="font-bold text-neutral-900 dark:text-white mb-4 text-lg">
+                {selectedPlanId === 'free' && 'Free Plan'}
+                {selectedPlanId === 'starter' && 'Starter Plan'}
+                {selectedPlanId === 'growth' && 'Growth Plan'}
+                {selectedPlanId === 'pro' && 'Pro Plan'}
+                {' '}Profit Breakdown
+              </h3>
+              
+              <div className="space-y-3">
+                <div className="flex justify-between items-center pb-3 border-b border-neutral-200 dark:border-neutral-700">
+                  <span className="text-neutral-700 dark:text-neutral-400">Sale Value</span>
+                  <span className="font-semibold text-neutral-900 dark:text-white">${saleValue.toFixed(0)}</span>
+                </div>
 
-          <p className="text-xs text-white/60">
-            * Estimates exclude payment processing fees. Based on platform fee differences vs Free plan.
-          </p>
+                {selectedPlanId === 'free' && (
+                  <>
+                    <div className="flex justify-between items-center pb-3 border-b border-neutral-200 dark:border-neutral-700">
+                      <span className="text-neutral-700 dark:text-neutral-400">Platform Fee (15%)</span>
+                      <span className="font-semibold text-red-600 dark:text-red-400">-${freeProfit.platformFeeAmount.toFixed(0)}</span>
+                    </div>
+                    <div className="flex justify-between items-center pb-3 border-b border-neutral-200 dark:border-neutral-700">
+                      <span className="text-neutral-700 dark:text-neutral-400">Monthly Subscription</span>
+                      <span className="font-semibold text-neutral-900 dark:text-white">$0</span>
+                    </div>
+                    <div className="flex justify-between items-center pt-3 bg-green-100 dark:bg-green-900/30 p-4 rounded-lg">
+                      <span className="font-bold text-neutral-900 dark:text-white">Your Profit</span>
+                      <span className="font-bold text-green-700 dark:text-green-400 text-xl">${freeProfit.profit.toFixed(0)}</span>
+                    </div>
+                  </>
+                )}
+
+                {selectedPlanId === 'starter' && (
+                  <>
+                    <div className="flex justify-between items-center pb-3 border-b border-neutral-200 dark:border-neutral-700">
+                      <span className="text-neutral-700 dark:text-neutral-400">Platform Fee (10%)</span>
+                      <span className="font-semibold text-red-600 dark:text-red-400">-${starterProfit.platformFeeAmount.toFixed(0)}</span>
+                    </div>
+                    <div className="flex justify-between items-center pb-3 border-b border-neutral-200 dark:border-neutral-700">
+                      <span className="text-neutral-700 dark:text-neutral-400">Monthly Subscription</span>
+                      <span className="font-semibold text-red-600 dark:text-red-400">-${starterProfit.subscriptionPrice.toFixed(0)}</span>
+                    </div>
+                    <div className="flex justify-between items-center pt-3 bg-green-100 dark:bg-green-900/30 p-4 rounded-lg">
+                      <span className="font-bold text-neutral-900 dark:text-white">Your Profit</span>
+                      <span className="font-bold text-green-700 dark:text-green-400 text-xl">${starterProfit.profit.toFixed(0)}</span>
+                    </div>
+                  </>
+                )}
+
+                {selectedPlanId === 'growth' && (
+                  <>
+                    <div className="flex justify-between items-center pb-3 border-b border-neutral-200 dark:border-neutral-700">
+                      <span className="text-neutral-700 dark:text-neutral-400">Platform Fee (8%)</span>
+                      <span className="font-semibold text-red-600 dark:text-red-400">-${growthProfit.platformFeeAmount.toFixed(0)}</span>
+                    </div>
+                    <div className="flex justify-between items-center pb-3 border-b border-neutral-200 dark:border-neutral-700">
+                      <span className="text-neutral-700 dark:text-neutral-400">Monthly Subscription</span>
+                      <span className="font-semibold text-red-600 dark:text-red-400">-${growthProfit.subscriptionPrice.toFixed(0)}</span>
+                    </div>
+                    <div className="flex justify-between items-center pt-3 bg-green-100 dark:bg-green-900/30 p-4 rounded-lg">
+                      <span className="font-bold text-neutral-900 dark:text-white">Your Profit</span>
+                      <span className="font-bold text-green-700 dark:text-green-400 text-xl">${growthProfit.profit.toFixed(0)}</span>
+                    </div>
+                  </>
+                )}
+
+                {selectedPlanId === 'pro' && (
+                  <>
+                    <div className="flex justify-between items-center pb-3 border-b border-neutral-200 dark:border-neutral-700">
+                      <span className="text-neutral-700 dark:text-neutral-400">Platform Fee (6%)</span>
+                      <span className="font-semibold text-red-600 dark:text-red-400">-${proProfit.platformFeeAmount.toFixed(0)}</span>
+                    </div>
+                    <div className="flex justify-between items-center pb-3 border-b border-neutral-200 dark:border-neutral-700">
+                      <span className="text-neutral-700 dark:text-neutral-400">Monthly Subscription</span>
+                      <span className="font-semibold text-red-600 dark:text-red-400">-${proProfit.subscriptionPrice.toFixed(0)}</span>
+                    </div>
+                    <div className="flex justify-between items-center pt-3 bg-green-100 dark:bg-green-900/30 p-4 rounded-lg">
+                      <span className="font-bold text-neutral-900 dark:text-white">Your Profit</span>
+                      <span className="font-bold text-green-700 dark:text-green-400 text-xl">${proProfit.profit.toFixed(0)}</span>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-4">
+                💡 <span className="font-semibold">Pro tip:</span> Higher tiers pay for themselves through lower fees as you grow!
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
