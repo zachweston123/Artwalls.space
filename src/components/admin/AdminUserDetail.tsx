@@ -333,7 +333,7 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
               <tbody className="divide-y divide-neutral-100">
                 {mockOrders.map((order) => (
                   <tr key={order.id} className="hover:bg-neutral-50">
-                    <td className="px-6 py-4 text-sm text-neutral-900 dark:text-neutral-50 font-mono">{order.id}</td>
+                    <td className="px-6 py-4 text-sm text-neutral-900 dark:text-neutral-50">{order.id}</td>
                     <td className="px-6 py-4 text-sm text-neutral-600">{order.artwork}</td>
                     <td className="px-6 py-4 text-sm text-neutral-900 dark:text-neutral-50">${order.amount}</td>
                     <td className="px-6 py-4">
@@ -341,7 +341,7 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
                         {order.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-neutral-600 font-mono">{order.stripeSessionId}</td>
+                    <td className="px-6 py-4 text-sm text-neutral-600">{order.stripeSessionId}</td>
                     <td className="px-6 py-4 text-sm text-neutral-600">{order.date}</td>
                     <td className="px-6 py-4">
                       <button className="px-3 py-1 bg-neutral-900 text-white rounded text-xs hover:bg-neutral-800 transition-colors">

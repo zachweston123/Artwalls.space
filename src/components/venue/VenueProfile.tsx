@@ -21,15 +21,15 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
   };
 
   return (
-    <div>
+    <div className="bg-[var(--bg)] text-[var(--text)]">
       <div className="mb-8">
-        <h1 className="text-3xl mb-2 text-neutral-900">Venue Profile</h1>
-        <p className="text-neutral-600">Manage your venue information and settings</p>
+        <h1 className="text-3xl mb-2">Venue Profile</h1>
+        <p className="text-[var(--text-muted)]">Manage your venue information and settings</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Profile Information Card */}
-        <div className="lg:col-span-2 bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-hidden">
+        <div className="lg:col-span-2 bg-[var(--surface-2)] rounded-xl border border-[var(--border)] overflow-hidden">
           <div className="p-6">
             <div className="flex items-start justify-between mb-6">
               <div className="flex items-center gap-4">
@@ -38,19 +38,19 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
                 </div>
                 <div>
                   <h2 className="text-2xl mb-1 text-neutral-900">{profile.name}</h2>
-                  <span className="inline-flex px-3 py-1 rounded-full text-sm bg-green-100 text-green-700">
+                  <span className="inline-flex px-3 py-1 rounded-full text-sm bg-[var(--surface-3)] text-[var(--text-muted)] border border-[var(--border)]">
                     Venue Account
                   </span>
                 </div>
               </div>
-              <button className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
+              <button className="flex items-center gap-2 px-4 py-2 bg-[var(--accent)] text-[var(--accent-contrast)] rounded-lg transition-colors">
                 <Edit className="w-4 h-4" />
                 <span>Edit Profile</span>
               </button>
             </div>
 
             <div className="space-y-4">
-              <div className="flex items-start gap-3 p-4 bg-neutral-50 rounded-lg">
+              <div className="flex items-start gap-3 p-4 bg-[var(--surface-1)] rounded-lg border border-[var(--border)]">
                 <Mail className="w-5 h-5 text-neutral-500 mt-0.5" />
                 <div className="flex-1">
                   <label className="block text-sm text-neutral-500 mb-1">Contact Email</label>
@@ -58,7 +58,7 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
                 </div>
               </div>
 
-              <div className="flex items-start gap-3 p-4 bg-neutral-50 dark:bg-neutral-700 rounded-lg">
+              <div className="flex items-start gap-3 p-4 bg-[var(--surface-1)] rounded-lg border border-[var(--border)]">
                 <MapPin className="w-5 h-5 text-neutral-500 dark:text-neutral-400 mt-0.5" />
                 <div className="flex-1">
                   <label className="block text-sm text-neutral-500 dark:text-neutral-400 mb-1">Venue Address</label>
@@ -71,7 +71,7 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
                   href={`https://instagram.com/${profile.instagram.replace('@', '')}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-start gap-3 p-4 bg-neutral-50 dark:bg-neutral-700 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-600 transition-colors group"
+                  className="flex items-start gap-3 p-4 bg-[var(--surface-1)] rounded-lg border border-[var(--border)] hover:bg-[var(--surface-3)] transition-colors group"
                 >
                   <Instagram className="w-5 h-5 text-neutral-500 dark:text-neutral-400 mt-0.5 group-hover:text-blue-600 dark:group-hover:text-blue-400" />
                   <div className="flex-1">
@@ -81,7 +81,7 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
                 </a>
               )}
 
-              <div className="flex items-start gap-3 p-4 bg-neutral-50 rounded-lg">
+              <div className="flex items-start gap-3 p-4 bg-[var(--surface-1)] rounded-lg border border-[var(--border)]">
                 <Clock className="w-5 h-5 text-neutral-500 mt-0.5" />
                 <div className="flex-1">
                   <label className="block text-sm text-neutral-500 mb-1">Install Window</label>
@@ -90,7 +90,7 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
                   </p>
                   <button 
                     onClick={() => onNavigate('venue-settings')}
-                    className="text-sm text-green-600 hover:underline mt-1"
+                    className="text-sm text-[var(--accent)] hover:underline mt-1"
                   >
                     Update schedule
                   </button>

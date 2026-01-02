@@ -134,10 +134,10 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
   const proEarnings = calculateEarnings(saleValue, 6, 39, 0); // Pro plan: protection included
 
   return (
-    <div className="bg-white dark:bg-neutral-950">
+    <div className="bg-[var(--bg)]">
       <div className="text-center mb-12">
-        <h1 className="text-3xl mb-2 text-neutral-900 dark:text-neutral-50">Plans & Pricing</h1>
-        <p className="text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto">
+        <h1 className="text-3xl mb-2 text-[var(--text)]">Plans & Pricing</h1>
+        <p className="text-[var(--text-muted)] max-w-2xl mx-auto">
           Choose the plan that fits your needs. Upgrade anytime as your art business grows.
         </p>
       </div>
@@ -149,63 +149,61 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
           return (
             <div
               key={plan.id}
-              className={`bg-white dark:bg-neutral-800 rounded-xl border-2 p-6 relative ${
-                plan.popular
-                  ? 'border-blue-600 dark:border-blue-500 shadow-lg'
-                  : 'border-neutral-200 dark:border-neutral-700'
+              className={`bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-6 relative ${
+                plan.popular ? 'shadow-lg' : ''
               }`}
             >
               {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 dark:bg-blue-500 text-white px-4 py-1 rounded-full text-xs">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[var(--accent)] text-[var(--accent-contrast)] px-4 py-1 rounded-full text-xs">
                   Most Popular
                 </div>
               )}
 
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
-                  <Icon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                <div className="w-10 h-10 bg-[var(--surface-3)] rounded-lg flex items-center justify-center">
+                  <Icon className="w-5 h-5 text-[var(--accent)]" />
                 </div>
                 <div>
-                  <h3 className="text-lg text-neutral-900 dark:text-neutral-50">{plan.name}</h3>
+                  <h3 className="text-lg text-[var(--text)]">{plan.name}</h3>
                 </div>
               </div>
 
               <div className="mb-6">
-                <span className="text-3xl text-neutral-900 dark:text-neutral-50">${plan.price}</span>
-                <span className="text-neutral-600 dark:text-neutral-400">{plan.period}</span>
+                <span className="text-3xl text-[var(--text)]">${plan.price}</span>
+                <span className="text-[var(--text-muted)]">{plan.period}</span>
               </div>
 
               <ul className="space-y-3 mb-6">
                 {plan.features.map((feature, index) => (
                   <li key={index} className="flex items-start gap-2 text-sm">
-                    <Check className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-                    <span className="text-neutral-700 dark:text-neutral-300">{feature}</span>
+                    <Check className="w-5 h-5 text-[var(--accent)] flex-shrink-0" />
+                    <span className="text-[var(--text)]">{feature}</span>
                   </li>
                 ))}
               </ul>
 
-              <div className="border-t border-neutral-200 dark:border-neutral-700 pt-4 mb-6">
-                <p className="text-xs text-neutral-600 dark:text-neutral-400 mb-2">Artwork Protection Plan:</p>
-                <p className="text-sm text-neutral-900 dark:text-neutral-50 mb-1">
+              <div className="border-t border-[var(--border)] pt-4 mb-6">
+                <p className="text-xs text-[var(--text-muted)] mb-2">Artwork Protection Plan:</p>
+                <p className="text-sm text-[var(--text)] mb-1">
                   {plan.protection}
                   {plan.id === 'pro' && (
-                    <span className="ml-2 text-xs bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-2 py-0.5 rounded">
+                    <span className="ml-2 text-xs bg-[var(--surface-3)] text-[var(--text)] border border-[var(--border)] px-2 py-0.5 rounded">
                       INCLUDED
                     </span>
                   )}
                 </p>
-                <p className="text-xs text-neutral-500 dark:text-neutral-400">Coverage: {plan.protectionCap}</p>
-                <p className="text-xs text-neutral-500 dark:text-neutral-400">{plan.claimLimit}</p>
+                <p className="text-xs text-[var(--text-muted)]">Coverage: {plan.protectionCap}</p>
+                <p className="text-xs text-[var(--text-muted)]">{plan.claimLimit}</p>
               </div>
 
               <button
                 disabled={plan.disabled}
                 className={`w-full py-3 rounded-lg transition-colors ${
                   plan.disabled
-                    ? 'bg-neutral-200 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-400 cursor-not-allowed'
+                    ? 'bg-[var(--surface-3)] text-[var(--text-muted)] cursor-not-allowed border border-[var(--border)]'
                     : plan.popular
-                    ? 'bg-blue-600 dark:bg-blue-500 text-white dark:text-neutral-50 hover:bg-blue-700 dark:hover:bg-blue-600'
-                    : 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800'
+                    ? 'bg-[var(--accent)] text-[var(--accent-contrast)]'
+                    : 'bg-[var(--surface-3)] text-[var(--text)] hover:bg-[var(--surface-2)] border border-[var(--border)]'
                 }`}
               >
                 {plan.cta}
@@ -216,25 +214,25 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       </div>
 
       {/* Upgrade Note */}
-      <div className="text-center mb-12 bg-blue-50 dark:bg-blue-900/30 rounded-xl p-6 border border-blue-100 dark:border-blue-800">
-        <p className="text-sm text-blue-900 dark:text-blue-300">
+      <div className="text-center mb-12 bg-[var(--surface-2)] rounded-xl p-6 border border-[var(--border)]">
+        <p className="text-sm text-[var(--text)]">
           💡 You can upgrade or downgrade your plan anytime. Changes take effect at the start of your next billing cycle.
         </p>
       </div>
 
       {/* Earnings Calculator */}
       <div className="max-w-4xl mx-auto mb-12">
-        <div className="bg-blue-600 dark:bg-blue-700 rounded-xl p-8 text-white">
-          <h2 className="text-2xl mb-2 text-white flex items-center gap-3">
+        <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl p-8">
+          <h2 className="text-2xl mb-2 text-[var(--text)] flex items-center gap-3">
             <Calculator className="w-7 h-7" />
             Earnings Calculator
           </h2>
-          <p className="text-sm text-white/90 mb-6">
+          <p className="text-sm text-[var(--text-muted)] mb-6">
             See how much you'll earn from a sale before subscription and protection costs
           </p>
           
-          <div className="bg-white dark:bg-neutral-800 rounded-lg p-6 mb-6">
-            <label className="block text-sm text-neutral-900 dark:text-neutral-50 font-semibold mb-3">Sale Value ($)</label>
+          <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-lg p-6 mb-6">
+            <label className="block text-sm text-[var(--text)] font-semibold mb-3">Sale Value ($)</label>
             <div className="flex items-center gap-4 mb-4">
               <input
                 type="range"
@@ -243,19 +241,19 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                 step="10"
                 value={saleValue}
                 onChange={(e) => setSaleValue(Number(e.target.value))}
-                className="flex-1 h-2 bg-neutral-300 dark:bg-neutral-600 rounded-lg appearance-none cursor-pointer accent-green-500"
+                className="flex-1 h-2 bg-[var(--surface-3)] rounded-lg appearance-none cursor-pointer accent-[var(--accent)]"
               />
               <input
                 type="number"
                 value={saleValue}
                 onChange={(e) => setSaleValue(Number(e.target.value))}
-                className="w-24 px-3 py-2 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-50 text-center font-bold"
+                className="w-24 px-3 py-2 bg-[var(--surface-1)] border border-[var(--border)] rounded-lg text-[var(--text)] text-center font-bold"
               />
             </div>
-            <p className="text-xs text-neutral-600 dark:text-neutral-400">Adjust the slider to see how your profit changes across plans</p>
+            <p className="text-xs text-[var(--text-muted)]">Adjust the slider to see how your profit changes across plans</p>
           </div>
 
-          <p className="text-sm text-white/90 mb-3 font-semibold">Click a plan to see your earnings breakdown:</p>
+          <p className="text-sm text-[var(--text)] mb-3 font-semibold">Click a plan to see your earnings breakdown:</p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {[
@@ -271,15 +269,15 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                   onClick={() => setSelectedPlanId(plan.id)}
                   className={`p-4 rounded-lg border-2 transition-all text-left ${
                     isSelected
-                      ? 'border-white bg-white/20 dark:border-neutral-500 dark:bg-neutral-700 ring-2 ring-white dark:ring-neutral-500 shadow-lg'
-                      : 'border-white/30 hover:border-white/60 bg-white/5 dark:border-neutral-700 dark:hover:border-neutral-600 dark:bg-neutral-900'
+                      ? 'border-[var(--border)] bg-[var(--surface-3)] shadow-lg'
+                      : 'border-[var(--border)] bg-[var(--surface-2)] hover:bg-[var(--surface-3)]'
                   }`}
                 >
-                  <div className="font-semibold text-white mb-2">{plan.name}</div>
-                  <div className="text-3xl font-bold text-white">
+                  <div className="font-semibold text-[var(--text)] mb-2">{plan.name}</div>
+                  <div className="text-3xl font-bold text-[var(--text)]">
                     ${plan.earnings.earnings.toFixed(0)}
                   </div>
-                  <div className="text-xs text-white/80 mt-1">
+                  <div className="text-xs text-[var(--text-muted)] mt-1">
                     you earn
                   </div>
                 </button>
@@ -288,8 +286,8 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
           </div>
 
           {selectedPlanId && (
-            <div className="bg-white dark:bg-neutral-800 rounded-lg p-6">
-              <h3 className="font-bold text-neutral-900 dark:text-white mb-4 text-lg">
+            <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-lg p-6">
+              <h3 className="font-bold text-[var(--text)] mb-4 text-lg">
                 {selectedPlanId === 'free' && 'Free Plan'}
                 {selectedPlanId === 'starter' && 'Starter Plan'}
                 {selectedPlanId === 'growth' && 'Growth Plan'}
@@ -298,36 +296,36 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
               </h3>
               
               <div className="space-y-3">
-                <div className="flex justify-between items-center pb-3 border-b border-neutral-200 dark:border-neutral-700">
-                  <span className="text-neutral-700 dark:text-neutral-400">Sale Value</span>
-                  <span className="font-semibold text-neutral-900 dark:text-white">${saleValue.toFixed(0)}</span>
+                <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
+                  <span className="text-[var(--text-muted)]">Sale Value</span>
+                  <span className="font-semibold text-[var(--text)]">${saleValue.toFixed(0)}</span>
                 </div>
 
                 {selectedPlanId === 'free' && (
                   <>
-                    <div className="flex justify-between items-center pb-3 border-b border-neutral-200 dark:border-neutral-700">
-                      <span className="text-neutral-700 dark:text-neutral-400">Platform Fee (15%)</span>
-                      <span className="font-semibold text-red-600 dark:text-red-400">-${freeEarnings.platformFeeAmount.toFixed(0)}</span>
+                    <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
+                      <span className="text-[var(--text-muted)]">Platform Fee (15%)</span>
+                      <span className="font-semibold text-[var(--text)]">-${freeEarnings.platformFeeAmount.toFixed(0)}</span>
                     </div>
-                    <div className="flex justify-between items-center pt-3 bg-green-100 dark:bg-green-900 p-4 rounded-lg mb-4">
-                      <span className="font-bold text-neutral-900 dark:text-green-50">Your Earnings</span>
-                      <span className="font-bold text-green-700 dark:text-green-200 text-xl">${freeEarnings.earnings.toFixed(0)}</span>
+                    <div className="flex justify-between items-center pt-3 bg-[var(--surface-2)] border border-[var(--border)] p-4 rounded-lg mb-4">
+                      <span className="font-bold text-[var(--text)]">Your Earnings</span>
+                      <span className="font-bold text-[var(--accent)] text-xl">${freeEarnings.earnings.toFixed(0)}</span>
                     </div>
-                    <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg border border-blue-100 dark:border-blue-800">
-                      <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-2">After Additional Costs:</h4>
+                    <div className="bg-[var(--surface-3)] p-4 rounded-lg border border-[var(--border)]">
+                      <h4 className="text-sm font-semibold text-[var(--text)] mb-2">After Additional Costs:</h4>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
-                          <span className="text-blue-700 dark:text-blue-200">Monthly Subscription</span>
-                          <span className="text-blue-700 dark:text-blue-200">$0</span>
+                          <span className="text-[var(--text-muted)]">Monthly Subscription</span>
+                          <span className="text-[var(--text)]">$0</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-blue-700 dark:text-blue-200">Platform Fee (15%)</span>
-                          <span className="text-blue-700 dark:text-blue-400">$3/artwork</span>
+                          <span className="text-[var(--text-muted)]">Protection Plan</span>
+                          <span className="text-[var(--text)]">$3/artwork</span>
                         </div>
-                        <div className="border-t border-blue-200 dark:border-blue-700 pt-2 mt-2">
+                        <div className="border-t border-[var(--border)] pt-2 mt-2">
                           <div className="flex justify-between font-semibold">
-                            <span className="text-blue-900 dark:text-blue-200">Net Income (1 artwork sold)</span>
-                            <span className="text-blue-900 dark:text-blue-200">${Math.max(0, freeEarnings.earnings - 3).toFixed(0)}</span>
+                            <span className="text-[var(--text)]">Net Income (1 artwork sold)</span>
+                            <span className="text-[var(--text)]">${Math.max(0, freeEarnings.earnings - 3).toFixed(0)}</span>
                           </div>
                         </div>
                       </div>
@@ -337,29 +335,29 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
 
                 {selectedPlanId === 'starter' && (
                   <>
-                    <div className="flex justify-between items-center pb-3 border-b border-neutral-200 dark:border-neutral-700">
-                      <span className="text-neutral-700 dark:text-neutral-400">Platform Fee (10%)</span>
-                      <span className="font-semibold text-red-600 dark:text-red-400">-${starterEarnings.platformFeeAmount.toFixed(0)}</span>
+                    <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
+                      <span className="text-[var(--text-muted)]">Platform Fee (10%)</span>
+                      <span className="font-semibold text-[var(--text)]">-${starterEarnings.platformFeeAmount.toFixed(0)}</span>
                     </div>
-                    <div className="flex justify-between items-center pt-3 bg-green-100 dark:bg-green-900 p-4 rounded-lg mb-4">
-                      <span className="font-bold text-neutral-900 dark:text-green-50">Your Earnings</span>
-                      <span className="font-bold text-green-700 dark:text-green-200 text-xl">${starterEarnings.earnings.toFixed(0)}</span>
+                    <div className="flex justify-between items-center pt-3 bg-[var(--surface-2)] border border-[var(--border)] p-4 rounded-lg mb-4">
+                      <span className="font-bold text-[var(--text)]">Your Earnings</span>
+                      <span className="font-bold text-[var(--accent)] text-xl">${starterEarnings.earnings.toFixed(0)}</span>
                     </div>
-                    <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg border border-blue-100 dark:border-blue-800">
-                      <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-2">After Additional Costs:</h4>
+                    <div className="bg-[var(--surface-3)] p-4 rounded-lg border border-[var(--border)]">
+                      <h4 className="text-sm font-semibold text-[var(--text)] mb-2">After Additional Costs:</h4>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
-                          <span className="text-blue-700 dark:text-blue-200">Monthly Subscription</span>
-                          <span className="text-blue-700 dark:text-blue-200">-$9</span>
+                          <span className="text-[var(--text-muted)]">Monthly Subscription</span>
+                          <span className="text-[var(--text)]">-$9</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-blue-700 dark:text-blue-200">Platform Fee (10%)</span>
-                          <span className="text-blue-700 dark:text-blue-400">$3/artwork</span>
+                          <span className="text-[var(--text-muted)]">Protection Plan</span>
+                          <span className="text-[var(--text)]">$3/artwork</span>
                         </div>
-                        <div className="border-t border-blue-200 dark:border-blue-700 pt-2 mt-2">
+                        <div className="border-t border-[var(--border)] pt-2 mt-2">
                           <div className="flex justify-between font-semibold">
-                            <span className="text-blue-900 dark:text-blue-200">Net Income (1 artwork sold)</span>
-                            <span className="text-blue-900 dark:text-blue-200">${Math.max(0, starterEarnings.earnings - 9 - 3).toFixed(0)}</span>
+                            <span className="text-[var(--text)]">Net Income (1 artwork sold)</span>
+                            <span className="text-[var(--text)]">${Math.max(0, starterEarnings.earnings - 9 - 3).toFixed(0)}</span>
                           </div>
                         </div>
                       </div>
@@ -369,29 +367,29 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
 
                 {selectedPlanId === 'growth' && (
                   <>
-                    <div className="flex justify-between items-center pb-3 border-b border-neutral-200 dark:border-neutral-700">
-                      <span className="text-neutral-700 dark:text-neutral-400">Platform Fee (8%)</span>
-                      <span className="font-semibold text-red-600 dark:text-red-400">-${growthEarnings.platformFeeAmount.toFixed(0)}</span>
+                    <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
+                      <span className="text-[var(--text-muted)]">Platform Fee (8%)</span>
+                      <span className="font-semibold text-[var(--text)]">-${growthEarnings.platformFeeAmount.toFixed(0)}</span>
                     </div>
-                    <div className="flex justify-between items-center pt-3 bg-green-100 dark:bg-green-900 p-4 rounded-lg mb-4">
-                      <span className="font-bold text-neutral-900 dark:text-green-50">Your Earnings</span>
-                      <span className="font-bold text-green-700 dark:text-green-200 text-xl">${growthEarnings.earnings.toFixed(0)}</span>
+                    <div className="flex justify-between items-center pt-3 bg-[var(--surface-2)] border border-[var(--border)] p-4 rounded-lg mb-4">
+                      <span className="font-bold text-[var(--text)]">Your Earnings</span>
+                      <span className="font-bold text-[var(--accent)] text-xl">${growthEarnings.earnings.toFixed(0)}</span>
                     </div>
-                    <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg border border-blue-100 dark:border-blue-800">
-                      <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-2">After Additional Costs:</h4>
+                    <div className="bg-[var(--surface-3)] p-4 rounded-lg border border-[var(--border)]">
+                      <h4 className="text-sm font-semibold text-[var(--text)] mb-2">After Additional Costs:</h4>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
-                          <span className="text-blue-700 dark:text-blue-200">Monthly Subscription</span>
-                          <span className="text-blue-700 dark:text-blue-200">-$19</span>
+                          <span className="text-[var(--text-muted)]">Monthly Subscription</span>
+                          <span className="text-[var(--text)]">-$19</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-blue-700 dark:text-blue-200">Platform Fee (8%)</span>
-                          <span className="text-blue-700 dark:text-blue-400">$3/artwork</span>
+                          <span className="text-[var(--text-muted)]">Protection Plan</span>
+                          <span className="text-[var(--text)]">$3/artwork</span>
                         </div>
-                        <div className="border-t border-blue-200 dark:border-blue-700 pt-2 mt-2">
+                        <div className="border-t border-[var(--border)] pt-2 mt-2">
                           <div className="flex justify-between font-semibold">
-                            <span className="text-blue-900 dark:text-blue-200">Net Income (1 artwork sold)</span>
-                            <span className="text-blue-900 dark:text-blue-200">${Math.max(0, growthEarnings.earnings - 19 - 3).toFixed(0)}</span>
+                            <span className="text-[var(--text)]">Net Income (1 artwork sold)</span>
+                            <span className="text-[var(--text)]">${Math.max(0, growthEarnings.earnings - 19 - 3).toFixed(0)}</span>
                           </div>
                         </div>
                       </div>
@@ -401,29 +399,29 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
 
                 {selectedPlanId === 'pro' && (
                   <>
-                    <div className="flex justify-between items-center pb-3 border-b border-neutral-200 dark:border-neutral-700">
-                      <span className="text-neutral-700 dark:text-neutral-400">Platform Fee (6%)</span>
-                      <span className="font-semibold text-red-600 dark:text-red-400">-${proEarnings.platformFeeAmount.toFixed(0)}</span>
+                    <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
+                      <span className="text-[var(--text-muted)]">Platform Fee (6%)</span>
+                      <span className="font-semibold text-[var(--text)]">-${proEarnings.platformFeeAmount.toFixed(0)}</span>
                     </div>
-                    <div className="flex justify-between items-center pt-3 bg-green-100 dark:bg-green-900 p-4 rounded-lg mb-4">
-                      <span className="font-bold text-neutral-900 dark:text-green-50">Your Earnings</span>
-                      <span className="font-bold text-green-700 dark:text-green-200 text-xl">${proEarnings.earnings.toFixed(0)}</span>
+                    <div className="flex justify-between items-center pt-3 bg-[var(--surface-2)] border border-[var(--border)] p-4 rounded-lg mb-4">
+                      <span className="font-bold text-[var(--text)]">Your Earnings</span>
+                      <span className="font-bold text-[var(--accent)] text-xl">${proEarnings.earnings.toFixed(0)}</span>
                     </div>
-                    <div className="bg-green-50 dark:bg-green-900/30 p-4 rounded-lg border border-green-100 dark:border-green-800">
-                      <h4 className="text-sm font-semibold text-green-900 dark:text-green-300 mb-2">After Additional Costs:</h4>
+                    <div className="bg-[var(--surface-3)] p-4 rounded-lg border border-[var(--border)]">
+                      <h4 className="text-sm font-semibold text-[var(--text)] mb-2">After Additional Costs:</h4>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
-                          <span className="text-green-700 dark:text-green-400">Monthly Subscription</span>
-                          <span className="text-green-700 dark:text-green-400">-$39</span>
+                          <span className="text-[var(--text-muted)]">Monthly Subscription</span>
+                          <span className="text-[var(--text)]">-$39</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-green-700 dark:text-green-400">Protection Plan</span>
-                          <span className="text-green-700 dark:text-green-400">Included FREE</span>
+                          <span className="text-[var(--text-muted)]">Protection Plan</span>
+                          <span className="text-[var(--text)]">Included</span>
                         </div>
-                        <div className="border-t border-green-200 dark:border-green-700 pt-2 mt-2">
+                        <div className="border-t border-[var(--border)] pt-2 mt-2">
                           <div className="flex justify-between font-semibold">
-                            <span className="text-green-900 dark:text-green-200">Net Income (1 artwork sold)</span>
-                            <span className="text-green-900 dark:text-green-200">${Math.max(0, proEarnings.earnings - 39).toFixed(0)}</span>
+                            <span className="text-[var(--text)]">Net Income (1 artwork sold)</span>
+                            <span className="text-[var(--text)]">${Math.max(0, proEarnings.earnings - 39).toFixed(0)}</span>
                           </div>
                         </div>
                       </div>
@@ -432,7 +430,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                 )}
               </div>
 
-              <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-4">
+              <p className="text-xs text-[var(--text-muted)] mt-4">
                 💡 <span className="font-semibold">Pro tip:</span> The Pro plan includes free protection for all your artworks and offers the lowest platform fee (6%) to maximize your earnings!
               </p>
             </div>
@@ -444,46 +442,46 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       <div className="max-w-4xl mx-auto mb-12">
         <button
           onClick={() => setShowProtectionDetails(!showProtectionDetails)}
-          className="w-full bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 p-6 text-left hover:shadow-md dark:hover:shadow-lg transition-shadow"
+          className="w-full bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-6 text-left hover:shadow-md transition-shadow"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
-              <Shield className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            <div className="w-12 h-12 bg-[var(--surface-3)] rounded-lg flex items-center justify-center">
+              <Shield className="w-6 h-6 text-[var(--accent)]" />
               </div>
               <div>
-                <h2 className="text-xl mb-1 text-neutral-900 dark:text-neutral-50">Artwork Protection Plan Details</h2>
-                <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                <h2 className="text-xl mb-1 text-[var(--text)]">Artwork Protection Plan Details</h2>
+                <p className="text-sm text-[var(--text-muted)]">
                   Learn about coverage, requirements, and exclusions
                 </p>
               </div>
             </div>
-            <div className="text-neutral-400 dark:text-neutral-600">
+            <div className="text-[var(--text-muted)]">
               {showProtectionDetails ? '−' : '+'}
             </div>
           </div>
         </button>
 
         {showProtectionDetails && (
-          <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 border-t-0 p-6 mt-0">
+          <div className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] border-t-0 p-6 mt-0">
             <div className="space-y-6">
               {/* What's Covered */}
               <div>
-                <h3 className="text-base mb-3 text-neutral-900 dark:text-neutral-50">What's Covered</h3>
-                <p className="text-sm text-neutral-700 dark:text-neutral-300 mb-3">
+                <h3 className="text-base mb-3 text-[var(--text)]">What's Covered</h3>
+                <p className="text-sm text-[var(--text)] mb-3">
                   The Artwork Protection Plan helps reimburse you for certain covered incidents while your artwork is displayed through Artwalls placements:
                 </p>
-                <ul className="space-y-2 text-sm text-neutral-700 dark:text-neutral-300">
+                <ul className="space-y-2 text-sm text-[var(--text)]">
                   <li className="flex items-start gap-2">
-                    <Check className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+                    <Check className="w-4 h-4 text-[var(--accent)] flex-shrink-0 mt-0.5" />
                     <span>Accidental damage (spills, bumps, falls)</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <Check className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+                    <Check className="w-4 h-4 text-[var(--accent)] flex-shrink-0 mt-0.5" />
                     <span>Theft or vandalism</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <Check className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+                    <Check className="w-4 h-4 text-[var(--accent)] flex-shrink-0 mt-0.5" />
                     <span>Environmental damage (within venue safety guidelines)</span>
                   </li>
                 </ul>
@@ -491,26 +489,26 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
 
               {/* Requirements */}
               <div>
-                <h3 className="text-base mb-3 text-neutral-900 dark:text-neutral-50">Coverage Requirements</h3>
-                <ul className="space-y-2 text-sm text-neutral-700 dark:text-neutral-300">
+                <h3 className="text-base mb-3 text-[var(--text)]">Coverage Requirements</h3>
+                <ul className="space-y-2 text-sm text-[var(--text)]">
                   <li className="flex items-start gap-2">
-                    <span className="text-blue-600 mr-1">•</span>
+                    <span className="text-[var(--text-muted)] mr-1">•</span>
                     <span><strong>Declared value:</strong> Required per artwork (defaults to sale price)</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-blue-600 dark:text-blue-400 mr-1">•</span>
+                    <span className="text-[var(--text-muted)] mr-1">•</span>
                     <span><strong>Condition report at install:</strong> 2–4 photos + "Installed in good condition" confirmation</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-blue-600 dark:text-blue-400 mr-1">•</span>
+                    <span className="text-[var(--text-muted)] mr-1">•</span>
                     <span><strong>Venue safety checklist:</strong> Must be completed (no heaters/steam/grease; sunlight disclosed)</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-blue-600 dark:text-blue-400 mr-1">•</span>
+                    <span className="text-[var(--text-muted)] mr-1">•</span>
                     <span><strong>Incident reporting:</strong> Within 48 hours with photos (close-up + context)</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-blue-600 dark:text-blue-400 mr-1">•</span>
+                    <span className="text-[var(--text-muted)] mr-1">•</span>
                     <span><strong>Waiting period:</strong> Coverage begins 7 days after plan activation</span>
                   </li>
                 </ul>
@@ -518,50 +516,50 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
 
               {/* Exclusions */}
               <div>
-                <h3 className="text-base mb-3 text-neutral-900 dark:text-neutral-50">What's NOT Covered (Exclusions)</h3>
-                <ul className="space-y-2 text-sm text-neutral-700 dark:text-neutral-300">
+                <h3 className="text-base mb-3 text-[var(--text)]">What's NOT Covered (Exclusions)</h3>
+                <ul className="space-y-2 text-sm text-[var(--text)]">
                   <li className="flex items-start gap-2">
-                    <span className="text-red-600 dark:text-red-400 mr-1">✕</span>
+                    <span className="text-[var(--text-muted)] mr-1">✕</span>
                     <span>Improper mounting or hardware failure caused by artist</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-red-600 dark:text-red-400 mr-1">✕</span>
+                    <span className="text-[var(--text-muted)] mr-1">✕</span>
                     <span>Normal wear and tear</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-red-600 dark:text-red-400 mr-1">✕</span>
+                    <span className="text-[var(--text-muted)] mr-1">✕</span>
                     <span>Damage from disclosed risks that artist accepted (e.g., direct sun disclosed)</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-red-600 dark:text-red-400 mr-1">✕</span>
+                    <span className="text-[var(--text-muted)] mr-1">✕</span>
                     <span>Intentional damage or fraud</span>
                   </li>
                 </ul>
               </div>
 
               {/* Coverage Caps */}
-              <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-4 border border-blue-100 dark:border-blue-800">
-                <h3 className="text-base text-blue-900 dark:text-blue-300 mb-3">Coverage Caps by Plan</h3>
+              <div className="bg-[var(--surface-3)] rounded-lg p-4 border border-[var(--border)]">
+                <h3 className="text-base text-[var(--text)] mb-3">Coverage Caps by Plan</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-blue-700 dark:text-blue-200 mb-1"><strong>Free & Starter:</strong></p>
-                    <p className="text-sm text-blue-700 dark:text-blue-200">Up to $100 per incident</p>
-                    <p className="text-xs text-blue-600 dark:text-blue-400">2 claims per year</p>
+                    <p className="text-sm text-[var(--text)] mb-1"><strong>Free & Starter:</strong></p>
+                    <p className="text-sm text-[var(--text)]">Up to $100 per incident</p>
+                    <p className="text-xs text-[var(--text-muted)]">2 claims per year</p>
                   </div>
                   <div>
-                    <p className="text-sm text-blue-700 dark:text-blue-200 mb-1"><strong>Growth:</strong></p>
-                    <p className="text-sm text-blue-700 dark:text-blue-200">Up to $150 per incident</p>
-                    <p className="text-xs text-blue-600 dark:text-blue-400">3 claims per year</p>
+                    <p className="text-sm text-[var(--text)] mb-1"><strong>Growth:</strong></p>
+                    <p className="text-sm text-[var(--text)]">Up to $150 per incident</p>
+                    <p className="text-xs text-[var(--text-muted)]">3 claims per year</p>
                   </div>
                   <div>
-                    <p className="text-sm text-blue-700 dark:text-blue-200 mb-1"><strong>Pro:</strong></p>
-                    <p className="text-sm text-blue-700 dark:text-blue-200">Up to $200 per incident</p>
-                    <p className="text-xs text-blue-600 dark:text-blue-400">4 claims per year</p>
+                    <p className="text-sm text-[var(--text)] mb-1"><strong>Pro:</strong></p>
+                    <p className="text-sm text-[var(--text)]">Up to $200 per incident</p>
+                    <p className="text-xs text-[var(--text-muted)]">4 claims per year</p>
                   </div>
-                  <div className="bg-white dark:bg-neutral-800 rounded-lg p-3 border border-blue-200 dark:border-blue-700">
-                    <p className="text-xs text-neutral-600 mb-1">Protection cost:</p>
-                    <p className="text-sm text-neutral-900">$3/artwork/mo</p>
-                    <p className="text-xs text-green-600 dark:text-green-300">FREE on Pro plan</p>
+                  <div className="bg-[var(--surface-1)] rounded-lg p-3 border border-[var(--border)]">
+                    <p className="text-xs text-[var(--text-muted)] mb-1">Protection cost:</p>
+                    <p className="text-sm text-[var(--text)]">$3/artwork/mo</p>
+                    <p className="text-xs text-[var(--text-muted)]">Included on Pro plan</p>
                   </div>
                 </div>
               </div>
@@ -572,88 +570,88 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
 
       {/* Feature Comparison Table */}
       <div className="max-w-6xl mx-auto mb-12">
-        <h2 className="text-2xl mb-6 text-center text-neutral-900 dark:text-neutral-50">Compare All Features</h2>
-        <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-x-auto">
+        <h2 className="text-2xl mb-6 text-center text-[var(--text)]">Compare All Features</h2>
+        <div className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-neutral-200 dark:border-neutral-700">
-                <th className="text-left p-4 text-sm text-neutral-600 dark:text-neutral-300 font-semibold">Feature</th>
-                <th className="text-center p-4 text-sm text-neutral-600 dark:text-neutral-300 font-semibold">Free</th>
-                <th className="text-center p-4 text-sm text-neutral-600 dark:text-neutral-300 font-semibold">Starter</th>
-                <th className="text-center p-4 text-sm bg-blue-50 dark:bg-blue-600 text-neutral-900 dark:text-white font-semibold">Growth</th>
-                <th className="text-center p-4 text-sm text-neutral-600 dark:text-neutral-300 font-semibold">Pro</th>
+              <tr className="border-b border-[var(--border)]">
+                <th className="text-left p-4 text-sm text-[var(--text-muted)] font-semibold">Feature</th>
+                <th className="text-center p-4 text-sm text-[var(--text-muted)] font-semibold">Free</th>
+                <th className="text-center p-4 text-sm text-[var(--text-muted)] font-semibold">Starter</th>
+                <th className="text-center p-4 text-sm bg-[var(--surface-3)] text-[var(--text)] font-semibold">Growth</th>
+                <th className="text-center p-4 text-sm text-[var(--text-muted)] font-semibold">Pro</th>
               </tr>
             </thead>
             <tbody>
-              <tr className="border-b border-neutral-200 dark:border-neutral-700">
-                <td className="p-4 text-sm text-neutral-900 dark:text-neutral-50"><strong>Active displays included</strong></td>
-                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-50"><strong>1</strong></td>
-                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-50"><strong>4</strong></td>
-                <td className="text-center p-4 text-sm bg-blue-50 dark:bg-blue-600 text-neutral-900 dark:text-white"><strong>10</strong></td>
-                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-50"><strong>Unlimited</strong></td>
+              <tr className="border-b border-[var(--border)]">
+                <td className="p-4 text-sm text-[var(--text)]"><strong>Active displays included</strong></td>
+                <td className="text-center p-4 text-sm text-[var(--text)]"><strong>1</strong></td>
+                <td className="text-center p-4 text-sm text-[var(--text)]"><strong>4</strong></td>
+                <td className="text-center p-4 text-sm bg-[var(--surface-3)] text-[var(--text)]"><strong>10</strong></td>
+                <td className="text-center p-4 text-sm text-[var(--text)]"><strong>Unlimited</strong></td>
               </tr>
-              <tr className="border-b border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/20">
-                <td className="p-4 text-sm text-neutral-900 dark:text-neutral-50">Overage pricing</td>
-                <td className="text-center p-4 text-sm text-xs text-neutral-600 dark:text-neutral-300">—</td>
-                <td className="text-center p-4 text-sm text-xs text-neutral-600 dark:text-neutral-300">$5/mo per display</td>
-                <td className="text-center p-4 text-sm text-xs bg-blue-50 dark:bg-blue-600 text-neutral-900 dark:text-white">$4/mo per display</td>
-                <td className="text-center p-4 text-sm text-xs text-neutral-600 dark:text-neutral-300">—</td>
+              <tr className="border-b border-[var(--border)] bg-[var(--surface-1)]">
+                <td className="p-4 text-sm text-[var(--text)]">Overage pricing</td>
+                <td className="text-center p-4 text-sm text-xs text-[var(--text-muted)]">—</td>
+                <td className="text-center p-4 text-sm text-xs text-[var(--text-muted)]">$5/mo per display</td>
+                <td className="text-center p-4 text-sm text-xs bg-[var(--surface-3)] text-[var(--text)]">$4/mo per display</td>
+                <td className="text-center p-4 text-sm text-xs text-[var(--text-muted)]">—</td>
               </tr>
-              <tr className="border-b border-neutral-200 dark:border-neutral-700">
-                <td className="p-4 text-sm text-neutral-900 dark:text-neutral-50">Artwork listings</td>
-                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-50">1</td>
-                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-50">10</td>
-                <td className="text-center p-4 text-sm bg-blue-50 dark:bg-blue-600 text-neutral-900 dark:text-white">30</td>
-                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-50">Unlimited</td>
+              <tr className="border-b border-[var(--border)]">
+                <td className="p-4 text-sm text-[var(--text)]">Artwork listings</td>
+                <td className="text-center p-4 text-sm text-[var(--text)]">1</td>
+                <td className="text-center p-4 text-sm text-[var(--text)]">10</td>
+                <td className="text-center p-4 text-sm bg-[var(--surface-3)] text-[var(--text)]">30</td>
+                <td className="text-center p-4 text-sm text-[var(--text)]">Unlimited</td>
               </tr>
-              <tr className="border-b border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/20">
-                <td className="p-4 text-sm text-neutral-900 dark:text-neutral-50">Venue applications</td>
-                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-50">1/month</td>
-                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-50">3/month</td>
-                <td className="text-center p-4 text-sm bg-blue-50 dark:bg-blue-600 text-neutral-900 dark:text-white">Unlimited</td>
-                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-50">Unlimited</td>
+              <tr className="border-b border-[var(--border)] bg-[var(--surface-1)]">
+                <td className="p-4 text-sm text-[var(--text)]">Venue applications</td>
+                <td className="text-center p-4 text-sm text-[var(--text)]">1/month</td>
+                <td className="text-center p-4 text-sm text-[var(--text)]">3/month</td>
+                <td className="text-center p-4 text-sm bg-[var(--surface-3)] text-[var(--text)]">Unlimited</td>
+                <td className="text-center p-4 text-sm text-[var(--text)]">Unlimited</td>
               </tr>
-              <tr className="border-b border-neutral-200 dark:border-neutral-700">
-                <td className="p-4 text-sm text-neutral-900 dark:text-neutral-50"><strong>Platform fee on sales</strong></td>
-                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-50"><strong>15%</strong></td>
-                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-50"><strong>10%</strong></td>
-                <td className="text-center p-4 text-sm bg-blue-50 dark:bg-blue-600 text-neutral-900 dark:text-white"><strong>8%</strong></td>
-                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-50"><strong>6%</strong></td>
+              <tr className="border-b border-[var(--border)]">
+                <td className="p-4 text-sm text-[var(--text)]"><strong>Platform fee on sales</strong></td>
+                <td className="text-center p-4 text-sm text-[var(--text)]"><strong>15%</strong></td>
+                <td className="text-center p-4 text-sm text-[var(--text)]"><strong>10%</strong></td>
+                <td className="text-center p-4 text-sm bg-[var(--surface-3)] text-[var(--text)]"><strong>8%</strong></td>
+                <td className="text-center p-4 text-sm text-[var(--text)]"><strong>6%</strong></td>
               </tr>
-              <tr className="border-b border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/20">
-                <td className="p-4 text-sm text-neutral-900 dark:text-neutral-50">Payout speed</td>
-                <td className="text-center p-4 text-sm text-xs text-neutral-900 dark:text-neutral-50">Weekly</td>
-                <td className="text-center p-4 text-sm text-xs text-neutral-900 dark:text-neutral-50">Standard</td>
-                <td className="text-center p-4 text-sm text-xs bg-blue-50 dark:bg-blue-600 text-neutral-900 dark:text-white">Standard</td>
-                <td className="text-center p-4 text-sm text-xs text-neutral-900 dark:text-neutral-50">Fast</td>
+              <tr className="border-b border-[var(--border)] bg-[var(--surface-1)]">
+                <td className="p-4 text-sm text-[var(--text)]">Payout speed</td>
+                <td className="text-center p-4 text-sm text-xs text-[var(--text)]">Weekly</td>
+                <td className="text-center p-4 text-sm text-xs text-[var(--text)]">Standard</td>
+                <td className="text-center p-4 text-sm text-xs bg-[var(--surface-3)] text-[var(--text)]">Standard</td>
+                <td className="text-center p-4 text-sm text-xs text-[var(--text)]">Fast</td>
               </tr>
-              <tr className="border-b border-neutral-200 dark:border-neutral-700">
-                <td className="p-4 text-sm text-neutral-900 dark:text-neutral-50">Analytics</td>
-                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-50">—</td>
-                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-50">Basic</td>
-                <td className="text-center p-4 text-sm bg-blue-50 dark:bg-blue-600 text-neutral-900 dark:text-white">Advanced</td>
-                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-50">Advanced</td>
+              <tr className="border-b border-[var(--border)]">
+                <td className="p-4 text-sm text-[var(--text)]">Analytics</td>
+                <td className="text-center p-4 text-sm text-[var(--text)]">—</td>
+                <td className="text-center p-4 text-sm text-[var(--text)]">Basic</td>
+                <td className="text-center p-4 text-sm bg-[var(--surface-3)] text-[var(--text)]">Advanced</td>
+                <td className="text-center p-4 text-sm text-[var(--text)]">Advanced</td>
               </tr>
-              <tr className="border-b border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/20">
-                <td className="p-4 text-sm text-neutral-900 dark:text-neutral-50">Priority visibility</td>
-                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-50">—</td>
-                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-50">—</td>
-                <td className="text-center p-4 text-sm bg-blue-50 dark:bg-blue-600 text-neutral-900 dark:text-white">✓</td>
-                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-50">✓✓</td>
+              <tr className="border-b border-[var(--border)] bg-[var(--surface-1)]">
+                <td className="p-4 text-sm text-[var(--text)]">Priority visibility</td>
+                <td className="text-center p-4 text-sm text-[var(--text)]">—</td>
+                <td className="text-center p-4 text-sm text-[var(--text)]">—</td>
+                <td className="text-center p-4 text-sm bg-[var(--surface-3)] text-[var(--text)]">✓</td>
+                <td className="text-center p-4 text-sm text-[var(--text)]">✓✓</td>
               </tr>
-              <tr className="border-b border-neutral-200 dark:border-neutral-700">
-                <td className="p-4 text-sm text-neutral-900 dark:text-neutral-50"><strong>Protection Plan</strong></td>
-                <td className="text-center p-4 text-sm text-xs text-neutral-900 dark:text-neutral-50">$3/artwork</td>
-                <td className="text-center p-4 text-sm text-xs text-neutral-900 dark:text-neutral-50">$3/artwork</td>
-                <td className="text-center p-4 text-sm text-xs bg-blue-50 dark:bg-blue-600 text-neutral-900 dark:text-white">$3/artwork</td>
-                <td className="text-center p-4 text-sm text-xs text-neutral-900 dark:text-neutral-50"><strong>INCLUDED</strong></td>
+              <tr className="border-b border-[var(--border)]">
+                <td className="p-4 text-sm text-[var(--text)]"><strong>Protection Plan</strong></td>
+                <td className="text-center p-4 text-sm text-xs text-[var(--text)]">$3/artwork</td>
+                <td className="text-center p-4 text-sm text-xs text-[var(--text)]">$3/artwork</td>
+                <td className="text-center p-4 text-sm text-xs bg-[var(--surface-3)] text-[var(--text)]">$3/artwork</td>
+                <td className="text-center p-4 text-sm text-xs text-[var(--text)]"><strong>INCLUDED</strong></td>
               </tr>
               <tr>
-                <td className="p-4 text-sm text-neutral-900 dark:text-neutral-50">Protection cap</td>
-                <td className="text-center p-4 text-sm text-xs text-neutral-900 dark:text-neutral-50">$100</td>
-                <td className="text-center p-4 text-sm text-xs text-neutral-900 dark:text-neutral-50">$100</td>
-                <td className="text-center p-4 text-sm text-xs bg-blue-50 dark:bg-blue-800 text-neutral-900 dark:text-neutral-50">$150</td>
-                <td className="text-center p-4 text-sm text-xs text-neutral-900 dark:text-neutral-50">$200</td>
+                <td className="p-4 text-sm text-[var(--text)]">Protection cap</td>
+                <td className="text-center p-4 text-sm text-xs text-[var(--text)]">$100</td>
+                <td className="text-center p-4 text-sm text-xs text-[var(--text)]">$100</td>
+                <td className="text-center p-4 text-sm text-xs bg-[var(--surface-3)] text-[var(--text)]">$150</td>
+                <td className="text-center p-4 text-sm text-xs text-[var(--text)]">$200</td>
               </tr>
             </tbody>
           </table>
@@ -662,23 +660,23 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
 
       {/* FAQ */}
       <div className="max-w-3xl mx-auto">
-        <h2 className="text-2xl mb-6 text-center text-neutral-900 dark:text-neutral-50">Frequently Asked Questions</h2>
+        <h2 className="text-2xl mb-6 text-center text-[var(--text)]">Frequently Asked Questions</h2>
         <div className="space-y-4">
-          <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 p-6">
-            <h3 className="text-base mb-2 text-neutral-900 dark:text-neutral-50">Can I change plans later?</h3>
-            <p className="text-sm text-neutral-700 dark:text-neutral-300">
+          <div className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-6">
+            <h3 className="text-base mb-2 text-[var(--text)]">Can I change plans later?</h3>
+            <p className="text-sm text-[var(--text)]">
               Yes! You can upgrade or downgrade anytime. Changes take effect at the start of your next billing cycle.
             </p>
           </div>
-          <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 p-6">
-            <h3 className="text-base mb-2 text-neutral-900 dark:text-neutral-50">How does the Protection Plan work if I have multiple artworks displayed?</h3>
-            <p className="text-sm text-neutral-700 dark:text-neutral-300">
+          <div className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-6">
+            <h3 className="text-base mb-2 text-[var(--text)]">How does the Protection Plan work if I have multiple artworks displayed?</h3>
+            <p className="text-sm text-[var(--text)]">
               On Free, Starter, and Growth plans, protection costs $3 per displayed artwork per month. On Pro, protection is included FREE for all displayed artworks. You can toggle protection on/off for each placement.
             </p>
           </div>
-          <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 p-6">
-            <h3 className="text-base mb-2 text-neutral-900 dark:text-neutral-50">What's the revenue split on sales?</h3>
-            <p className="text-sm text-neutral-700 dark:text-neutral-300">
+          <div className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-6">
+            <h3 className="text-base mb-2 text-[var(--text)]">What's the revenue split on sales?</h3>
+            <p className="text-sm text-[var(--text)]">
               Artists receive a percentage of the sale price based on their current subscription plan, while venues always receive 10%. The platform fee is determined by the artist's subscription plan and is applied in addition to this split.
             </p>
           </div>

@@ -12,7 +12,6 @@ interface NavigationProps {
 
 export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClick, unreadCount = 2 }: NavigationProps) {
   const isArtist = user.role === 'artist';
-  const accentColor = isArtist ? 'blue' : 'green';
 
   const artistLinks = [
     { id: 'artist-dashboard', label: 'Dashboard' },
@@ -33,25 +32,25 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
   const links = isArtist ? artistLinks : venueLinks;
 
   return (
-    <nav className="bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
+    <nav className="bg-[var(--surface-2)] border-b border-[var(--border)]">
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-8">
             {/* Mobile Menu Button */}
             <button
               onClick={onMenuClick}
-              className="lg:hidden p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg transition-colors text-neutral-900 dark:text-neutral-50"
+              className="lg:hidden p-2 hover:bg-[var(--surface-3)] rounded-lg transition-colors text-[var(--text)]"
             >
               <Menu className="w-6 h-6" />
             </button>
 
             <div className="flex items-center gap-2">
               {isArtist ? (
-                <Palette className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                <Palette className="w-6 h-6 text-[var(--accent)]" />
               ) : (
-                <Store className="w-6 h-6 text-green-600 dark:text-green-400" />
+                <Store className="w-6 h-6 text-[var(--accent)]" />
               )}
-              <span className="text-xl tracking-tight text-neutral-900 dark:text-neutral-50">Artwalls</span>
+              <span className="text-xl tracking-tight text-[var(--text)]">Artwalls</span>
             </div>
             
             {/* Desktop Navigation - Hidden on Mobile */}
@@ -62,10 +61,8 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
                   onClick={() => onNavigate(link.id)}
                   className={`px-4 py-2 rounded-lg transition-colors ${
                     currentPage === link.id
-                      ? isArtist
-                        ? 'bg-blue-50 dark:bg-neutral-700 text-blue-700 dark:text-blue-300'
-                        : 'bg-green-50 dark:bg-neutral-700 text-green-700 dark:text-green-300'
-                      : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700'
+                      ? 'bg-[var(--surface-3)] text-[var(--text)]'
+                      : 'text-[var(--text-muted)] hover:bg-[var(--surface-3)]'
                   }`}
                 >
                   {link.label}
@@ -78,33 +75,29 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
             {/* Notification Bell */}
             <button
               onClick={() => onNavigate(user.role === 'artist' ? 'artist-notifications' : 'venue-notifications')}
-              className="relative p-2 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg transition-colors"
+              className="relative p-2 text-[var(--text-muted)] hover:bg-[var(--surface-3)] rounded-lg transition-colors"
             >
               <Bell className="w-5 h-5" />
               {unreadCount > 0 && (
-                <span className={`absolute top-1 right-1 w-4 h-4 text-white text-xs rounded-full flex items-center justify-center ${
-                  isArtist ? 'bg-blue-600 dark:bg-blue-500' : 'bg-green-600 dark:bg-green-500'
-                }`}>
+                <span className="absolute top-1 right-1 w-4 h-4 text-[var(--accent-contrast)] text-xs rounded-full flex items-center justify-center bg-[var(--accent)]">
                   {unreadCount}
                 </span>
               )}
             </button>
 
             {/* Role Badge - Mobile Only */}
-            <div className={`lg:hidden px-3 py-1 rounded-full text-xs ${
-              isArtist ? 'bg-blue-50 dark:bg-neutral-700 text-blue-700 dark:text-blue-300' : 'bg-green-50 dark:bg-neutral-700 text-green-700 dark:text-green-300'
-            }`}>
+            <div className="lg:hidden px-3 py-1 rounded-full text-xs bg-[var(--surface-3)] text-[var(--text)] border border-[var(--border)]">
               {user.role === 'artist' ? 'Artist' : 'Venue'}
             </div>
 
             {/* Desktop User Info */}
             <div className="hidden lg:block text-right">
-              <div className="text-sm text-neutral-900 dark:text-neutral-50">{user.name}</div>
-                <div className="text-xs text-neutral-500 dark:text-neutral-400 capitalize">{user.role}</div>
+              <div className="text-sm text-[var(--text)]">{user.name}</div>
+                <div className="text-xs text-[var(--text-muted)] capitalize">{user.role}</div>
             </div>
             <button
               onClick={onLogout}
-              className="hidden lg:block p-2 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg transition-colors"
+              className="hidden lg:block p-2 text-[var(--text-muted)] hover:bg-[var(--surface-3)] rounded-lg transition-colors"
             >
               <LogOut className="w-5 h-5" />
             </button>

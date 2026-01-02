@@ -48,13 +48,13 @@ export function ArtistProfileEdit({ onSave, onCancel }: ArtistProfileEditProps) 
 
   return (
     <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-6">
-      <div className="bg-white dark:bg-neutral-800 rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-[var(--surface-2)] text-[var(--text)] rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto border border-[var(--border)]">
         {/* Header */}
-        <div className="sticky top-0 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 p-6 flex items-center justify-between">
+        <div className="sticky top-0 bg-[var(--surface-2)] border-b border-[var(--border)] p-6 flex items-center justify-between">
           <h2 className="text-2xl">Edit Profile</h2>
           <button
             onClick={onCancel}
-            className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-[var(--surface-3)] rounded-lg transition-colors"
           >
             <X className="w-5 h-5" />
           </button>

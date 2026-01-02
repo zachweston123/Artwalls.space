@@ -89,8 +89,8 @@ export function VenueSales() {
                   <td className="px-6 py-4 text-sm">${sale.price.toFixed(2)}</td>
                   <td className="px-6 py-4">
                     <div className="text-sm">
-                      <span className="text-[var(--accent-2)]">${sale.venueEarnings.toFixed(2)}</span>
-                      <span className="text-xs text-[var(--text-subtle)] ml-1">(10%)</span>
+                      <span className="text-[var(--accent)]">${sale.venueEarnings.toFixed(2)}</span>
+                      <span className="text-xs text-[var(--text-muted)] ml-1">(10%)</span>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm text-[var(--text-muted)]">

@@ -88,7 +88,7 @@ export function AdminPromoCodes({ onCreatePromoCode }: AdminPromoCodesProps) {
                 <tr key={promo.id} className="hover:bg-neutral-50">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-mono text-neutral-900 dark:text-neutral-50">{promo.code}</span>
+                      <span className="text-sm text-neutral-900 dark:text-neutral-50">{promo.code}</span>
                       <button className="p-1 text-neutral-400 hover:text-neutral-600">
                         <Copy className="w-3 h-3" />
                       </button>

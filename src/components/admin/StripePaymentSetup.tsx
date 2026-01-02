@@ -181,7 +181,7 @@ export function StripePaymentSetup({ onNavigate }: StripeSetupProps) {
                 type={showPublishableKey ? 'text' : 'password'}
                 value={publishableKey}
                 onChange={(e) => setPublishableKey(e.target.value)}
-                className="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white font-mono text-sm"
+                className="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white text-sm"
                 readOnly
               />
               <button
@@ -218,7 +218,7 @@ export function StripePaymentSetup({ onNavigate }: StripeSetupProps) {
                 type={showSecretKey ? 'text' : 'password'}
                 value={secretKey}
                 onChange={(e) => setSecretKey(e.target.value)}
-                className="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white font-mono text-sm"
+                className="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white text-sm"
                 readOnly
               />
               <button
@@ -266,7 +266,7 @@ export function StripePaymentSetup({ onNavigate }: StripeSetupProps) {
         <div className="bg-neutral-50 dark:bg-neutral-700 p-4 rounded-lg mb-4">
           <p className="text-xs text-neutral-600 dark:text-neutral-400 mb-2">Webhook URL:</p>
           <div className="flex gap-2">
-            <code className="flex-1 text-sm font-mono bg-white dark:bg-neutral-800 p-2 rounded text-neutral-900 dark:text-white break-all">
+            <code className="flex-1 text-sm bg-white dark:bg-neutral-800 p-2 rounded text-neutral-900 dark:text-white break-all">
               https://api.artwalls.space/webhooks/stripe
             </code>
             <button

@@ -106,7 +106,7 @@ export function AdminActivityLog() {
             <tbody className="divide-y divide-neutral-100 dark:divide-neutral-700">
               {mockActivity.map((log) => (
                 <tr key={log.id} className="hover:bg-neutral-50 dark:hover:bg-neutral-700">
-                  <td className="px-6 py-4 text-sm text-neutral-600 dark:text-neutral-300 font-mono">
+                  <td className="px-6 py-4 text-sm text-neutral-600 dark:text-neutral-300">
                     {log.timestamp}
                   </td>
                   <td className="px-6 py-4 text-sm text-neutral-900 dark:text-neutral-50">
@@ -117,7 +117,7 @@ export function AdminActivityLog() {
                       {log.action}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-neutral-900 dark:text-neutral-50 font-mono">
+                  <td className="px-6 py-4 text-sm text-neutral-900 dark:text-neutral-50">
                     {log.target}
                   </td>
                   <td className="px-6 py-4 text-sm text-neutral-600 dark:text-neutral-300">

@@ -57,42 +57,40 @@ export function MobileSidebar({ isOpen, onClose, user, onNavigate, onLogout, cur
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 dark:bg-black/70 z-40 lg:hidden"
+        className="fixed inset-0 bg-black/60 z-40 lg:hidden"
         onClick={onClose}
       />
 
       {/* Sidebar */}
-      <div className="fixed inset-y-0 left-0 w-72 bg-white dark:bg-neutral-800 shadow-xl z-50 lg:hidden overflow-y-auto">
+      <div className="fixed inset-y-0 left-0 w-72 bg-[var(--surface-2)] border-r border-[var(--border)] shadow-xl z-50 lg:hidden overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-neutral-200 dark:border-neutral-700">
+        <div className="flex items-center justify-between p-6 border-b border-[var(--border)]">
           <div className="flex items-center gap-2">
             {isArtist ? (
-              <Palette className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              <Palette className="w-6 h-6 text-[var(--accent)]" />
             ) : (
-              <Store className="w-6 h-6 text-green-600 dark:text-green-400" />
+              <Store className="w-6 h-6 text-[var(--accent)]" />
             )}
-            <span className="text-xl tracking-tight text-neutral-900 dark:text-neutral-50">Artwalls</span>
+            <span className="text-xl tracking-tight text-[var(--text)]">Artwalls</span>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg transition-colors text-neutral-900 dark:text-neutral-50"
+            className="p-2 hover:bg-[var(--surface-3)] rounded-lg transition-colors text-[var(--text)]"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* User Info */}
-        <div className="p-6 border-b border-neutral-200">
-          <div className="text-lg mb-1 text-neutral-900 dark:text-neutral-50">{user.name}</div>
-          <div className={`inline-flex px-3 py-1 rounded-full text-sm ${
-            isArtist ? 'bg-blue-50 dark:bg-neutral-700 text-blue-700 dark:text-blue-300' : 'bg-green-50 dark:bg-neutral-700 text-green-700 dark:text-green-300'
-          }`}>
+        <div className="p-6 border-b border-[var(--border)]">
+          <div className="text-lg mb-1 text-[var(--text)]">{user.name}</div>
+          <div className="inline-flex px-3 py-1 rounded-full text-sm bg-[var(--surface-3)] text-[var(--text)] border border-[var(--border)]">
             {user.role === 'artist' ? 'Artist' : 'Venue'}
           </div>
         </div>
 
         {/* Theme */}
-        <div className="p-6 border-b border-neutral-200">
+        <div className="p-6 border-b border-[var(--border)]">
           <ThemeToggle variant="button" />
         </div>
 
@@ -105,10 +103,8 @@ export function MobileSidebar({ isOpen, onClose, user, onNavigate, onLogout, cur
                 onClick={() => handleNavigate(link.id)}
                 className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${
                   currentPage === link.id
-                    ? isArtist
-                      ? 'bg-blue-50 dark:bg-neutral-700 text-blue-700 dark:text-blue-300'
-                      : 'bg-green-50 dark:bg-neutral-700 text-green-700 dark:text-green-300'
-                    : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700'
+                    ? 'bg-[var(--surface-3)] text-[var(--text)]'
+                    : 'text-[var(--text-muted)] hover:bg-[var(--surface-3)] hover:text-[var(--text)]'
                 }`}
               >
                 {link.label}
@@ -118,10 +114,10 @@ export function MobileSidebar({ isOpen, onClose, user, onNavigate, onLogout, cur
         </nav>
 
         {/* Logout Button */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800">
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-[var(--border)] bg-[var(--surface-2)]">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 text-neutral-700 hover:bg-neutral-100 rounded-lg transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 text-[var(--text-muted)] hover:bg-[var(--surface-3)] hover:text-[var(--text)] rounded-lg transition-colors"
           >
             <LogOut className="w-5 h-5" />
             <span>Logout</span>
