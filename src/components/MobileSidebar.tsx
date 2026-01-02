@@ -56,7 +56,7 @@ export function MobileSidebar({ isOpen, onClose, user, onNavigate, onLogout, cur
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+        className="fixed inset-0 bg-black/50 dark:bg-black/70 z-40 lg:hidden"
         onClick={onClose}
       />
 
@@ -82,7 +82,7 @@ export function MobileSidebar({ isOpen, onClose, user, onNavigate, onLogout, cur
 
         {/* User Info */}
         <div className="p-6 border-b border-neutral-200">
-          <div className="text-lg mb-1 text-neutral-900">{user.name}</div>
+          <div className="text-lg mb-1 text-neutral-900 dark:text-neutral-50">{user.name}</div>
           <div className={`inline-flex px-3 py-1 rounded-full text-sm ${
             isArtist ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
           }`}>
@@ -117,7 +117,7 @@ export function MobileSidebar({ isOpen, onClose, user, onNavigate, onLogout, cur
         </nav>
 
         {/* Logout Button */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-neutral-200 bg-white">
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800">
           <button
             onClick={handleLogout}
             className="w-full flex items-center justify-center gap-2 px-4 py-3 text-neutral-700 hover:bg-neutral-100 rounded-lg transition-colors"

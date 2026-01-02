@@ -71,39 +71,39 @@ export function AdminAnnouncements({ onCreateAnnouncement }: AdminAnnouncementsP
         </button>
       </div>
 
-      <div className="bg-white rounded-xl border border-neutral-200 overflow-hidden">
+      <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-neutral-50 border-b border-neutral-200">
+            <thead className="bg-neutral-50 dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-700">
               <tr>
-                <th className="text-left px-6 py-3 text-sm text-neutral-600">Title</th>
-                <th className="text-left px-6 py-3 text-sm text-neutral-600">Audience</th>
-                <th className="text-left px-6 py-3 text-sm text-neutral-600">Type</th>
-                <th className="text-left px-6 py-3 text-sm text-neutral-600">Status</th>
-                <th className="text-left px-6 py-3 text-sm text-neutral-600">Start Date</th>
-                <th className="text-left px-6 py-3 text-sm text-neutral-600">End Date</th>
-                <th className="text-left px-6 py-3 text-sm text-neutral-600">Created By</th>
-                <th className="text-left px-6 py-3 text-sm text-neutral-600">Actions</th>
+                <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Title</th>
+                <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Audience</th>
+                <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Type</th>
+                <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Status</th>
+                <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Start Date</th>
+                <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">End Date</th>
+                <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Created By</th>
+                <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-100">
+            <tbody className="divide-y divide-neutral-100 dark:divide-neutral-700">
               {mockAnnouncements.map((announcement) => (
-                <tr key={announcement.id} className="hover:bg-neutral-50">
-                  <td className="px-6 py-4 text-sm text-neutral-900">{announcement.title}</td>
+                <tr key={announcement.id} className="hover:bg-neutral-50 dark:hover:bg-neutral-700">
+                  <td className="px-6 py-4 text-sm text-neutral-900 dark:text-neutral-50">{announcement.title}</td>
                   <td className="px-6 py-4">
                     <span className={`px-2 py-1 rounded-full text-xs ${getAudienceColor(announcement.audience)}`}>
                       {announcement.audience}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-neutral-600">{announcement.type}</td>
+                  <td className="px-6 py-4 text-sm text-neutral-600 dark:text-neutral-300">{announcement.type}</td>
                   <td className="px-6 py-4">
                     <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(announcement.status)}`}>
                       {announcement.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-neutral-600">{announcement.startDate}</td>
-                  <td className="px-6 py-4 text-sm text-neutral-600">{announcement.endDate || '—'}</td>
-                  <td className="px-6 py-4 text-sm text-neutral-600">{announcement.createdBy}</td>
+                  <td className="px-6 py-4 text-sm text-neutral-600 dark:text-neutral-300">{announcement.startDate}</td>
+                  <td className="px-6 py-4 text-sm text-neutral-600 dark:text-neutral-300">{announcement.endDate || '—'}</td>
+                  <td className="px-6 py-4 text-sm text-neutral-600 dark:text-neutral-300">{announcement.createdBy}</td>
                   <td className="px-6 py-4">
                     <div className="flex gap-2">
                       <button className="p-1 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-50">
@@ -125,11 +125,11 @@ export function AdminAnnouncements({ onCreateAnnouncement }: AdminAnnouncementsP
       </div>
 
       {mockAnnouncements.length === 0 && (
-        <div className="text-center py-16 bg-white rounded-xl border border-neutral-200">
-          <div className="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Megaphone className="w-8 h-8 text-neutral-400" />
+        <div className="text-center py-16 bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700">
+          <div className="w-16 h-16 bg-neutral-100 dark:bg-neutral-700 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Megaphone className="w-8 h-8 text-neutral-400 dark:text-neutral-500" />
           </div>
-          <h3 className="text-xl mb-2">No announcements yet</h3>
+          <h3 className="text-xl mb-2 text-neutral-900 dark:text-neutral-50">No announcements yet</h3>
           <p className="text-neutral-600 dark:text-neutral-300 mb-6">
             Create your first announcement to communicate with users
           </p>

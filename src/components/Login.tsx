@@ -88,7 +88,7 @@ export function Login({ onLogin }: LoginProps) {
             ) : (
               <Store className="w-8 h-8 text-green-600" />
             )}
-            <h1 className="text-3xl text-neutral-900">Artwalls</h1>
+            <h1 className="text-3xl text-neutral-900 dark:text-neutral-50">Artwalls</h1>
           </div>
           <p className="text-neutral-600 dark:text-neutral-300">
             {isSignup ? 'Create your account' : 'Sign in to continue'}

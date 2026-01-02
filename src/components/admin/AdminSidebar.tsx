@@ -28,16 +28,16 @@ export function AdminSidebar({ currentPage, onNavigate }: AdminSidebarProps) {
   ];
 
   return (
-    <aside className="w-64 bg-white border-r border-neutral-200 flex flex-col">
+    <aside className="w-64 bg-white dark:bg-neutral-800 border-r border-neutral-200 dark:border-neutral-700 flex flex-col">
       {/* Admin Badge */}
-      <div className="p-6 border-b border-neutral-200">
+      <div className="p-6 border-b border-neutral-200 dark:border-neutral-700">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-neutral-900 rounded-lg flex items-center justify-center">
-            <Shield className="w-5 h-5 text-white" />
+          <div className="w-10 h-10 bg-neutral-900 dark:bg-neutral-700 rounded-lg flex items-center justify-center">
+            <Shield className="w-5 h-5 text-white dark:text-neutral-50" />
           </div>
           <div>
-            <h2 className="text-sm text-neutral-900">Admin Console</h2>
-            <p className="text-xs text-neutral-500">Internal</p>
+            <h2 className="text-sm text-neutral-900 dark:text-neutral-50">Admin Console</h2>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400">Internal</p>
           </div>
         </div>
       </div>

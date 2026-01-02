@@ -98,7 +98,7 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
 
             {/* Desktop User Info */}
             <div className="hidden lg:block text-right">
-              <div className="text-sm text-neutral-900">{user.name}</div>
+              <div className="text-sm text-neutral-900 dark:text-neutral-50">{user.name}</div>
               <div className="text-xs text-neutral-500 capitalize">{user.role}</div>
             </div>
             <button

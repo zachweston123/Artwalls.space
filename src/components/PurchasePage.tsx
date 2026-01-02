@@ -63,19 +63,19 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
   return (
     <div className="min-h-screen bg-neutral-50">
       {/* Header */}
-      <div className="bg-white border-b border-neutral-200">
+      <div className="bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between">
             {onBack && (
               <button
                 onClick={onBack}
-                className="flex items-center gap-2 text-neutral-600 hover:text-neutral-900 transition-colors"
+                className="flex items-center gap-2 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-neutral-50 transition-colors"
               >
                 <ArrowLeft className="w-5 h-5" />
                 <span className="text-sm">Back</span>
               </button>
             )}
-            <span className="text-xl tracking-tight text-neutral-900">Artwalls</span>
+            <span className="text-xl tracking-tight text-neutral-900 dark:text-neutral-50">Artwalls</span>
             <div className="w-16" /> {/* Spacer for balance */}
           </div>
         </div>
@@ -85,8 +85,8 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
           {/* Image */}
-          <div className="bg-white rounded-2xl overflow-hidden border border-neutral-200 shadow-lg">
-            <div className="aspect-square bg-neutral-100">
+          <div className="bg-white dark:bg-neutral-800 rounded-2xl overflow-hidden border border-neutral-200 dark:border-neutral-700 shadow-lg">
+            <div className="aspect-square bg-neutral-100 dark:bg-neutral-900">
               <img
                 src={artwork.imageUrl}
                 alt={artwork.title}
@@ -98,30 +98,30 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
           {/* Details */}
           <div>
             <div className="mb-6">
-              <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm mb-4">
+              <span className="inline-block px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 rounded-full text-sm mb-4">
                 {artwork.status === 'sold' ? 'Sold' : 'Available for Purchase'}
               </span>
-              <h1 className="text-3xl sm:text-4xl mb-3 text-neutral-900">{artwork.title}</h1>
-                <div className="flex items-center gap-2 text-neutral-600 mb-4">
+              <h1 className="text-3xl sm:text-4xl mb-3 text-neutral-900 dark:text-neutral-50">{artwork.title}</h1>
+                <div className="flex items-center gap-2 text-neutral-600 dark:text-neutral-300 mb-4">
                 <User className="w-5 h-5" />
                 <span className="text-base sm:text-lg">by {artwork.artistName}</span>
               </div>
-                <div className="flex items-start gap-2 text-neutral-600 mb-6">
+                <div className="flex items-start gap-2 text-neutral-600 dark:text-neutral-300 mb-6">
                 <MapPin className="w-5 h-5 flex-shrink-0 mt-0.5" />
                 <span className="text-sm sm:text-base">Currently on display at {artwork.venueName || 'Local Venue'}</span>
               </div>
             </div>
 
             <div className="mb-8">
-              <p className="text-neutral-700 leading-relaxed">{artwork.description}</p>
+              <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed">{artwork.description}</p>
             </div>
 
-            <div className="bg-neutral-100 rounded-xl p-4 sm:p-6 mb-6 border border-neutral-200">
+            <div className="bg-neutral-100 dark:bg-neutral-800 rounded-xl p-4 sm:p-6 mb-6 border border-neutral-200 dark:border-neutral-700">
               <div className="flex items-baseline justify-between mb-2">
-                <span className="text-neutral-600">Price</span>
-                <span className="text-3xl sm:text-4xl text-neutral-900">${artwork.price}</span>
+                <span className="text-neutral-600 dark:text-neutral-300">Price</span>
+                <span className="text-3xl sm:text-4xl text-neutral-900 dark:text-neutral-50">${artwork.price}</span>
               </div>
-              <p className="text-sm text-neutral-500">
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">
                 Supports local artist with ~80% of the sale going to the creator (before Stripe fees)
               </p>
             </div>
@@ -142,7 +142,7 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
             </button>
 
             {loading && (
-              <p className="text-xs text-neutral-500">Loading latest availability…</p>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">Loading latest availability…</p>
             )}
 
             {/* All Sales Final Notice */}
@@ -153,7 +153,7 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
               </p>
             </div>
 
-            <div className="space-y-3 pt-6 border-t border-neutral-200">
+            <div className="space-y-3 pt-6 border-t border-neutral-200 dark:border-neutral-700">
               <div className="flex items-start gap-3 text-sm">
                 <div className="w-5 h-5 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                   <svg className="w-3 h-3 text-green-600 dark:text-green-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -161,8 +161,8 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-neutral-900">Original physical artwork</p>
-                  <p className="text-neutral-500">Take it home immediately after purchase</p>
+                  <p className="text-neutral-900 dark:text-neutral-50">Original physical artwork</p>
+                  <p className="text-neutral-500 dark:text-neutral-400">Take it home immediately after purchase</p>
                 </div>
               </div>
               <div className="flex items-start gap-3 text-sm">
@@ -172,8 +172,8 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-neutral-900">Support local artists</p>
-                  <p className="text-neutral-500">Funds are routed to the artist automatically via Stripe Connect</p>
+                  <p className="text-neutral-900 dark:text-neutral-50">Support local artists</p>
+                  <p className="text-neutral-500 dark:text-neutral-400">Funds are routed to the artist automatically via Stripe Connect</p>
                 </div>
               </div>
               <div className="flex items-start gap-3 text-sm">
@@ -183,8 +183,8 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-neutral-900">Secure payment</p>
-                  <p className="text-neutral-500">Checkout is handled by Stripe</p>
+                  <p className="text-neutral-900 dark:text-neutral-50">Secure payment</p>
+                  <p className="text-neutral-500 dark:text-neutral-400">Checkout is handled by Stripe</p>
                 </div>
               </div>
             </div>

@@ -90,26 +90,26 @@ export function AdminActivityLog() {
         </p>
       </div>
 
-      <div className="bg-white rounded-xl border border-neutral-200 overflow-hidden">
+      <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-neutral-50 border-b border-neutral-200">
+            <thead className="bg-neutral-50 dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-700">
               <tr>
-                <th className="text-left px-6 py-3 text-sm text-neutral-600">Timestamp</th>
-                <th className="text-left px-6 py-3 text-sm text-neutral-600">Admin User</th>
-                <th className="text-left px-6 py-3 text-sm text-neutral-600">Action</th>
-                <th className="text-left px-6 py-3 text-sm text-neutral-600">Target</th>
-                <th className="text-left px-6 py-3 text-sm text-neutral-600">Details</th>
-                <th className="text-left px-6 py-3 text-sm text-neutral-600">Actions</th>
+                <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Timestamp</th>
+                <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Admin User</th>
+                <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Action</th>
+                <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Target</th>
+                <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Details</th>
+                <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-100">
+            <tbody className="divide-y divide-neutral-100 dark:divide-neutral-700">
               {mockActivity.map((log) => (
-                <tr key={log.id} className="hover:bg-neutral-50">
-                  <td className="px-6 py-4 text-sm text-neutral-600 font-mono">
+                <tr key={log.id} className="hover:bg-neutral-50 dark:hover:bg-neutral-700">
+                  <td className="px-6 py-4 text-sm text-neutral-600 dark:text-neutral-300 font-mono">
                     {log.timestamp}
                   </td>
-                  <td className="px-6 py-4 text-sm text-neutral-900">
+                  <td className="px-6 py-4 text-sm text-neutral-900 dark:text-neutral-50">
                     {log.admin}
                   </td>
                   <td className="px-6 py-4">
@@ -117,14 +117,14 @@ export function AdminActivityLog() {
                       {log.action}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-neutral-900 font-mono">
+                  <td className="px-6 py-4 text-sm text-neutral-900 dark:text-neutral-50 font-mono">
                     {log.target}
                   </td>
-                  <td className="px-6 py-4 text-sm text-neutral-600">
+                  <td className="px-6 py-4 text-sm text-neutral-600 dark:text-neutral-300">
                     {log.details}
                   </td>
                   <td className="px-6 py-4">
-                    <button className="px-3 py-1 text-neutral-600 hover:text-neutral-900 text-xs transition-colors">
+                    <button className="px-3 py-1 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-neutral-50 text-xs transition-colors">
                       View
                     </button>
                   </td>
@@ -135,15 +135,15 @@ export function AdminActivityLog() {
         </div>
 
         {/* Pagination */}
-        <div className="p-4 border-t border-neutral-200 flex items-center justify-between">
-          <p className="text-sm text-neutral-600">
+        <div className="p-4 border-t border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
+          <p className="text-sm text-neutral-600 dark:text-neutral-300">
             Showing 1-{mockActivity.length} of 247 entries
           </p>
           <div className="flex gap-2">
-            <button className="px-3 py-1 bg-neutral-100 text-neutral-700 rounded hover:bg-neutral-200 transition-colors text-sm">
+            <button className="px-3 py-1 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded hover:bg-neutral-200 dark:hover:bg-neutral-600 transition-colors text-sm">
               Previous
             </button>
-            <button className="px-3 py-1 bg-neutral-900 text-white rounded hover:bg-neutral-800 transition-colors text-sm">
+            <button className="px-3 py-1 bg-neutral-900 dark:bg-neutral-600 text-white dark:text-neutral-50 rounded hover:bg-neutral-800 dark:hover:bg-neutral-500 transition-colors text-sm">
               Next
             </button>
           </div>
@@ -151,12 +151,12 @@ export function AdminActivityLog() {
       </div>
 
       {mockActivity.length === 0 && (
-        <div className="text-center py-16 bg-white rounded-xl border border-neutral-200">
-          <div className="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Activity className="w-8 h-8 text-neutral-400" />
+        <div className="text-center py-16 bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700">
+          <div className="w-16 h-16 bg-neutral-100 dark:bg-neutral-700 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Activity className="w-8 h-8 text-neutral-400 dark:text-neutral-500" />
           </div>
-          <h3 className="text-xl mb-2">No activity yet</h3>
-          <p className="text-neutral-600">
+          <h3 className="text-xl mb-2 text-neutral-900 dark:text-neutral-50">No activity yet</h3>
+          <p className="text-neutral-600 dark:text-neutral-300">
             Admin actions will appear here
           </p>
         </div>
