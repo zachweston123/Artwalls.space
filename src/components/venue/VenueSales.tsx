@@ -14,43 +14,43 @@ export function VenueSales() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white dark:bg-neutral-900 rounded-xl p-6 border border-neutral-200 dark:border-neutral-800">
+        <div className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)]">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
-              <DollarSign className="w-6 h-6 text-green-600 dark:text-green-400" />
+            <div className="w-12 h-12 bg-[var(--green-muted)] rounded-lg flex items-center justify-center">
+              <DollarSign className="w-6 h-6 text-[var(--green)]" />
             </div>
             <div>
-              <div className="text-sm text-neutral-600 dark:text-neutral-300">Total Earnings</div>
-              <div className="text-2xl text-neutral-900 dark:text-neutral-50">${totalEarnings.toFixed(2)}</div>
+              <div className="text-sm text-[var(--text-muted)]">Total Earnings</div>
+              <div className="text-2xl">${totalEarnings.toFixed(2)}</div>
             </div>
           </div>
-          <div className="text-xs text-neutral-500 dark:text-neutral-400">10% commission</div>
+          <div className="text-xs text-[var(--text-muted)]">10% commission</div>
         </div>
 
-        <div className="bg-white dark:bg-neutral-900 rounded-xl p-6 border border-neutral-200 dark:border-neutral-800">
+        <div className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)]">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
-              <Package className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            <div className="w-12 h-12 bg-[var(--surface-2)] rounded-lg flex items-center justify-center">
+              <Package className="w-6 h-6 text-[var(--blue)]" />
             </div>
             <div>
-              <div className="text-sm text-neutral-600 dark:text-neutral-300">Artworks Sold</div>
-              <div className="text-2xl text-neutral-900 dark:text-neutral-50">{totalSales}</div>
+              <div className="text-sm text-[var(--text-muted)]">Artworks Sold</div>
+              <div className="text-2xl">{totalSales}</div>
             </div>
           </div>
-          <div className="text-xs text-neutral-500 dark:text-neutral-400">From your venue</div>
+          <div className="text-xs text-[var(--text-muted)]">From your venue</div>
         </div>
 
-        <div className="bg-white dark:bg-neutral-900 rounded-xl p-6 border border-neutral-200 dark:border-neutral-800">
+        <div className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)]">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+            <div className="w-12 h-12 bg-[var(--surface-2)] rounded-lg flex items-center justify-center">
+              <TrendingUp className="w-6 h-6 text-[var(--blue)]" />
             </div>
             <div>
-              <div className="text-sm text-neutral-600 dark:text-neutral-300">Avg. Commission</div>
-              <div className="text-2xl text-neutral-900 dark:text-neutral-50">${averageCommission.toFixed(0)}</div>
+              <div className="text-sm text-[var(--text-muted)]">Avg. Commission</div>
+              <div className="text-2xl">${averageCommission.toFixed(0)}</div>
             </div>
           </div>
-          <div className="text-xs text-neutral-500">Per sale</div>
+          <div className="text-xs text-[var(--text-muted)]">Per sale</div>
         </div>
       </div>
 
@@ -75,7 +75,7 @@ export function VenueSales() {
                 <tr key={sale.id} className="transition-colors hover:bg-[var(--surface-3)]">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-neutral-100 rounded overflow-hidden">
+                      <div className="w-12 h-12 bg-[var(--surface-3)] rounded overflow-hidden">
                         <img
                           src={sale.artworkImage}
                           alt={sale.artworkTitle}
@@ -89,7 +89,7 @@ export function VenueSales() {
                   <td className="px-6 py-4 text-sm">${sale.price.toFixed(2)}</td>
                   <td className="px-6 py-4">
                     <div className="text-sm">
-                      <span className="text-[var(--accent)]">${sale.venueEarnings.toFixed(2)}</span>
+                      <span className="text-[var(--green)]">${sale.venueEarnings.toFixed(2)}</span>
                       <span className="text-xs text-[var(--text-muted)] ml-1">(10%)</span>
                     </div>
                   </td>
@@ -108,11 +108,11 @@ export function VenueSales() {
 
         {mockSales.length === 0 && (
           <div className="text-center py-16">
-            <div className="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <DollarSign className="w-8 h-8 text-neutral-400" />
+            <div className="w-16 h-16 bg-[var(--surface-3)] rounded-full flex items-center justify-center mx-auto mb-4">
+              <DollarSign className="w-8 h-8 text-[var(--text-muted)]" />
             </div>
-            <h3 className="text-xl mb-2 text-neutral-900">No sales yet</h3>
-            <p className="text-neutral-600">Sales will appear here once artwork is purchased</p>
+            <h3 className="text-xl mb-2">No sales yet</h3>
+            <p className="text-[var(--text-muted)]">Sales will appear here once artwork is purchased</p>
           </div>
         )}
       </div>
@@ -125,11 +125,11 @@ export function VenueSales() {
         <div className="grid grid-cols-3 gap-4 text-sm">
           <div className="bg-[var(--surface-1)] rounded-lg p-3 border border-[var(--border)]">
             <div className="text-[var(--text-muted)] mb-1">Artist</div>
-            <div className="text-xl text-blue-600">80%</div>
+            <div className="text-xl text-[var(--blue)]">80%</div>
           </div>
           <div className="bg-[var(--surface-1)] rounded-lg p-3 border border-[var(--border)]">
             <div className="text-[var(--text-muted)] mb-1">Your Venue</div>
-            <div className="text-xl text-green-600">10%</div>
+            <div className="text-xl text-[var(--green)]">10%</div>
           </div>
           <div className="bg-[var(--surface-1)] rounded-lg p-3 border border-[var(--border)]">
             <div className="text-[var(--text-muted)] mb-1">Platform</div>
