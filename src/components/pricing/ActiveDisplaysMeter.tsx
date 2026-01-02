@@ -94,7 +94,7 @@ export function ActiveDisplaysMeter({
 
       {isUnlimited && (
         <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-          <p className="text-sm text-green-900">
+            <p className="text-sm text-green-700 dark:text-green-400">
             ✓ <strong>Unlimited displays</strong> — Display as many artworks as you want with no overage charges.
           </p>
         </div>
@@ -104,7 +104,7 @@ export function ActiveDisplaysMeter({
         {onManage && (
           <button
             onClick={onManage}
-            className="flex-1 px-4 py-2 bg-neutral-100 text-neutral-700 rounded-lg hover:bg-neutral-200 transition-colors text-sm"
+            className="flex-1 px-4 py-2 bg-neutral-100 dark:bg-neutral-700 text-neutral-900 dark:text-neutral-50 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition-colors text-sm"
           >
             Manage Displays
           </button>
@@ -120,7 +120,7 @@ export function ActiveDisplaysMeter({
       </div>
 
       {!isUnlimited && percentage > 80 && !isOverage && (
-        <p className="text-xs text-yellow-700 mt-3 text-center">
+        <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-3 text-center">
           ⚠️ You're nearing your display limit. Consider upgrading to avoid overage charges.
         </p>
       )}

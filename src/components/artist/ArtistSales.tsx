@@ -124,11 +124,11 @@ export function ArtistSales() {
         </p>
         <div className="grid grid-cols-3 gap-4 text-sm">
           <div className="bg-white rounded-lg p-3 border border-transparent">
-            <div className="text-neutral-600 mb-1">Artist</div>
+            <div className="text-neutral-600 dark:text-neutral-300 mb-1">Artist</div>
             <div className="text-xl text-blue-600">80%</div>
           </div>
           <div className="bg-white rounded-lg p-3 border border-transparent">
-            <div className="text-neutral-600 mb-1">Venue</div>
+            <div className="text-neutral-600 dark:text-neutral-300 mb-1">Venue</div>
             <div className="text-xl text-green-600">10%</div>
           </div>
           <div className="bg-white rounded-lg p-3 border border-transparent">

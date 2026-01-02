@@ -561,7 +561,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                   <div className="bg-white dark:bg-neutral-800 rounded-lg p-3 border border-blue-200 dark:border-blue-700">
                     <p className="text-xs text-neutral-600 mb-1">Protection cost:</p>
                     <p className="text-sm text-neutral-900">$3/artwork/mo</p>
-                    <p className="text-xs text-green-600">FREE on Pro plan</p>
+                    <p className="text-xs text-green-600 dark:text-green-300">FREE on Pro plan</p>
                   </div>
                 </div>
               </div>
@@ -580,7 +580,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                 <th className="text-left p-4 text-sm text-neutral-600 dark:text-neutral-300">Feature</th>
                 <th className="text-center p-4 text-sm text-neutral-600 dark:text-neutral-300">Free</th>
                 <th className="text-center p-4 text-sm text-neutral-600 dark:text-neutral-300">Starter</th>
-                <th className="text-center p-4 text-sm bg-blue-50 dark:bg-blue-900 text-neutral-600 dark:text-neutral-300">Growth</th>
+                <th className="text-center p-4 text-sm bg-blue-50 dark:bg-blue-900 text-neutral-900 dark:text-blue-100">Growth</th>
                 <th className="text-center p-4 text-sm text-neutral-600 dark:text-neutral-300">Pro</th>
               </tr>
             </thead>
@@ -596,7 +596,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                 <td className="p-4 text-sm text-neutral-900 dark:text-neutral-50">Overage pricing</td>
                 <td className="text-center p-4 text-sm text-xs text-neutral-600 dark:text-neutral-400">—</td>
                 <td className="text-center p-4 text-sm text-xs text-neutral-600 dark:text-neutral-400">$5/mo per display</td>
-                <td className="text-center p-4 text-sm text-xs bg-blue-50 dark:bg-blue-800 text-neutral-600 dark:text-neutral-300">$4/mo per display</td>
+                <td className="text-center p-4 text-sm text-xs bg-blue-50 dark:bg-blue-800 text-neutral-900 dark:text-neutral-50">$4/mo per display</td>
                 <td className="text-center p-4 text-sm text-xs text-neutral-600 dark:text-neutral-400">—</td>
               </tr>
               <tr className="border-b border-neutral-200 dark:border-neutral-700">

@@ -119,7 +119,7 @@ export function AdminPromoCodes({ onCreatePromoCode }: AdminPromoCodesProps) {
                         View
                       </button>
                       {promo.status === 'Active' && (
-                        <button className="px-3 py-1 bg-red-100 text-red-700 rounded text-xs hover:bg-red-200 transition-colors">
+                        <button className="px-3 py-1 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded text-xs hover:bg-red-200 dark:hover:bg-red-800 transition-colors">
                           Deactivate
                         </button>
                       )}

@@ -178,7 +178,7 @@ export function ArtistProfileEdit({ onSave, onCancel }: ArtistProfileEditProps) 
             <button
               type="button"
               onClick={onCancel}
-              className="flex-1 px-4 py-2 bg-neutral-100 text-neutral-700 rounded-lg hover:bg-neutral-200 transition-colors"
+              className="flex-1 px-4 py-2 bg-neutral-100 dark:bg-neutral-700 text-neutral-900 dark:text-neutral-50 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition-colors"
             >
               Cancel
             </button>

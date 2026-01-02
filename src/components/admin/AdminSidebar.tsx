@@ -55,7 +55,7 @@ export function AdminSidebar({ currentPage, onNavigate }: AdminSidebarProps) {
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm ${
                 isActive
                   ? 'bg-neutral-900 text-white'
-                  : 'text-neutral-700 hover:bg-neutral-100'
+                  : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700'
               }`}
             >
               <Icon className="w-5 h-5" />
@@ -69,11 +69,11 @@ export function AdminSidebar({ currentPage, onNavigate }: AdminSidebarProps) {
       <div className="p-4 border-t border-neutral-200">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-neutral-200 rounded-full flex items-center justify-center">
-            <span className="text-xs text-neutral-700">AD</span>
+            <span className="text-xs text-neutral-50 dark:text-neutral-900">AD</span>
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm text-neutral-900 dark:text-neutral-50 truncate">Admin User</p>
-            <p className="text-xs text-neutral-500">admin@artwalls.com</p>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400">admin@artwalls.com</p>
           </div>
         </div>
       </div>

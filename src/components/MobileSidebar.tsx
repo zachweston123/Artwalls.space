@@ -84,7 +84,7 @@ export function MobileSidebar({ isOpen, onClose, user, onNavigate, onLogout, cur
         <div className="p-6 border-b border-neutral-200">
           <div className="text-lg mb-1 text-neutral-900 dark:text-neutral-50">{user.name}</div>
           <div className={`inline-flex px-3 py-1 rounded-full text-sm ${
-            isArtist ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
+            isArtist ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' : 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
           }`}>
             {user.role === 'artist' ? 'Artist' : 'Venue'}
           </div>

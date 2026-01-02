@@ -99,11 +99,11 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
             {/* Desktop User Info */}
             <div className="hidden lg:block text-right">
               <div className="text-sm text-neutral-900 dark:text-neutral-50">{user.name}</div>
-              <div className="text-xs text-neutral-500 capitalize">{user.role}</div>
+                <div className="text-xs text-neutral-500 dark:text-neutral-400 capitalize">{user.role}</div>
             </div>
             <button
               onClick={onLogout}
-              className="hidden lg:block p-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors"
+              className="hidden lg:block p-2 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg transition-colors"
             >
               <LogOut className="w-5 h-5" />
             </button>

@@ -128,7 +128,7 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
 
             {error && (
               <div className="bg-red-50 rounded-xl p-4 border border-red-200 mb-4">
-                <p className="text-sm text-red-800">{error}</p>
+                <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
               </div>
             )}
 
@@ -147,7 +147,7 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
 
             {/* All Sales Final Notice */}
             <div className="bg-yellow-50 rounded-xl p-4 border border-yellow-200 mb-6">
-              <p className="text-sm text-yellow-900">
+              <p className="text-sm text-yellow-700 dark:text-yellow-300">
                 <strong>⚠️ All sales final:</strong> Please view artwork in person before purchasing.
                 No returns or refunds available.
               </p>

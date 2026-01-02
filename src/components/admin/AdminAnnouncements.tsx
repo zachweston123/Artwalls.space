@@ -112,7 +112,7 @@ export function AdminAnnouncements({ onCreateAnnouncement }: AdminAnnouncementsP
                       <button className="p-1 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-50">
                         <Edit className="w-4 h-4" />
                       </button>
-                      <button className="p-1 text-red-600 hover:text-red-700">
+                      <button className="p-1 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
