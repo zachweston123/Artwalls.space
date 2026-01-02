@@ -140,7 +140,7 @@ export default function App() {
           />
         )}
         {/* Demo link to simulate QR code scan */}
-        <div className="fixed bottom-6 right-6 bg-white rounded-lg shadow-lg p-4 border border-neutral-200 dark:bg-neutral-800 dark:border-neutral-700">
+        <div className="fixed bottom-6 right-6 bg-white dark:bg-neutral-900 rounded-lg shadow-lg p-4 border border-neutral-200 dark:border-neutral-800">
           <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-2">Demo QR Purchase Page:</p>
           <button
             onClick={() => setCurrentPage('purchase-1')}

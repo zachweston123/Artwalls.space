@@ -123,17 +123,17 @@ export function ArtistSales() {
           You receive 80% of the sale price. The venue receives 10%, and Artwalls keeps 10% as a platform fee.
         </p>
         <div className="grid grid-cols-3 gap-4 text-sm">
-          <div className="bg-white rounded-lg p-3 border border-transparent">
+          <div className="bg-white dark:bg-neutral-900 rounded-lg p-3 border border-transparent dark:border-neutral-800">
             <div className="text-neutral-600 dark:text-neutral-300 mb-1">Artist</div>
             <div className="text-xl text-blue-600">80%</div>
           </div>
-          <div className="bg-white rounded-lg p-3 border border-transparent">
+          <div className="bg-white dark:bg-neutral-900 rounded-lg p-3 border border-transparent dark:border-neutral-800">
             <div className="text-neutral-600 dark:text-neutral-300 mb-1">Venue</div>
             <div className="text-xl text-green-600">10%</div>
           </div>
-          <div className="bg-white rounded-lg p-3 border border-transparent">
-            <div className="text-neutral-600 mb-1">Platform</div>
-            <div className="text-xl text-neutral-600">10%</div>
+          <div className="bg-white dark:bg-neutral-900 rounded-lg p-3 border border-transparent dark:border-neutral-800">
+            <div className="text-neutral-600 dark:text-neutral-300 mb-1">Platform</div>
+            <div className="text-xl text-neutral-600 dark:text-neutral-300">10%</div>
           </div>
         </div>
       </div>

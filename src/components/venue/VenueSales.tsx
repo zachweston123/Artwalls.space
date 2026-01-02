@@ -14,40 +14,40 @@ export function VenueSales() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white rounded-xl p-6 border border-neutral-200">
+        <div className="bg-white dark:bg-neutral-900 rounded-xl p-6 border border-neutral-200 dark:border-neutral-800">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-              <DollarSign className="w-6 h-6 text-green-600" />
+            <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+              <DollarSign className="w-6 h-6 text-green-600 dark:text-green-400" />
             </div>
             <div>
-              <div className="text-sm text-neutral-600">Total Earnings</div>
-              <div className="text-2xl">${totalEarnings.toFixed(2)}</div>
+              <div className="text-sm text-neutral-600 dark:text-neutral-300">Total Earnings</div>
+              <div className="text-2xl text-neutral-900 dark:text-neutral-50">${totalEarnings.toFixed(2)}</div>
             </div>
           </div>
-          <div className="text-xs text-neutral-500">10% commission</div>
+          <div className="text-xs text-neutral-500 dark:text-neutral-400">10% commission</div>
         </div>
 
-        <div className="bg-white rounded-xl p-6 border border-neutral-200">
+        <div className="bg-white dark:bg-neutral-900 rounded-xl p-6 border border-neutral-200 dark:border-neutral-800">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Package className="w-6 h-6 text-blue-600" />
+            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+              <Package className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <div className="text-sm text-neutral-600">Artworks Sold</div>
-              <div className="text-2xl">{totalSales}</div>
+              <div className="text-sm text-neutral-600 dark:text-neutral-300">Artworks Sold</div>
+              <div className="text-2xl text-neutral-900 dark:text-neutral-50">{totalSales}</div>
             </div>
           </div>
-          <div className="text-xs text-neutral-500">From your venue</div>
+          <div className="text-xs text-neutral-500 dark:text-neutral-400">From your venue</div>
         </div>
 
-        <div className="bg-white rounded-xl p-6 border border-neutral-200">
+        <div className="bg-white dark:bg-neutral-900 rounded-xl p-6 border border-neutral-200 dark:border-neutral-800">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-purple-600" />
+            <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+              <TrendingUp className="w-6 h-6 text-purple-600 dark:text-purple-400" />
             </div>
             <div>
-              <div className="text-sm text-neutral-600">Avg. Commission</div>
-              <div className="text-2xl">${averageCommission.toFixed(0)}</div>
+              <div className="text-sm text-neutral-600 dark:text-neutral-300">Avg. Commission</div>
+              <div className="text-2xl text-neutral-900 dark:text-neutral-50">${averageCommission.toFixed(0)}</div>
             </div>
           </div>
           <div className="text-xs text-neutral-500">Per sale</div>

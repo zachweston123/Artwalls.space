@@ -198,7 +198,7 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
       {activeTab === 'overview' && (
         <div className="space-y-6">
           {/* Identity Card */}
-          <div className="bg-white rounded-xl p-6 border border-neutral-200">
+          <div className="bg-white dark:bg-neutral-900 rounded-xl p-6 border border-neutral-200 dark:border-neutral-800">
             <h2 className="text-xl mb-4">Identity</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="flex items-start gap-3">
@@ -246,8 +246,8 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
           </div>
 
           {/* Artist Stats */}
-          <div className="bg-white rounded-xl p-6 border border-neutral-200">
-            <h2 className="text-xl mb-4">Artist Stats</h2>
+          <div className="bg-white dark:bg-neutral-900 rounded-xl p-6 border border-neutral-200 dark:border-neutral-800">
+            <h2 className="text-xl mb-4 text-neutral-900 dark:text-neutral-50">Artist Stats</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               <div>
                 <p className="text-sm text-neutral-600 mb-1">Artworks</p>
@@ -267,10 +267,10 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
       )}
 
       {activeTab === 'placements' && (
-        <div className="bg-white rounded-xl border border-neutral-200 overflow-hidden">
+        <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-neutral-50 border-b border-neutral-200">
+              <thead className="bg-neutral-50 dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
                 <tr>
                   <th className="text-left px-6 py-3 text-sm text-neutral-600">Artwork</th>
                   <th className="text-left px-6 py-3 text-sm text-neutral-600">Venue</th>
@@ -316,10 +316,10 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
       )}
 
       {activeTab === 'orders' && (
-        <div className="bg-white rounded-xl border border-neutral-200 overflow-hidden">
+        <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-neutral-50 border-b border-neutral-200">
+              <thead className="bg-neutral-50 dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
                 <tr>
                   <th className="text-left px-6 py-3 text-sm text-neutral-600">Order ID</th>
                   <th className="text-left px-6 py-3 text-sm text-neutral-600">Artwork</th>

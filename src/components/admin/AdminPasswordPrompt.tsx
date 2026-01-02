@@ -42,7 +42,7 @@ export function AdminPasswordPrompt({ onVerify, onCancel }: AdminPasswordPromptP
 
   return (
     <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center p-6 z-50">
-      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full dark:bg-neutral-900">
+      <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-2xl max-w-md w-full">
         {/* Header */}
         <div className="p-8 border-b border-neutral-200 dark:border-neutral-700">
           <div className="w-12 h-12 bg-neutral-100 dark:bg-neutral-800 rounded-full flex items-center justify-center mb-4">
