@@ -32,24 +32,24 @@ export function AdminAnnouncements({ onCreateAnnouncement }: AdminAnnouncementsP
   const getAudienceColor = (audience: string) => {
     switch (audience) {
       case 'Artists':
-        return 'bg-blue-50 dark:bg-neutral-700 text-blue-700 dark:text-blue-300';
+        return 'bg-[var(--surface-3)] text-[var(--blue)] border border-[var(--border)]';
       case 'Venues':
-        return 'bg-green-50 dark:bg-neutral-700 text-green-700 dark:text-green-300';
+        return 'bg-[var(--surface-3)] text-[var(--green)] border border-[var(--border)]';
       default:
-        return 'bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300';
+        return 'bg-[var(--surface-3)] text-[var(--text-muted)] border border-[var(--border)]';
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Active':
-        return 'bg-green-50 dark:bg-neutral-700 text-green-700 dark:text-green-300';
+        return 'bg-[var(--green-muted)] text-[var(--green)] border border-[var(--border)]';
       case 'Scheduled':
-        return 'bg-orange-50 dark:bg-neutral-700 text-orange-700 dark:text-orange-300';
+        return 'bg-[var(--surface-3)] text-[var(--warning)] border border-[var(--border)]';
       case 'Expired':
-        return 'bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300';
+        return 'bg-[var(--surface-3)] text-[var(--text-muted)] border border-[var(--border)]';
       default:
-        return 'bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300';
+        return 'bg-[var(--surface-3)] text-[var(--text-muted)] border border-[var(--border)]';
     }
   };
 
@@ -57,62 +57,62 @@ export function AdminAnnouncements({ onCreateAnnouncement }: AdminAnnouncementsP
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl mb-2">Announcements</h1>
-          <p className="text-neutral-600">
+          <h1 className="text-3xl mb-2 text-[var(--text)]">Announcements</h1>
+          <p className="text-[var(--text-muted)]">
             Manage global and role-targeted announcements
           </p>
         </div>
         <button
           onClick={onCreateAnnouncement}
-          className="flex items-center gap-2 px-6 py-3 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition-colors"
+          className="flex items-center gap-2 px-6 py-3 bg-[var(--blue)] text-[var(--on-blue)] rounded-lg hover:bg-[var(--blue-hover)] transition-colors"
         >
           <Plus className="w-5 h-5" />
           Create Announcement
         </button>
       </div>
 
-      <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-hidden">
+      <div className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-neutral-100 dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
+            <thead className="bg-[var(--surface-3)] border-b border-[var(--border)]">
               <tr>
-                <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Title</th>
-                <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Audience</th>
-                <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Type</th>
-                <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Status</th>
-                <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Start Date</th>
-                <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">End Date</th>
-                <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Created By</th>
-                <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Actions</th>
+                <th className="text-left px-6 py-3 text-sm text-[var(--text-muted)]">Title</th>
+                <th className="text-left px-6 py-3 text-sm text-[var(--text-muted)]">Audience</th>
+                <th className="text-left px-6 py-3 text-sm text-[var(--text-muted)]">Type</th>
+                <th className="text-left px-6 py-3 text-sm text-[var(--text-muted)]">Status</th>
+                <th className="text-left px-6 py-3 text-sm text-[var(--text-muted)]">Start Date</th>
+                <th className="text-left px-6 py-3 text-sm text-[var(--text-muted)]">End Date</th>
+                <th className="text-left px-6 py-3 text-sm text-[var(--text-muted)]">Created By</th>
+                <th className="text-left px-6 py-3 text-sm text-[var(--text-muted)]">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-100 dark:divide-neutral-700">
+            <tbody className="divide-y divide-[var(--border)]">
               {mockAnnouncements.map((announcement) => (
-                <tr key={announcement.id} className="hover:bg-neutral-50 dark:hover:bg-neutral-700">
-                  <td className="px-6 py-4 text-sm text-neutral-900 dark:text-neutral-50">{announcement.title}</td>
+                <tr key={announcement.id} className="hover:bg-[var(--surface-3)] transition-colors">
+                  <td className="px-6 py-4 text-sm text-[var(--text)]">{announcement.title}</td>
                   <td className="px-6 py-4">
                     <span className={`px-2 py-1 rounded-full text-xs ${getAudienceColor(announcement.audience)}`}>
                       {announcement.audience}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-neutral-600 dark:text-neutral-300">{announcement.type}</td>
+                  <td className="px-6 py-4 text-sm text-[var(--text-muted)]">{announcement.type}</td>
                   <td className="px-6 py-4">
                     <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(announcement.status)}`}>
                       {announcement.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-neutral-600 dark:text-neutral-300">{announcement.startDate}</td>
-                  <td className="px-6 py-4 text-sm text-neutral-600 dark:text-neutral-300">{announcement.endDate || '—'}</td>
-                  <td className="px-6 py-4 text-sm text-neutral-600 dark:text-neutral-300">{announcement.createdBy}</td>
+                  <td className="px-6 py-4 text-sm text-[var(--text-muted)]">{announcement.startDate}</td>
+                  <td className="px-6 py-4 text-sm text-[var(--text-muted)]">{announcement.endDate || '—'}</td>
+                  <td className="px-6 py-4 text-sm text-[var(--text-muted)]">{announcement.createdBy}</td>
                   <td className="px-6 py-4">
                     <div className="flex gap-2">
-                      <button className="p-1 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-50">
+                      <button className="p-1 text-[var(--text-muted)] hover:text-[var(--text)]">
                         <Eye className="w-4 h-4" />
                       </button>
-                      <button className="p-1 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-50">
+                      <button className="p-1 text-[var(--text-muted)] hover:text-[var(--text)]">
                         <Edit className="w-4 h-4" />
                       </button>
-                      <button className="p-1 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300">
+                      <button className="p-1 text-[var(--danger)] hover:brightness-90">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
@@ -125,17 +125,17 @@ export function AdminAnnouncements({ onCreateAnnouncement }: AdminAnnouncementsP
       </div>
 
       {mockAnnouncements.length === 0 && (
-        <div className="text-center py-16 bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700">
-          <div className="w-16 h-16 bg-neutral-100 dark:bg-neutral-700 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Megaphone className="w-8 h-8 text-neutral-400 dark:text-neutral-500" />
+        <div className="text-center py-16 bg-[var(--surface-2)] rounded-xl border border-[var(--border)]">
+          <div className="w-16 h-16 bg-[var(--surface-3)] border border-[var(--border)] rounded-full flex items-center justify-center mx-auto mb-4">
+            <Megaphone className="w-8 h-8 text-[var(--text-muted)]" />
           </div>
-          <h3 className="text-xl mb-2 text-neutral-900 dark:text-neutral-50">No announcements yet</h3>
-          <p className="text-neutral-600 dark:text-neutral-300 mb-6">
+          <h3 className="text-xl mb-2 text-[var(--text)]">No announcements yet</h3>
+          <p className="text-[var(--text-muted)] mb-6">
             Create your first announcement to communicate with users
           </p>
           <button
             onClick={onCreateAnnouncement}
-            className="px-6 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition-colors"
+            className="px-6 py-2 bg-[var(--blue)] text-[var(--on-blue)] rounded-lg hover:bg-[var(--blue-hover)] transition-colors"
           >
             Create Announcement
           </button>

@@ -7,8 +7,9 @@ interface AdminUsersProps {
 
 // Simple role badge component for admin use
 function RoleBadge({ role }: { role: 'artist' | 'venue' }) {
-  const artistClasses = 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300';
-  const venueClasses = 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300';
+  const baseClasses = 'border border-[var(--border)]';
+  const artistClasses = `${baseClasses} bg-[var(--surface-3)] text-[var(--blue)]`;
+  const venueClasses = `${baseClasses} bg-[var(--green-muted)] text-[var(--green)]`;
   
   return (
     <span className={`px-2 py-1 rounded-full text-xs capitalize ${role === 'artist' ? artistClasses : venueClasses}`}>
@@ -94,26 +95,26 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
   const getPlanBadgeColor = (plan: string) => {
     switch (plan) {
       case 'Free':
-        return 'bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300';
+        return 'bg-[var(--surface-3)] text-[var(--text-muted)] border border-[var(--border)]';
       case 'Starter':
-        return 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300';
+        return 'bg-[var(--surface-3)] text-[var(--blue)] border border-[var(--border)]';
       case 'Growth':
-        return 'bg-neutral-100 dark:bg-neutral-900/50 text-neutral-700 dark:text-neutral-300';
+        return 'bg-[var(--surface-3)] text-[var(--text)] border border-[var(--border)]';
       case 'Pro':
-        return 'bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-300';
+        return 'bg-[var(--surface-3)] text-[var(--warning)] border border-[var(--border)]';
       default:
-        return 'bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300';
+        return 'bg-[var(--surface-3)] text-[var(--text-muted)] border border-[var(--border)]';
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Active':
-        return 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300';
+        return 'bg-[var(--green-muted)] text-[var(--green)] border border-[var(--border)]';
       case 'Suspended':
-        return 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300';
+        return 'bg-[var(--surface-3)] text-[var(--danger)] border border-[var(--border)]';
       default:
-        return 'bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300';
+        return 'bg-[var(--surface-3)] text-[var(--text-muted)] border border-[var(--border)]';
     }
   };
 
@@ -157,46 +158,46 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
     searchQuery !== '';
 
   return (
-    <div className="bg-white dark:bg-neutral-950">
+    <div className="bg-[var(--bg)]">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl mb-2 dark:text-neutral-50">Users</h1>
-        <p className="text-neutral-600">
+        <h1 className="text-3xl mb-2 text-[var(--text)]">Users</h1>
+        <p className="text-[var(--text-muted)]">
           Manage and support platform users
         </p>
       </div>
 
       {/* Search & Filters */}
-      <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700 mb-6">
+      <div className="bg-[var(--surface-2)] rounded-xl p-6 border border-[var(--border)] mb-6">
         {/* Search Bar */}
         <div className="flex gap-3 mb-4">
           <div className="flex-1 relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-muted)]" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by name, email, venue name, or user ID..."
-              className="w-full pl-12 pr-4 py-3 rounded-lg border border-neutral-300 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-50 dark:border-neutral-600 focus:outline-none focus:ring-2 focus:ring-neutral-500 dark:focus:ring-neutral-400"
+              className="w-full pl-12 pr-4 py-3 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
             />
           </div>
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={`px-6 py-3 rounded-lg border-2 transition-all flex items-center gap-2 ${
               showFilters || hasActiveFilters
-            ? 'border-neutral-900 bg-neutral-900 text-white'
-            : 'border-neutral-300 bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:border-neutral-400 dark:border-neutral-600 dark:hover:border-neutral-500'
+            ? 'border-[var(--blue)] bg-[var(--blue)] text-[var(--on-blue)]'
+            : 'border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] hover:bg-[var(--surface-3)]'
             }`}
           >
             <Filter className="w-5 h-5" />
             Filters
             {hasActiveFilters && (
-              <span className="ml-1 px-2 py-0.5 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-50 text-xs rounded-full">
+              <span className="ml-1 px-2 py-0.5 bg-[var(--surface-2)] text-[var(--on-blue)] text-xs rounded-full border border-[color:color-mix(in_srgb,var(--on-blue)_35%,transparent)]">
                 Active
               </span>
             )}
           </button>
-          <button className="px-6 py-3 rounded-lg border border-neutral-300 bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 dark:border-neutral-600 transition-colors flex items-center gap-2">
+          <button className="px-6 py-3 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] hover:bg-[var(--surface-3)] transition-colors flex items-center gap-2">
             <Download className="w-5 h-5" />
             Export
           </button>
@@ -204,17 +205,17 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
 
         {/* Filter Panel */}
         {showFilters && (
-          <div className="pt-4 border-t border-neutral-200">
+          <div className="pt-4 border-t border-[var(--border)]">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
               {/* Role Filter */}
               <div>
-                <label className="block text-sm text-neutral-700 dark:text-neutral-300 mb-2">
+                <label className="block text-sm text-[var(--text-muted)] mb-2">
                   Role
                 </label>
                 <select
                   value={filters.role}
                   onChange={(e) => setFilters({ ...filters, role: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-50 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-500"
+                  className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
                 >
                   <option value="all">All roles</option>
                   <option value="artist">Artist</option>
@@ -224,13 +225,13 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
 
               {/* Plan Filter */}
               <div>
-                <label className="block text-sm text-neutral-700 dark:text-neutral-300 mb-2">
+                <label className="block text-sm text-[var(--text-muted)] mb-2">
                   Plan
                 </label>
                 <select
                   value={filters.plan}
                   onChange={(e) => setFilters({ ...filters, plan: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-50 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-500"
+                  className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
                 >
                   <option value="all">All plans</option>
                   {plans.map(plan => (
@@ -241,13 +242,13 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
 
               {/* Status Filter */}
               <div>
-                <label className="block text-sm text-neutral-700 dark:text-neutral-300 mb-2">
+                <label className="block text-sm text-[var(--text-muted)] mb-2">
                   Status
                 </label>
                 <select
                   value={filters.status}
                   onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-50 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-500"
+                  className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
                 >
                   <option value="all">All statuses</option>
                   {statuses.map(status => (
@@ -258,13 +259,13 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
 
               {/* City Filter */}
               <div>
-                <label className="block text-sm text-neutral-700 dark:text-neutral-300 mb-2">
+                <label className="block text-sm text-[var(--text-muted)] mb-2">
                   City
                 </label>
                 <select
                   value={filters.city}
                   onChange={(e) => setFilters({ ...filters, city: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-50 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-500"
+                  className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
                 >
                   <option value="all">All cities</option>
                   {cities.map(city => (
@@ -275,13 +276,13 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
 
               {/* Agreement Filter */}
               <div>
-                <label className="block text-sm text-neutral-700 dark:text-neutral-300 mb-2">
+                <label className="block text-sm text-[var(--text-muted)] mb-2">
                   Agreement
                 </label>
                 <select
                   value={filters.agreementAccepted}
                   onChange={(e) => setFilters({ ...filters, agreementAccepted: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-50 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-500"
+                  className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
                 >
                   <option value="all">All</option>
                   <option value="yes">Accepted</option>
@@ -294,7 +295,7 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
             {hasActiveFilters && (
               <button
                 onClick={clearFilters}
-                className="text-sm text-neutral-600 hover:text-neutral-900 transition-colors"
+                className="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
               >
                 Clear all filters
               </button>
@@ -305,37 +306,37 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
 
       {/* Results Count */}
       <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-neutral-600 dark:text-neutral-400">
-          <span className="text-neutral-900 dark:text-neutral-50">{filteredUsers.length}</span> users found
+        <p className="text-sm text-[var(--text-muted)]">
+          <span className="text-[var(--text)]">{filteredUsers.length}</span> users found
         </p>
       </div>
 
       {/* Users Table */}
       {filteredUsers.length > 0 ? (
-        <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-hidden">
+        <div className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-neutral-50 dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-700">
+              <thead className="bg-[var(--surface-3)] border-b border-[var(--border)]">
                 <tr>
-                  <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Name</th>
-                  <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Role</th>
-                  <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Email</th>
-                  <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Plan</th>
-                  <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Status</th>
-                  <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Last Active</th>
-                  <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Actions</th>
+                  <th className="text-left px-6 py-3 text-sm text-[var(--text-muted)]">Name</th>
+                  <th className="text-left px-6 py-3 text-sm text-[var(--text-muted)]">Role</th>
+                  <th className="text-left px-6 py-3 text-sm text-[var(--text-muted)]">Email</th>
+                  <th className="text-left px-6 py-3 text-sm text-[var(--text-muted)]">Plan</th>
+                  <th className="text-left px-6 py-3 text-sm text-[var(--text-muted)]">Status</th>
+                  <th className="text-left px-6 py-3 text-sm text-[var(--text-muted)]">Last Active</th>
+                  <th className="text-left px-6 py-3 text-sm text-[var(--text-muted)]">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-100 dark:divide-neutral-700">
+              <tbody className="divide-y divide-[var(--border)]">
                 {filteredUsers.map((user) => (
-                  <tr key={user.id} className="hover:bg-neutral-50 dark:hover:bg-neutral-700/50 transition-colors">
-                    <td className="px-6 py-4 text-sm text-neutral-900 dark:text-neutral-50">
+                  <tr key={user.id} className="hover:bg-[var(--surface-3)] transition-colors">
+                    <td className="px-6 py-4 text-sm text-[var(--text)]">
                       {user.name}
                     </td>
                     <td className="px-6 py-4">
                       <RoleBadge role={user.role} />
                     </td>
-                    <td className="px-6 py-4 text-sm text-neutral-600 dark:text-neutral-400">
+                    <td className="px-6 py-4 text-sm text-[var(--text-muted)]">
                       {user.email}
                     </td>
                     <td className="px-6 py-4">
@@ -348,23 +349,23 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
                         {user.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-neutral-600 dark:text-neutral-400">
+                    <td className="px-6 py-4 text-sm text-[var(--text-muted)]">
                       {user.lastActive}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex gap-2">
                         <button
                           onClick={() => onViewUser(user.id)}
-                          className="px-3 py-1 bg-neutral-900 dark:bg-neutral-50 text-white dark:text-neutral-900 rounded text-xs hover:bg-neutral-800 dark:hover:bg-neutral-100 transition-colors"
+                          className="px-3 py-1 bg-[var(--blue)] text-[var(--on-blue)] rounded text-xs hover:bg-[var(--blue-hover)] transition-colors"
                         >
                           View
                         </button>
                         {user.status === 'Active' ? (
-                          <button className="px-3 py-1 bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 rounded text-xs hover:bg-red-200 dark:hover:bg-red-900 transition-colors">
+                          <button className="px-3 py-1 bg-[var(--surface-3)] text-[var(--danger)] border border-[var(--border)] rounded text-xs hover:bg-[var(--surface-2)] transition-colors">
                             Suspend
                           </button>
                         ) : (
-                          <button className="px-3 py-1 bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 rounded text-xs hover:bg-green-200 dark:hover:bg-green-900 transition-colors">
+                          <button className="px-3 py-1 bg-[var(--green)] text-[var(--on-blue)] rounded text-xs hover:opacity-95 transition-colors">
                             Activate
                           </button>
                         )}
@@ -377,12 +378,12 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
           </div>
         </div>
       ) : (
-        <div className="text-center py-16 bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700">
-          <div className="w-16 h-16 bg-neutral-100 dark:bg-neutral-800 rounded-full flex items-center justify-center mx-auto mb-4">
-            <UsersIcon className="w-8 h-8 text-neutral-400" />
+        <div className="text-center py-16 bg-[var(--surface-2)] rounded-xl border border-[var(--border)]">
+          <div className="w-16 h-16 bg-[var(--surface-3)] border border-[var(--border)] rounded-full flex items-center justify-center mx-auto mb-4">
+            <UsersIcon className="w-8 h-8 text-[var(--text-muted)]" />
           </div>
-          <h3 className="text-xl mb-2">No users found</h3>
-          <p className="text-neutral-600 dark:text-neutral-300 mb-6">
+          <h3 className="text-xl mb-2 text-[var(--text)]">No users found</h3>
+          <p className="text-[var(--text-muted)] mb-6">
             {hasActiveFilters
               ? 'Try adjusting your filters to see more results'
               : 'No users in the system yet'}
@@ -390,7 +391,7 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
           {hasActiveFilters && (
             <button
               onClick={clearFilters}
-              className="px-6 py-2 bg-neutral-900 dark:bg-neutral-50 text-white dark:text-neutral-900 rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-100 transition-colors"
+              className="px-6 py-2 bg-[var(--blue)] text-[var(--on-blue)] rounded-lg hover:bg-[var(--blue-hover)] transition-colors"
             >
               Clear Filters
             </button>

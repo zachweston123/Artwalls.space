@@ -3,31 +3,69 @@
 
 /* A) Tokens (exact) */
 :root {
+  /* base */
   --bg: #ffffff;
-  --surface-1: #f7f7f8;
+  --surface-1: #f7f8fb;
   --surface-2: #ffffff;
-  --surface-3: #f1f1f3;
+  --surface-3: #f1f4fb;
   --border: rgba(0,0,0,.10);
+
+  /* text */
   --text: #0b0c0f;
   --text-muted: rgba(11,12,15,.70);
-  --accent: #2f6bff;
-  --accent-contrast: #ffffff;
-  --focus: rgba(47,107,255,.40);
+
+  /* brand accents (KEEP) */
+  --blue: #2f6bff;
+  --blue-hover: #2457d6;
+  --on-blue: #ffffff;
+
+  --green: #22c55e;
+  --green-muted: rgba(34,197,94,.15);
+
+  /* semantic */
+  --warning: #f59e0b;
+  --danger: #ef4444;
+
+  /* focus */
+  --focus: rgba(47,107,255,.45);
+
+  /* Back-compat for existing tokenized components */
+  --accent: var(--blue);
+  --accent-hover: var(--blue-hover);
+  --accent-contrast: var(--on-blue);
+  --success: var(--green);
+  --success-muted: var(--green-muted);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0b0f17;
-    --surface-1: #0f1623;
-    --surface-2: #121b2b;
-    --surface-3: #17233a;
-    --border: rgba(255,255,255,.10);
-    --text: rgba(255,255,255,.92);
-    --text-muted: rgba(255,255,255,.68);
-    --accent: #2f6bff;
-    --accent-contrast: #ffffff;
-    --focus: rgba(47,107,255,.45);
-  }
+html[data-theme="dark"] {
+  --bg: #0b0f17;
+  --surface-1: #0f1623;
+  --surface-2: #121b2b;
+  --surface-3: #17233a;
+  --border: rgba(255,255,255,.10);
+
+  --text: rgba(255,255,255,.92);
+  --text-muted: rgba(255,255,255,.68);
+
+  --blue: #3b7bff;
+  --blue-hover: #2f6bff;
+  --on-blue: #ffffff;
+
+  --green: #34d399;
+  --green-muted: rgba(52,211,153,.16);
+
+  --warning: #fbbf24;
+  --danger: #f87171;
+
+  --focus: rgba(59,123,255,.55);
+}
+
+html[data-theme="light"] {
+  color-scheme: light;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
 }
 
 /* B) Apply globally (exact) */
@@ -35,6 +73,7 @@ html, body {
   background: var(--bg);
   color: var(--text);
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
+  min-height: 100%;
 }
 
 #root, #app, main {
@@ -91,18 +130,16 @@ td {
 
 /* Dark-mode overrides for common Tailwind "white island" utilities.
    Keeps UI consistent while components are migrated to tokens. */
-@media (prefers-color-scheme: dark) {
-  .bg-white { background-color: var(--surface-2) !important; }
-  .bg-neutral-50,
-  .bg-neutral-100 { background-color: var(--surface-3) !important; }
+html[data-theme="dark"] .bg-white { background-color: var(--surface-2) !important; }
+html[data-theme="dark"] .bg-neutral-50,
+html[data-theme="dark"] .bg-neutral-100 { background-color: var(--surface-3) !important; }
 
-  .text-black,
-  .text-neutral-900 { color: var(--text) !important; }
+html[data-theme="dark"] .text-black,
+html[data-theme="dark"] .text-neutral-900 { color: var(--text) !important; }
 
-  .text-neutral-700,
-  .text-neutral-600,
-  .text-neutral-500 { color: var(--text-muted) !important; }
+html[data-theme="dark"] .text-neutral-700,
+html[data-theme="dark"] .text-neutral-600,
+html[data-theme="dark"] .text-neutral-500 { color: var(--text-muted) !important; }
 
-  .border-neutral-200,
-  .border-neutral-300 { border-color: var(--border) !important; }
-}
+html[data-theme="dark"] .border-neutral-200,
+html[data-theme="dark"] .border-neutral-300 { border-color: var(--border) !important; }

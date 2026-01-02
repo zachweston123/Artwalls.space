@@ -12,29 +12,29 @@ export function PlanBadge({ plan, size = 'md', showUpgrade = false, onUpgrade }:
     free: {
       label: 'Free',
       icon: Sparkles,
-      bg: 'bg-neutral-100',
-      text: 'text-neutral-900 dark:text-neutral-50',
-      border: 'border-neutral-200',
+      bg: 'bg-[var(--surface-2)]',
+      text: 'text-[var(--text)]',
+      border: 'border-[var(--border)]',
     },
     starter: {
       label: 'Starter',
       icon: TrendingUp,
-      bg: 'bg-blue-100',
-      text: 'text-blue-700',
-      border: 'border-blue-200',
+      bg: 'bg-[var(--surface-2)]',
+      text: 'text-[var(--blue)]',
+      border: 'border-[var(--border)]',
     },
     growth: {
       label: 'Growth',
       icon: Zap,
-      bg: 'bg-blue-100',
-      text: 'text-blue-700',
-      border: 'border-blue-200',
+      bg: 'bg-[var(--surface-2)]',
+      text: 'text-[var(--blue)]',
+      border: 'border-[var(--border)]',
     },
     pro: {
       label: 'Pro',
       icon: Shield,
-      bg: 'bg-blue-600 dark:bg-blue-500',
-      text: 'text-white dark:text-neutral-900',
+      bg: 'bg-[var(--blue)]',
+      text: 'text-[var(--on-blue)]',
       border: 'border-transparent',
     },
   };
@@ -65,7 +65,7 @@ export function PlanBadge({ plan, size = 'md', showUpgrade = false, onUpgrade }:
       {showUpgrade && plan !== 'pro' && (
         <button
           onClick={onUpgrade}
-          className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline"
+          className="text-xs text-[var(--blue)] hover:opacity-90 underline"
         >
           Upgrade
         </button>

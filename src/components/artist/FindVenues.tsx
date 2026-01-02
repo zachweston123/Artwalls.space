@@ -133,27 +133,27 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
         {/* Search Bar */}
         <div className="flex gap-3 mb-4">
           <div className="flex-1 relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-muted)]" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by venue name..."
-              className="w-full pl-12 pr-4 py-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+              className="w-full pl-12 pr-4 py-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
             />
           </div>
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={`px-6 py-3 rounded-lg border-2 transition-all flex items-center gap-2 ${
               showFilters || hasActiveFilters
-                ? 'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                : 'border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-muted)] hover:border-blue-300 dark:hover:border-blue-500'
+                ? 'border-[var(--blue)] bg-[var(--surface-2)] text-[var(--blue)]'
+                : 'border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-muted)] hover:border-[var(--blue)]'
             }`}
           >
             <Filter className="w-5 h-5" />
             Filters
             {hasActiveFilters && (
-              <span className="ml-1 px-2 py-0.5 bg-blue-600 dark:bg-blue-500 text-white text-xs rounded-full">
+              <span className="ml-1 px-2 py-0.5 bg-[var(--blue)] text-[var(--on-blue)] text-xs rounded-full">
                 {(filters.labels.length + (filters.acceptingArtists ? 1 : 0) + (filters.neighborhood ? 1 : 0))}
               </span>
             )}
@@ -162,16 +162,16 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
 
         {/* Filter Panel */}
         {showFilters && (
-          <div className="pt-4 border-t border-neutral-200 dark:border-neutral-700 space-y-4">
+          <div className="pt-4 border-t border-[var(--border)] space-y-4">
             {/* Neighborhood */}
             <div>
-              <label className="block text-sm text-neutral-700 dark:text-neutral-300 mb-2">
+              <label className="block text-sm text-[var(--text-muted)] mb-2">
                 Neighborhood
               </label>
               <select
                 value={filters.neighborhood}
                 onChange={(e) => setFilters({ ...filters, neighborhood: e.target.value })}
-                className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
               >
                 <option value="">All neighborhoods</option>
                 {neighborhoods.map((neighborhood) => (
@@ -184,7 +184,7 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
 
             {/* Venue Labels */}
             <div>
-              <label className="block text-sm text-neutral-700 dark:text-neutral-300 mb-2">
+              <label className="block text-sm text-[var(--text-muted)] mb-2">
                 Venue Highlights
               </label>
               <div className="flex flex-wrap gap-2">
@@ -202,8 +202,8 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
             </div>
 
             {/* Accepting Artists Toggle */}
-            <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-100 dark:border-blue-800">
-              <label className="text-sm text-neutral-900 dark:text-neutral-50">
+            <div className="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--blue)]">
+              <label className="text-sm text-[var(--text)]">
                 Only show venues with available wall spaces
               </label>
               <button
@@ -211,12 +211,12 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
                 onClick={() => setFilters({ ...filters, acceptingArtists: !filters.acceptingArtists })}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                   filters.acceptingArtists
-                    ? 'bg-blue-600 dark:bg-blue-500'
-                    : 'bg-neutral-300 dark:bg-neutral-600'
+                    ? 'bg-[var(--blue)]'
+                    : 'bg-[var(--border)]'
                 }`}
               >
                 <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white dark:bg-neutral-200 transition-transform ${
+                  className={`inline-block h-4 w-4 transform rounded-full bg-[var(--surface-1)] transition-transform ${
                     filters.acceptingArtists ? 'translate-x-6' : 'translate-x-1'
                   }`}
                 />
@@ -227,7 +227,7 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
             {hasActiveFilters && (
               <button
                 onClick={clearFilters}
-                className="w-full px-4 py-2 text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-50 transition-colors"
+                className="w-full px-4 py-2 text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
               >
                 Clear all filters
               </button>
@@ -238,8 +238,8 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
 
       {/* Results Count */}
       <div className="flex items-center justify-between mb-6">
-        <p className="text-sm text-neutral-600 dark:text-neutral-400">
-          <span className="text-neutral-900 dark:text-neutral-50">{filteredVenues.length}</span> venues found
+        <p className="text-sm text-[var(--text-muted)]">
+          <span className="text-[var(--text)]">{filteredVenues.length}</span> venues found
         </p>
       </div>
 
@@ -249,14 +249,14 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
           {filteredVenues.map((venue) => (
             <div
               key={venue.id}
-              className="bg-white dark:bg-neutral-800 rounded-xl overflow-hidden border border-neutral-200 dark:border-neutral-700 hover:shadow-lg transition-all group"
+              className="bg-[var(--surface-1)] rounded-xl overflow-hidden border border-[var(--border)] hover:shadow-lg transition-all group"
             >
               {/* Cover Photo */}
               <button
                 onClick={() => onViewVenue(venue.id)}
                 className="w-full"
               >
-                <div className="h-48 bg-neutral-100 dark:bg-neutral-900 overflow-hidden">
+                <div className="h-48 bg-[var(--surface-3)] overflow-hidden">
                   <img
                     src={venue.coverPhoto}
                     alt={venue.name}
@@ -273,19 +273,19 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
                     className="text-left w-full group/name"
                   >
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="text-xl group-hover/name:text-blue-600 dark:group-hover/name:text-blue-400 transition-colors">
+                      <h3 className="text-xl group-hover/name:text-[var(--blue)] transition-colors">
                         {venue.name}
                       </h3>
                       {venue.verified && (
-                        <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                        <CheckCircle className="w-4 h-4 text-[var(--green)] flex-shrink-0" />
                       )}
                     </div>
                   </button>
-                  <div className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400">
+                  <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
                     <MapPin className="w-3 h-3" />
                     {venue.location}
                   </div>
-                  <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                  <p className="text-xs text-[var(--text-muted)] mt-1">
                     Established {venue.foundedYear} • {currentYear - venue.foundedYear} years
                   </p>
                 </div>
@@ -302,29 +302,29 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
                     />
                   ))}
                   {venue.labels.length > 3 && (
-                    <span className="text-xs text-neutral-500 dark:text-neutral-400 px-2 py-1">
+                    <span className="text-xs text-[var(--text-muted)] px-2 py-1">
                       +{venue.labels.length - 3} more
                     </span>
                   )}
                 </div>
 
                 {/* Bio */}
-                <p className="text-sm text-neutral-600 dark:text-neutral-300 mb-4 line-clamp-2">
+                <p className="text-sm text-[var(--text-muted)] mb-4 line-clamp-2">
                   {venue.bio}
                 </p>
 
                 {/* Wall Spaces Info */}
-                <div className="flex items-center justify-between text-xs mb-4 p-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg">
-                  <div className="flex items-center gap-2 text-neutral-600 dark:text-neutral-400">
+                <div className="flex items-center justify-between text-xs mb-4 p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)]">
+                  <div className="flex items-center gap-2 text-[var(--text-muted)]">
                     <Frame className="w-3 h-3" />
                     {venue.wallSpaces} wall spaces
                   </div>
                   {venue.availableSpaces > 0 ? (
-                    <span className="px-2 py-1 bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 rounded-full">
+                    <span className="px-2 py-1 bg-[var(--green-muted)] text-[var(--green)] rounded-full">
                       {venue.availableSpaces} available
                     </span>
                   ) : (
-                    <span className="text-neutral-500 dark:text-neutral-400">
+                    <span className="text-[var(--text-muted)]">
                       Currently full
                     </span>
                   )}
@@ -334,13 +334,13 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
                 <div className="flex gap-3">
                   <button
                     onClick={() => onViewVenue(venue.id)}
-                    className="flex-1 px-4 py-2 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition-colors text-sm"
+                    className="flex-1 px-4 py-2 bg-[var(--surface-3)] text-[var(--text)] border border-[var(--border)] rounded-lg hover:bg-[var(--surface-2)] transition-colors text-sm"
                   >
                     View Profile
                   </button>
                   <button
                     onClick={() => onViewWallspaces(venue.id)}
-                    className="flex-1 px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-400 transition-colors text-sm"
+                    className="flex-1 px-4 py-2 bg-[var(--blue)] text-[var(--on-blue)] rounded-lg hover:bg-[var(--blue-hover)] transition-colors text-sm"
                   >
                     View Wallspaces
                   </button>
@@ -350,12 +350,12 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
           ))}
         </div>
       ) : (
-        <div className="text-center py-16 bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700">
-          <div className="w-16 h-16 bg-neutral-100 dark:bg-neutral-800 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Frame className="w-8 h-8 text-neutral-400" />
+        <div className="text-center py-16 bg-[var(--surface-1)] rounded-xl border border-[var(--border)]">
+          <div className="w-16 h-16 bg-[var(--surface-2)] border border-[var(--border)] rounded-full flex items-center justify-center mx-auto mb-4">
+            <Frame className="w-8 h-8 text-[var(--text-muted)]" />
           </div>
           <h3 className="text-xl mb-2">No venues found</h3>
-          <p className="text-neutral-600 dark:text-neutral-300 mb-6">
+          <p className="text-[var(--text-muted)] mb-6">
             {hasActiveFilters
               ? 'Try adjusting your filters to see more results'
               : 'Check back soon as new venues join the platform'}
@@ -363,7 +363,7 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
           {hasActiveFilters && (
             <button
               onClick={clearFilters}
-              className="px-6 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-400 transition-colors"
+              className="px-6 py-2 bg-[var(--blue)] text-[var(--on-blue)] rounded-lg hover:bg-[var(--blue-hover)] transition-colors"
             >
               Clear Filters
             </button>

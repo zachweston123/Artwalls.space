@@ -19,19 +19,19 @@ export function RoleButton({
   
   if (role === 'artist') {
     if (variant === 'primary') {
-      variantClasses = 'bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-500 dark:hover:bg-blue-400';
+      variantClasses = 'bg-[var(--blue)] hover:bg-[var(--blue-hover)] text-[var(--on-blue)]';
     } else if (variant === 'secondary') {
-      variantClasses = 'bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800';
+      variantClasses = 'bg-[var(--surface-2)] text-[var(--blue)] hover:bg-[var(--surface-3)]';
     } else if (variant === 'ghost') {
-      variantClasses = 'text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900';
+      variantClasses = 'text-[var(--blue)] hover:bg-[var(--surface-2)]';
     }
   } else {
     if (variant === 'primary') {
-      variantClasses = 'bg-green-600 hover:bg-green-700 text-white dark:bg-green-500 dark:hover:bg-green-400';
+      variantClasses = 'bg-[var(--green)] hover:opacity-90 text-white';
     } else if (variant === 'secondary') {
-      variantClasses = 'bg-green-50 text-green-700 hover:bg-green-100 dark:bg-green-900 dark:text-green-300 dark:hover:bg-green-800';
+      variantClasses = 'bg-[var(--green-muted)] text-[var(--green)] hover:opacity-90';
     } else if (variant === 'ghost') {
-      variantClasses = 'text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900';
+      variantClasses = 'text-[var(--green)] hover:bg-[var(--green-muted)]';
     }
   }
   

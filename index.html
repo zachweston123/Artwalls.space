@@ -5,24 +5,42 @@
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <title>Artwalls Marketplace Web App</title>
+
+      <script>
+        (function () {
+          try {
+            var STORAGE_KEY = 'theme';
+            var pref = localStorage.getItem(STORAGE_KEY) || 'system';
+            var mql = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
+
+            function resolveTheme(preference) {
+              if (preference === 'dark' || preference === 'light') return preference;
+              return mql && mql.matches ? 'dark' : 'light';
+            }
+
+            function apply(preference) {
+              var resolved = resolveTheme(preference);
+              document.documentElement.setAttribute('data-theme', resolved);
+            }
+
+            apply(pref);
+
+            if (mql) {
+              mql.addEventListener('change', function () {
+                var currentPref = localStorage.getItem(STORAGE_KEY) || 'system';
+                if (currentPref === 'system') apply(currentPref);
+              });
+            }
+          } catch (e) {
+            // If anything fails, default to light without blocking render.
+            document.documentElement.setAttribute('data-theme', 'light');
+          }
+        })();
+      </script>
     </head>
 
     <body>
       <div id="root"></div>
-      <script>
-        // Enable dark mode based on system preference
-        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-          document.documentElement.classList.add('dark');
-        }
-        // Listen for changes to system preference
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-          if (e.matches) {
-            document.documentElement.classList.add('dark');
-          } else {
-            document.documentElement.classList.remove('dark');
-          }
-        });
-      </script>
       <script type="module" src="/src/main.tsx"></script>
     </body>
   </html>

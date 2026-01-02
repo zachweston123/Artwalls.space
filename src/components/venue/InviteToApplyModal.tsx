@@ -43,19 +43,19 @@ export function InviteToApplyModal({ artistName, venueName, onSend, onCancel }: 
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4 sm:p-6">
-      <div className="bg-white dark:bg-neutral-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 sm:p-6">
+      <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto text-[var(--text)]">
         {/* Header */}
-        <div className="sticky top-0 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 p-6 flex items-center justify-between">
+        <div className="sticky top-0 bg-[var(--surface-1)] border-b border-[var(--border)] p-6 flex items-center justify-between">
           <div>
             <h2 className="text-2xl mb-1">Invite to Apply</h2>
-            <p className="text-sm text-neutral-600 dark:text-neutral-400">
-              Invite <span className="text-neutral-900 dark:text-neutral-50">{artistName}</span> to display at your venue
+            <p className="text-sm text-[var(--text-muted)]">
+              Invite <span className="text-[var(--text)]">{artistName}</span> to display at your venue
             </p>
           </div>
           <button
             onClick={onCancel}
-            className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg transition-colors"
+            className="p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -64,8 +64,8 @@ export function InviteToApplyModal({ artistName, venueName, onSend, onCancel }: 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Select Wallspace */}
           <div>
-            <label className="block text-sm text-neutral-700 dark:text-neutral-300 mb-3">
-              Wall Space <span className="text-neutral-500">(Optional)</span>
+            <label className="block text-sm text-[var(--text)] mb-3">
+              Wall Space <span className="text-[var(--text-muted)]">(Optional)</span>
             </label>
             <div className="space-y-2">
               {/* General Invite Option */}
@@ -74,24 +74,24 @@ export function InviteToApplyModal({ artistName, venueName, onSend, onCancel }: 
                 onClick={() => setFormData({ ...formData, wallspaceId: '' })}
                 className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
                   formData.wallspaceId === ''
-                    ? 'border-green-500 dark:border-green-400 bg-green-50 dark:bg-green-900/30'
-                    : 'border-neutral-200 dark:border-neutral-700 hover:border-green-300 dark:hover:border-green-500'
+                    ? 'border-[var(--green)] bg-[var(--green-muted)]'
+                    : 'border-[var(--border)] bg-[var(--surface-1)] hover:border-[var(--green)]'
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm mb-1">General Invitation</p>
-                    <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                    <p className="text-xs text-[var(--text-muted)]">
                       Let the artist choose from available wall spaces
                     </p>
                   </div>
                   <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
                     formData.wallspaceId === ''
-                      ? 'border-green-500 dark:border-green-400 bg-green-500 dark:bg-green-400'
-                      : 'border-neutral-300 dark:border-neutral-600'
+                      ? 'border-[var(--green)] bg-[var(--green)]'
+                      : 'border-[var(--border)]'
                   }`}>
                     {formData.wallspaceId === '' && (
-                      <div className="w-2 h-2 bg-white dark:bg-neutral-200 rounded-full"></div>
+                      <div className="w-2 h-2 bg-white rounded-full"></div>
                     )}
                   </div>
                 </div>
@@ -105,13 +105,13 @@ export function InviteToApplyModal({ artistName, venueName, onSend, onCancel }: 
                   onClick={() => setFormData({ ...formData, wallspaceId: wall.id })}
                   className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
                     formData.wallspaceId === wall.id
-                      ? 'border-green-500 dark:border-green-400 bg-green-50 dark:bg-green-900/30'
-                      : 'border-neutral-200 dark:border-neutral-700 hover:border-green-300 dark:hover:border-green-500'
+                      ? 'border-[var(--green)] bg-[var(--green-muted)]'
+                      : 'border-[var(--border)] bg-[var(--surface-1)] hover:border-[var(--green)]'
                   }`}
                 >
                   <div className="flex items-start gap-3">
                     {wall.photos && wall.photos[0] && (
-                      <div className="w-16 h-16 bg-neutral-100 dark:bg-neutral-900 rounded overflow-hidden flex-shrink-0">
+                      <div className="w-16 h-16 bg-[var(--surface-2)] rounded overflow-hidden flex-shrink-0">
                         <img
                           src={wall.photos[0]}
                           alt={wall.name}
@@ -121,11 +121,11 @@ export function InviteToApplyModal({ artistName, venueName, onSend, onCancel }: 
                     )}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm mb-1">{wall.name}</p>
-                      <p className="text-xs text-neutral-600 dark:text-neutral-400">
+                      <p className="text-xs text-[var(--text-muted)]">
                         {wall.width}" × {wall.height}"
                       </p>
                       {wall.location && (
-                        <div className="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                        <div className="flex items-center gap-1 text-xs text-[var(--text-muted)] mt-1">
                           <MapPin className="w-3 h-3" />
                           {wall.location}
                         </div>
@@ -133,11 +133,11 @@ export function InviteToApplyModal({ artistName, venueName, onSend, onCancel }: 
                     </div>
                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
                       formData.wallspaceId === wall.id
-                        ? 'border-green-500 dark:border-green-400 bg-green-500 dark:bg-green-400'
-                        : 'border-neutral-300 dark:border-neutral-600'
+                        ? 'border-[var(--green)] bg-[var(--green)]'
+                        : 'border-[var(--border)]'
                     }`}>
                       {formData.wallspaceId === wall.id && (
-                        <div className="w-2 h-2 bg-white dark:bg-neutral-200 rounded-full"></div>
+                        <div className="w-2 h-2 bg-white rounded-full"></div>
                       )}
                     </div>
                   </div>
@@ -148,7 +148,7 @@ export function InviteToApplyModal({ artistName, venueName, onSend, onCancel }: 
 
           {/* Display Duration */}
           <div>
-            <label className="block text-sm text-neutral-700 dark:text-neutral-300 mb-3">
+            <label className="block text-sm text-[var(--text)] mb-3">
               Display Duration
             </label>
             <div className="grid grid-cols-3 gap-3">
@@ -159,18 +159,18 @@ export function InviteToApplyModal({ artistName, venueName, onSend, onCancel }: 
                   onClick={() => setFormData({ ...formData, duration: duration.value })}
                   className={`p-4 rounded-lg border-2 transition-all text-center ${
                     formData.duration === duration.value
-                      ? 'border-green-500 dark:border-green-400 bg-green-50 dark:bg-green-900/30'
-                      : 'border-neutral-200 dark:border-neutral-700 hover:border-green-300 dark:hover:border-green-500'
+                      ? 'border-[var(--green)] bg-[var(--green-muted)]'
+                      : 'border-[var(--border)] bg-[var(--surface-1)] hover:border-[var(--green)]'
                   }`}
                 >
                   <div className={`text-lg mb-1 ${
                     formData.duration === duration.value
-                      ? 'text-green-700 dark:text-green-300'
-                      : 'text-neutral-900 dark:text-neutral-50'
+                      ? 'text-[var(--green)]'
+                      : 'text-[var(--text)]'
                   }`}>
                     {duration.label}
                   </div>
-                  <div className="text-xs text-neutral-500 dark:text-neutral-400">
+                  <div className="text-xs text-[var(--text-muted)]">
                     {duration.sublabel}
                   </div>
                 </button>
@@ -181,14 +181,14 @@ export function InviteToApplyModal({ artistName, venueName, onSend, onCancel }: 
           {/* Message */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <label className="block text-sm text-neutral-700 dark:text-neutral-300">
-                Personal Message <span className="text-neutral-500">(Optional)</span>
+              <label className="block text-sm text-[var(--text)]">
+                Personal Message <span className="text-[var(--text-muted)]">(Optional)</span>
               </label>
               {formData.message === '' && (
                 <button
                   type="button"
                   onClick={useTemplate}
-                  className="text-xs text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300"
+                  className="text-xs text-[var(--green)] hover:opacity-80"
                 >
                   Use template
                 </button>
@@ -199,35 +199,35 @@ export function InviteToApplyModal({ artistName, venueName, onSend, onCancel }: 
               onChange={(e) => setFormData({ ...formData, message: e.target.value })}
               rows={6}
               maxLength={300}
-              className="w-full px-4 py-3 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-50 focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400"
+              className="w-full px-4 py-3 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
               placeholder="Add a personal note to your invitation (optional)..."
             />
             <div className="flex items-center justify-between mt-2">
-              <p className="text-xs text-neutral-500 dark:text-neutral-400">
+              <p className="text-xs text-[var(--text-muted)]">
                 {formData.message.length}/300 characters
               </p>
             </div>
           </div>
 
           {/* Info Box */}
-          <div className="p-4 bg-green-50 dark:bg-green-900/30 rounded-lg border border-green-100 dark:border-green-800">
-            <p className="text-sm text-green-900 dark:text-green-200">
+          <div className="p-4 bg-[var(--green-muted)] rounded-lg border border-[var(--border)]">
+            <p className="text-sm text-[var(--text)]">
               <strong>What happens next:</strong> {artistName} will receive your invitation in their inbox. They can review the details and apply with their artwork, or politely decline if they're not interested.
             </p>
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3 pt-4 border-t border-neutral-200 dark:border-neutral-700">
+          <div className="flex gap-3 pt-4 border-t border-[var(--border)]">
             <button
               type="button"
               onClick={onCancel}
-              className="flex-1 px-4 py-3 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition-colors"
+              className="flex-1 px-4 py-3 bg-[var(--surface-2)] text-[var(--text)] rounded-lg hover:bg-[var(--surface-3)] transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-3 bg-green-600 dark:bg-green-500 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-400 transition-colors"
+              className="flex-1 px-4 py-3 bg-[var(--green)] text-white rounded-lg hover:opacity-90 transition-colors"
             >
               Send Invitation
             </button>

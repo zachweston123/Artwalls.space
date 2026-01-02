@@ -17,43 +17,47 @@ export function AgreementStatusCard({
 }: AgreementStatusCardProps) {
   const agreementPage = role === 'artist' ? 'artist-agreement' : 'venue-agreement';
   const agreementName = role === 'artist' ? 'Artist Agreement' : 'Venue Agreement';
-  const accentColor = role === 'artist' ? 'blue' : 'green';
+  const isArtist = role === 'artist';
 
   return (
-    <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 p-6">
+    <div className="bg-[var(--surface-1)] text-[var(--text)] rounded-xl border border-[var(--border)] p-6">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 bg-${accentColor}-100 rounded-lg flex items-center justify-center`}>
-            <FileText className={`w-5 h-5 text-${accentColor}-600`} />
+          <div className="w-10 h-10 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg flex items-center justify-center">
+            <FileText className={isArtist ? 'w-5 h-5 text-[var(--blue)]' : 'w-5 h-5 text-[var(--green)]'} />
           </div>
           <div>
-            <h3 className="text-base mb-1 text-neutral-900">{agreementName}</h3>
-            <p className="text-sm text-neutral-600">Legal agreement status</p>
+            <h3 className="text-base mb-1 text-[var(--text)]">{agreementName}</h3>
+            <p className="text-sm text-[var(--text-muted)]">Legal agreement status</p>
           </div>
         </div>
         {hasAccepted && (
-          <CheckCircle className="w-6 h-6 text-green-600" />
+          <CheckCircle className="w-6 h-6 text-[var(--green)]" />
         )}
       </div>
 
       {hasAccepted ? (
-        <div className="bg-green-50 rounded-lg p-4 border border-green-100">
-          <p className="text-sm text-green-900 mb-2">✓ Agreement Accepted</p>
+        <div className="bg-[var(--green-muted)] rounded-lg p-4 border border-[var(--border)]">
+          <p className="text-sm text-[var(--text)] mb-2">✓ Agreement Accepted</p>
           {acceptedName && (
-            <p className="text-xs text-green-700">Signed by: {acceptedName}</p>
+            <p className="text-xs text-[var(--text)]">Signed by: {acceptedName}</p>
           )}
           {acceptedDate && (
-            <p className="text-xs text-green-700">Date: {acceptedDate}</p>
+            <p className="text-xs text-[var(--text)]">Date: {acceptedDate}</p>
           )}
         </div>
       ) : (
-        <div className={`bg-${accentColor}-50 rounded-lg p-4 border border-${accentColor}-100`}>
-          <p className={`text-sm text-${accentColor}-900 mb-3`}>
+        <div className="bg-[var(--surface-2)] rounded-lg p-4 border border-[var(--border)]">
+          <p className="text-sm text-[var(--text)] mb-3">
             You must accept this agreement to use Artwalls features.
           </p>
           <button
             onClick={() => onNavigate(agreementPage)}
-            className={`px-4 py-2 bg-${accentColor}-600 text-white rounded-lg hover:bg-${accentColor}-700 transition-colors text-sm`}
+            className={
+              isArtist
+                ? 'px-4 py-2 bg-[var(--blue)] text-[var(--on-blue)] rounded-lg hover:bg-[var(--blue-hover)] transition-colors text-sm'
+                : 'px-4 py-2 bg-[var(--green)] text-white rounded-lg hover:opacity-90 transition-colors text-sm'
+            }
           >
             Review & Accept
           </button>
@@ -62,7 +66,7 @@ export function AgreementStatusCard({
 
       <button
         onClick={() => onNavigate(agreementPage)}
-        className="mt-4 text-sm text-neutral-600 hover:text-neutral-900 underline"
+        className="mt-4 text-sm text-[var(--blue)] hover:text-[var(--blue-hover)] underline"
       >
         View Full Agreement
       </button>

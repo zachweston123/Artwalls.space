@@ -58,86 +58,94 @@ export function StripePaymentSetup({ onNavigate }: StripeSetupProps) {
   ];
 
   return (
-    <div className="bg-white dark:bg-neutral-950 p-6 rounded-lg">
+    <div className="bg-[var(--bg)] text-[var(--text)] p-6 rounded-lg">
       <div className="space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-neutral-900 dark:text-white">Stripe Payment Setup</h1>
-          <p className="text-neutral-600 dark:text-neutral-400 mt-2">
+          <h1 className="text-3xl font-bold">Stripe Payment Setup</h1>
+          <p className="text-[var(--text-muted)] mt-2">
             Connect your Stripe account to accept payments from artists and venues
           </p>
         </div>
-        <div className={`px-4 py-2 rounded-full flex items-center gap-2 ${
-          isConnected 
-            ? 'bg-green-100 dark:bg-green-900' 
-            : 'bg-red-100 dark:bg-red-900'
-        }`}>
+        <div
+          className={`px-4 py-2 rounded-full flex items-center gap-2 ${
+            isConnected ? 'bg-[var(--green-muted)]' : 'bg-[var(--surface-2)]'
+          }`}
+        >
           {isConnected ? (
             <>
-              <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
-              <span className={isConnected ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'}>
+              <CheckCircle className="w-5 h-5 text-[var(--green)]" />
+              <span className="text-[var(--green)]">
                 Connected
               </span>
             </>
           ) : (
             <>
-              <XCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
-              <span className="text-red-700 dark:text-red-300">Not Connected</span>
+              <XCircle className="w-5 h-5 text-[var(--danger)]" />
+              <span className="text-[var(--danger)]">Not Connected</span>
             </>
           )}
         </div>
       </div>
 
       {/* Info Banner */}
-      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 flex gap-4">
-        <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+      <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-lg p-4 flex gap-4">
+        <Info className="w-5 h-5 text-[var(--blue)] flex-shrink-0 mt-0.5" />
         <div>
-          <h3 className="font-semibold text-blue-900 dark:text-blue-300 mb-1">What is Stripe?</h3>
-          <p className="text-sm text-blue-700 dark:text-blue-200">
+          <h3 className="font-semibold text-[var(--text)] mb-1">What is Stripe?</h3>
+          <p className="text-sm text-[var(--text-muted)]">
             Stripe is a secure payment platform that handles credit card processing, subscriptions, and payouts. 
-            Learn more at <a href="https://stripe.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-600 dark:hover:text-blue-500">stripe.com</a>
+            Learn more at{' '}
+            <a
+              href="https://stripe.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline text-[var(--blue)] hover:text-[var(--blue-hover)]"
+            >
+              stripe.com
+            </a>
           </p>
         </div>
       </div>
 
       {/* Connection Status Section */}
       {isConnected && (
-        <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 p-6">
+        <div className="bg-[var(--surface-1)] rounded-xl border border-[var(--border)] p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-neutral-900 dark:text-white">Connection Status</h2>
+            <h2 className="text-xl font-semibold text-[var(--text)]">Connection Status</h2>
             <a 
               href="https://dashboard.stripe.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-1"
+              className="text-sm text-[var(--blue)] hover:text-[var(--blue-hover)] flex items-center gap-1"
             >
               Open Stripe Dashboard <ExternalLink className="w-4 h-4" />
             </a>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div className="bg-neutral-50 dark:bg-neutral-700 p-4 rounded-lg">
-              <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-1">Account Status</p>
-              <p className="text-lg font-semibold text-green-600 dark:text-green-400">Active</p>
+            <div className="bg-[var(--surface-2)] p-4 rounded-lg">
+              <p className="text-sm text-[var(--text-muted)] mb-1">Account Status</p>
+              <p className="text-lg font-semibold text-[var(--green)]">Active</p>
             </div>
-            <div className="bg-neutral-50 dark:bg-neutral-700 p-4 rounded-lg">
-              <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-1">Processing Fee</p>
-              <p className="text-lg font-semibold text-neutral-900 dark:text-white">2.9% + $0.30</p>
+            <div className="bg-[var(--surface-2)] p-4 rounded-lg">
+              <p className="text-sm text-[var(--text-muted)] mb-1">Processing Fee</p>
+              <p className="text-lg font-semibold text-[var(--text)]">2.9% + $0.30</p>
             </div>
-            <div className="bg-neutral-50 dark:bg-neutral-700 p-4 rounded-lg">
-              <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-1">Mode</p>
-              <p className="text-lg font-semibold text-neutral-900 dark:text-white">{testMode ? 'Test' : 'Live'}</p>
+            <div className="bg-[var(--surface-2)] p-4 rounded-lg">
+              <p className="text-sm text-[var(--text-muted)] mb-1">Mode</p>
+              <p className="text-lg font-semibold text-[var(--text)]">{testMode ? 'Test' : 'Live'}</p>
             </div>
           </div>
 
           {/* Enabled Features */}
           <div className="space-y-2">
-            <p className="text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-3">Enabled Features</p>
+            <p className="text-sm font-semibold text-[var(--text)] mb-3">Enabled Features</p>
             {paymentFeatures.map((feature) => (
               <div key={feature.name} className="flex items-center gap-3 p-2">
-                <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
-                <span className="text-neutral-700 dark:text-neutral-300">{feature.name}</span>
+                <CheckCircle className="w-5 h-5 text-[var(--green)]" />
+                <span className="text-[var(--text)]">{feature.name}</span>
               </div>
             ))}
           </div>
@@ -145,8 +153,8 @@ export function StripePaymentSetup({ onNavigate }: StripeSetupProps) {
       )}
 
       {/* API Keys Section */}
-      <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 p-6">
-        <h2 className="text-xl font-semibold text-neutral-900 dark:text-white mb-6 flex items-center gap-2">
+      <div className="bg-[var(--surface-1)] rounded-xl border border-[var(--border)] p-6">
+        <h2 className="text-xl font-semibold text-[var(--text)] mb-6 flex items-center gap-2">
           <CreditCard className="w-5 h-5" />
           API Keys
         </h2>
@@ -159,9 +167,9 @@ export function StripePaymentSetup({ onNavigate }: StripeSetupProps) {
               id="testMode"
               checked={testMode}
               onChange={(e) => setTestMode(e.target.checked)}
-              className="w-4 h-4 accent-blue-600"
+              className="w-4 h-4 accent-[var(--blue)]"
             />
-            <label htmlFor="testMode" className="text-sm text-neutral-600 dark:text-neutral-400">
+            <label htmlFor="testMode" className="text-sm text-[var(--text-muted)]">
               Test Mode (Recommended for development)
             </label>
           </div>
@@ -169,10 +177,10 @@ export function StripePaymentSetup({ onNavigate }: StripeSetupProps) {
 
         {/* Publishable Key */}
         <div className="mb-6">
-          <label className="block text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-2">
+          <label className="block text-sm font-semibold text-[var(--text)] mb-2">
             {testMode ? 'Test' : 'Live'} Publishable Key
           </label>
-          <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-3">
+          <p className="text-xs text-[var(--text-muted)] mb-3">
             This key is safe to use in your frontend code. Used for payment form validation.
           </p>
           <div className="flex gap-2">
@@ -181,19 +189,19 @@ export function StripePaymentSetup({ onNavigate }: StripeSetupProps) {
                 type={showPublishableKey ? 'text' : 'password'}
                 value={publishableKey}
                 onChange={(e) => setPublishableKey(e.target.value)}
-                className="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white text-sm"
+                className="w-full px-4 py-3 border border-[var(--border)] rounded-lg bg-[var(--surface-2)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
                 readOnly
               />
               <button
                 onClick={() => setShowPublishableKey(!showPublishableKey)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text)]"
               >
                 {showPublishableKey ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
             <button
               onClick={() => handleCopyToClipboard(publishableKey, 'publishable')}
-              className="px-4 py-3 bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-600 rounded-lg transition-colors flex items-center gap-2 text-neutral-700 dark:text-neutral-300"
+              className="px-4 py-3 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] rounded-lg transition-colors flex items-center gap-2 text-[var(--text)] border border-[var(--border)]"
             >
               {copiedField === 'publishable' ? (
                 <Check className="w-4 h-4" />
@@ -206,10 +214,10 @@ export function StripePaymentSetup({ onNavigate }: StripeSetupProps) {
 
         {/* Secret Key */}
         <div className="mb-6">
-          <label className="block text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-2">
+          <label className="block text-sm font-semibold text-[var(--text)] mb-2">
             {testMode ? 'Test' : 'Live'} Secret Key
           </label>
-          <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-3">
+          <p className="text-xs text-[var(--text-muted)] mb-3">
             <strong>Keep this secret!</strong> Never share this key or commit it to version control. Use environment variables.
           </p>
           <div className="flex gap-2">
@@ -218,19 +226,19 @@ export function StripePaymentSetup({ onNavigate }: StripeSetupProps) {
                 type={showSecretKey ? 'text' : 'password'}
                 value={secretKey}
                 onChange={(e) => setSecretKey(e.target.value)}
-                className="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white text-sm"
+                className="w-full px-4 py-3 border border-[var(--border)] rounded-lg bg-[var(--surface-2)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
                 readOnly
               />
               <button
                 onClick={() => setShowSecretKey(!showSecretKey)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text)]"
               >
                 {showSecretKey ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
             <button
               onClick={() => handleCopyToClipboard(secretKey, 'secret')}
-              className="px-4 py-3 bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-600 rounded-lg transition-colors flex items-center gap-2 text-neutral-700 dark:text-neutral-300"
+              className="px-4 py-3 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] rounded-lg transition-colors flex items-center gap-2 text-[var(--text)] border border-[var(--border)]"
             >
               {copiedField === 'secret' ? (
                 <Check className="w-4 h-4" />
@@ -242,10 +250,10 @@ export function StripePaymentSetup({ onNavigate }: StripeSetupProps) {
         </div>
 
         {/* Alert Box */}
-        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 flex gap-3 mb-6">
-          <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+        <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-lg p-4 flex gap-3 mb-6">
+          <AlertCircle className="w-5 h-5 text-[var(--warning)] flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm text-amber-800 dark:text-amber-200">
+            <p className="text-sm text-[var(--text)]">
               <strong>Security Best Practice:</strong> Store your secret key in environment variables, not in code.
             </p>
           </div>
@@ -253,30 +261,30 @@ export function StripePaymentSetup({ onNavigate }: StripeSetupProps) {
       </div>
 
       {/* Webhook Configuration */}
-      <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 p-6">
-        <h2 className="text-xl font-semibold text-neutral-900 dark:text-white mb-6 flex items-center gap-2">
+      <div className="bg-[var(--surface-1)] rounded-xl border border-[var(--border)] p-6">
+        <h2 className="text-xl font-semibold text-[var(--text)] mb-6 flex items-center gap-2">
           <Zap className="w-5 h-5" />
           Webhook Configuration
         </h2>
 
-        <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
+        <p className="text-sm text-[var(--text-muted)] mb-4">
           Configure webhooks in your Stripe dashboard to receive real-time payment events.
         </p>
 
-        <div className="bg-neutral-50 dark:bg-neutral-700 p-4 rounded-lg mb-4">
-          <p className="text-xs text-neutral-600 dark:text-neutral-400 mb-2">Webhook URL:</p>
+        <div className="bg-[var(--surface-2)] p-4 rounded-lg mb-4 border border-[var(--border)]">
+          <p className="text-xs text-[var(--text-muted)] mb-2">Webhook URL:</p>
           <div className="flex gap-2">
-            <code className="flex-1 text-sm bg-white dark:bg-neutral-800 p-2 rounded text-neutral-900 dark:text-white break-all">
+            <code className="flex-1 text-sm bg-[var(--surface-1)] p-2 rounded text-[var(--text)] break-all border border-[var(--border)]">
               https://api.artwalls.space/webhooks/stripe
             </code>
             <button
               onClick={() => handleCopyToClipboard('https://api.artwalls.space/webhooks/stripe', 'webhook')}
-              className="px-3 py-2 bg-white dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded transition-colors"
+              className="px-3 py-2 bg-[var(--surface-1)] hover:bg-[var(--surface-3)] rounded transition-colors border border-[var(--border)]"
             >
               {copiedField === 'webhook' ? (
-                <Check className="w-4 h-4 text-green-600" />
+                <Check className="w-4 h-4 text-[var(--green)]" />
               ) : (
-                <Copy className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
+                <Copy className="w-4 h-4 text-[var(--text-muted)]" />
               )}
             </button>
           </div>
@@ -286,49 +294,49 @@ export function StripePaymentSetup({ onNavigate }: StripeSetupProps) {
           href="https://dashboard.stripe.com/webhooks"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-1"
+          className="text-sm text-[var(--blue)] hover:text-[var(--blue-hover)] flex items-center gap-1"
         >
           Configure in Stripe Dashboard <ExternalLink className="w-4 h-4" />
         </a>
       </div>
 
       {/* Quick Setup Guide */}
-      <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 p-6">
-        <h2 className="text-xl font-semibold text-neutral-900 dark:text-white mb-4">Quick Setup Guide</h2>
+      <div className="bg-[var(--surface-1)] rounded-xl border border-[var(--border)] p-6">
+        <h2 className="text-xl font-semibold text-[var(--text)] mb-4">Quick Setup Guide</h2>
         <ol className="space-y-3">
           <li className="flex gap-3">
-            <span className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">1</span>
+            <span className="flex-shrink-0 w-6 h-6 bg-[var(--blue)] text-[var(--on-blue)] rounded-full flex items-center justify-center text-sm font-semibold">1</span>
             <div>
-              <p className="font-medium text-neutral-900 dark:text-white">Create Stripe Account</p>
-              <p className="text-sm text-neutral-600 dark:text-neutral-400">Sign up at stripe.com if you haven't already</p>
+              <p className="font-medium text-[var(--text)]">Create Stripe Account</p>
+              <p className="text-sm text-[var(--text-muted)]">Sign up at stripe.com if you haven't already</p>
             </div>
           </li>
           <li className="flex gap-3">
-            <span className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">2</span>
+            <span className="flex-shrink-0 w-6 h-6 bg-[var(--blue)] text-[var(--on-blue)] rounded-full flex items-center justify-center text-sm font-semibold">2</span>
             <div>
-              <p className="font-medium text-neutral-900 dark:text-white">Get API Keys</p>
-              <p className="text-sm text-neutral-600 dark:text-neutral-400">Copy your publishable and secret keys from Stripe Dashboard</p>
+              <p className="font-medium text-[var(--text)]">Get API Keys</p>
+              <p className="text-sm text-[var(--text-muted)]">Copy your publishable and secret keys from Stripe Dashboard</p>
             </div>
           </li>
           <li className="flex gap-3">
-            <span className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">3</span>
+            <span className="flex-shrink-0 w-6 h-6 bg-[var(--blue)] text-[var(--on-blue)] rounded-full flex items-center justify-center text-sm font-semibold">3</span>
             <div>
-              <p className="font-medium text-neutral-900 dark:text-white">Configure Environment Variables</p>
-              <p className="text-sm text-neutral-600 dark:text-neutral-400">Add REACT_APP_STRIPE_PUBLISHABLE_KEY and STRIPE_SECRET_KEY</p>
+              <p className="font-medium text-[var(--text)]">Configure Environment Variables</p>
+              <p className="text-sm text-[var(--text-muted)]">Add REACT_APP_STRIPE_PUBLISHABLE_KEY and STRIPE_SECRET_KEY</p>
             </div>
           </li>
           <li className="flex gap-3">
-            <span className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">4</span>
+            <span className="flex-shrink-0 w-6 h-6 bg-[var(--blue)] text-[var(--on-blue)] rounded-full flex items-center justify-center text-sm font-semibold">4</span>
             <div>
-              <p className="font-medium text-neutral-900 dark:text-white">Set Up Webhooks</p>
-              <p className="text-sm text-neutral-600 dark:text-neutral-400">Configure webhook endpoint in Stripe Dashboard</p>
+              <p className="font-medium text-[var(--text)]">Set Up Webhooks</p>
+              <p className="text-sm text-[var(--text-muted)]">Configure webhook endpoint in Stripe Dashboard</p>
             </div>
           </li>
           <li className="flex gap-3">
-            <span className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">5</span>
+            <span className="flex-shrink-0 w-6 h-6 bg-[var(--blue)] text-[var(--on-blue)] rounded-full flex items-center justify-center text-sm font-semibold">5</span>
             <div>
-              <p className="font-medium text-neutral-900 dark:text-white">Test Payments</p>
-              <p className="text-sm text-neutral-600 dark:text-neutral-400">Use test card numbers to verify payment processing</p>
+              <p className="font-medium text-[var(--text)]">Test Payments</p>
+              <p className="text-sm text-[var(--text-muted)]">Use test card numbers to verify payment processing</p>
             </div>
           </li>
         </ol>
@@ -339,20 +347,20 @@ export function StripePaymentSetup({ onNavigate }: StripeSetupProps) {
         <button
           onClick={handleDisconnect}
           disabled={!isConnected}
-          className="px-6 py-3 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+          className="px-6 py-3 bg-[var(--surface-2)] text-[var(--danger)] rounded-lg hover:bg-[var(--surface-3)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium border border-[var(--border)]"
         >
           Disconnect Stripe
         </button>
         <div className="flex gap-3">
           <button
             onClick={() => window.open('https://stripe.com/docs', '_blank')}
-            className="px-6 py-3 border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors font-medium"
+            className="px-6 py-3 border border-[var(--border)] text-[var(--text)] rounded-lg hover:bg-[var(--surface-2)] transition-colors font-medium"
           >
             View Documentation
           </button>
           <button
             onClick={handleSaveSettings}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2"
+            className="px-6 py-3 bg-[var(--blue)] text-[var(--on-blue)] rounded-lg hover:bg-[var(--blue-hover)] transition-colors font-medium flex items-center gap-2"
           >
             {saveSuccess ? (
               <>

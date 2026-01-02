@@ -6,8 +6,10 @@ interface QuickReferenceCardProps {
 }
 
 export function QuickReferenceCard({ role, onNavigate }: QuickReferenceCardProps) {
-  const accentColor = role === 'artist' ? 'blue' : 'green';
+  const isArtist = role === 'artist';
   const agreementPage = role === 'artist' ? 'artist-agreement' : 'venue-agreement';
+  const accentTextClass = isArtist ? 'text-[var(--blue)]' : 'text-[var(--green)]';
+  const accentIconClass = accentTextClass;
 
   const artistQuickFacts = [
     { icon: DollarSign, label: 'Your Earnings', value: '80% of sale price' },
@@ -26,12 +28,12 @@ export function QuickReferenceCard({ role, onNavigate }: QuickReferenceCardProps
   const facts = role === 'artist' ? artistQuickFacts : venueQuickFacts;
 
   return (
-    <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 p-6">
+    <div className="bg-[var(--surface-1)] rounded-xl border border-[var(--border)] p-6">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg text-neutral-900">Agreement Quick Reference</h3>
+        <h3 className="text-lg text-[var(--text)]">Agreement Quick Reference</h3>
         <button
           onClick={() => onNavigate(agreementPage)}
-          className={`text-sm text-${accentColor}-600 hover:text-${accentColor}-700 underline`}
+          className={`text-sm underline hover:opacity-90 ${accentTextClass}`}
         >
           View Full Terms
         </button>
@@ -42,12 +44,12 @@ export function QuickReferenceCard({ role, onNavigate }: QuickReferenceCardProps
           const Icon = fact.icon;
           return (
             <div key={index} className="flex items-start gap-3">
-              <div className={`w-8 h-8 bg-${accentColor}-100 rounded-lg flex items-center justify-center flex-shrink-0`}>
-                <Icon className={`w-4 h-4 text-${accentColor}-600`} />
+              <div className="w-8 h-8 bg-[var(--surface-2)] rounded-lg flex items-center justify-center flex-shrink-0">
+                <Icon className={`w-4 h-4 ${accentIconClass}`} />
               </div>
               <div>
-                <p className="text-xs text-neutral-500 mb-0.5">{fact.label}</p>
-                <p className="text-sm text-neutral-900">{fact.value}</p>
+                <p className="text-xs text-[var(--text-muted)] mb-0.5">{fact.label}</p>
+                <p className="text-sm text-[var(--text)]">{fact.value}</p>
               </div>
             </div>
           );
