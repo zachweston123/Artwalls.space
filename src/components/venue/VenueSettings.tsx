@@ -199,6 +199,30 @@ export function VenueSettings() {
         </div>
       </div>
 
+      {/* Instagram Section */}
+      <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-hidden mb-6">
+        <div className="p-6">
+          <h2 className="text-xl text-neutral-900 dark:text-neutral-50 mb-4">Social Media</h2>
+          <div>
+            <label className="block text-sm text-neutral-700 dark:text-neutral-300 mb-2">
+              Instagram Handle <span className="text-neutral-500">(Optional)</span>
+            </label>
+            <div className="flex items-center">
+              <span className="text-neutral-600 dark:text-neutral-400 px-4 py-2 bg-neutral-50 dark:bg-neutral-900 rounded-l-lg border border-r-0 border-neutral-300 dark:border-neutral-600">@</span>
+              <input
+                type="text"
+                defaultValue="brewpalettecafe"
+                className="flex-1 px-4 py-2 rounded-r-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-50 focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400"
+                placeholder="yourinstagram"
+              />
+            </div>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-2">
+              Add your Instagram profile so customers can follow you and see your venue
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Success Toast */}
       {showToast && (
         <div className="fixed bottom-6 right-6 bg-green-600 text-white px-6 py-4 rounded-xl shadow-lg flex items-center gap-3 animate-slide-up z-50">

@@ -13,6 +13,7 @@ export interface ArtistProfileData {
   artTypes: string[];
   openToNew: boolean;
   avatar?: string;
+  instagram?: string;
 }
 
 export function ArtistProfileEdit({ onSave, onCancel }: ArtistProfileEditProps) {
@@ -22,6 +23,7 @@ export function ArtistProfileEdit({ onSave, onCancel }: ArtistProfileEditProps) 
     artTypes: ['Painter', 'Mixed Media', 'Digital', 'Collage'],
     openToNew: true,
     avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400',
+    instagram: '@sarahchenart',
   });
 
   const allArtTypes = [
@@ -143,6 +145,26 @@ export function ArtistProfileEdit({ onSave, onCancel }: ArtistProfileEditProps) 
             </div>
             <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-2">
               {formData.artTypes.length} selected
+            </p>
+          </div>
+
+          {/* Instagram Handle */}
+          <div>
+            <label className="block text-sm text-neutral-700 dark:text-neutral-300 mb-2">
+              Instagram Handle <span className="text-neutral-500">(Optional)</span>
+            </label>
+            <div className="flex items-center">
+              <span className="text-neutral-600 dark:text-neutral-400 px-4 py-2 bg-neutral-50 dark:bg-neutral-900 rounded-l-lg border border-r-0 border-neutral-300 dark:border-neutral-600">@</span>
+              <input
+                type="text"
+                value={formData.instagram?.replace('@', '') || ''}
+                onChange={(e) => setFormData({ ...formData, instagram: e.target.value ? `@${e.target.value}` : '' })}
+                className="flex-1 px-4 py-2 rounded-r-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                placeholder="yourinstagramhandle"
+              />
+            </div>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-2">
+              Link your Instagram profile so venues can see your work
             </p>
           </div>
 

@@ -119,7 +119,7 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
   const currentYear = new Date().getFullYear();
 
   return (
-    <div>
+    <div className="bg-white dark:bg-neutral-950">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl mb-2">Find Venues</h1>
@@ -370,6 +370,7 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
           )}
         </div>
       )}
+    </div>
     </div>
   );
 }

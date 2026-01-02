@@ -1,4 +1,4 @@
-import { MapPin, Edit, Flag, Eye } from 'lucide-react';
+import { MapPin, Edit, Flag, Eye, Instagram } from 'lucide-react';
 import { LabelChip } from '../LabelChip';
 import { mockArtworks } from '../../data/mockData';
 import type { User } from '../../App';
@@ -25,6 +25,7 @@ export function ArtistProfileView({
     avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400',
     location: 'Downtown, Portland',
     bio: 'Contemporary mixed media artist exploring themes of urban life and human connection. My work combines traditional painting techniques with digital elements to create layered, textured pieces that invite viewers to look closer and discover hidden narratives.',
+    instagram: '@sarahchenart',
     artTypes: ['Painter', 'Mixed Media', 'Digital', 'Collage'],
     openToNew: true,
     activeDisplays: 3,
@@ -57,9 +58,22 @@ export function ArtistProfileView({
             <div className="flex items-start justify-between mb-3">
               <div>
                 <h1 className="text-3xl mb-2">{artist.name}</h1>
-                <div className="flex items-center gap-2 text-neutral-600 mb-2">
-                  <MapPin className="w-4 h-4" />
-                  <span className="text-sm">{artist.location}</span>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-neutral-600 dark:text-neutral-300">
+                    <MapPin className="w-4 h-4" />
+                    <span className="text-sm">{artist.location}</span>
+                  </div>
+                  {artist.instagram && (
+                    <a
+                      href={`https://instagram.com/${artist.instagram.replace('@', '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-neutral-600 dark:text-neutral-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                    >
+                      <Instagram className="w-4 h-4" />
+                      <span className="text-sm">{artist.instagram}</span>
+                    </a>
+                  )}
                 </div>
               </div>
               

@@ -19,7 +19,7 @@ export function ArtistVenues() {
   };
 
   return (
-    <div>
+    <div className="bg-white dark:bg-neutral-950">
       <div className="mb-8">
         <h1 className="text-3xl mb-2">Available Venues</h1>
         <p className="text-neutral-600">Find the perfect space to display your artwork</p>
@@ -201,6 +201,7 @@ export function ArtistVenues() {
           </div>
         </div>
       )}
+    </div>
     </div>
   );
 }

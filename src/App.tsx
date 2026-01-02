@@ -17,6 +17,7 @@ import { VenueSettings } from './components/venue/VenueSettings';
 import { VenueSettingsWithEmptyState } from './components/venue/VenueSettingsWithEmptyState';
 import { VenueProfile } from './components/venue/VenueProfile';
 import { FindArtists } from './components/venue/FindArtists';
+import { FindVenues } from './components/artist/FindVenues';
 import { NotificationsList } from './components/notifications/NotificationsList';
 import { PoliciesLanding } from './components/legal/PoliciesLanding';
 import { ArtistAgreement } from './components/legal/ArtistAgreement';
@@ -200,7 +201,7 @@ export default function App() {
         currentPage={currentPage}
       />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8\">"
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 bg-white dark:bg-neutral-950">
         {/* Agreement Banner */}
         {!hasAcceptedAgreement && 
          !['policies', 'artist-agreement', 'venue-agreement'].includes(currentPage) && (
@@ -232,7 +233,7 @@ export default function App() {
           <>
             {currentPage === 'artist-dashboard' && <ArtistDashboard onNavigate={handleNavigate} user={currentUser} />}
             {currentPage === 'artist-artworks' && <ArtistArtworks user={currentUser} />}
-            {currentPage === 'artist-venues' && <ArtistVenues />}
+            {currentPage === 'artist-venues' && <FindVenues onViewVenue={(venueId) => handleNavigate('artist-dashboard')} onViewWallspaces={(venueId) => handleNavigate('artist-dashboard')} />}
             {currentPage === 'artist-applications' && <ArtistApplicationsWithScheduling />}
             {currentPage === 'artist-sales' && <ArtistSales />}
             {currentPage === 'artist-profile' && <ArtistProfile onNavigate={handleNavigate} />}

@@ -1,4 +1,4 @@
-import { Store, Mail, MapPin, Clock, DollarSign, Edit } from 'lucide-react';
+import { Store, Mail, MapPin, Clock, DollarSign, Edit, Instagram } from 'lucide-react';
 
 interface VenueProfileProps {
   onNavigate: (page: string) => void;
@@ -10,6 +10,7 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
     name: 'Brew & Palette Café',
     email: 'contact@brewpalette.com',
     address: '123 Arts District, Portland, OR 97209',
+    instagram: '@brewpalettecafe',
     totalEarnings: 487.50,
     wallSpaces: 3,
     activeDisplays: 2,
@@ -57,13 +58,28 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
                 </div>
               </div>
 
-              <div className="flex items-start gap-3 p-4 bg-neutral-50 rounded-lg">
-                <MapPin className="w-5 h-5 text-neutral-500 mt-0.5" />
+              <div className="flex items-start gap-3 p-4 bg-neutral-50 dark:bg-neutral-700 rounded-lg">
+                <MapPin className="w-5 h-5 text-neutral-500 dark:text-neutral-400 mt-0.5" />
                 <div className="flex-1">
-                  <label className="block text-sm text-neutral-500 mb-1">Venue Address</label>
-                  <p className="text-neutral-900">{profile.address}</p>
+                  <label className="block text-sm text-neutral-500 dark:text-neutral-400 mb-1">Venue Address</label>
+                  <p className="text-neutral-900 dark:text-neutral-50">{profile.address}</p>
                 </div>
               </div>
+
+              {profile.instagram && (
+                <a
+                  href={`https://instagram.com/${profile.instagram.replace('@', '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-start gap-3 p-4 bg-neutral-50 dark:bg-neutral-700 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-600 transition-colors group"
+                >
+                  <Instagram className="w-5 h-5 text-neutral-500 dark:text-neutral-400 mt-0.5 group-hover:text-blue-600 dark:group-hover:text-blue-400" />
+                  <div className="flex-1">
+                    <label className="block text-sm text-neutral-500 dark:text-neutral-400 mb-1">Instagram</label>
+                    <p className="text-neutral-900 dark:text-neutral-50 group-hover:text-blue-600 dark:group-hover:text-blue-400">{profile.instagram}</p>
+                  </div>
+                </a>
+              )}
 
               <div className="flex items-start gap-3 p-4 bg-neutral-50 rounded-lg">
                 <Clock className="w-5 h-5 text-neutral-500 mt-0.5" />
