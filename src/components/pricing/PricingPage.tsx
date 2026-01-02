@@ -580,7 +580,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                 <th className="text-left p-4 text-sm text-neutral-600 dark:text-neutral-300">Feature</th>
                 <th className="text-center p-4 text-sm text-neutral-600 dark:text-neutral-300">Free</th>
                 <th className="text-center p-4 text-sm text-neutral-600 dark:text-neutral-300">Starter</th>
-                <th className=\"text-center p-4 text-sm bg-blue-50 dark:bg-neutral-700 text-neutral-900 dark:text-blue-300\">Growth</th>
+                <th className="text-center p-4 text-sm bg-blue-50 dark:bg-neutral-700 text-neutral-900 dark:text-blue-300">Growth</th>
                 <th className="text-center p-4 text-sm text-neutral-600 dark:text-neutral-300">Pro</th>
               </tr>
             </thead>
