@@ -147,25 +147,25 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
               </div>
 
               <div>
-                <label className=\"block text-sm text-neutral-700 dark:text-neutral-300 mb-2\">Artwork Title</label>
+                <label className="block text-sm text-neutral-700 dark:text-neutral-300 mb-2">Artwork Title</label>
                 <input
-                  type=\"text\"
+                  type="text"
                   required
                   value={newArtwork.title}
                   onChange={(e) => setNewArtwork({ ...newArtwork, title: e.target.value })}
-                  className=\"w-full px-4 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400\"
+                  className="w-full px-4 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                   placeholder="Enter artwork title"
                 />
               </div>
 
               <div>
-                <label className=\"block text-sm text-neutral-700 dark:text-neutral-300 mb-2\">Description</label>
+                <label className="block text-sm text-neutral-700 dark:text-neutral-300 mb-2">Description</label>
                 <textarea
                   required
                   value={newArtwork.description}
                   onChange={(e) => setNewArtwork({ ...newArtwork, description: e.target.value })}
                   rows={4}
-                  className=\"w-full px-4 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400\"
+                  className="w-full px-4 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                   placeholder="Describe your artwork, medium, inspiration..."
                 />
               </div>

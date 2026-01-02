@@ -39,11 +39,11 @@ export function ArtistProfileView({
   return (
     <div>
       {/* Profile Header */}
-      <div className=\"bg-white dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700 mb-6\">
-        <div className=\"flex flex-col sm:flex-row gap-6\">
+      <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700 mb-6">
+        <div className="flex flex-col sm:flex-row gap-6">
           {/* Avatar */}
-          <div className=\"flex-shrink-0\">
-            <div className=\"w-32 h-32 rounded-full overflow-hidden bg-neutral-100 dark:bg-neutral-700 border-4 border-neutral-200 dark:border-neutral-600\">
+          <div className="flex-shrink-0">
+            <div className="w-32 h-32 rounded-full overflow-hidden bg-neutral-100 dark:bg-neutral-700 border-4 border-neutral-200 dark:border-neutral-600">
               <img
                 src={artist.avatar}
                 alt={artist.name}

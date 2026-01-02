@@ -14,14 +14,14 @@ export function ArtistSales() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <div className=\"bg-white dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700\">
-          <div className=\"flex items-center gap-3 mb-4\">
-            <div className=\"w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center\">
-              <DollarSign className=\"w-6 h-6 text-blue-600 dark:text-blue-400\" />
+        <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
+              <DollarSign className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <div className=\"text-sm text-neutral-600 dark:text-neutral-400\">Total Earnings</div>
-              <div className=\"text-2xl text-neutral-900 dark:text-neutral-50\">${totalEarnings.toFixed(2)}</div>
+              <div className="text-sm text-neutral-600 dark:text-neutral-400">Total Earnings</div>
+              <div className="text-2xl text-neutral-900 dark:text-neutral-50">${totalEarnings.toFixed(2)}</div>
             </div>
           </div>
           <div className="text-xs text-neutral-500">80% of total sales</div>
