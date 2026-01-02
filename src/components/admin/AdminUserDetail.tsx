@@ -358,8 +358,8 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
 
       {activeTab === 'subscriptions' && (
         <div className="space-y-6">
-          <div className="bg-white rounded-xl p-6 border border-neutral-200">
-            <h2 className="text-xl mb-4">Current Plan</h2>
+          <div className="bg-white dark:bg-neutral-900 rounded-xl p-6 border border-neutral-200 dark:border-neutral-800">
+            <h2 className="text-xl mb-4 dark:text-neutral-50">Current Plan</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
               <div>
                 <p className="text-sm text-neutral-600 mb-1">Tier</p>
@@ -387,8 +387,8 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
       {activeTab === 'notes' && (
         <div className="space-y-6">
           {/* Add Note */}
-          <div className="bg-white rounded-xl p-6 border border-neutral-200">
-            <h2 className="text-xl mb-4">Add Internal Note</h2>
+          <div className="bg-white dark:bg-neutral-900 rounded-xl p-6 border border-neutral-200 dark:border-neutral-800">
+            <h2 className="text-xl mb-4 dark:text-neutral-50">Add Internal Note</h2>
             <div className="space-y-4">
               <select className="w-full px-4 py-2 rounded-lg border border-neutral-300 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-50 dark:border-neutral-600 focus:outline-none focus:ring-2 focus:ring-neutral-500 dark:focus:ring-neutral-400">
                 <option>Support</option>
@@ -407,8 +407,8 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
           </div>
 
           {/* Notes Timeline */}
-          <div className="bg-white rounded-xl p-6 border border-neutral-200">
-            <h2 className="text-xl mb-4">Notes History</h2>
+          <div className="bg-white dark:bg-neutral-900 rounded-xl p-6 border border-neutral-200 dark:border-neutral-800">
+            <h2 className="text-xl mb-4 dark:text-neutral-50">Notes History</h2>
             <div className="space-y-4">
               {mockNotes.map((note) => (
                 <div key={note.id} className="p-4 bg-neutral-50 rounded-lg">

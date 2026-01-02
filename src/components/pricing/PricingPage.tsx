@@ -271,8 +271,8 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                   onClick={() => setSelectedPlanId(plan.id)}
                   className={`p-4 rounded-lg border-2 transition-all text-left ${
                     isSelected
-                      ? 'border-white bg-white/20 ring-2 ring-white shadow-lg'
-                      : 'border-white/30 hover:border-white/60 bg-white/5'
+                      ? 'border-white bg-white/20 dark:border-neutral-500 dark:bg-neutral-700 ring-2 ring-white dark:ring-neutral-500 shadow-lg'
+                      : 'border-white/30 hover:border-white/60 bg-white/5 dark:border-neutral-700 dark:hover:border-neutral-600 dark:bg-neutral-900'
                   }`}
                 >
                   <div className="font-semibold text-white mb-2">{plan.name}</div>
