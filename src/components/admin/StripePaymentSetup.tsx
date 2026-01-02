@@ -368,6 +368,7 @@ export function StripePaymentSetup({ onNavigate }: StripeSetupProps) {
           </button>
         </div>
       </div>
+      </div>
     </div>
   );
 }
