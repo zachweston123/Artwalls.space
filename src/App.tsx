@@ -156,7 +156,7 @@ export default function App() {
   // Admin Console Layout (different from main app)
   if (currentUser.role === 'admin') {
     return (
-      <div className="flex min-h-screen bg-neutral-50 dark:bg-neutral-900">
+      <div className="flex min-h-screen bg-neutral-50 dark:bg-neutral-950">
         <AdminSidebar currentPage={currentPage} onNavigate={handleNavigate} />
         <div className="flex-1 flex flex-col">
           <main className="flex-1 p-8 overflow-y-auto">
@@ -182,7 +182,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900">
+    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
       <Navigation 
         user={currentUser} 
         onNavigate={handleNavigate}

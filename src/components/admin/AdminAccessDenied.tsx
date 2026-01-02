@@ -9,7 +9,7 @@ interface AdminAccessDeniedProps {
 export function AdminAccessDenied({ type, onSignIn, onReturnToApp }: AdminAccessDeniedProps) {
   if (type === 'not-signed-in') {
     return (
-      <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 flex items-center justify-center p-6">
         <div className="max-w-md w-full text-center">
           <div className="w-20 h-20 bg-neutral-100 dark:bg-neutral-800 rounded-full flex items-center justify-center mx-auto mb-6">
             <LogIn className="w-10 h-10 text-neutral-400 dark:text-neutral-500" />
@@ -30,7 +30,7 @@ export function AdminAccessDenied({ type, onSignIn, onReturnToApp }: AdminAccess
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 flex items-center justify-center p-6">
       <div className="max-w-md w-full text-center">
         <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
           <ShieldAlert className="w-10 h-10 text-red-600 dark:text-red-400" />

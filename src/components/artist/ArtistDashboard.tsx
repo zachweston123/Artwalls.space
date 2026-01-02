@@ -1,4 +1,4 @@
-import { TrendingUp, Package, DollarSign, Eye } from 'lucide-react';
+import { TrendingUp, Package, DollarSign, Eye, Search } from 'lucide-react';
 import { mockArtworks, mockSales } from '../../data/mockData';
 import { PlanBadge } from '../pricing/PlanBadge';
 import { UpgradePromptCard } from '../pricing/UpgradePromptCard';
@@ -62,6 +62,22 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
           </div>
           <PlanBadge plan="free" size="md" showUpgrade onUpgrade={() => onNavigate('plans-pricing')} />
         </div>
+      </div>
+
+      {/* Search Bar for Finding Venues */}
+      <div className="mb-8 bg-white dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700">
+        <button
+          onClick={() => onNavigate('artist-venues')}
+          className="w-full flex items-center gap-3 px-4 py-3 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-lg hover:border-blue-500 dark:hover:border-blue-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all text-left group"
+        >
+          <Search className="w-5 h-5 text-neutral-400 dark:text-neutral-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
+          <span className="text-neutral-600 dark:text-neutral-400 group-hover:text-neutral-700 dark:group-hover:text-neutral-300 transition-colors">
+            Find venues to display your artwork...
+          </span>
+        </button>
+        <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-3 ml-1">
+          Browse available wall spaces and apply to showcase your work
+        </p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

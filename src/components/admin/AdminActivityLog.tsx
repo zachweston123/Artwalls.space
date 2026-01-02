@@ -93,7 +93,7 @@ export function AdminActivityLog() {
       <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-neutral-50 dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-700">
+            <thead className="bg-neutral-100 dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
               <tr>
                 <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Timestamp</th>
                 <th className="text-left px-6 py-3 text-sm text-neutral-600 dark:text-neutral-300">Admin User</th>
