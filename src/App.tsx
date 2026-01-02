@@ -155,7 +155,7 @@ export default function App() {
 
         {/* Legal Pages (available to both roles) */}
         {currentPage === 'policies' && <PoliciesLanding onNavigate={handleNavigate} />}
-        {currentPage === 'plans-pricing' && <PricingPage onNavigate={handleNavigate} currentPlan="free" />}
+        {currentPage === 'plans-pricing' && <PricingPage onNavigate={handleNavigate} currentPlan="free" currentUser={currentUser} />}
         {currentPage === 'artist-agreement' && (
           <ArtistAgreement 
             onNavigate={handleNavigate}

@@ -1,14 +1,54 @@
-import { Check, Sparkles, Shield, TrendingUp, Zap } from 'lucide-react';
+import { Check, Sparkles, Shield, TrendingUp, Zap, Loader2 } from 'lucide-react';
 import { useState } from 'react';
+import { apiPost } from '../../lib/api';
 
 interface PricingPageProps {
   onNavigate: (page: string) => void;
   currentPlan?: 'free' | 'starter' | 'growth' | 'pro';
+  currentUser?: { id: string; role: string; email: string } | null;
 }
 
-export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPageProps) {
+export function PricingPage({ onNavigate, currentPlan = 'free', currentUser }: PricingPageProps) {
   const [showProtectionDetails, setShowProtectionDetails] = useState(false);
   const [monthlySales, setMonthlySales] = useState(300);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleUpgrade = async (tier: string, planId: string) => {
+    try {
+      if (!currentUser) {
+        setError('Please log in to upgrade your plan');
+        return;
+      }
+
+      if (currentUser.role !== 'artist') {
+        setError('Only artists can upgrade plans');
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+
+      // Map frontend plan ID to backend tier name
+      const tierMap: Record<string, string> = {
+        free: 'free',
+        starter: 'starter',
+        growth: 'elite',
+        pro: 'pro',
+      };
+      const backendTier = tierMap[tier] || tier;
+
+      const { url } = await apiPost<{ url: string }>(
+        '/api/stripe/billing/create-subscription-session',
+        { tier: backendTier }
+      );
+
+      window.location.href = url;
+    } catch (e: any) {
+      setError(e?.message || `Failed to start upgrade to ${tier}`);
+      setLoading(false);
+    }
+  };
 
   const plans = [
     {
@@ -17,6 +57,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       price: 0,
       period: '/mo',
       icon: Sparkles,
+      tier: 'free',
       features: [
         '1 active display included',
         '1 artwork listing',
@@ -42,6 +83,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       price: 9,
       period: '/mo',
       icon: TrendingUp,
+      tier: 'starter',
       features: [
         '4 active displays included',
         'Up to 10 artworks',
@@ -67,6 +109,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       price: 19,
       period: '/mo',
       icon: Zap,
+      tier: 'elite',
       features: [
         '10 active displays included',
         'Up to 30 artworks',
@@ -92,6 +135,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       price: 39,
       period: '/mo',
       icon: Shield,
+      tier: 'pro',
       features: [
         'Unlimited active displays',
         'Unlimited artworks',
@@ -135,6 +179,12 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
 
   return (
     <div>
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 max-w-2xl mx-auto">
+          <p className="text-red-800 text-sm">{error}</p>
+        </div>
+      )}
+
       <div className="text-center mb-12">
         <h1 className="text-3xl mb-2 text-neutral-900">Plans & Pricing</h1>
         <p className="text-neutral-600 max-w-2xl mx-auto">
@@ -199,15 +249,19 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
               </div>
 
               <button
-                disabled={plan.disabled}
-                className={`w-full py-3 rounded-lg transition-colors ${
-                  plan.disabled
+                onClick={() => handleUpgrade(plan.tier, plan.id)}
+                disabled={plan.disabled || loading}
+                className={`w-full py-3 rounded-lg transition-colors flex items-center justify-center gap-2 ${
+                  plan.disabled || loading
                     ? 'bg-neutral-200 text-neutral-500 cursor-not-allowed'
                     : plan.popular
                     ? 'bg-blue-600 text-white hover:bg-blue-700'
                     : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
                 }`}
               >
+                {loading && plan.id === 'growth' ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : null}
                 {plan.cta}
               </button>
             </div>

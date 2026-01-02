@@ -525,7 +525,8 @@ app.post('/api/venues', async (req, res) => {
 const SUB_PRICE_IDS = {
   starter: process.env.STRIPE_SUB_PRICE_STARTER,
   pro: process.env.STRIPE_SUB_PRICE_PRO,
-  elite: process.env.STRIPE_SUB_PRICE_ELITE,
+  elite: process.env.STRIPE_SUB_PRICE_ELITE || process.env.STRIPE_SUB_PRICE_GROWTH, // Support both names
+  growth: process.env.STRIPE_SUB_PRICE_GROWTH || process.env.STRIPE_SUB_PRICE_ELITE, // Support both names
 };
 
 app.post('/api/stripe/billing/create-subscription-session', async (req, res) => {
