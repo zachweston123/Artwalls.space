@@ -202,6 +202,5 @@ export function ArtistVenues() {
         </div>
       )}
     </div>
-    </div>
   );
 }

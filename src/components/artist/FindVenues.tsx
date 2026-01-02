@@ -371,6 +371,5 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
         </div>
       )}
     </div>
-    </div>
   );
 }
