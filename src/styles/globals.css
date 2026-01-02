@@ -3,7 +3,32 @@
 @tailwind utilities;
 
 @layer base {
-  /* Root color tokens - Light mode */
+  /* ═══════════════════════════════════════════════════════════
+     SYSTEM DARK MODE DETECTION + ROOT BACKGROUND
+     ═══════════════════════════════════════════════════════════ */
+  
+  /* Always ensure html/body has correct background color */
+  html {
+    background-color: rgb(var(--color-bg));
+    color-scheme: light;
+  }
+
+  body {
+    background-color: rgb(var(--color-bg));
+    color: rgb(var(--color-text-primary));
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Root app container (#root element) must match page background */
+  #root {
+    background-color: rgb(var(--color-bg));
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Root color tokens - Light mode (DEFAULT) */
   :root {
     /* Backgrounds */
     --color-bg: 250 250 250; /* neutral-50 */
@@ -54,6 +79,20 @@
 
   /* Dark mode color tokens */
   @media (prefers-color-scheme: dark) {
+    html {
+      background-color: rgb(var(--color-bg));
+      color-scheme: dark;
+    }
+
+    body {
+      background-color: rgb(var(--color-bg));
+      color: rgb(var(--color-text-primary));
+    }
+
+    #root {
+      background-color: rgb(var(--color-bg));
+    }
+
     :root {
       /* Backgrounds */
       --color-bg: 23 23 23; /* neutral-900 */

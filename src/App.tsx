@@ -157,7 +157,7 @@ export default function App() {
   // Admin Console Layout (different from main app)
   if (currentUser.role === 'admin') {
     return (
-      <div className="flex min-h-screen bg-neutral-50 dark:bg-neutral-950">
+      <div className="flex min-h-screen">
         <AdminSidebar currentPage={currentPage} onNavigate={handleNavigate} />
         <div className="flex-1 flex flex-col">
           <main className="flex-1 p-8 overflow-y-auto">
@@ -183,7 +183,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
+    <div className="min-h-screen">
       <Navigation 
         user={currentUser} 
         onNavigate={handleNavigate}
@@ -201,7 +201,8 @@ export default function App() {
         currentPage={currentPage}
       />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 bg-white dark:bg-neutral-950">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+        {/* Background is controlled by system dark mode preference set on html/body */}
         {/* Agreement Banner */}
         {!hasAcceptedAgreement && 
          !['policies', 'artist-agreement', 'venue-agreement'].includes(currentPage) && (
