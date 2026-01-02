@@ -76,7 +76,7 @@ export function ArtistApplicationsWithScheduling() {
         {applications.map((application) => (
           <div
             key={application.id}
-            className="bg-white rounded-xl border border-neutral-200 overflow-hidden hover:shadow-lg transition-shadow"
+            className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-hidden hover:shadow-lg transition-shadow dark:hover:shadow-lg"
           >
             <div className="h-48 bg-neutral-100 overflow-hidden">
               <img

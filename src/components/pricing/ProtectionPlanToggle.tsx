@@ -28,7 +28,7 @@ export function ProtectionPlanToggle({
   const isPro = currentPlan === 'pro';
 
   return (
-    <div className="bg-white rounded-lg border border-neutral-200 p-4">
+    <div className="bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 p-4">
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-3 flex-1">
           <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${

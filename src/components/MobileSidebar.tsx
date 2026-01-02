@@ -105,9 +105,9 @@ export function MobileSidebar({ isOpen, onClose, user, onNavigate, onLogout, cur
                 className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${
                   currentPage === link.id
                     ? isArtist
-                      ? 'bg-blue-50 text-blue-700'
-                      : 'bg-green-50 text-green-700'
-                    : 'text-neutral-700 hover:bg-neutral-100'
+                      ? 'bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
+                      : 'bg-green-50 dark:bg-green-900 text-green-700 dark:text-green-300'
+                    : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700'
                 }`}
               >
                 {link.label}

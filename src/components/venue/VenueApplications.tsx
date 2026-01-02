@@ -131,7 +131,7 @@ export function VenueApplications() {
         {filteredApplications.map((application) => (
           <div
             key={application.id}
-            className="bg-white rounded-xl p-6 border border-neutral-200 hover:shadow-md transition-shadow"
+            className="bg-white dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700 hover:shadow-md transition-shadow"
           >
             <div className="flex gap-6">
               <div className="w-48 h-48 bg-neutral-100 rounded-lg overflow-hidden flex-shrink-0">
@@ -221,9 +221,9 @@ export function VenueApplications() {
 
       {/* Approval Modal */}
       {showApprovalModal && selectedApplication && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-neutral-200 p-6">
+        <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-neutral-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 p-6">
               <div className="flex items-start justify-between">
                 <div>
                   <h2 className="text-2xl mb-1 text-neutral-900">Approve Application</h2>
@@ -309,7 +309,7 @@ export function VenueApplications() {
             </div>
 
             {/* Footer Actions */}
-            <div className="sticky bottom-0 bg-white border-t border-neutral-200 p-6 flex gap-3">
+            <div className="sticky bottom-0 bg-white dark:bg-neutral-800 border-t border-neutral-200 dark:border-neutral-700 p-6 flex gap-3">
               <button
                 onClick={() => setShowApprovalModal(false)}
                 className="flex-1 px-6 py-3 bg-neutral-100 text-neutral-700 rounded-lg hover:bg-neutral-200 transition-colors"

@@ -200,10 +200,10 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                 disabled={plan.disabled}
                 className={`w-full py-3 rounded-lg transition-colors ${
                   plan.disabled
-                    ? 'bg-neutral-200 text-neutral-500 cursor-not-allowed'
+                    ? 'bg-neutral-200 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-400 cursor-not-allowed'
                     : plan.popular
-                    ? 'bg-blue-600 text-white hover:bg-blue-700'
-                    : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                    ? 'bg-blue-600 dark:bg-blue-500 text-white dark:text-neutral-50 hover:bg-blue-700 dark:hover:bg-blue-600'
+                    : 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800'
                 }`}
               >
                 {plan.cta}
@@ -231,7 +231,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
             See how much profit you'll keep from a sale with each plan
           </p>
           
-          <div className="bg-white dark:bg-neutral-900 backdrop-blur rounded-lg p-6 mb-6">
+          <div className="bg-white dark:bg-neutral-800 backdrop-blur rounded-lg p-6 mb-6">
             <label className="block text-sm text-neutral-900 dark:text-neutral-50 font-semibold mb-3">Sale Value ($)</label>
             <div className="flex items-center gap-4 mb-4">
               <input
@@ -286,7 +286,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
           </div>
 
           {selectedPlanId && (
-            <div className="bg-white dark:bg-neutral-900 backdrop-blur rounded-lg p-6">
+            <div className="bg-white dark:bg-neutral-800 backdrop-blur rounded-lg p-6">
               <h3 className="font-bold text-neutral-900 dark:text-white mb-4 text-lg">
                 {selectedPlanId === 'free' && 'Free Plan'}
                 {selectedPlanId === 'starter' && 'Starter Plan'}
@@ -311,9 +311,9 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                       <span className="text-neutral-700 dark:text-neutral-400">Monthly Subscription</span>
                       <span className="font-semibold text-neutral-900 dark:text-white">$0</span>
                     </div>
-                    <div className="flex justify-between items-center pt-3 bg-green-100 dark:bg-green-900/30 p-4 rounded-lg">
-                      <span className="font-bold text-neutral-900 dark:text-white">Your Profit</span>
-                      <span className="font-bold text-green-700 dark:text-green-400 text-xl">${freeProfit.profit.toFixed(0)}</span>
+                    <div className="flex justify-between items-center pt-3 bg-green-100 dark:bg-green-900 p-4 rounded-lg">
+                      <span className="font-bold text-neutral-900 dark:text-green-50">Your Profit</span>
+                      <span className="font-bold text-green-700 dark:text-green-200 text-xl">${freeProfit.profit.toFixed(0)}</span>
                     </div>
                   </>
                 )}
@@ -328,9 +328,9 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                       <span className="text-neutral-700 dark:text-neutral-400">Monthly Subscription</span>
                       <span className="font-semibold text-red-600 dark:text-red-400">-${starterProfit.subscriptionPrice.toFixed(0)}</span>
                     </div>
-                    <div className="flex justify-between items-center pt-3 bg-green-100 dark:bg-green-900/30 p-4 rounded-lg">
-                      <span className="font-bold text-neutral-900 dark:text-white">Your Profit</span>
-                      <span className="font-bold text-green-700 dark:text-green-400 text-xl">${starterProfit.profit.toFixed(0)}</span>
+                    <div className="flex justify-between items-center pt-3 bg-green-100 dark:bg-green-900 p-4 rounded-lg">
+                      <span className="font-bold text-neutral-900 dark:text-green-50">Your Profit</span>
+                      <span className="font-bold text-green-700 dark:text-green-200 text-xl">${starterProfit.profit.toFixed(0)}</span>
                     </div>
                   </>
                 )}
@@ -345,9 +345,9 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                       <span className="text-neutral-700 dark:text-neutral-400">Monthly Subscription</span>
                       <span className="font-semibold text-red-600 dark:text-red-400">-${growthProfit.subscriptionPrice.toFixed(0)}</span>
                     </div>
-                    <div className="flex justify-between items-center pt-3 bg-green-100 dark:bg-green-900/30 p-4 rounded-lg">
-                      <span className="font-bold text-neutral-900 dark:text-white">Your Profit</span>
-                      <span className="font-bold text-green-700 dark:text-green-400 text-xl">${growthProfit.profit.toFixed(0)}</span>
+                    <div className="flex justify-between items-center pt-3 bg-green-100 dark:bg-green-900 p-4 rounded-lg">
+                      <span className="font-bold text-neutral-900 dark:text-green-50">Your Profit</span>
+                      <span className="font-bold text-green-700 dark:text-green-200 text-xl">${growthProfit.profit.toFixed(0)}</span>
                     </div>
                   </>
                 )}
@@ -362,9 +362,9 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                       <span className="text-neutral-700 dark:text-neutral-400">Monthly Subscription</span>
                       <span className="font-semibold text-red-600 dark:text-red-400">-${proProfit.subscriptionPrice.toFixed(0)}</span>
                     </div>
-                    <div className="flex justify-between items-center pt-3 bg-green-100 dark:bg-green-900/30 p-4 rounded-lg">
-                      <span className="font-bold text-neutral-900 dark:text-white">Your Profit</span>
-                      <span className="font-bold text-green-700 dark:text-green-400 text-xl">${proProfit.profit.toFixed(0)}</span>
+                    <div className="flex justify-between items-center pt-3 bg-green-100 dark:bg-green-900 p-4 rounded-lg">
+                      <span className="font-bold text-neutral-900 dark:text-green-50">Your Profit</span>
+                      <span className="font-bold text-green-700 dark:text-green-200 text-xl">${proProfit.profit.toFixed(0)}</span>
                     </div>
                   </>
                 )}
@@ -496,7 +496,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                     <p className="text-sm text-blue-700 dark:text-blue-300">Up to $200 per incident</p>
                     <p className="text-xs text-blue-600 dark:text-blue-400">4 claims per year</p>
                   </div>
-                  <div className="bg-white rounded-lg p-3 border border-blue-200">
+                  <div className="bg-white dark:bg-neutral-800 rounded-lg p-3 border border-blue-200 dark:border-blue-700">
                     <p className="text-xs text-neutral-600 mb-1">Protection cost:</p>
                     <p className="text-sm text-neutral-900">$3/artwork/mo</p>
                     <p className="text-xs text-green-600">FREE on Pro plan</p>
@@ -510,44 +510,44 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
 
       {/* Feature Comparison Table */}
       <div className="max-w-6xl mx-auto mb-12">
-        <h2 className="text-2xl mb-6 text-center text-neutral-900">Compare All Features</h2>
-        <div className="bg-white rounded-xl border border-neutral-200 overflow-x-auto">
+        <h2 className="text-2xl mb-6 text-center text-neutral-900 dark:text-neutral-50">Compare All Features</h2>
+        <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-neutral-200">
-                <th className="text-left p-4 text-sm text-neutral-600">Feature</th>
-                <th className="text-center p-4 text-sm">Free</th>
-                <th className="text-center p-4 text-sm">Starter</th>
-                <th className="text-center p-4 text-sm bg-blue-50 dark:bg-blue-900/30">Growth</th>
-                <th className="text-center p-4 text-sm">Pro</th>
+              <tr className="border-b border-neutral-200 dark:border-neutral-700">
+                <th className="text-left p-4 text-sm text-neutral-600 dark:text-neutral-300">Feature</th>
+                <th className="text-center p-4 text-sm text-neutral-600 dark:text-neutral-300">Free</th>
+                <th className="text-center p-4 text-sm text-neutral-600 dark:text-neutral-300">Starter</th>
+                <th className="text-center p-4 text-sm bg-blue-50 dark:bg-blue-900 text-neutral-600 dark:text-neutral-300">Growth</th>
+                <th className="text-center p-4 text-sm text-neutral-600 dark:text-neutral-300">Pro</th>
               </tr>
             </thead>
             <tbody>
-              <tr className="border-b border-neutral-200 bg-purple-50">
-                <td className="p-4 text-sm"><strong>Active displays included</strong></td>
-                <td className="text-center p-4 text-sm"><strong>1</strong></td>
-                <td className="text-center p-4 text-sm"><strong>4</strong></td>
-                <td className="text-center p-4 text-sm bg-blue-100"><strong>10</strong></td>
-                <td className="text-center p-4 text-sm"><strong>Unlimited</strong></td>
+              <tr className="border-b border-neutral-200 dark:border-neutral-700 bg-purple-50 dark:bg-purple-900/20">
+                <td className="p-4 text-sm text-neutral-900 dark:text-neutral-50"><strong>Active displays included</strong></td>
+                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-50"><strong>1</strong></td>
+                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-50"><strong>4</strong></td>
+                <td className="text-center p-4 text-sm bg-blue-100 dark:bg-blue-900/50 text-neutral-900 dark:text-neutral-50"><strong>10</strong></td>
+                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-50"><strong>Unlimited</strong></td>
               </tr>
-              <tr className="border-b border-neutral-200">
-                <td className="p-4 text-sm">Overage pricing</td>
-                <td className="text-center p-4 text-sm text-xs">—</td>
-                <td className="text-center p-4 text-sm text-xs">$5/mo per display</td>
-                <td className="text-center p-4 text-sm text-xs bg-blue-50">$4/mo per display</td>
-                <td className="text-center p-4 text-sm text-xs">—</td>
+              <tr className="border-b border-neutral-200 dark:border-neutral-700">
+                <td className="p-4 text-sm text-neutral-900 dark:text-neutral-50">Overage pricing</td>
+                <td className="text-center p-4 text-sm text-xs text-neutral-600 dark:text-neutral-400">—</td>
+                <td className="text-center p-4 text-sm text-xs text-neutral-600 dark:text-neutral-400">$5/mo per display</td>
+                <td className="text-center p-4 text-sm text-xs bg-blue-50 dark:bg-blue-900/30 text-neutral-600 dark:text-neutral-400">$4/mo per display</td>
+                <td className="text-center p-4 text-sm text-xs text-neutral-600 dark:text-neutral-400">—</td>
               </tr>
-              <tr className="border-b border-neutral-200">
-                <td className="p-4 text-sm">Artwork listings</td>
-                <td className="text-center p-4 text-sm">1</td>
-                <td className="text-center p-4 text-sm">10</td>
-                <td className="text-center p-4 text-sm bg-blue-50">30</td>
-                <td className="text-center p-4 text-sm">Unlimited</td>
+              <tr className="border-b border-neutral-200 dark:border-neutral-700">
+                <td className="p-4 text-sm text-neutral-900 dark:text-neutral-50">Artwork listings</td>
+                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-50">1</td>
+                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-50">10</td>
+                <td className="text-center p-4 text-sm bg-blue-50 dark:bg-blue-900/30 text-neutral-900 dark:text-neutral-50">30</td>
+                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-50">Unlimited</td>
               </tr>
-              <tr className="border-b border-neutral-200">
-                <td className="p-4 text-sm">Venue applications</td>
-                <td className="text-center p-4 text-sm">1/month</td>
-                <td className="text-center p-4 text-sm">3/month</td>
+              <tr className="border-b border-neutral-200 dark:border-neutral-700">
+                <td className="p-4 text-sm text-neutral-900 dark:text-neutral-50">Venue applications</td>
+                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-50">1/month</td>
+                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-50">3/month</td>
                 <td className="text-center p-4 text-sm bg-blue-50">Unlimited</td>
                 <td className="text-center p-4 text-sm">Unlimited</td>
               </tr>
@@ -600,23 +600,23 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
 
       {/* FAQ */}
       <div className="max-w-3xl mx-auto">
-        <h2 className="text-2xl mb-6 text-center text-neutral-900">Frequently Asked Questions</h2>
+        <h2 className="text-2xl mb-6 text-center text-neutral-900 dark:text-neutral-50">Frequently Asked Questions</h2>
         <div className="space-y-4">
-          <div className="bg-white rounded-xl border border-neutral-200 p-6">
-            <h3 className="text-base mb-2 text-neutral-900">Can I change plans later?</h3>
-            <p className="text-sm text-neutral-700">
+          <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 p-6">
+            <h3 className="text-base mb-2 text-neutral-900 dark:text-neutral-50">Can I change plans later?</h3>
+            <p className="text-sm text-neutral-700 dark:text-neutral-300">
               Yes! You can upgrade or downgrade anytime. Changes take effect at the start of your next billing cycle.
             </p>
           </div>
-          <div className="bg-white rounded-xl border border-neutral-200 p-6">
-            <h3 className="text-base mb-2 text-neutral-900">How does the Protection Plan work if I have multiple artworks displayed?</h3>
-            <p className="text-sm text-neutral-700">
+          <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 p-6">
+            <h3 className="text-base mb-2 text-neutral-900 dark:text-neutral-50">How does the Protection Plan work if I have multiple artworks displayed?</h3>
+            <p className="text-sm text-neutral-700 dark:text-neutral-300">
               On Free, Starter, and Growth plans, protection costs $3 per displayed artwork per month. On Pro, protection is included FREE for all displayed artworks. You can toggle protection on/off for each placement.
             </p>
           </div>
-          <div className="bg-white rounded-xl border border-neutral-200 p-6">
-            <h3 className="text-base mb-2 text-neutral-900">What's the revenue split on sales?</h3>
-            <p className="text-sm text-neutral-700">
+          <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 p-6">
+            <h3 className="text-base mb-2 text-neutral-900 dark:text-neutral-50">What's the revenue split on sales?</h3>
+            <p className="text-sm text-neutral-700 dark:text-neutral-300">
               Artists receive a percentage of the sale price based on their current subscription plan, while venues always receive 10%. The platform fee is determined by the artist's subscription plan and is applied in addition to this split.
             </p>
           </div>

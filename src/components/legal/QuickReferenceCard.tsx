@@ -26,7 +26,7 @@ export function QuickReferenceCard({ role, onNavigate }: QuickReferenceCardProps
   const facts = role === 'artist' ? artistQuickFacts : venueQuickFacts;
 
   return (
-    <div className="bg-white rounded-xl border border-neutral-200 p-6">
+    <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 p-6">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg text-neutral-900">Agreement Quick Reference</h3>
         <button

@@ -167,7 +167,7 @@ export function VenueCurrentArtWithScheduling() {
         {filteredArtworks.map((artwork) => (
           <div
             key={artwork.id}
-            className="bg-white rounded-xl border border-neutral-200 hover:shadow-md transition-shadow overflow-hidden"
+            className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:shadow-md transition-shadow overflow-hidden"
           >
             <div className="flex flex-col md:flex-row gap-6 p-4 sm:p-6">
               {/* Artwork Image */}
@@ -405,8 +405,8 @@ export function VenueCurrentArtWithScheduling() {
 
       {/* Confirmation Modal */}
       {showConfirmModal && selectedAction && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full">
+        <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-neutral-800 rounded-2xl p-6 max-w-md w-full dark:border border-neutral-200 dark:border-neutral-700">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl text-neutral-900">Confirm Action</h3>
               <button

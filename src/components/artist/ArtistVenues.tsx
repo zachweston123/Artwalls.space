@@ -27,7 +27,7 @@ export function ArtistVenues() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {mockVenues.map((venue) => (
-          <div key={venue.id} className="bg-white rounded-xl overflow-hidden border border-neutral-200 hover:shadow-lg transition-shadow">
+          <div key={venue.id} className="bg-white dark:bg-neutral-800 rounded-xl overflow-hidden border border-neutral-200 dark:border-neutral-700 hover:shadow-lg transition-shadow">
             <div className="h-48 bg-neutral-100 overflow-hidden">
               <img
                 src={venue.imageUrl}
@@ -107,8 +107,8 @@ export function ArtistVenues() {
       </div>
 
       {showApplicationForm && selectedVenue && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
-          <div className="bg-white rounded-2xl p-8 max-w-2xl w-full">
+        <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-6">
+          <div className="bg-white dark:bg-neutral-800 rounded-2xl p-8 max-w-2xl w-full">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl">Apply to {selectedVenue.name}</h2>
               <button
@@ -155,7 +155,7 @@ export function ArtistVenues() {
                             className="w-full h-full object-cover"
                           />
                         </div>
-                        <div className="p-3 bg-white">
+                        <div className="p-3 bg-white dark:bg-neutral-700">
                           <h4 className="text-sm mb-1 text-neutral-900">{artwork.title}</h4>
                           <p className="text-xs text-neutral-600">${artwork.price}</p>
                         </div>
@@ -171,7 +171,7 @@ export function ArtistVenues() {
                     <label className="block text-sm text-neutral-700 mb-2">Additional Message (Optional)</label>
                     <textarea
                       rows={4}
-                      className="w-full px-4 py-2 rounded-lg border border-neutral-300 bg-white text-neutral-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                       placeholder="Tell the venue why your artwork would be a great fit..."
                     />
                   </div>

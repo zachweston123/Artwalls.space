@@ -29,11 +29,11 @@ export function Login({ onLogin }: LoginProps) {
 
   if (!selectedRole) {
     return (
-      <div className="min-h-screen bg-neutral-50 flex items-center justify-center px-6">
+      <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900 flex items-center justify-center px-6">
         <div className="w-full max-w-4xl">
           <div className="text-center mb-12">
-            <h1 className="text-4xl mb-3">Welcome to Artwalls</h1>
-            <p className="text-neutral-600">
+            <h1 className="text-4xl mb-3 text-neutral-900 dark:text-neutral-50">Welcome to Artwalls</h1>
+            <p className="text-neutral-600 dark:text-neutral-300">
               Connecting local artists with venues to display and sell physical artworks
             </p>
           </div>

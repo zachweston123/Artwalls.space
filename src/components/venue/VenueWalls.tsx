@@ -70,8 +70,8 @@ export function VenueWalls() {
       </div>
 
       {showAddForm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 sm:p-6 overflow-y-auto">
-          <div className="bg-white rounded-2xl p-6 sm:p-8 max-w-2xl w-full my-8">
+        <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4 sm:p-6 overflow-y-auto">
+          <div className="bg-white dark:bg-neutral-800 rounded-2xl p-6 sm:p-8 max-w-2xl w-full border border-neutral-200 dark:border-neutral-700">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl text-neutral-900 dark:text-neutral-50">Add New Wall Space</h2>
               <button
@@ -198,7 +198,7 @@ export function VenueWalls() {
         {wallSpaces.map((wall) => (
           <div
             key={wall.id}
-            className="bg-white rounded-xl overflow-hidden border border-neutral-200 hover:shadow-lg transition-shadow"
+            className="bg-white dark:bg-neutral-800 rounded-xl overflow-hidden border border-neutral-200 dark:border-neutral-700 hover:shadow-lg transition-shadow"
           >
             {/* Wall Photo Preview */}
             {wall.photos && wall.photos.length > 0 && (

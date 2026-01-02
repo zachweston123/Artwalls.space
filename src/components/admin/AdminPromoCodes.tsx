@@ -68,7 +68,7 @@ export function AdminPromoCodes({ onCreatePromoCode }: AdminPromoCodesProps) {
         </button>
       </div>
 
-      <div className="bg-white rounded-xl border border-neutral-200 overflow-hidden">
+      <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-neutral-50 border-b border-neutral-200">
@@ -133,7 +133,7 @@ export function AdminPromoCodes({ onCreatePromoCode }: AdminPromoCodesProps) {
       </div>
 
       {mockPromoCodes.length === 0 && (
-        <div className="text-center py-16 bg-white rounded-xl border border-neutral-200">
+        <div className="text-center py-16 bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700">
           <div className="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Tag className="w-8 h-8 text-neutral-400" />
           </div>

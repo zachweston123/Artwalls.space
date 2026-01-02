@@ -68,8 +68,8 @@ export function NotificationsList() {
               {groupedNotifications.today.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`bg-white rounded-xl border border-neutral-200 p-4 sm:p-5 hover:shadow-md transition-shadow ${
-                    !notification.isRead ? 'bg-blue-50' : ''
+                  className={`bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 p-4 sm:p-5 hover:shadow-md transition-shadow ${
+                    !notification.isRead ? 'bg-blue-50 dark:bg-blue-900/20' : ''
                   }`}
                 >
                   <div className="flex gap-4">
@@ -110,8 +110,8 @@ export function NotificationsList() {
               {groupedNotifications.earlier.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`bg-white rounded-xl border border-neutral-200 p-4 sm:p-5 hover:shadow-md transition-shadow ${
-                    !notification.isRead ? 'bg-blue-50' : ''
+                  className={`bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 p-4 sm:p-5 hover:shadow-md transition-shadow ${
+                    !notification.isRead ? 'bg-blue-50 dark:bg-blue-900/20' : ''
                   }`}
                 >
                   <div className="flex gap-4">

@@ -390,7 +390,7 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
           <div className="bg-white rounded-xl p-6 border border-neutral-200">
             <h2 className="text-xl mb-4">Add Internal Note</h2>
             <div className="space-y-4">
-              <select className="w-full px-4 py-2 rounded-lg border border-neutral-300 bg-white text-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-500">
+              <select className="w-full px-4 py-2 rounded-lg border border-neutral-300 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-50 dark:border-neutral-600 focus:outline-none focus:ring-2 focus:ring-neutral-500 dark:focus:ring-neutral-400">
                 <option>Support</option>
                 <option>Billing</option>
                 <option>Safety</option>
@@ -398,7 +398,7 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
               <textarea
                 rows={4}
                 placeholder="Add your note here..."
-                className="w-full px-4 py-2 rounded-lg border border-neutral-300 bg-white text-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-500"
+                className="w-full px-4 py-2 rounded-lg border border-neutral-300 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-50 dark:border-neutral-600 focus:outline-none focus:ring-2 focus:ring-neutral-500 dark:focus:ring-neutral-400"
               />
               <button className="px-6 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition-colors">
                 Save Note

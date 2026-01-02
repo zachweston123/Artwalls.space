@@ -61,7 +61,7 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50">
+    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900\">
       {/* Header */}
       <div className="bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4">

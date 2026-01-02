@@ -9,18 +9,18 @@ interface AdminAccessDeniedProps {
 export function AdminAccessDenied({ type, onSignIn, onReturnToApp }: AdminAccessDeniedProps) {
   if (type === 'not-signed-in') {
     return (
-      <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900 flex items-center justify-center p-6">
         <div className="max-w-md w-full text-center">
-          <div className="w-20 h-20 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <LogIn className="w-10 h-10 text-neutral-400" />
+          <div className="w-20 h-20 bg-neutral-100 dark:bg-neutral-800 rounded-full flex items-center justify-center mx-auto mb-6">
+            <LogIn className="w-10 h-10 text-neutral-400 dark:text-neutral-500" />
           </div>
-          <h1 className="text-3xl mb-3">Admin Access Required</h1>
+          <h1 className="text-3xl dark:text-neutral-50 mb-3">Admin Access Required</h1>
           <p className="text-neutral-600 dark:text-neutral-300 mb-8">
             Please sign in to access the Admin Console. This area is restricted to authorized staff members only.
           </p>
           <button
             onClick={onSignIn}
-            className="w-full px-6 py-3 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition-colors"
+            className="w-full px-6 py-3 bg-neutral-900 dark:bg-neutral-700 text-white dark:text-neutral-50 rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-600 transition-colors"
           >
             Sign In
           </button>

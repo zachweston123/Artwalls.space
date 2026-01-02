@@ -32,7 +32,7 @@ export function UpgradePromptCard({ currentPlan, onUpgrade }: UpgradePromptCardP
   return (
     <div className="bg-blue-600 dark:bg-blue-500 rounded-xl p-6 text-white">
       <div className="flex items-start gap-4">
-        <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center flex-shrink-0">
+        <div className="w-12 h-12 bg-white dark:bg-neutral-700 rounded-lg flex items-center justify-center flex-shrink-0">
           <Sparkles className="w-6 h-6 text-blue-600" />
         </div>
         <div className="flex-1">
@@ -41,14 +41,14 @@ export function UpgradePromptCard({ currentPlan, onUpgrade }: UpgradePromptCardP
           <ul className="space-y-1 mb-4">
             {prompt.features.map((feature, index) => (
               <li key={index} className="text-sm text-white/90 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
+                <span className="w-1.5 h-1.5 bg-white dark:bg-neutral-800 rounded-full"></span>
                 {feature}
               </li>
             ))}
           </ul>
           <button
             onClick={onUpgrade}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-white transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-neutral-700 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-600 transition-colors"
           >
             <span>{prompt.cta}</span>
             <ArrowRight className="w-4 h-4" />

@@ -67,7 +67,7 @@ export function VenueAgreement({ onNavigate, onAccept, hasAccepted = false }: Ve
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Main Content */}
         <div className="flex-1 max-w-3xl">
-          <div className="bg-white rounded-xl border border-neutral-200 p-6 sm:p-8 mb-6">
+          <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 p-6 sm:p-8 mb-6">
             <div className="mb-6">
               <h1 className="text-3xl mb-2 text-neutral-900">Artwalls Venue Agreement</h1>
               <p className="text-sm text-neutral-500">Last updated: December 25, 2024</p>
@@ -264,7 +264,7 @@ export function VenueAgreement({ onNavigate, onAccept, hasAccepted = false }: Ve
           </div>
 
           {/* Accept Agreement Card */}
-          <div className="bg-white rounded-xl border border-neutral-200 p-6 sm:p-8">
+          <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 p-6 sm:p-8">
             <h2 className="text-xl mb-1 text-neutral-900">Accept Agreement</h2>
             <p className="text-sm text-neutral-600 mb-6">
               You must accept this agreement to use Artwalls venue features.
@@ -330,7 +330,7 @@ export function VenueAgreement({ onNavigate, onAccept, hasAccepted = false }: Ve
         {/* Desktop TOC Sidebar */}
         <div className="hidden lg:block w-64 flex-shrink-0">
           <div className="sticky top-8">
-            <div className="bg-white rounded-xl border border-neutral-200 p-5">
+            <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 p-5">
               <h3 className="text-sm text-neutral-500 mb-3">On this page</h3>
               <nav className="space-y-2">
                 {sections.map((section) => (

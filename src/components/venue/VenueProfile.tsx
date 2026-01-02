@@ -28,7 +28,7 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Profile Information Card */}
-        <div className="lg:col-span-2 bg-white rounded-xl border border-neutral-200 overflow-hidden">
+        <div className="lg:col-span-2 bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-hidden">
           <div className="p-6">
             <div className="flex items-start justify-between mb-6">
               <div className="flex items-center gap-4">

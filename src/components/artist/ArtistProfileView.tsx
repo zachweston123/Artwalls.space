@@ -39,11 +39,11 @@ export function ArtistProfileView({
   return (
     <div>
       {/* Profile Header */}
-      <div className="bg-white rounded-xl p-6 border border-neutral-200 mb-6">
-        <div className="flex flex-col sm:flex-row gap-6">
+      <div className=\"bg-white dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700 mb-6\">
+        <div className=\"flex flex-col sm:flex-row gap-6\">
           {/* Avatar */}
-          <div className="flex-shrink-0">
-            <div className="w-32 h-32 rounded-full overflow-hidden bg-neutral-100 border-4 border-neutral-200">
+          <div className=\"flex-shrink-0\">
+            <div className=\"w-32 h-32 rounded-full overflow-hidden bg-neutral-100 dark:bg-neutral-700 border-4 border-neutral-200 dark:border-neutral-600\">
               <img
                 src={artist.avatar}
                 alt={artist.name}
@@ -98,13 +98,13 @@ export function ArtistProfileView({
       </div>
 
       {/* Bio */}
-      <div className="bg-white rounded-xl p-6 border border-neutral-200 mb-6">
+      <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700 mb-6">
         <h2 className="text-xl mb-3">About</h2>
         <p className="text-neutral-600 leading-relaxed">{artist.bio}</p>
       </div>
 
       {/* Art Types */}
-      <div className="bg-white rounded-xl p-6 border border-neutral-200 mb-6">
+      <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700 mb-6">
         <h2 className="text-xl mb-4">Art Types</h2>
         <div className="flex flex-wrap gap-2">
           {allArtTypes.map((type) => (
@@ -132,7 +132,7 @@ export function ArtistProfileView({
             <button
               key={artwork.id}
               onClick={() => onViewArtwork?.(artwork.id)}
-              className="bg-white rounded-xl overflow-hidden border border-neutral-200 hover:shadow-lg transition-all group text-left"
+              className="bg-white dark:bg-neutral-800 rounded-xl overflow-hidden border border-neutral-200 dark:border-neutral-700 hover:shadow-lg transition-all group text-left"
             >
               <div className="aspect-square bg-neutral-100 overflow-hidden">
                 <img
@@ -161,7 +161,7 @@ export function ArtistProfileView({
         </div>
 
         {mockArtworks.length === 0 && (
-          <div className="text-center py-16 bg-white rounded-xl border border-neutral-200">
+          <div className="text-center py-16 bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700">
             <div className="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Eye className="w-8 h-8 text-neutral-400" />
             </div>
@@ -175,7 +175,7 @@ export function ArtistProfileView({
 
       {/* Actions */}
       {!isOwnProfile && (
-        <div className="bg-white rounded-xl p-6 border border-neutral-200">
+        <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700">
           <div className="flex flex-wrap gap-3">
             {currentUser.role === 'venue' && (
               <button

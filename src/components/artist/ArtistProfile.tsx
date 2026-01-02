@@ -25,7 +25,7 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Profile Information Card */}
-        <div className="lg:col-span-2 bg-white rounded-xl border border-neutral-200 overflow-hidden">
+        <div className="lg:col-span-2 bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-hidden">
           <div className="p-6">
             <div className="flex items-start justify-between mb-6">
               <div className="flex items-center gap-4">
@@ -86,7 +86,7 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
 
         {/* Earnings Summary Card */}
         <div className="space-y-6">
-          <div className="bg-white rounded-xl border border-neutral-200 p-6">
+          <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                 <DollarSign className="w-6 h-6 text-blue-600" />

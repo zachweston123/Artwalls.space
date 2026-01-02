@@ -114,8 +114,8 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
       )}
 
       {showAddForm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
-          <div className="bg-white rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-6">
+          <div className="bg-white dark:bg-neutral-800 rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl">Add New Artwork</h2>
               <button
@@ -137,7 +137,7 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
                     type="url"
                     value={newArtwork.imageUrl}
                     onChange={(e) => setNewArtwork({ ...newArtwork, imageUrl: e.target.value })}
-                    className="flex-1 px-4 py-2 rounded-lg border border-neutral-300 bg-white text-neutral-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 px-4 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                     placeholder="https://... (optional)"
                   />
                 </div>
@@ -147,25 +147,25 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
               </div>
 
               <div>
-                <label className="block text-sm text-neutral-700 mb-2">Artwork Title</label>
+                <label className=\"block text-sm text-neutral-700 dark:text-neutral-300 mb-2\">Artwork Title</label>
                 <input
-                  type="text"
+                  type=\"text\"
                   required
                   value={newArtwork.title}
                   onChange={(e) => setNewArtwork({ ...newArtwork, title: e.target.value })}
-                  className="w-full px-4 py-2 rounded-lg border border-neutral-300 bg-white text-neutral-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className=\"w-full px-4 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400\"
                   placeholder="Enter artwork title"
                 />
               </div>
 
               <div>
-                <label className="block text-sm text-neutral-700 mb-2">Description</label>
+                <label className=\"block text-sm text-neutral-700 dark:text-neutral-300 mb-2\">Description</label>
                 <textarea
                   required
                   value={newArtwork.description}
                   onChange={(e) => setNewArtwork({ ...newArtwork, description: e.target.value })}
                   rows={4}
-                  className="w-full px-4 py-2 rounded-lg border border-neutral-300 bg-white text-neutral-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className=\"w-full px-4 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400\"
                   placeholder="Describe your artwork, medium, inspiration..."
                 />
               </div>
@@ -179,7 +179,7 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
                     required
                     value={newArtwork.price}
                     onChange={(e) => setNewArtwork({ ...newArtwork, price: e.target.value })}
-                    className="w-full pl-8 pr-4 py-2 rounded-lg border border-neutral-300 bg-white text-neutral-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full pl-8 pr-4 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                     placeholder="0.00"
                   />
                 </div>
@@ -212,7 +212,7 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
         {artworks.map((artwork) => (
           <div
             key={artwork.id}
-            className="bg-white rounded-xl overflow-hidden border border-neutral-200 hover:shadow-lg transition-shadow group"
+            className="bg-white dark:bg-neutral-800 rounded-xl overflow-hidden border border-neutral-200 dark:border-neutral-700 hover:shadow-lg transition-shadow group"
           >
             <div className="aspect-square bg-neutral-100 overflow-hidden">
               <img

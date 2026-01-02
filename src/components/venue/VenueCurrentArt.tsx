@@ -274,7 +274,7 @@ export function VenueCurrentArt() {
 
       {/* Confirmation Modal */}
       {showConfirmModal && selectedAction && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-neutral-800 rounded-2xl p-6 max-w-md w-full">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl text-neutral-900 dark:text-neutral-50">Confirm Action</h3>

@@ -40,7 +40,7 @@ export function PoliciesLanding({ onNavigate }: PoliciesLandingProps) {
         {/* Artist Agreement Card */}
         <button
           onClick={() => onNavigate('artist-agreement')}
-          className="bg-white rounded-xl border border-neutral-200 p-6 hover:shadow-lg transition-shadow text-left group"
+          className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 p-6 hover:shadow-lg transition-shadow text-left group"
         >
           <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-blue-200 transition-colors">
             <FileText className="w-6 h-6 text-blue-600" />
@@ -58,7 +58,7 @@ export function PoliciesLanding({ onNavigate }: PoliciesLandingProps) {
         {/* Venue Agreement Card */}
         <button
           onClick={() => onNavigate('venue-agreement')}
-          className="bg-white rounded-xl border border-neutral-200 p-6 hover:shadow-lg transition-shadow text-left group"
+          className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 p-6 hover:shadow-lg transition-shadow text-left group"
         >
           <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-green-200 transition-colors">
             <FileCheck className="w-6 h-6 text-green-600" />
@@ -75,7 +75,7 @@ export function PoliciesLanding({ onNavigate }: PoliciesLandingProps) {
 
         {/* Privacy Policy Placeholder */}
         <button
-          className="bg-white rounded-xl border border-neutral-200 p-6 hover:shadow-lg transition-shadow text-left group opacity-75 cursor-not-allowed"
+          className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 p-6 hover:shadow-lg transition-shadow text-left group opacity-75 cursor-not-allowed"
           disabled
         >
           <div className="w-12 h-12 bg-neutral-100 rounded-lg flex items-center justify-center mb-4">
@@ -92,7 +92,7 @@ export function PoliciesLanding({ onNavigate }: PoliciesLandingProps) {
 
         {/* Terms of Service Placeholder */}
         <button
-          className="bg-white rounded-xl border border-neutral-200 p-6 hover:shadow-lg transition-shadow text-left group opacity-75 cursor-not-allowed"
+          className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 p-6 hover:shadow-lg transition-shadow text-left group opacity-75 cursor-not-allowed"
           disabled
         >
           <div className="w-12 h-12 bg-neutral-100 rounded-lg flex items-center justify-center mb-4">

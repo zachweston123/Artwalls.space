@@ -137,7 +137,7 @@ export function InviteToApplyModal({ artistName, venueName, onSend, onCancel }: 
                         : 'border-neutral-300 dark:border-neutral-600'
                     }`}>
                       {formData.wallspaceId === wall.id && (
-                        <div className="w-2 h-2 bg-white rounded-full"></div>
+                        <div className="w-2 h-2 bg-white dark:bg-neutral-200 rounded-full"></div>
                       )}
                     </div>
                   </div>

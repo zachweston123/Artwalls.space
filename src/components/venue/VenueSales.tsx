@@ -54,7 +54,7 @@ export function VenueSales() {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-neutral-200 overflow-hidden">
+      <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-hidden">
         <div className="p-6 border-b border-neutral-200">
           <h2 className="text-xl text-neutral-900">Sales History</h2>
         </div>
@@ -123,16 +123,16 @@ export function VenueSales() {
           You receive 10% commission on each artwork sold from your venue. Artists receive 80%, and Artwalls keeps 10% as a platform fee.
         </p>
         <div className="grid grid-cols-3 gap-4 text-sm">
-          <div className="bg-white rounded-lg p-3">
-            <div className="text-neutral-600 mb-1">Artist</div>
+          <div className="bg-white dark:bg-neutral-800 rounded-lg p-3 border border-transparent dark:border-neutral-700\">
+            <div className="text-neutral-600 dark:text-neutral-400 mb-1\">Artist</div>
             <div className="text-xl text-blue-600">80%</div>
           </div>
-          <div className="bg-white rounded-lg p-3">
-            <div className="text-neutral-600 mb-1">Your Venue</div>
+          <div className="bg-white dark:bg-neutral-800 rounded-lg p-3 border border-transparent dark:border-neutral-700\">
+            <div className="text-neutral-600 dark:text-neutral-400 mb-1\">Your Venue</div>
             <div className="text-xl text-green-600">10%</div>
           </div>
-          <div className="bg-white rounded-lg p-3">
-            <div className="text-neutral-600 mb-1">Platform</div>
+          <div className="bg-white dark:bg-neutral-800 rounded-lg p-3 border border-transparent dark:border-neutral-700\">
+            <div className="text-neutral-600 dark:text-neutral-400 mb-1\">Platform</div>
             <div className="text-xl text-neutral-600">10%</div>
           </div>
         </div>

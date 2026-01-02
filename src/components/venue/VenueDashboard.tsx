@@ -60,7 +60,7 @@ export function VenueDashboard({ onNavigate }: VenueDashboardProps) {
             <button
               key={stat.label}
               onClick={stat.action}
-              className="bg-white rounded-xl p-6 border border-neutral-200 hover:border-green-300 hover:shadow-md transition-all text-left group"
+              className="bg-white dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700 hover:border-green-300 dark:hover:border-green-600 hover:shadow-md transition-all text-left group"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-500 transition-colors">
@@ -76,7 +76,7 @@ export function VenueDashboard({ onNavigate }: VenueDashboardProps) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl p-6 border border-neutral-200">
+        <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700">
           <h2 className="text-xl mb-4">Recent Activity</h2>
           <div className="space-y-4">
             <div className="flex items-start gap-3 pb-4 border-b border-neutral-100 dark:border-neutral-700">
@@ -103,7 +103,7 @@ export function VenueDashboard({ onNavigate }: VenueDashboardProps) {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-6 border border-neutral-200">
+        <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700\">
           <h2 className="text-xl mb-4">Quick Actions</h2>
           <div className="space-y-3">
             <button
@@ -112,7 +112,7 @@ export function VenueDashboard({ onNavigate }: VenueDashboardProps) {
             >
               <span>Review Applications</span>
               {pendingApplications > 0 && (
-                  <span className="px-2 py-1 bg-white text-green-700 rounded-full text-xs">
+                  <span className="px-2 py-1 bg-white dark:bg-neutral-700 text-green-700 dark:text-green-400 rounded-full text-xs">
                   {pendingApplications} new
                 </span>
               )}

@@ -74,7 +74,7 @@ export function TimeSlotPicker({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 z-50"
+        className="fixed inset-0 bg-black/50 dark:bg-black/70 z-50"
         onClick={onClose}
       />
 
