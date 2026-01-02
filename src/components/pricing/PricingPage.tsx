@@ -317,11 +317,11 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                       <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-2">After Additional Costs:</h4>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
-                          <span className="text-blue-700 dark:text-blue-400">Monthly Subscription</span>
-                          <span className="text-blue-700 dark:text-blue-400">$0</span>
+                          <span className="text-blue-700 dark:text-blue-200">Monthly Subscription</span>
+                          <span className="text-blue-700 dark:text-blue-200">$0</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-blue-700 dark:text-blue-400">Protection Plan (per artwork)</span>
+                          <span className="text-blue-700 dark:text-blue-200">Platform Fee (15%)</span>
                           <span className="text-blue-700 dark:text-blue-400">$3/artwork</span>
                         </div>
                         <div className="border-t border-blue-200 dark:border-blue-700 pt-2 mt-2">
@@ -349,11 +349,11 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                       <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-2">After Additional Costs:</h4>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
-                          <span className="text-blue-700 dark:text-blue-400">Monthly Subscription</span>
-                          <span className="text-blue-700 dark:text-blue-400">-$9</span>
+                          <span className="text-blue-700 dark:text-blue-200">Monthly Subscription</span>
+                          <span className="text-blue-700 dark:text-blue-200">-$9</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-blue-700 dark:text-blue-400">Protection Plan (per artwork)</span>
+                          <span className="text-blue-700 dark:text-blue-200">Platform Fee (10%)</span>
                           <span className="text-blue-700 dark:text-blue-400">$3/artwork</span>
                         </div>
                         <div className="border-t border-blue-200 dark:border-blue-700 pt-2 mt-2">
@@ -381,11 +381,11 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                       <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-2">After Additional Costs:</h4>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
-                          <span className="text-blue-700 dark:text-blue-400">Monthly Subscription</span>
-                          <span className="text-blue-700 dark:text-blue-400">-$19</span>
+                          <span className="text-blue-700 dark:text-blue-200">Monthly Subscription</span>
+                          <span className="text-blue-700 dark:text-blue-200">-$19</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-blue-700 dark:text-blue-400">Protection Plan (per artwork)</span>
+                          <span className="text-blue-700 dark:text-blue-200">Platform Fee (8%)</span>
                           <span className="text-blue-700 dark:text-blue-400">$3/artwork</span>
                         </div>
                         <div className="border-t border-blue-200 dark:border-blue-700 pt-2 mt-2">
@@ -544,18 +544,18 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                 <h3 className="text-base text-blue-900 dark:text-blue-300 mb-3">Coverage Caps by Plan</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-blue-700 dark:text-blue-300 mb-1"><strong>Free & Starter:</strong></p>
-                    <p className="text-sm text-blue-700 dark:text-blue-300">Up to $100 per incident</p>
+                    <p className="text-sm text-blue-700 dark:text-blue-200 mb-1"><strong>Free & Starter:</strong></p>
+                    <p className="text-sm text-blue-700 dark:text-blue-200">Up to $100 per incident</p>
                     <p className="text-xs text-blue-600 dark:text-blue-400">2 claims per year</p>
                   </div>
                   <div>
-                    <p className="text-sm text-blue-700 dark:text-blue-300 mb-1"><strong>Growth:</strong></p>
-                    <p className="text-sm text-blue-700 dark:text-blue-300">Up to $150 per incident</p>
+                    <p className="text-sm text-blue-700 dark:text-blue-200 mb-1"><strong>Growth:</strong></p>
+                    <p className="text-sm text-blue-700 dark:text-blue-200">Up to $150 per incident</p>
                     <p className="text-xs text-blue-600 dark:text-blue-400">3 claims per year</p>
                   </div>
                   <div>
-                    <p className="text-sm text-blue-700 dark:text-blue-300 mb-1"><strong>Pro:</strong></p>
-                    <p className="text-sm text-blue-700 dark:text-blue-300">Up to $200 per incident</p>
+                    <p className="text-sm text-blue-700 dark:text-blue-200 mb-1"><strong>Pro:</strong></p>
+                    <p className="text-sm text-blue-700 dark:text-blue-200">Up to $200 per incident</p>
                     <p className="text-xs text-blue-600 dark:text-blue-400">4 claims per year</p>
                   </div>
                   <div className="bg-white dark:bg-neutral-800 rounded-lg p-3 border border-blue-200 dark:border-blue-700">
@@ -580,7 +580,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                 <th className="text-left p-4 text-sm text-neutral-600 dark:text-neutral-300">Feature</th>
                 <th className="text-center p-4 text-sm text-neutral-600 dark:text-neutral-300">Free</th>
                 <th className="text-center p-4 text-sm text-neutral-600 dark:text-neutral-300">Starter</th>
-                <th className="text-center p-4 text-sm bg-blue-50 dark:bg-blue-900 text-neutral-900 dark:text-blue-100">Growth</th>
+                <th className="text-center p-4 text-sm bg-blue-50 dark:bg-blue-900 text-neutral-900 dark:text-blue-50">Growth</th>
                 <th className="text-center p-4 text-sm text-neutral-600 dark:text-neutral-300">Pro</th>
               </tr>
             </thead>
