@@ -17,7 +17,7 @@ export function MobileSidebar({ isOpen, onClose, user, onNavigate, onLogout, cur
   const artistLinks = [
     { id: 'artist-dashboard', label: 'Dashboard' },
     { id: 'artist-artworks', label: 'My Artworks' },
-    { id: 'artist-venues', label: 'Available Venues' },
+    { id: 'artist-venues', label: 'Find Venues' },
     { id: 'artist-applications', label: 'Applications' },
     { id: 'artist-sales', label: 'Sales & Earnings' },
     { id: 'artist-notifications', label: 'Notifications' },
@@ -28,9 +28,10 @@ export function MobileSidebar({ isOpen, onClose, user, onNavigate, onLogout, cur
 
   const venueLinks = [
     { id: 'venue-dashboard', label: 'Dashboard' },
-    { id: 'venue-walls', label: 'My Wall Spaces' },
-    { id: 'venue-applications', label: 'Artist Applications' },
-    { id: 'venue-current', label: 'Current Artwork' },
+    { id: 'venue-walls', label: 'My Walls' },
+    { id: 'venue-applications', label: 'Applications' },
+    { id: 'venue-find-artists', label: 'Find Artists' },
+    { id: 'venue-current', label: 'Current Art' },
     { id: 'venue-sales', label: 'Sales' },
     { id: 'venue-settings', label: 'Settings' },
     { id: 'venue-notifications', label: 'Notifications' },

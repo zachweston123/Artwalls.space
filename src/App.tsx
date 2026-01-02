@@ -16,6 +16,7 @@ import { VenueSales } from './components/venue/VenueSales';
 import { VenueSettings } from './components/venue/VenueSettings';
 import { VenueSettingsWithEmptyState } from './components/venue/VenueSettingsWithEmptyState';
 import { VenueProfile } from './components/venue/VenueProfile';
+import { FindArtists } from './components/venue/FindArtists';
 import { NotificationsList } from './components/notifications/NotificationsList';
 import { PoliciesLanding } from './components/legal/PoliciesLanding';
 import { ArtistAgreement } from './components/legal/ArtistAgreement';
@@ -248,6 +249,7 @@ export default function App() {
             {currentPage === 'venue-sales' && <VenueSales />}
             {currentPage === 'venue-settings' && <VenueSettingsWithEmptyState />}
             {currentPage === 'venue-profile' && <VenueProfile onNavigate={handleNavigate} />}
+            {currentPage === 'venue-find-artists' && <FindArtists onViewArtist={(artistId) => handleNavigate('artist-profile')} />}
             {currentPage === 'venue-notifications' && <NotificationsList />}
           </>
         )}
