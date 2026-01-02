@@ -14,7 +14,7 @@ export function ThemeToggle({ variant = 'icon' }: { variant?: 'icon' | 'button' 
       <button
         type="button"
         onClick={toggle}
-        className="px-3 py-2 rounded-lg border border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-100 transition-colors"
+        className="px-3 py-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
         aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       >
         <span className="inline-flex items-center gap-2">
@@ -29,7 +29,7 @@ export function ThemeToggle({ variant = 'icon' }: { variant?: 'icon' | 'button' 
     <button
       type="button"
       onClick={toggle}
-      className="p-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors"
+      className="p-2 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg transition-colors"
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
     >

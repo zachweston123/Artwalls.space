@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 @layer base {
-  /* Root color tokens - Light mode only */
+  /* Root color tokens - Light mode */
   :root {
     /* Backgrounds */
     --color-bg: 250 250 250; /* neutral-50 */
@@ -49,6 +49,56 @@
     --color-info: 37 99 235; /* blue-600 */
     --color-info-bg: 239 246 255; /* blue-50 */
     --color-info-text: 29 78 216; /* blue-700 */
+  }
+
+  /* Dark mode color tokens */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      /* Backgrounds */
+      --color-bg: 23 23 23; /* neutral-900 */
+      --color-surface: 38 38 38; /* neutral-800 */
+      --color-surface-alt: 64 64 64; /* neutral-700 */
+      
+      /* Borders */
+      --color-border: 64 64 64; /* neutral-700 */
+      --color-border-subtle: 82 82 82; /* neutral-600 */
+      
+      /* Text */
+      --color-text-primary: 250 250 250; /* neutral-50 */
+      --color-text-secondary: 212 212 212; /* neutral-300 */
+      --color-text-muted: 163 163 163; /* neutral-400 */
+      
+      /* Artist Accent (Blue) - brighter for dark mode */
+      --color-accent-artist: 96 165 250; /* blue-400 */
+      --color-accent-artist-hover: 147 197 253; /* blue-300 */
+      --color-accent-artist-bg: 30 58 138; /* blue-900 */
+      --color-accent-artist-subtle: 30 64 175; /* blue-800 */
+      --color-accent-artist-text: 191 219 254; /* blue-200 */
+      
+      /* Venue Accent (Green) - brighter for dark mode */
+      --color-accent-venue: 74 222 128; /* green-400 */
+      --color-accent-venue-hover: 134 239 172; /* green-300 */
+      --color-accent-venue-bg: 20 83 45; /* green-900 */
+      --color-accent-venue-subtle: 22 101 52; /* green-800 */
+      --color-accent-venue-text: 187 247 208; /* green-200 */
+      
+      /* Status Colors - adjusted for dark backgrounds */
+      --color-success: 74 222 128; /* green-400 */
+      --color-success-bg: 20 83 45; /* green-900 */
+      --color-success-text: 187 247 208; /* green-200 */
+      
+      --color-warning: 250 204 21; /* yellow-400 */
+      --color-warning-bg: 113 63 18; /* yellow-900 */
+      --color-warning-text: 254 240 138; /* yellow-200 */
+      
+      --color-danger: 248 113 113; /* red-400 */
+      --color-danger-bg: 127 29 29; /* red-900 */
+      --color-danger-text: 254 202 202; /* red-200 */
+      
+      --color-info: 96 165 250; /* blue-400 */
+      --color-info-bg: 30 58 138; /* blue-900 */
+      --color-info-text: 191 219 254; /* blue-200 */
+    }
   }
 
   /* Typography defaults */

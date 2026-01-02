@@ -6,7 +6,7 @@ interface FooterProps {
 
 export function Footer({ onNavigate }: FooterProps) {
   return (
-    <footer className="bg-white border-t border-neutral-200 mt-16">
+    <footer className="bg-white dark:bg-neutral-800 border-t border-neutral-200 dark:border-neutral-700 mt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
@@ -15,29 +15,29 @@ export function Footer({ onNavigate }: FooterProps) {
               <div className="w-8 h-8 bg-blue-600 dark:bg-blue-500 rounded-lg flex items-center justify-center">
                 <Palette className="w-5 h-5 text-white" />
               </div>
-              <span className="text-lg text-neutral-900">Artwalls</span>
+              <span className="text-lg text-neutral-900 dark:text-neutral-50">Artwalls</span>
             </div>
-            <p className="text-sm text-neutral-600">
+            <p className="text-sm text-neutral-600 dark:text-neutral-300">
               Connecting local artists with venues for rotating artwork displays and sales.
             </p>
           </div>
 
           {/* For Artists */}
           <div>
-            <h3 className="text-sm mb-3">For Artists</h3>
-            <ul className="space-y-2 text-sm text-neutral-600">
+            <h3 className="text-sm mb-3 text-neutral-900 dark:text-neutral-50">For Artists</h3>
+            <ul className="space-y-2 text-sm text-neutral-600 dark:text-neutral-300">
               <li>
-                <button onClick={() => onNavigate('artist-venues')} className="hover:text-neutral-900 transition-colors">
+                <button onClick={() => onNavigate('artist-venues')} className="hover:text-neutral-900 dark:hover:text-neutral-50 transition-colors">
                   Browse Venues
                 </button>
               </li>
               <li>
-                <button onClick={() => onNavigate('artist-artworks')} className="hover:text-neutral-900 transition-colors">
+                <button onClick={() => onNavigate('artist-artworks')} className="hover:text-neutral-900 dark:hover:text-neutral-50 transition-colors">
                   Manage Artwork
                 </button>
               </li>
               <li>
-                <button onClick={() => onNavigate('artist-sales')} className="hover:text-neutral-900 transition-colors">
+                <button onClick={() => onNavigate('artist-sales')} className="hover:text-neutral-900 dark:hover:text-neutral-50 transition-colors">
                   Track Sales
                 </button>
               </li>
@@ -46,8 +46,8 @@ export function Footer({ onNavigate }: FooterProps) {
 
           {/* For Venues */}
           <div>
-            <h3 className="text-sm mb-3">For Venues</h3>
-            <ul className="space-y-2 text-sm text-neutral-600">
+            <h3 className="text-sm mb-3 text-neutral-900 dark:text-neutral-50">For Venues</h3>
+            <ul className="space-y-2 text-sm text-neutral-600 dark:text-neutral-300">
               <li>
                 <button onClick={() => onNavigate('venue-walls')} className="hover:text-neutral-900 transition-colors">
                   Wall Spaces

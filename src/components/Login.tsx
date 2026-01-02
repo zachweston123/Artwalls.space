@@ -41,14 +41,14 @@ export function Login({ onLogin }: LoginProps) {
           <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
             <button
               onClick={() => setSelectedRole('artist')}
-              className="group bg-white rounded-2xl p-8 border-2 border-neutral-200 hover:border-blue-500 hover:shadow-lg transition-all"
+              className="group bg-white dark:bg-neutral-800 rounded-2xl p-8 border-2 border-neutral-200 dark:border-neutral-700 hover:border-blue-500 dark:hover:border-blue-400 hover:shadow-lg transition-all"
             >
               <div className="flex flex-col items-center text-center gap-4">
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center group-hover:bg-blue-500 transition-colors">
-                  <Palette className="w-8 h-8 text-blue-600 group-hover:text-white transition-colors" />
+                <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center group-hover:bg-blue-500 dark:group-hover:bg-blue-500 transition-colors">
+                  <Palette className="w-8 h-8 text-blue-600 dark:text-blue-400 group-hover:text-white transition-colors" />
                 </div>
                 <div>
-                  <h2 className="text-xl mb-2 text-neutral-900">I'm an Artist</h2>
+                  <h2 className="text-xl mb-2 text-neutral-900 dark:text-neutral-50">I'm an Artist</h2>
                   <p className="text-sm text-neutral-600 dark:text-neutral-300">
                     Share and sell your artwork at local venues
                   </p>
@@ -58,14 +58,14 @@ export function Login({ onLogin }: LoginProps) {
 
             <button
               onClick={() => setSelectedRole('venue')}
-              className="group bg-white rounded-2xl p-8 border-2 border-neutral-200 hover:border-green-500 hover:shadow-lg transition-all"
+              className="group bg-white dark:bg-neutral-800 rounded-2xl p-8 border-2 border-neutral-200 dark:border-neutral-700 hover:border-green-500 dark:hover:border-green-400 hover:shadow-lg transition-all"
             >
               <div className="flex flex-col items-center text-center gap-4">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center group-hover:bg-green-500 transition-colors">
-                  <Store className="w-8 h-8 text-green-600 group-hover:text-white transition-colors" />
+                <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center group-hover:bg-green-500 dark:group-hover:bg-green-500 transition-colors">
+                  <Store className="w-8 h-8 text-green-600 dark:text-green-400 group-hover:text-white transition-colors" />
                 </div>
                 <div>
-                  <h2 className="text-xl mb-2 text-neutral-900">I'm a Venue</h2>
+                  <h2 className="text-xl mb-2 text-neutral-900 dark:text-neutral-50">I'm a Venue</h2>
                   <p className="text-sm text-neutral-600 dark:text-neutral-300">
                     Support local artists by displaying rotating artworks and earn 10% commission on sales
                   </p>
@@ -95,11 +95,11 @@ export function Login({ onLogin }: LoginProps) {
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl p-8 shadow-sm border border-neutral-200">
+        <div className="bg-white dark:bg-neutral-800 rounded-2xl p-8 shadow-sm border border-neutral-200 dark:border-neutral-700">
           <div className={`inline-flex px-3 py-1 rounded-full text-sm mb-6 ${
             selectedRole === 'artist' 
-              ? 'bg-blue-100 text-blue-700' 
-              : 'bg-green-100 text-green-700'
+              ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' 
+              : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
           }`}>
             {selectedRole === 'artist' ? 'Artist Account' : 'Venue Account'}
           </div>
@@ -107,21 +107,21 @@ export function Login({ onLogin }: LoginProps) {
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignup && (
               <div>
-                <label className="block text-sm text-neutral-700 mb-1">
+                <label className="block text-sm text-neutral-700 dark:text-neutral-300 mb-1">
                   {selectedRole === 'artist' ? 'Artist Name' : 'Venue Name'}
                 </label>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-neutral-300 bg-white text-neutral-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-50 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                   placeholder={selectedRole === 'artist' ? 'Your name' : 'Your venue name'}
                 />
               </div>
             )}
 
             <div>
-              <label className="block text-sm text-neutral-700 mb-1">Email</label>
+              <label className="block text-sm text-neutral-700 dark:text-neutral-300 mb-1">Email</label>
               <input
                 type="email"
                 value={email}
@@ -132,7 +132,7 @@ export function Login({ onLogin }: LoginProps) {
             </div>
 
             <div>
-              <label className="block text-sm text-neutral-700 mb-1">Password</label>
+              <label className="block text-sm text-neutral-700 dark:text-neutral-300 mb-1">Password</label>
               <input
                 type="password"
                 className="w-full px-4 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-50 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
@@ -144,8 +144,8 @@ export function Login({ onLogin }: LoginProps) {
               type="submit"
               className={`w-full py-3 rounded-lg text-white transition-colors ${
                 selectedRole === 'artist'
-                  ? 'bg-blue-600 hover:bg-blue-700'
-                  : 'bg-green-600 hover:bg-green-700'
+                  ? 'bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-400'
+                  : 'bg-green-600 dark:bg-green-500 hover:bg-green-700 dark:hover:bg-green-400'
               }`}
             >
               {isSignup ? 'Create Account' : 'Sign In'}
@@ -155,7 +155,7 @@ export function Login({ onLogin }: LoginProps) {
           <div className="mt-6 text-center">
             <button
               onClick={() => setIsSignup(!isSignup)}
-              className="text-sm text-neutral-600 hover:text-neutral-900"
+              className="text-sm text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-neutral-50"
             >
               {isSignup ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
             </button>
@@ -164,7 +164,7 @@ export function Login({ onLogin }: LoginProps) {
           <div className="mt-4 text-center">
             <button
               onClick={() => setSelectedRole(null)}
-              className="text-sm text-neutral-500 hover:text-neutral-700"
+              className="text-sm text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200"
             >
               ← Choose different role
             </button>
