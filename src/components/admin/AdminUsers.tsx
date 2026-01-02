@@ -157,10 +157,10 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
     searchQuery !== '';
 
   return (
-    <div>
+    <div className="bg-white dark:bg-neutral-950">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl mb-2">Users</h1>
+        <h1 className="text-3xl mb-2 dark:text-neutral-50">Users</h1>
         <p className="text-neutral-600">
           Manage and support platform users
         </p>

@@ -7,9 +7,9 @@ export function ArtistSales() {
   const averageSale = totalEarnings / totalSales;
 
   return (
-    <div>
+    <div className="bg-white dark:bg-neutral-950">
       <div className="mb-8">
-        <h1 className="text-3xl mb-2">Sales & Earnings</h1>
+        <h1 className="text-3xl mb-2 dark:text-neutral-50">Sales & Earnings</h1>
         <p className="text-neutral-600">Track your artwork sales and income (80% payout)</p>
       </div>
 

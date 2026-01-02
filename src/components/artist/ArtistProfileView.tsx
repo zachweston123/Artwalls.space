@@ -38,7 +38,7 @@ export function ArtistProfileView({
   ];
 
   return (
-    <div>
+    <div className="bg-white dark:bg-neutral-950">
       {/* Profile Header */}
       <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700 mb-6">
         <div className="flex flex-col sm:flex-row gap-6">

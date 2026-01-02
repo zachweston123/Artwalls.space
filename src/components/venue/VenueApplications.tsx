@@ -75,10 +75,10 @@ export function VenueApplications() {
   const pendingCount = applications.filter(a => a.status === 'pending').length;
 
   return (
-    <div>
+    <div className="bg-white dark:bg-neutral-950">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl mb-2 text-neutral-900">Artist Applications</h1>
+          <h1 className="text-3xl mb-2 text-neutral-900 dark:text-neutral-50">Artist Applications</h1>
           <p className="text-neutral-600">
             {pendingCount} pending application{pendingCount !== 1 ? 's' : ''} to review
           </p>

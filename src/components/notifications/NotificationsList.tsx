@@ -51,9 +51,9 @@ export function NotificationsList() {
   };
 
   return (
-    <div>
+    <div className="bg-white dark:bg-neutral-950">
       <div className="mb-8">
-        <h1 className="text-3xl mb-2 text-neutral-900">Notifications</h1>
+        <h1 className="text-3xl mb-2 text-neutral-900 dark:text-neutral-50">Notifications</h1>
         <p className="text-neutral-600">
           {mockNotifications.filter(n => !n.isRead).length} unread notifications
         </p>

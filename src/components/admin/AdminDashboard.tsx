@@ -199,10 +199,10 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
   };
 
   return (
-    <div>
+    <div className="bg-white dark:bg-neutral-950">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl mb-2">Dashboard</h1>
+        <h1 className="text-3xl mb-2 dark:text-neutral-50">Dashboard</h1>
         <p className="text-neutral-600 dark:text-neutral-300">
           Overview of platform metrics and recent activity
         </p>

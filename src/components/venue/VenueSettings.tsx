@@ -66,7 +66,7 @@ export function VenueSettings() {
   };
 
   return (
-    <div>
+    <div className="bg-white dark:bg-neutral-950">
       <div className="mb-8">
         <h1 className="text-3xl mb-2 text-neutral-900 dark:text-neutral-50">Venue Settings</h1>
         <p className="text-neutral-600 dark:text-neutral-300">Manage your venue profile and scheduling preferences</p>

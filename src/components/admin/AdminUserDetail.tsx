@@ -129,7 +129,7 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
   };
 
   return (
-    <div>
+    <div className="bg-white dark:bg-neutral-950">
       {/* Header */}
       <div className="mb-8">
         <button

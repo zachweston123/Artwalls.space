@@ -52,11 +52,11 @@ export function VenueWalls() {
   };
 
   return (
-    <div>
+    <div className="bg-white dark:bg-neutral-950">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-3xl mb-2 text-neutral-900">My Wall Spaces</h1>
-          <p className="text-neutral-600">
+          <h1 className="text-3xl mb-2 text-neutral-900 dark:text-neutral-50">My Wall Spaces</h1>
+          <p className="text-neutral-600 dark:text-neutral-300">
             {wallSpaces.length} total spaces • {wallSpaces.filter(w => w.available).length} available
           </p>
         </div>

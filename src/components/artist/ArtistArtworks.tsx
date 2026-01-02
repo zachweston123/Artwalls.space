@@ -90,10 +90,10 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
   };
 
   return (
-    <div>
+    <div className="bg-white dark:bg-neutral-950">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl mb-2">My Artworks</h1>
+          <h1 className="text-3xl mb-2 dark:text-neutral-50">My Artworks</h1>
           <p className="text-neutral-600">
             {loading ? 'Loading…' : `${artworks.length} pieces in your collection`}
           </p>

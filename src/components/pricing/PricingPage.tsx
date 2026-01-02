@@ -134,7 +134,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
   const proEarnings = calculateEarnings(saleValue, 6, 39, 0); // Pro plan: protection included
 
   return (
-    <div>
+    <div className="bg-white dark:bg-neutral-950">
       <div className="text-center mb-12">
         <h1 className="text-3xl mb-2 text-neutral-900 dark:text-neutral-50">Plans & Pricing</h1>
         <p className="text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto">

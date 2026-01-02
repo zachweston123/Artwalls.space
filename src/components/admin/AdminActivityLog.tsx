@@ -82,9 +82,9 @@ export function AdminActivityLog() {
   };
 
   return (
-    <div>
+    <div className="bg-white dark:bg-neutral-950">
       <div className="mb-8">
-        <h1 className="text-3xl mb-2">Activity Log</h1>
+        <h1 className="text-3xl mb-2 dark:text-neutral-50">Activity Log</h1>
         <p className="text-neutral-600">
           Audit trail of all admin actions
         </p>

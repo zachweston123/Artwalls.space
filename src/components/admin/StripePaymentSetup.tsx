@@ -58,7 +58,8 @@ export function StripePaymentSetup({ onNavigate }: StripeSetupProps) {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="bg-white dark:bg-neutral-950 p-6 rounded-lg">
+      <div className="space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>

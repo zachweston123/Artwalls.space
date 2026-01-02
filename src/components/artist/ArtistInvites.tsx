@@ -100,10 +100,10 @@ export function ArtistInvites({ onApply, onDecline, onNavigate }: ArtistInvitesP
   };
 
   return (
-    <div>
+    <div className="bg-white dark:bg-neutral-950">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl mb-2">Invitations</h1>
+        <h1 className="text-3xl mb-2 dark:text-neutral-50">Invitations</h1>
         <p className="text-neutral-600 dark:text-neutral-300">
           Venues have invited you to display your artwork
         </p>

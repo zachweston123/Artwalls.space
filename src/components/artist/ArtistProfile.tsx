@@ -17,9 +17,9 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
   };
 
   return (
-    <div>
+    <div className="bg-white dark:bg-neutral-950">
       <div className="mb-8">
-        <h1 className="text-3xl mb-2 text-neutral-900">Artist Profile</h1>
+        <h1 className="text-3xl mb-2 text-neutral-900 dark:text-neutral-50">Artist Profile</h1>
         <p className="text-neutral-600">Manage your account information and settings</p>
       </div>
 

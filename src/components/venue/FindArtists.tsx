@@ -109,10 +109,10 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
   });
 
   return (
-    <div>
+    <div className="bg-white dark:bg-neutral-950">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl mb-2">Find Artists</h1>
+        <h1 className="text-3xl mb-2 dark:text-neutral-50">Find Artists</h1>
         <p className="text-neutral-600 dark:text-neutral-300">
           Discover local artists and invite them to display at your venue
         </p>

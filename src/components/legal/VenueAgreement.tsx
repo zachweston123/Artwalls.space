@@ -54,11 +54,11 @@ export function VenueAgreement({ onNavigate, onAccept, hasAccepted = false }: Ve
   };
 
   return (
-    <div>
+    <div className="bg-white dark:bg-neutral-950">
       {/* Back Button */}
       <button
         onClick={() => onNavigate('policies')}
-        className="flex items-center gap-2 text-neutral-600 hover:text-neutral-900 mb-6 transition-colors"
+        className="flex items-center gap-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-50 mb-6 transition-colors"
       >
         <ArrowLeft className="w-5 h-5" />
         <span>Back to Policies</span>

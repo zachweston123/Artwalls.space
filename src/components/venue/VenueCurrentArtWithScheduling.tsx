@@ -110,9 +110,9 @@ export function VenueCurrentArtWithScheduling() {
   const endingSoonCount = artworks.filter(a => a.status === 'ending-soon').length;
 
   return (
-    <div>
+    <div className="bg-white dark:bg-neutral-950">
       <div className="mb-8">
-        <h1 className="text-3xl mb-2 text-neutral-900">Current Artwork</h1>
+        <h1 className="text-3xl mb-2 text-neutral-900 dark:text-neutral-50">Current Artwork</h1>
         <p className="text-neutral-600">
           {activeCount} active • {soldCount} sold • {endingSoonCount} ending soon
         </p>

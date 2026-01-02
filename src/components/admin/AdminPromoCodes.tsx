@@ -51,10 +51,10 @@ export function AdminPromoCodes({ onCreatePromoCode }: AdminPromoCodesProps) {
   };
 
   return (
-    <div>
+    <div className="bg-white dark:bg-neutral-950">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl mb-2">Promo Codes</h1>
+          <h1 className="text-3xl mb-2 dark:text-neutral-50">Promo Codes</h1>
           <p className="text-neutral-600">
             Create and manage subscription discount codes
           </p>

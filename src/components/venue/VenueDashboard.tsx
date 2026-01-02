@@ -47,10 +47,10 @@ export function VenueDashboard({ onNavigate }: VenueDashboardProps) {
   ];
 
   return (
-    <div>
+    <div className="bg-white dark:bg-neutral-950">
       <div className="mb-8">
-        <h1 className="text-3xl mb-2">Welcome back, Brew & Palette Café</h1>
-        <p className="text-neutral-600">Manage your wall spaces and artist applications</p>
+        <h1 className="text-3xl mb-2 dark:text-neutral-50">Welcome back, Brew & Palette Café</h1>
+        <p className="text-neutral-600 dark:text-neutral-300">Manage your wall spaces and artist applications</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">

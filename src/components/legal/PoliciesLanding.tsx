@@ -7,9 +7,9 @@ interface PoliciesLandingProps {
 
 export function PoliciesLanding({ onNavigate }: PoliciesLandingProps) {
   return (
-    <div>
+    <div className="bg-white dark:bg-neutral-950">
       <div className="mb-8">
-        <h1 className="text-3xl mb-2 text-neutral-900">Policies & Agreements</h1>
+        <h1 className="text-3xl mb-2 text-neutral-900 dark:text-neutral-50">Policies & Agreements</h1>
         <p className="text-neutral-600">
           Review the terms and agreements that govern the Artwalls marketplace
         </p>
