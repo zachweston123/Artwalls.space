@@ -72,7 +72,7 @@ export function AdminSidebar({ currentPage, onNavigate }: AdminSidebarProps) {
             <span className="text-xs text-neutral-700">AD</span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm text-neutral-900 truncate">Admin User</p>
+            <p className="text-sm text-neutral-900 dark:text-neutral-50 truncate">Admin User</p>
             <p className="text-xs text-neutral-500">admin@artwalls.com</p>
           </div>
         </div>

@@ -414,7 +414,7 @@ export function ArtistAgreement({ onNavigate, onAccept, hasAccepted = false }: A
                   <button
                     key={section.id}
                     onClick={() => scrollToSection(section.id)}
-                    className="block w-full text-left text-sm text-neutral-700 hover:text-blue-600 py-1 transition-colors"
+                    className="block w-full text-left text-sm text-neutral-700 dark:text-neutral-300 hover:text-blue-600 dark:hover:text-blue-400 py-1 transition-colors"
                   >
                     {section.title}
                   </button>

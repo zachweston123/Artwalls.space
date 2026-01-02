@@ -109,7 +109,7 @@ export function AdminPasswordPrompt({ onVerify, onCancel }: AdminPasswordPromptP
             <button
               type="submit"
               disabled={isLoading || !password}
-              className="flex-1 px-4 py-3 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+              className="flex-1 px-4 py-3 bg-neutral-900 dark:bg-neutral-50 text-white dark:text-neutral-900 rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
             >
               {isLoading ? 'Verifying...' : 'Verify'}
             </button>

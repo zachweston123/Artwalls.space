@@ -134,7 +134,7 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
       <div className="mb-8">
         <button
           onClick={onBack}
-          className="flex items-center gap-2 text-neutral-600 hover:text-neutral-900 mb-4 transition-colors"
+          className="flex items-center gap-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-50 mb-4 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Users
@@ -182,8 +182,8 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors ${
                   activeTab === tab.id
-                    ? 'border-neutral-900 text-neutral-900'
-                    : 'border-transparent text-neutral-600 hover:text-neutral-900'
+                    ? 'border-neutral-900 dark:border-neutral-50 text-neutral-900 dark:text-neutral-50'
+                    : 'border-transparent text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-50'
                 }`}
               >
                 <Icon className="w-4 h-4" />
@@ -205,28 +205,28 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
                 <User className="w-5 h-5 text-neutral-400 mt-0.5" />
                 <div>
                   <p className="text-sm text-neutral-600">Name</p>
-                  <p className="text-neutral-900">{user.name}</p>
+                  <p className="text-neutral-900 dark:text-neutral-50">{user.name}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <Mail className="w-5 h-5 text-neutral-400 mt-0.5" />
                 <div>
                   <p className="text-sm text-neutral-600">Email</p>
-                  <p className="text-neutral-900">{user.email}</p>
+                  <p className="text-neutral-900 dark:text-neutral-50">{user.email}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-neutral-400 mt-0.5" />
                 <div>
                   <p className="text-sm text-neutral-600">City</p>
-                  <p className="text-neutral-900">{user.city}</p>
+                  <p className="text-neutral-900 dark:text-neutral-50">{user.city}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <Calendar className="w-5 h-5 text-neutral-400 mt-0.5" />
                 <div>
                   <p className="text-sm text-neutral-600">Member Since</p>
-                  <p className="text-neutral-900">{user.createdAt}</p>
+                  <p className="text-neutral-900 dark:text-neutral-50">{user.createdAt}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
@@ -251,15 +251,15 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               <div>
                 <p className="text-sm text-neutral-600 mb-1">Artworks</p>
-                <p className="text-2xl text-neutral-900">{user.artworksCount}</p>
+                <p className="text-2xl text-neutral-900 dark:text-neutral-50">{user.artworksCount}</p>
               </div>
               <div>
                 <p className="text-sm text-neutral-600 mb-1">Active Displays</p>
-                <p className="text-2xl text-neutral-900">{user.activeDisplays}</p>
+                <p className="text-2xl text-neutral-900 dark:text-neutral-50">{user.activeDisplays}</p>
               </div>
               <div>
                 <p className="text-sm text-neutral-600 mb-1">Protected Artworks</p>
-                <p className="text-2xl text-neutral-900">{user.protectionPlanActive}</p>
+                <p className="text-2xl text-neutral-900 dark:text-neutral-50">{user.protectionPlanActive}</p>
               </div>
             </div>
           </div>
@@ -285,7 +285,7 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
               <tbody className="divide-y divide-neutral-100">
                 {mockPlacements.map((placement) => (
                   <tr key={placement.id} className="hover:bg-neutral-50">
-                    <td className="px-6 py-4 text-sm text-neutral-900">{placement.artwork}</td>
+                    <td className="px-6 py-4 text-sm text-neutral-900 dark:text-neutral-50">{placement.artwork}</td>
                     <td className="px-6 py-4 text-sm text-neutral-600">{placement.venue}</td>
                     <td className="px-6 py-4">
                       <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(placement.status)}`}>
@@ -333,9 +333,9 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
               <tbody className="divide-y divide-neutral-100">
                 {mockOrders.map((order) => (
                   <tr key={order.id} className="hover:bg-neutral-50">
-                    <td className="px-6 py-4 text-sm text-neutral-900 font-mono">{order.id}</td>
+                    <td className="px-6 py-4 text-sm text-neutral-900 dark:text-neutral-50 font-mono">{order.id}</td>
                     <td className="px-6 py-4 text-sm text-neutral-600">{order.artwork}</td>
-                    <td className="px-6 py-4 text-sm text-neutral-900">${order.amount}</td>
+                    <td className="px-6 py-4 text-sm text-neutral-900 dark:text-neutral-50">${order.amount}</td>
                     <td className="px-6 py-4">
                       <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(order.status)}`}>
                         {order.status}
@@ -363,7 +363,7 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
               <div>
                 <p className="text-sm text-neutral-600 mb-1">Tier</p>
-                <p className="text-2xl text-neutral-900">{user.plan}</p>
+                <p className="text-2xl text-neutral-900 dark:text-neutral-50">{user.plan}</p>
               </div>
               <div>
                 <p className="text-sm text-neutral-600 mb-1">Stripe Status</p>
@@ -414,7 +414,7 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
                 <div key={note.id} className="p-4 bg-neutral-50 rounded-lg">
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-neutral-900">{note.author}</span>
+                      <span className="text-sm text-neutral-900 dark:text-neutral-50">{note.author}</span>
                       <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs">
                         {note.tag}
                       </span>

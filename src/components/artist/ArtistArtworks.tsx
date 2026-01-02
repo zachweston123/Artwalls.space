@@ -120,7 +120,7 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
               <h2 className="text-2xl">Add New Artwork</h2>
               <button
                 onClick={() => setShowAddForm(false)}
-                className="p-2 hover:bg-neutral-100 rounded-lg transition-colors text-neutral-900"
+                className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg transition-colors text-neutral-900 dark:text-neutral-50"
               >
                 <X className="w-5 h-5" />
               </button>

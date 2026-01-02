@@ -69,14 +69,14 @@ export function VenueAgreement({ onNavigate, onAccept, hasAccepted = false }: Ve
         <div className="flex-1 max-w-3xl">
           <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 p-6 sm:p-8 mb-6">
             <div className="mb-6">
-              <h1 className="text-3xl mb-2 text-neutral-900">Artwalls Venue Agreement</h1>
-              <p className="text-sm text-neutral-500">Last updated: December 25, 2024</p>
+              <h1 className="text-3xl mb-2 text-neutral-900 dark:text-neutral-50">Artwalls Venue Agreement</h1>
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">Last updated: December 25, 2024</p>
             </div>
 
             {/* Summary */}
-            <div className="bg-green-50 rounded-lg p-5 mb-8 border border-green-100">
-              <h2 className="text-base text-green-900 mb-2 text-neutral-900">Summary (non-binding)</h2>
-              <p className="text-sm text-green-700">
+            <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-5 mb-8 border border-green-100 dark:border-green-700">
+              <h2 className="text-base text-green-900 dark:text-green-100 mb-2">Summary (non-binding)</h2>
+              <p className="text-sm text-green-700 dark:text-green-200">
                 This agreement explains how venues list wallspaces, host art, and earn a share of sales through Artwalls. 
                 The "Terms" below are binding; this summary is for convenience only.
               </p>

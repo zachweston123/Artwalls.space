@@ -355,7 +355,7 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
                       <div className="flex gap-2">
                         <button
                           onClick={() => onViewUser(user.id)}
-                          className="px-3 py-1 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded text-xs hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors"
+                          className="px-3 py-1 bg-neutral-900 dark:bg-neutral-50 text-white dark:text-neutral-900 rounded text-xs hover:bg-neutral-800 dark:hover:bg-neutral-100 transition-colors"
                         >
                           View
                         </button>
@@ -390,7 +390,7 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
           {hasActiveFilters && (
             <button
               onClick={clearFilters}
-              className="px-6 py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors"
+              className="px-6 py-2 bg-neutral-900 dark:bg-neutral-50 text-white dark:text-neutral-900 rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-100 transition-colors"
             >
               Clear Filters
             </button>
