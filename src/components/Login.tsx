@@ -29,11 +29,11 @@ export function Login({ onLogin }: LoginProps) {
 
   if (!selectedRole) {
     return (
-      <div className="min-h-screen bg-neutral-50 flex items-center justify-center px-6">
+      <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900 flex items-center justify-center px-6">
         <div className="w-full max-w-4xl">
           <div className="text-center mb-12">
-            <h1 className="text-4xl mb-3">Welcome to Artwalls</h1>
-            <p className="text-neutral-600">
+            <h1 className="text-4xl mb-3 text-neutral-900 dark:text-neutral-50">Welcome to Artwalls</h1>
+            <p className="text-neutral-600 dark:text-neutral-400">
               Connecting local artists with venues to display and sell physical artwork
             </p>
           </div>
@@ -41,15 +41,15 @@ export function Login({ onLogin }: LoginProps) {
           <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
             <button
               onClick={() => setSelectedRole('artist')}
-              className="group bg-white rounded-2xl p-8 border-2 border-neutral-200 hover:border-blue-500 hover:shadow-lg transition-all"
+              className="group bg-white dark:bg-neutral-800 rounded-2xl p-8 border-2 border-neutral-200 dark:border-neutral-700 hover:border-blue-500 dark:hover:border-blue-400 hover:shadow-lg dark:hover:shadow-lg transition-all"
             >
               <div className="flex flex-col items-center text-center gap-4">
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center group-hover:bg-blue-500 transition-colors">
-                  <Palette className="w-8 h-8 text-blue-600 group-hover:text-white transition-colors" />
+                <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center group-hover:bg-blue-500 dark:group-hover:bg-blue-500 transition-colors">
+                  <Palette className="w-8 h-8 text-blue-600 dark:text-blue-300 group-hover:text-white transition-colors" />
                 </div>
                 <div>
-                  <h2 className="text-xl mb-2 text-neutral-900">I'm an Artist</h2>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-300">
+                  <h2 className="text-xl mb-2 text-neutral-900 dark:text-neutral-50">I'm an Artist</h2>
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
                     Share your artwork with local venues and earn 80% from every sale
                   </p>
                 </div>
@@ -58,15 +58,15 @@ export function Login({ onLogin }: LoginProps) {
 
             <button
               onClick={() => setSelectedRole('venue')}
-              className="group bg-white rounded-2xl p-8 border-2 border-neutral-200 hover:border-green-500 hover:shadow-lg transition-all"
+              className="group bg-white dark:bg-neutral-800 rounded-2xl p-8 border-2 border-neutral-200 dark:border-neutral-700 hover:border-green-500 dark:hover:border-green-400 hover:shadow-lg dark:hover:shadow-lg transition-all"
             >
               <div className="flex flex-col items-center text-center gap-4">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center group-hover:bg-green-500 transition-colors">
-                  <Store className="w-8 h-8 text-green-600 group-hover:text-white transition-colors" />
+                <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center group-hover:bg-green-500 dark:group-hover:bg-green-500 transition-colors">
+                  <Store className="w-8 h-8 text-green-600 dark:text-green-300 group-hover:text-white transition-colors" />
                 </div>
                 <div>
-                  <h2 className="text-xl mb-2 text-neutral-900">I'm a Venue</h2>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-300">
+                  <h2 className="text-xl mb-2 text-neutral-900 dark:text-neutral-50">I'm a Venue</h2>
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
                     Display rotating artwork and earn 10% commission on sales
                   </p>
                 </div>
@@ -95,11 +95,11 @@ export function Login({ onLogin }: LoginProps) {
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl p-8 shadow-sm border border-neutral-200">
+        <div className="bg-white dark:bg-neutral-800 rounded-2xl p-8 shadow-sm border border-neutral-200 dark:border-neutral-700">
           <div className={`inline-flex px-3 py-1 rounded-full text-sm mb-6 ${
             selectedRole === 'artist' 
-              ? 'bg-blue-100 text-blue-700' 
-              : 'bg-green-100 text-green-700'
+              ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' 
+              : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
           }`}>
             {selectedRole === 'artist' ? 'Artist Account' : 'Venue Account'}
           </div>

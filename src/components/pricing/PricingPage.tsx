@@ -270,8 +270,8 @@ export function PricingPage({ onNavigate, currentPlan = 'free', currentUser }: P
       </div>
 
       {/* Upgrade Note */}
-      <div className="text-center mb-12 bg-blue-50 rounded-xl p-6 border border-blue-100">
-        <p className="text-sm text-blue-900">
+      <div className="text-center mb-12 bg-blue-50 dark:bg-blue-900/30 rounded-xl p-6 border border-blue-100 dark:border-blue-800">
+        <p className="text-sm text-blue-900 dark:text-blue-300">
           💡 You can upgrade or downgrade your plan anytime. Changes take effect at the start of your next billing cycle.
         </p>
       </div>
@@ -444,28 +444,28 @@ export function PricingPage({ onNavigate, currentPlan = 'free', currentUser }: P
               </div>
 
               {/* Coverage Caps */}
-              <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
-                <h3 className="text-base text-blue-900 mb-3 text-neutral-900">Coverage Caps by Plan</h3>
+              <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-4 border border-blue-100 dark:border-blue-800">
+                <h3 className="text-base text-blue-900 dark:text-blue-300 mb-3">Coverage Caps by Plan</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-blue-700 mb-1"><strong>Free & Starter:</strong></p>
-                    <p className="text-sm text-blue-700">Up to $100 per incident</p>
-                    <p className="text-xs text-blue-600">2 claims per year</p>
+                    <p className="text-sm text-blue-700 dark:text-blue-300 mb-1"><strong>Free & Starter:</strong></p>
+                    <p className="text-sm text-blue-700 dark:text-blue-300">Up to $100 per incident</p>
+                    <p className="text-xs text-blue-600 dark:text-blue-400">2 claims per year</p>
                   </div>
                   <div>
-                    <p className="text-sm text-blue-700 mb-1"><strong>Growth:</strong></p>
-                    <p className="text-sm text-blue-700">Up to $150 per incident</p>
-                    <p className="text-xs text-blue-600">3 claims per year</p>
+                    <p className="text-sm text-blue-700 dark:text-blue-300 mb-1"><strong>Growth:</strong></p>
+                    <p className="text-sm text-blue-700 dark:text-blue-300">Up to $150 per incident</p>
+                    <p className="text-xs text-blue-600 dark:text-blue-400">3 claims per year</p>
                   </div>
                   <div>
-                    <p className="text-sm text-blue-700 mb-1"><strong>Pro:</strong></p>
-                    <p className="text-sm text-blue-700">Up to $200 per incident</p>
-                    <p className="text-xs text-blue-600">4 claims per year</p>
+                    <p className="text-sm text-blue-700 dark:text-blue-300 mb-1"><strong>Pro:</strong></p>
+                    <p className="text-sm text-blue-700 dark:text-blue-300">Up to $200 per incident</p>
+                    <p className="text-xs text-blue-600 dark:text-blue-400">4 claims per year</p>
                   </div>
-                  <div className="bg-white rounded-lg p-3 border border-blue-200">
-                    <p className="text-xs text-neutral-600 mb-1">Protection cost:</p>
-                    <p className="text-sm text-neutral-900">$3/artwork/mo</p>
-                    <p className="text-xs text-green-600">FREE on Pro plan</p>
+                  <div className="bg-white dark:bg-neutral-800 rounded-lg p-3 border border-blue-200 dark:border-neutral-700">
+                    <p className="text-xs text-neutral-600 dark:text-neutral-400 mb-1">Protection cost:</p>
+                    <p className="text-sm text-neutral-900 dark:text-neutral-100">$3/artwork/mo</p>
+                    <p className="text-xs text-green-600 dark:text-green-400">FREE on Pro plan</p>
                   </div>
                 </div>
               </div>
@@ -480,84 +480,84 @@ export function PricingPage({ onNavigate, currentPlan = 'free', currentUser }: P
         <div className="bg-white rounded-xl border border-neutral-200 overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-neutral-200">
-                <th className="text-left p-4 text-sm text-neutral-600">Feature</th>
-                <th className="text-center p-4 text-sm">Free</th>
-                <th className="text-center p-4 text-sm">Starter</th>
-                <th className="text-center p-4 text-sm bg-blue-50 dark:bg-blue-900/30">Growth</th>
-                <th className="text-center p-4 text-sm">Pro</th>
+              <tr className="border-b border-neutral-200 dark:border-neutral-700">
+                <th className="text-left p-4 text-sm text-neutral-600 dark:text-neutral-400">Feature</th>
+                <th className="text-center p-4 text-sm dark:text-neutral-300">Free</th>
+                <th className="text-center p-4 text-sm dark:text-neutral-300">Starter</th>
+                <th className="text-center p-4 text-sm bg-blue-50 dark:bg-blue-900/30 text-neutral-900 dark:text-blue-300">Growth</th>
+                <th className="text-center p-4 text-sm dark:text-neutral-300">Pro</th>
               </tr>
             </thead>
             <tbody>
-              <tr className="border-b border-neutral-200 bg-purple-50">
-                <td className="p-4 text-sm"><strong>Active displays included</strong></td>
-                <td className="text-center p-4 text-sm"><strong>1</strong></td>
-                <td className="text-center p-4 text-sm"><strong>4</strong></td>
-                <td className="text-center p-4 text-sm bg-blue-100"><strong>10</strong></td>
-                <td className="text-center p-4 text-sm"><strong>Unlimited</strong></td>
+              <tr className="border-b border-neutral-200 dark:border-neutral-700 bg-purple-50 dark:bg-purple-900/20">
+                <td className="p-4 text-sm text-neutral-900 dark:text-neutral-100"><strong>Active displays included</strong></td>
+                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-100"><strong>1</strong></td>
+                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-100"><strong>4</strong></td>
+                <td className="text-center p-4 text-sm bg-blue-100 dark:bg-blue-900/50 text-neutral-900 dark:text-blue-300"><strong>10</strong></td>
+                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-100"><strong>Unlimited</strong></td>
               </tr>
-              <tr className="border-b border-neutral-200">
-                <td className="p-4 text-sm">Overage pricing</td>
-                <td className="text-center p-4 text-sm text-xs">—</td>
-                <td className="text-center p-4 text-sm text-xs">$5/mo per display</td>
-                <td className="text-center p-4 text-sm text-xs bg-blue-50">$4/mo per display</td>
-                <td className="text-center p-4 text-sm text-xs">—</td>
+              <tr className="border-b border-neutral-200 dark:border-neutral-700">
+                <td className="p-4 text-sm text-neutral-900 dark:text-neutral-100">Overage pricing</td>
+                <td className="text-center p-4 text-sm text-xs text-neutral-900 dark:text-neutral-100">—</td>
+                <td className="text-center p-4 text-sm text-xs text-neutral-900 dark:text-neutral-100">$5/mo per display</td>
+                <td className="text-center p-4 text-sm text-xs bg-blue-50 dark:bg-blue-900/30 text-neutral-900 dark:text-blue-300">$4/mo per display</td>
+                <td className="text-center p-4 text-sm text-xs text-neutral-900 dark:text-neutral-100">—</td>
               </tr>
-              <tr className="border-b border-neutral-200">
-                <td className="p-4 text-sm">Artwork listings</td>
-                <td className="text-center p-4 text-sm">1</td>
-                <td className="text-center p-4 text-sm">10</td>
-                <td className="text-center p-4 text-sm bg-blue-50">30</td>
-                <td className="text-center p-4 text-sm">Unlimited</td>
+              <tr className="border-b border-neutral-200 dark:border-neutral-700">
+                <td className="p-4 text-sm text-neutral-900 dark:text-neutral-100">Artwork listings</td>
+                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-100">1</td>
+                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-100">10</td>
+                <td className="text-center p-4 text-sm bg-blue-50 dark:bg-blue-900/30 text-neutral-900 dark:text-blue-300">30</td>
+                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-100">Unlimited</td>
               </tr>
-              <tr className="border-b border-neutral-200">
-                <td className="p-4 text-sm">Venue applications</td>
-                <td className="text-center p-4 text-sm">1/month</td>
-                <td className="text-center p-4 text-sm">3/month</td>
-                <td className="text-center p-4 text-sm bg-blue-50">Unlimited</td>
-                <td className="text-center p-4 text-sm">Unlimited</td>
+              <tr className="border-b border-neutral-200 dark:border-neutral-700">
+                <td className="p-4 text-sm text-neutral-900 dark:text-neutral-100">Venue applications</td>
+                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-100">1/month</td>
+                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-100">3/month</td>
+                <td className="text-center p-4 text-sm bg-blue-50 dark:bg-blue-900/30 text-neutral-900 dark:text-blue-300">Unlimited</td>
+                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-100">Unlimited</td>
               </tr>
-              <tr className="border-b border-neutral-200 bg-yellow-50">
-                <td className="p-4 text-sm"><strong>Platform fee on sales</strong></td>
-                <td className="text-center p-4 text-sm"><strong>15%</strong></td>
-                <td className="text-center p-4 text-sm"><strong>10%</strong></td>
-                <td className="text-center p-4 text-sm bg-blue-100"><strong>8%</strong></td>
-                <td className="text-center p-4 text-sm"><strong>6%</strong></td>
+              <tr className="border-b border-neutral-200 dark:border-neutral-700 bg-yellow-50 dark:bg-yellow-900/20">
+                <td className="p-4 text-sm text-neutral-900 dark:text-neutral-100"><strong>Platform fee on sales</strong></td>
+                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-100"><strong>15%</strong></td>
+                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-100"><strong>10%</strong></td>
+                <td className="text-center p-4 text-sm bg-blue-100 dark:bg-blue-900/50 text-neutral-900 dark:text-blue-300"><strong>8%</strong></td>
+                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-100"><strong>6%</strong></td>
               </tr>
-              <tr className="border-b border-neutral-200">
-                <td className="p-4 text-sm">Payout speed</td>
-                <td className="text-center p-4 text-sm text-xs">Weekly</td>
-                <td className="text-center p-4 text-sm text-xs">Standard</td>
-                <td className="text-center p-4 text-sm text-xs bg-blue-50">Standard</td>
-                <td className="text-center p-4 text-sm text-xs">Fast</td>
+              <tr className="border-b border-neutral-200 dark:border-neutral-700">
+                <td className="p-4 text-sm text-neutral-900 dark:text-neutral-100">Payout speed</td>
+                <td className="text-center p-4 text-sm text-xs text-neutral-900 dark:text-neutral-100">Weekly</td>
+                <td className="text-center p-4 text-sm text-xs text-neutral-900 dark:text-neutral-100">Standard</td>
+                <td className="text-center p-4 text-sm text-xs bg-blue-50 dark:bg-blue-900/30 text-neutral-900 dark:text-blue-300">Standard</td>
+                <td className="text-center p-4 text-sm text-xs text-neutral-900 dark:text-neutral-100">Fast</td>
               </tr>
-              <tr className="border-b border-neutral-200">
-                <td className="p-4 text-sm">Analytics</td>
-                <td className="text-center p-4 text-sm">—</td>
-                <td className="text-center p-4 text-sm">Basic</td>
-                <td className="text-center p-4 text-sm bg-blue-50">Advanced</td>
-                <td className="text-center p-4 text-sm">Advanced</td>
+              <tr className="border-b border-neutral-200 dark:border-neutral-700">
+                <td className="p-4 text-sm text-neutral-900 dark:text-neutral-100">Analytics</td>
+                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-100">—</td>
+                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-100">Basic</td>
+                <td className="text-center p-4 text-sm bg-blue-50 dark:bg-blue-900/30 text-neutral-900 dark:text-blue-300">Advanced</td>
+                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-100">Advanced</td>
               </tr>
-              <tr className="border-b border-neutral-200">
-                <td className="p-4 text-sm">Priority visibility</td>
-                <td className="text-center p-4 text-sm">—</td>
-                <td className="text-center p-4 text-sm">—</td>
-                <td className="text-center p-4 text-sm bg-blue-50">✓</td>
-                <td className="text-center p-4 text-sm">✓✓</td>
+              <tr className="border-b border-neutral-200 dark:border-neutral-700">
+                <td className="p-4 text-sm text-neutral-900 dark:text-neutral-100">Priority visibility</td>
+                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-100">—</td>
+                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-100">—</td>
+                <td className="text-center p-4 text-sm bg-blue-50 dark:bg-blue-900/30 text-neutral-900 dark:text-blue-300">✓</td>
+                <td className="text-center p-4 text-sm text-neutral-900 dark:text-neutral-100">✓✓</td>
               </tr>
-              <tr className="border-b border-neutral-200 bg-green-50">
-                <td className="p-4 text-sm"><strong>Protection Plan</strong></td>
-                <td className="text-center p-4 text-sm text-xs">$3/artwork</td>
-                <td className="text-center p-4 text-sm text-xs">$3/artwork</td>
-                <td className="text-center p-4 text-sm text-xs bg-blue-50">$3/artwork</td>
-                <td className="text-center p-4 text-sm text-xs"><strong>INCLUDED</strong></td>
+              <tr className="border-b border-neutral-200 dark:border-neutral-700 bg-green-50 dark:bg-green-900/20">
+                <td className="p-4 text-sm text-neutral-900 dark:text-neutral-100"><strong>Protection Plan</strong></td>
+                <td className="text-center p-4 text-sm text-xs text-neutral-900 dark:text-neutral-100">$3/artwork</td>
+                <td className="text-center p-4 text-sm text-xs text-neutral-900 dark:text-neutral-100">$3/artwork</td>
+                <td className="text-center p-4 text-sm text-xs bg-blue-50 dark:bg-blue-900/30 text-neutral-900 dark:text-blue-300">$3/artwork</td>
+                <td className="text-center p-4 text-sm text-xs text-neutral-900 dark:text-neutral-100"><strong>INCLUDED</strong></td>
               </tr>
-              <tr>
-                <td className="p-4 text-sm">Protection cap</td>
-                <td className="text-center p-4 text-sm text-xs">$100</td>
-                <td className="text-center p-4 text-sm text-xs">$100</td>
-                <td className="text-center p-4 text-sm text-xs bg-blue-50 dark:bg-blue-900/30">$150</td>
-                <td className="text-center p-4 text-sm text-xs">$200</td>
+              <tr className="border-t border-neutral-200 dark:border-neutral-700">
+                <td className="p-4 text-sm text-neutral-900 dark:text-neutral-100">Protection cap</td>
+                <td className="text-center p-4 text-sm text-xs text-neutral-900 dark:text-neutral-100">$100</td>
+                <td className="text-center p-4 text-sm text-xs text-neutral-900 dark:text-neutral-100">$100</td>
+                <td className="text-center p-4 text-sm text-xs bg-blue-50 dark:bg-blue-900/30 text-neutral-900 dark:text-blue-300">$150</td>
+                <td className="text-center p-4 text-sm text-xs text-neutral-900 dark:text-neutral-100">$200</td>
               </tr>
             </tbody>
           </table>
