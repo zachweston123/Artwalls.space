@@ -42,11 +42,11 @@ export function VenueProfileView({
   const yearsInBusiness = new Date().getFullYear() - venue.foundedYear;
 
   return (
-    <div>
+    <div className="bg-[var(--bg)] text-[var(--text)]">
       {/* Cover Photo & Header */}
-      <div className="bg-white dark:bg-neutral-800 rounded-xl overflow-hidden border border-neutral-200 dark:border-neutral-700 mb-6">
+      <div className="bg-[var(--surface-1)] rounded-xl overflow-hidden border border-[var(--border)] mb-6">
         {/* Cover Photo */}
-        <div className="h-64 bg-neutral-100 dark:bg-neutral-900 overflow-hidden">
+        <div className="h-64 bg-[var(--surface-2)] overflow-hidden">
           <img
             src={venue.coverPhoto}
             alt={venue.name}
@@ -61,17 +61,17 @@ export function VenueProfileView({
               <div className="flex items-center gap-3 mb-2">
                 <h1 className="text-3xl">{venue.name}</h1>
                 {venue.verified && (
-                  <div className="flex items-center gap-1 px-2 py-1 bg-green-50 dark:bg-green-900/50 text-green-700 dark:text-green-300 rounded-full text-xs">
+                  <div className="flex items-center gap-1 px-2 py-1 bg-[var(--green-muted)] text-[var(--green)] rounded-full text-xs">
                     <CheckCircle className="w-3 h-3" />
                     Verified
                   </div>
                 )}
               </div>
-              <div className="flex items-center gap-2 text-neutral-600 dark:text-neutral-300 mb-2">
+              <div className="flex items-center gap-2 text-[var(--text-muted)] mb-2">
                 <MapPin className="w-4 h-4" />
                 <span className="text-sm">{venue.location}</span>
               </div>
-              <p className="text-sm text-neutral-600 dark:text-neutral-400">
+              <p className="text-sm text-[var(--text-muted)]">
                 Established {venue.foundedYear} • {yearsInBusiness} years in business
               </p>
             </div>
@@ -79,7 +79,7 @@ export function VenueProfileView({
             {isOwnProfile && (
               <button
                 onClick={onEdit}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 dark:bg-green-500 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-400 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-[var(--green)] text-white rounded-lg hover:opacity-90 transition-opacity"
               >
                 <Edit className="w-4 h-4" />
                 Edit Profile
@@ -88,27 +88,27 @@ export function VenueProfileView({
           </div>
 
           {/* Quick Stats */}
-          <div className="flex flex-wrap gap-6 text-sm pt-4 border-t border-neutral-100 dark:border-neutral-700">
+          <div className="flex flex-wrap gap-6 text-sm pt-4 border-t border-[var(--border)]">
             <div>
-              <span className="text-neutral-600 dark:text-neutral-400">Wall Spaces:</span>
-              <span className="ml-2 text-neutral-900 dark:text-neutral-50">{venue.wallSpaces}</span>
+              <span className="text-[var(--text-muted)]">Wall Spaces:</span>
+              <span className="ml-2 text-[var(--text)]">{venue.wallSpaces}</span>
             </div>
             <div>
-              <span className="text-neutral-600 dark:text-neutral-400">Current Artists:</span>
-              <span className="ml-2 text-neutral-900 dark:text-neutral-50">{venue.currentArtists}</span>
+              <span className="text-[var(--text-muted)]">Current Artists:</span>
+              <span className="ml-2 text-[var(--text)]">{venue.currentArtists}</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* About */}
-      <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700 mb-6">
+      <div className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)] mb-6">
         <h2 className="text-xl mb-3">About</h2>
-        <p className="text-neutral-600 dark:text-neutral-300 leading-relaxed">{venue.bio}</p>
+        <p className="text-[var(--text-muted)] leading-relaxed">{venue.bio}</p>
       </div>
 
       {/* Venue Labels */}
-      <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700 mb-6">
+      <div className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)] mb-6">
         <h2 className="text-xl mb-4">Venue Highlights</h2>
         <div className="flex flex-wrap gap-2">
           {allLabels.map((label) => (
@@ -123,18 +123,18 @@ export function VenueProfileView({
       </div>
 
       {/* Install Window */}
-      <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700 mb-6">
+      <div className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)] mb-6">
         <h2 className="text-xl mb-4">Installation Schedule</h2>
-        <div className="flex items-start gap-3 p-4 bg-green-50 dark:bg-green-900/30 rounded-lg border border-green-100 dark:border-green-800">
-          <Calendar className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+        <div className="flex items-start gap-3 p-4 bg-[var(--green-muted)] rounded-lg border border-[var(--border)]">
+          <Calendar className="w-5 h-5 text-[var(--green)] flex-shrink-0 mt-0.5" />
           <div>
             <p className="text-sm mb-1">
-              <span className="text-neutral-900 dark:text-neutral-50">Artwork Installation & Pickup:</span>
+              <span className="text-[var(--text)]">Artwork Installation & Pickup:</span>
             </p>
-            <p className="text-sm text-neutral-600 dark:text-neutral-300">{venue.installWindow}</p>
+            <p className="text-sm text-[var(--text-muted)]">{venue.installWindow}</p>
           </div>
         </div>
-        <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-3">
+        <p className="text-xs text-[var(--text-muted)] mt-3">
           Please coordinate with venue staff for installations outside this window.
         </p>
       </div>
@@ -143,7 +143,7 @@ export function VenueProfileView({
       <div className="mb-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl">Wall Spaces</h2>
-          <span className="text-sm text-neutral-600 dark:text-neutral-400">
+          <span className="text-sm text-[var(--text-muted)]">
             {mockWallSpaces.length} spaces
           </span>
         </div>
@@ -152,9 +152,9 @@ export function VenueProfileView({
           {mockWallSpaces.slice(0, 3).map((wall) => (
             <div
               key={wall.id}
-              className="bg-white dark:bg-neutral-800 rounded-xl overflow-hidden border border-neutral-200 dark:border-neutral-700 hover:shadow-lg transition-all group"
+              className="bg-[var(--surface-1)] rounded-xl overflow-hidden border border-[var(--border)] hover:shadow-lg transition-all group"
             >
-              <div className="aspect-video bg-neutral-100 dark:bg-neutral-900 overflow-hidden">
+              <div className="aspect-video bg-[var(--surface-2)] overflow-hidden">
                 {wall.photos && wall.photos[0] && (
                   <img
                     src={wall.photos[0]}
@@ -167,16 +167,16 @@ export function VenueProfileView({
                 <div className="flex items-start justify-between mb-2">
                   <h3 className="">{wall.name}</h3>
                   {wall.available ? (
-                    <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 rounded-full">
+                    <span className="text-xs px-2 py-1 bg-[var(--green-muted)] text-[var(--green)] rounded-full">
                       Available
                     </span>
                   ) : (
-                    <span className="text-xs px-2 py-1 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-full">
+                    <span className="text-xs px-2 py-1 bg-[var(--surface-2)] text-[var(--text-muted)] rounded-full">
                       Occupied
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-neutral-600 dark:text-neutral-300">
+                <p className="text-sm text-[var(--text-muted)]">
                   {wall.width}" × {wall.height}"
                 </p>
               </div>
@@ -188,7 +188,7 @@ export function VenueProfileView({
           <div className="mt-4 text-center">
             <button
               onClick={onViewWallspaces}
-              className="px-6 py-2 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-neutral-50 transition-colors"
+              className="px-6 py-2 text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
             >
               View all {mockWallSpaces.length} wall spaces →
             </button>
@@ -196,9 +196,9 @@ export function VenueProfileView({
         )}
 
         {mockWallSpaces.length === 0 && (
-          <div className="text-center py-16 bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700">
+          <div className="text-center py-16 bg-[var(--surface-1)] rounded-xl border border-[var(--border)]">
             <h3 className="text-xl mb-2">No wall spaces yet</h3>
-            <p className="text-neutral-600 dark:text-neutral-300">
+            <p className="text-[var(--text-muted)]">
               {isOwnProfile ? 'Add your first wall space to get started' : 'This venue hasn\'t added any wall spaces yet'}
             </p>
           </div>
@@ -206,12 +206,12 @@ export function VenueProfileView({
       </div>
 
       {/* Actions */}
-      <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700">
+      <div className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)]">
         <div className="flex flex-wrap gap-3">
           {!isOwnProfile && (
             <button
               onClick={onViewWallspaces}
-              className="flex-1 px-6 py-3 bg-green-600 dark:bg-green-500 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-400 transition-colors"
+              className="flex-1 px-6 py-3 bg-[var(--green)] text-white rounded-lg hover:opacity-90 transition-opacity"
             >
               View Open Wallspaces
             </button>
@@ -219,13 +219,13 @@ export function VenueProfileView({
           {isOwnProfile && (
             <button
               onClick={() => onNavigate?.('venue-find-artists')}
-              className="flex-1 px-6 py-3 bg-green-600 dark:bg-green-500 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-400 transition-colors"
+              className="flex-1 px-6 py-3 bg-[var(--green)] text-white rounded-lg hover:opacity-90 transition-opacity"
             >
               Find Artists to Invite
             </button>
           )}
           {!isOwnProfile && (
-            <button className="flex items-center gap-2 px-6 py-3 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-50 transition-colors">
+            <button className="flex items-center gap-2 px-6 py-3 text-[var(--text-muted)] hover:text-[var(--text)] transition-colors">
               <Flag className="w-4 h-4" />
               <span className="text-sm">Report</span>
             </button>

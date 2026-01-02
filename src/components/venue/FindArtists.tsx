@@ -109,41 +109,41 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
   });
 
   return (
-    <div className="bg-white dark:bg-neutral-950">
+    <div className="bg-[var(--bg)] text-[var(--text)]">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl mb-2 dark:text-neutral-50">Find Artists</h1>
-        <p className="text-neutral-600 dark:text-neutral-300">
+        <h1 className="text-3xl mb-2">Find Artists</h1>
+        <p className="text-[var(--text-muted)]">
           Discover local artists and invite them to display at your venue
         </p>
       </div>
 
       {/* Search & Filters */}
-      <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700 mb-6">
+      <div className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)] mb-6">
         {/* Search Bar */}
         <div className="flex gap-3 mb-4">
           <div className="flex-1 relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-muted)]" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by artist name..."
-              className="w-full pl-12 pr-4 py-3 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-50 focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400"
+              className="w-full pl-12 pr-4 py-3 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
             />
           </div>
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={`px-6 py-3 rounded-lg border-2 transition-all flex items-center gap-2 ${
               showFilters || hasActiveFilters
-                ? 'border-green-500 dark:border-green-400 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300'
-                : 'border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 hover:border-green-300 dark:hover:border-green-500'
+                ? 'border-[var(--green)] bg-[var(--green-muted)] text-[var(--green)]'
+                : 'border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] hover:border-[var(--green)]'
             }`}
           >
             <Filter className="w-5 h-5" />
             Filters
             {hasActiveFilters && (
-              <span className="ml-1 px-2 py-0.5 bg-green-600 dark:bg-green-500 text-white text-xs rounded-full">
+              <span className="ml-1 px-2 py-0.5 bg-[var(--green)] text-white text-xs rounded-full">
                 {(filters.artTypes.length + (filters.openToNew ? 1 : 0) + (filters.neighborhood ? 1 : 0))}
               </span>
             )}
@@ -152,16 +152,16 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
 
         {/* Filter Panel */}
         {showFilters && (
-          <div className="pt-4 border-t border-neutral-200 dark:border-neutral-700 space-y-4">
+          <div className="pt-4 border-t border-[var(--border)] space-y-4">
             {/* Neighborhood */}
             <div>
-              <label className="block text-sm text-neutral-700 dark:text-neutral-300 mb-2">
+              <label className="block text-sm text-[var(--text-muted)] mb-2">
                 Neighborhood
               </label>
               <select
                 value={filters.neighborhood}
                 onChange={(e) => setFilters({ ...filters, neighborhood: e.target.value })}
-                className="w-full px-4 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-50 focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400"
+                className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
               >
                 <option value="">All neighborhoods</option>
                 {neighborhoods.map((neighborhood) => (
@@ -174,7 +174,7 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
 
             {/* Art Types */}
             <div>
-              <label className="block text-sm text-neutral-700 dark:text-neutral-300 mb-2">
+              <label className="block text-sm text-[var(--text-muted)] mb-2">
                 Art Types
               </label>
               <div className="flex flex-wrap gap-2">
@@ -192,8 +192,8 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
             </div>
 
             {/* Open to Placements Toggle */}
-            <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/30 rounded-lg border border-green-100 dark:border-green-800">
-              <label className="text-sm text-neutral-900 dark:text-neutral-50">
+            <div className="flex items-center justify-between p-3 bg-[var(--green-muted)] rounded-lg border border-[var(--border)]">
+              <label className="text-sm text-[var(--text)]">
                 Only show artists open to new placements
               </label>
               <button
@@ -201,12 +201,12 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
                 onClick={() => setFilters({ ...filters, openToNew: !filters.openToNew })}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                   filters.openToNew
-                    ? 'bg-green-600 dark:bg-green-500'
-                    : 'bg-neutral-300 dark:bg-neutral-600'
+                    ? 'bg-[var(--green)]'
+                    : 'bg-[var(--border)]'
                 }`}
               >
                 <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white dark:bg-neutral-200 transition-transform ${
+                  className={`inline-block h-4 w-4 transform rounded-full bg-[var(--surface-1)] transition-transform ${
                     filters.openToNew ? 'translate-x-6' : 'translate-x-1'
                   }`}
                 />
@@ -217,7 +217,7 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
             {hasActiveFilters && (
               <button
                 onClick={clearFilters}
-                className="w-full px-4 py-2 text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-50 transition-colors"
+                className="w-full px-4 py-2 text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
               >
                 Clear all filters
               </button>
@@ -228,8 +228,8 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
 
       {/* Results Count */}
       <div className="flex items-center justify-between mb-6">
-        <p className="text-sm text-neutral-600 dark:text-neutral-400">
-          <span className="text-neutral-900 dark:text-neutral-50">{filteredArtists.length}</span> artists found
+        <p className="text-sm text-[var(--text-muted)]">
+          <span className="text-[var(--text)]">{filteredArtists.length}</span> artists found
         </p>
       </div>
 
@@ -239,7 +239,7 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
           {filteredArtists.map((artist) => (
             <div
               key={artist.id}
-              className="bg-white dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700 hover:shadow-lg transition-all"
+              className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)] hover:shadow-lg transition-all"
             >
               <div className="flex gap-4 mb-4">
                 {/* Avatar */}
@@ -247,7 +247,7 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
                   onClick={() => onViewProfile(artist.id)}
                   className="flex-shrink-0 group"
                 >
-                  <div className="w-20 h-20 rounded-full overflow-hidden bg-neutral-100 dark:bg-neutral-900 border-2 border-neutral-200 dark:border-neutral-700 group-hover:border-green-500 dark:group-hover:border-green-400 transition-colors">
+                  <div className="w-20 h-20 rounded-full overflow-hidden bg-[var(--surface-2)] border-2 border-[var(--border)] group-hover:border-[var(--green)] transition-colors">
                     <img
                       src={artist.avatar}
                       alt={artist.name}
@@ -262,17 +262,17 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
                     onClick={() => onViewProfile(artist.id)}
                     className="text-left group"
                   >
-                    <h3 className="text-xl mb-1 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">
+                    <h3 className="text-xl mb-1 group-hover:text-[var(--green)] transition-colors">
                       {artist.name}
                     </h3>
                   </button>
-                  <div className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400 mb-2">
+                  <div className="flex items-center gap-2 text-sm text-[var(--text-muted)] mb-2">
                     <MapPin className="w-3 h-3" />
                     {artist.location}
                   </div>
                   {artist.openToNew && (
-                    <div className="inline-flex items-center gap-1 px-2 py-1 bg-green-50 dark:bg-green-900/50 text-green-700 dark:text-green-300 rounded-full text-xs">
-                      <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                    <div className="inline-flex items-center gap-1 px-2 py-1 bg-[var(--green-muted)] text-[var(--green)] rounded-full text-xs">
+                      <div className="w-1.5 h-1.5 bg-[var(--green)] rounded-full"></div>
                       Open to new placements
                     </div>
                   )}
@@ -291,19 +291,19 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
                   />
                 ))}
                 {artist.artTypes.length > 3 && (
-                  <span className="text-xs text-neutral-500 dark:text-neutral-400 px-2 py-1">
+                  <span className="text-xs text-[var(--text-muted)] px-2 py-1">
                     +{artist.artTypes.length - 3} more
                   </span>
                 )}
               </div>
 
               {/* Bio Snippet */}
-              <p className="text-sm text-neutral-600 dark:text-neutral-300 mb-4 line-clamp-2">
+              <p className="text-sm text-[var(--text-muted)] mb-4 line-clamp-2">
                 {artist.bio}
               </p>
 
               {/* Portfolio Count */}
-              <div className="flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400 mb-4">
+              <div className="flex items-center gap-2 text-xs text-[var(--text-muted)] mb-4">
                 <Users className="w-3 h-3" />
                 {artist.portfolioCount} artworks in portfolio
               </div>
@@ -312,13 +312,13 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
               <div className="flex gap-3">
                 <button
                   onClick={() => onViewProfile(artist.id)}
-                  className="flex-1 px-4 py-2 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition-colors text-sm"
+                  className="flex-1 px-4 py-2 bg-[var(--surface-2)] text-[var(--text)] rounded-lg hover:bg-[var(--surface-3)] transition-colors text-sm"
                 >
                   View Profile
                 </button>
                 <button
                   onClick={() => onInviteArtist(artist.id)}
-                  className="flex-1 px-4 py-2 bg-green-600 dark:bg-green-500 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-400 transition-colors text-sm"
+                  className="flex-1 px-4 py-2 bg-[var(--green)] text-white rounded-lg hover:opacity-90 transition-opacity text-sm"
                 >
                   Invite to Apply
                 </button>
@@ -327,12 +327,12 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
           ))}
         </div>
       ) : (
-        <div className="text-center py-16 bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700">
-          <div className="w-16 h-16 bg-neutral-100 dark:bg-neutral-800 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Users className="w-8 h-8 text-neutral-400" />
+        <div className="text-center py-16 bg-[var(--surface-1)] rounded-xl border border-[var(--border)]">
+          <div className="w-16 h-16 bg-[var(--surface-2)] rounded-full flex items-center justify-center mx-auto mb-4">
+            <Users className="w-8 h-8 text-[var(--text-muted)]" />
           </div>
           <h3 className="text-xl mb-2">No artists found</h3>
-          <p className="text-neutral-600 dark:text-neutral-300 mb-6">
+          <p className="text-[var(--text-muted)] mb-6">
             {hasActiveFilters
               ? 'Try adjusting your filters to see more results'
               : 'Check back soon as new artists join the platform'}
@@ -340,7 +340,7 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
           {hasActiveFilters && (
             <button
               onClick={clearFilters}
-              className="px-6 py-2 bg-green-600 dark:bg-green-500 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-400 transition-colors"
+              className="px-6 py-2 bg-[var(--green)] text-white rounded-lg hover:opacity-90 transition-opacity"
             >
               Clear Filters
             </button>
