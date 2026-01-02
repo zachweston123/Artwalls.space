@@ -11,7 +11,8 @@ import {
   Settings,
   CheckCircle,
   XCircle,
-  Zap
+  Zap,
+  ShoppingCart
 } from 'lucide-react';
 
 interface StripeSetupProps {

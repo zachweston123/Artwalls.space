@@ -1,4 +1,4 @@
-import { Check, Sparkles, Shield, TrendingUp, Zap } from 'lucide-react';
+import { Check, Sparkles, Shield, TrendingUp, Zap, Calculator } from 'lucide-react';
 import { useState } from 'react';
 
 interface PricingPageProps {
@@ -8,7 +8,8 @@ interface PricingPageProps {
 
 export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPageProps) {
   const [showProtectionDetails, setShowProtectionDetails] = useState(false);
-  const [monthlySales, setMonthlySales] = useState(300);
+  const [saleValue, setSaleValue] = useState(100);
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
 
   const plans = [
     {
@@ -113,25 +114,22 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
     },
   ];
 
-  // Break-even calculator
-  const calculateFees = (sales: number, platformFee: number) => {
-    return sales * (platformFee / 100);
+  // Calculate profit for a given plan
+  const calculateProfit = (saleAmount: number, platformFee: number, subscriptionPrice: number) => {
+    const platformFeeAmount = saleAmount * (platformFee / 100);
+    const profit = saleAmount - platformFeeAmount - subscriptionPrice;
+    return {
+      platformFeeAmount: Math.max(0, platformFeeAmount),
+      subscriptionPrice: subscriptionPrice,
+      profit: Math.max(0, profit),
+      profitPercent: saleAmount > 0 ? ((profit / saleAmount) * 100) : 0
+    };
   };
 
-  const freeFee = calculateFees(monthlySales, 15);
-  const starterFee = calculateFees(monthlySales, 10) + 9;
-  const growthFee = calculateFees(monthlySales, 8) + 19;
-  const proFee = calculateFees(monthlySales, 6) + 39;
-
-  const getRecommendedPlan = () => {
-    const costs = [
-      { plan: 'Free', cost: freeFee },
-      { plan: 'Starter', cost: starterFee },
-      { plan: 'Growth', cost: growthFee },
-      { plan: 'Pro', cost: proFee },
-    ];
-    return costs.reduce((min, curr) => curr.cost < min.cost ? curr : min).plan;
-  };
+  const freeProfit = calculateProfit(saleValue, 15, 0);
+  const starterProfit = calculateProfit(saleValue, 10, 9);
+  const growthProfit = calculateProfit(saleValue, 8, 19);
+  const proProfit = calculateProfit(saleValue, 6, 39);
 
   return (
     <div>
