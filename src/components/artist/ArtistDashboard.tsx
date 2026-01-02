@@ -54,7 +54,6 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
 
   return (
     <div className="bg-white dark:bg-neutral-950">
-      <div>
       <div className="mb-8">
         <div className="flex items-start justify-between mb-4">
           <div>
