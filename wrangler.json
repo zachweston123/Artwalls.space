@@ -1,19 +1,4 @@
 {
-  "pages_build_output_dir": "dist",
-  "build": {
-    "command": "npm install && npm run build",
-    "cwd": "/",
-    "root_dir": "/"
-  },
-  "env": {
-    "production": {
-      "name": "artwalls",
-      "routes": [
-        {
-          "pattern": "artwalls.space",
-          "zone_name": "artwalls.space"
-        }
-      ]
-    }
-  }
+  "name": "artwalls",
+  "pages_build_output_dir": "dist"
 }

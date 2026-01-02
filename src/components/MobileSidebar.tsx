@@ -84,7 +84,7 @@ export function MobileSidebar({ isOpen, onClose, user, onNavigate, onLogout, cur
         <div className="p-6 border-b border-neutral-200">
           <div className="text-lg mb-1 text-neutral-900 dark:text-neutral-50">{user.name}</div>
           <div className={`inline-flex px-3 py-1 rounded-full text-sm ${
-            isArtist ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' : 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
+            isArtist ? 'bg-blue-50 dark:bg-neutral-700 text-blue-700 dark:text-blue-300' : 'bg-green-50 dark:bg-neutral-700 text-green-700 dark:text-green-300'
           }`}>
             {user.role === 'artist' ? 'Artist' : 'Venue'}
           </div>
@@ -105,8 +105,8 @@ export function MobileSidebar({ isOpen, onClose, user, onNavigate, onLogout, cur
                 className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${
                   currentPage === link.id
                     ? isArtist
-                      ? 'bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
-                      : 'bg-green-50 dark:bg-green-900 text-green-700 dark:text-green-300'
+                      ? 'bg-blue-50 dark:bg-neutral-700 text-blue-700 dark:text-blue-300'
+                      : 'bg-green-50 dark:bg-neutral-700 text-green-700 dark:text-green-300'
                     : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700'
                 }`}
               >

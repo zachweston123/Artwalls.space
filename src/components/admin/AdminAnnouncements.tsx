@@ -32,9 +32,9 @@ export function AdminAnnouncements({ onCreateAnnouncement }: AdminAnnouncementsP
   const getAudienceColor = (audience: string) => {
     switch (audience) {
       case 'Artists':
-        return 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300';
+        return 'bg-blue-50 dark:bg-neutral-700 text-blue-700 dark:text-blue-300';
       case 'Venues':
-        return 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300';
+        return 'bg-green-50 dark:bg-neutral-700 text-green-700 dark:text-green-300';
       default:
         return 'bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300';
     }
@@ -43,9 +43,9 @@ export function AdminAnnouncements({ onCreateAnnouncement }: AdminAnnouncementsP
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Active':
-        return 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300';
+        return 'bg-green-50 dark:bg-neutral-700 text-green-700 dark:text-green-300';
       case 'Scheduled':
-        return 'bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-300';
+        return 'bg-orange-50 dark:bg-neutral-700 text-orange-700 dark:text-orange-300';
       case 'Expired':
         return 'bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300';
       default:

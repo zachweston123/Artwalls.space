@@ -23,8 +23,8 @@ export function LabelChip({
 
   const colorClasses = selected
     ? role === 'artist'
-      ? 'bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border-2 border-blue-500 dark:border-blue-400'
-      : 'bg-green-50 dark:bg-green-900 text-green-700 dark:text-green-300 border-2 border-green-500 dark:border-green-400'
+      ? 'bg-blue-50 dark:bg-neutral-700 text-blue-700 dark:text-blue-300 border-2 border-blue-500 dark:border-blue-400'
+      : 'bg-green-50 dark:bg-neutral-700 text-green-700 dark:text-green-300 border-2 border-green-500 dark:border-green-400'
     : 'bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 border-2 border-transparent hover:border-neutral-300 dark:hover:border-neutral-600';
 
   const disabledClasses = disabled ? 'opacity-50 cursor-not-allowed' : '';
