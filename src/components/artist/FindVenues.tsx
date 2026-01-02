@@ -119,17 +119,17 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
   const currentYear = new Date().getFullYear();
 
   return (
-    <div className="bg-white dark:bg-neutral-950">
+    <div className="bg-[var(--bg)] text-[var(--text)]">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl mb-2">Find Venues</h1>
-        <p className="text-neutral-600 dark:text-neutral-300">
+        <p className="text-[var(--text-muted)]">
           Discover venues where you can display and sell your artwork
         </p>
       </div>
 
       {/* Search & Filters */}
-      <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700 mb-6">
+      <div className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)] mb-6">
         {/* Search Bar */}
         <div className="flex gap-3 mb-4">
           <div className="flex-1 relative">
@@ -139,7 +139,7 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by venue name..."
-              className="w-full pl-12 pr-4 py-3 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+              className="w-full pl-12 pr-4 py-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)] placeholder:text-[var(--text-subtle)] focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
             />
           </div>
           <button
@@ -147,7 +147,7 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
             className={`px-6 py-3 rounded-lg border-2 transition-all flex items-center gap-2 ${
               showFilters || hasActiveFilters
                 ? 'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                : 'border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 hover:border-blue-300 dark:hover:border-blue-500'
+                : 'border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-muted)] hover:border-blue-300 dark:hover:border-blue-500'
             }`}
           >
             <Filter className="w-5 h-5" />
@@ -171,7 +171,7 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
               <select
                 value={filters.neighborhood}
                 onChange={(e) => setFilters({ ...filters, neighborhood: e.target.value })}
-                className="w-full px-4 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
               >
                 <option value="">All neighborhoods</option>
                 {neighborhoods.map((neighborhood) => (
