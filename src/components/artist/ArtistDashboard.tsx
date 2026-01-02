@@ -53,55 +53,125 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
   ];
 
   return (
-    <div className="bg-white dark:bg-neutral-950">
-      <div className="mb-8">
-        <div className="flex items-start justify-between mb-4">
-          <div>
-            <h1 className="text-3xl mb-2 text-neutral-900 dark:text-neutral-50">Welcome back, {user.name.split(' ')[0] || 'Artist'}</h1>
-            <p className="text-neutral-600 dark:text-neutral-300">Here's what's happening with your artwork</p>
+    <div className="bg-neutral-950 text-neutral-50 min-h-screen">
+      {/* ════════════════════════════════════════════════════════════
+          HEADER SECTION (Welcome + Plan Chip + Upgrade Button)
+          ════════════════════════════════════════════════════════════ */}
+      <div className="border-b border-white/10 mb-8">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex-1">
+            <h1 className="text-4xl font-bold text-neutral-50 mb-1">
+              Welcome back, {user.name.split(' ')[0] || 'Artist'}
+            </h1>
+            <p className="text-neutral-400">
+              Here's what's happening with your artwork
+            </p>
           </div>
-          <PlanBadge plan="free" size="md" showUpgrade onUpgrade={() => onNavigate('plans-pricing')} />
+          
+          {/* Plan Chip + Upgrade Button (Right side) */}
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-neutral-800 border border-white/10 rounded-full">
+              <span className="text-xs font-semibold text-neutral-300">Plan:</span>
+              <span className="text-xs font-bold text-blue-400">Free</span>
+            </div>
+            <button
+              onClick={() => onNavigate('plans-pricing')}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900"
+            >
+              Upgrade
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Search Bar for Finding Venues */}
-      <div className="mb-8 bg-white dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700">
+      {/* ════════════════════════════════════════════════════════════
+          ACTION REQUIRED BANNER (Compact, Clear CTA)
+          ════════════════════════════════════════════════════════════ */}
+      <div className="mb-8 bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3 flex-1">
+          <div className="w-5 h-5 text-yellow-400 flex-shrink-0">
+            <svg fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-neutral-50">Complete your artist profile</p>
+            <p className="text-xs text-neutral-400 mt-0.5">Venues are more likely to invite artists with complete profiles</p>
+          </div>
+        </div>
         <button
-          onClick={() => onNavigate('artist-venues')}
-          className="w-full flex items-center gap-3 px-4 py-3 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-lg hover:border-blue-500 dark:hover:border-blue-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all text-left group"
+          onClick={() => onNavigate('artist-profile')}
+          className="flex-shrink-0 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900"
         >
-          <Search className="w-5 h-5 text-neutral-400 dark:text-neutral-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
-          <span className="text-neutral-600 dark:text-neutral-400 group-hover:text-neutral-700 dark:group-hover:text-neutral-300 transition-colors">
-            Find venues to display your artwork...
-          </span>
+          Complete
         </button>
-        <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-3 ml-1">
-          Browse available wall spaces and apply to showcase your work
+      </div>
+
+      {/* ════════════════════════════════════════════════════════════
+          SEARCH MODULE (Compact, Clear Input + Primary Button)
+          ════════════════════════════════════════════════════════════ */}
+      <div className="mb-8 bg-neutral-900 border border-white/10 rounded-lg p-4">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search venues by name, location, or style..."
+              className="w-full pl-10 pr-4 py-2.5 bg-neutral-800 border border-white/10 rounded-md text-neutral-50 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all"
+            />
+          </div>
+          <button
+            onClick={() => onNavigate('artist-venues')}
+            className="flex-shrink-0 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 flex items-center gap-2"
+          >
+            <Search className="w-4 h-4" />
+            <span>Find Venues</span>
+          </button>
+        </div>
+        <p className="text-xs text-neutral-500 px-1">
+          Browse {Math.floor(Math.random() * 50) + 100}+ available wall spaces across your city
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      {/* ════════════════════════════════════════════════════════════
+          STAT CARDS GRID (Minimal, Balanced)
+          ════════════════════════════════════════════════════════════ */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
             <button
               key={stat.label}
               onClick={stat.action}
-              className="bg-white dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-md transition-all text-left group"
+              className="group bg-neutral-900 border border-white/10 rounded-lg p-5 transition-all hover:bg-neutral-800/50 hover:border-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950 text-left"
             >
-              <div className="flex items-start justify-between mb-4">
-                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center group-hover:bg-blue-500 transition-colors">
-                  <Icon className="w-6 h-6 text-blue-600 dark:text-blue-300 group-hover:text-white transition-colors" />
-                </div>
+              {/* Icon - Reduced weight/size */}
+              <div className="w-10 h-10 bg-blue-500/10 rounded-md flex items-center justify-center mb-3 group-hover:bg-blue-500/20 transition-colors">
+                <Icon className="w-5 h-5 text-blue-400" />
               </div>
-              <div className="text-3xl mb-1 text-neutral-900 dark:text-neutral-50">{stat.value}</div>
-              <div className="text-neutral-600 dark:text-neutral-300 text-sm">{stat.label}</div>
-              <div className="text-neutral-400 dark:text-neutral-500 text-xs mt-1">{stat.subtext}</div>
+              
+              {/* Metric */}
+              <div className="text-2xl font-bold text-neutral-50 mb-1">
+                {stat.value}
+              </div>
+              
+              {/* Label */}
+              <div className="text-sm font-medium text-neutral-400 mb-0.5">
+                {stat.label}
+              </div>
+              
+              {/* Sublabel */}
+              <div className="text-xs text-neutral-500">
+                {stat.subtext}
+              </div>
             </button>
           );
         })}
       </div>
 
+      {/* ════════════════════════════════════════════════════════════
+          MAIN CONTENT GRID (Cards + Widgets)
+          ════════════════════════════════════════════════════════════ */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Payout setup */}
         <ArtistPayoutsCard user={user} />
@@ -116,56 +186,82 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
           onManage={() => onNavigate('artist-artworks')}
         />
 
-        {/* Upgrade Prompt (only show on free/starter/growth) */}
+        {/* Upgrade Prompt (full-width) */}
         <div className="lg:col-span-2">
           <UpgradePromptCard currentPlan="free" onUpgrade={() => onNavigate('plans-pricing')} />
         </div>
 
-        <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700">
-          <h2 className="text-xl mb-4 text-neutral-900 dark:text-neutral-50">Recent Activity</h2>
+        {/* Recent Activity Card */}
+        <div className="bg-neutral-900 border border-white/10 rounded-lg p-6">
+          <div className="mb-6">
+            <h2 className="text-lg font-bold text-neutral-50 mb-1">Recent Activity</h2>
+            <p className="text-sm text-neutral-400">Latest updates on your artwork</p>
+          </div>
+          
           <div className="space-y-4">
-            <div className="flex items-start gap-3 pb-4 border-b border-neutral-100 dark:border-neutral-700">
-              <div className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full mt-2"></div>
-              <div className="flex-1">
-                <p className="text-sm text-neutral-900 dark:text-neutral-50">Your artwork "Sunset Boulevard" was sold</p>
-                <p className="text-xs text-neutral-500 dark:text-neutral-400">2 days ago at Brew & Palette Café</p>
+            {[
+              {
+                type: 'success',
+                title: 'Your artwork "Sunset Boulevard" was sold',
+                time: '2 days ago at Brew & Palette Café',
+              },
+              {
+                type: 'info',
+                title: 'Application approved for The Artisan Lounge',
+                time: '4 days ago',
+              },
+              {
+                type: 'neutral',
+                title: 'New artwork "Urban Dreams" uploaded',
+                time: '1 week ago',
+              },
+            ].map((item, idx) => (
+              <div key={idx} className="flex items-start gap-3 pb-4 border-b border-white/10 last:border-0 last:pb-0">
+                <div
+                  className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
+                    item.type === 'success'
+                      ? 'bg-green-400'
+                      : item.type === 'info'
+                      ? 'bg-blue-400'
+                      : 'bg-neutral-600'
+                  }`}
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-neutral-50">
+                    {item.title}
+                  </p>
+                  <p className="text-xs text-neutral-500 mt-0.5">
+                    {item.time}
+                  </p>
+                </div>
               </div>
-            </div>
-            <div className="flex items-start gap-3 pb-4 border-b border-neutral-100 dark:border-neutral-700">
-              <div className="w-2 h-2 bg-blue-500 dark:bg-blue-400 rounded-full mt-2"></div>
-              <div className="flex-1">
-                <p className="text-sm text-neutral-900 dark:text-neutral-50">Application approved for The Artisan Lounge</p>
-                <p className="text-xs text-neutral-500 dark:text-neutral-400">4 days ago</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="w-2 h-2 bg-neutral-300 dark:bg-neutral-600 rounded-full mt-2"></div>
-              <div className="flex-1">
-                <p className="text-sm text-neutral-900 dark:text-neutral-50">New artwork "Urban Dreams" uploaded</p>
-                <p className="text-xs text-neutral-500 dark:text-neutral-400">1 week ago</p>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
 
-        <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700">
-          <h2 className="text-xl mb-4 text-neutral-900 dark:text-neutral-50">Quick Actions</h2>
+        {/* Quick Actions Card */}
+        <div className="bg-neutral-900 border border-white/10 rounded-lg p-6">
+          <div className="mb-6">
+            <h2 className="text-lg font-bold text-neutral-50 mb-1">Quick Actions</h2>
+            <p className="text-sm text-neutral-400">Common tasks</p>
+          </div>
+          
           <div className="space-y-3">
             <button
               onClick={() => onNavigate('artist-artworks')}
-              className="w-full px-4 py-3 bg-blue-600 dark:bg-blue-500 text-white dark:text-neutral-50 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
+              className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900"
             >
               Upload New Artwork
             </button>
             <button
               onClick={() => onNavigate('artist-venues')}
-              className="w-full px-4 py-3 bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-200 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-800 transition-colors"
+              className="w-full px-4 py-3 bg-neutral-800 hover:bg-neutral-700 text-neutral-50 font-semibold text-sm rounded-md border border-white/10 hover:border-white/20 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900"
             >
               Browse Available Venues
             </button>
             <button
               onClick={() => onNavigate('artist-sales')}
-              className="w-full px-4 py-3 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition-colors"
+              className="w-full px-4 py-3 bg-neutral-800/50 hover:bg-neutral-700/50 text-neutral-300 hover:text-neutral-50 font-semibold text-sm rounded-md border border-white/10 hover:border-white/15 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900"
             >
               View Sales Report
             </button>
