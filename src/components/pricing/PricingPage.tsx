@@ -114,22 +114,24 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
     },
   ];
 
-  // Calculate profit for a given plan
-  const calculateProfit = (saleAmount: number, platformFee: number, subscriptionPrice: number) => {
+  // Calculate earnings for a given plan
+  // Earnings = Sale Value - Platform Fee (no subscription costs deducted)
+  const calculateEarnings = (saleAmount: number, platformFee: number, subscriptionPrice: number, protectionPlanCost: number = 0) => {
     const platformFeeAmount = saleAmount * (platformFee / 100);
-    const profit = saleAmount - platformFeeAmount - subscriptionPrice;
+    const earnings = saleAmount - platformFeeAmount; // Earnings from service fee only
     return {
       platformFeeAmount: Math.max(0, platformFeeAmount),
       subscriptionPrice: subscriptionPrice,
-      profit: Math.max(0, profit),
-      profitPercent: saleAmount > 0 ? ((profit / saleAmount) * 100) : 0
+      protectionPlanCost: protectionPlanCost,
+      earnings: Math.max(0, earnings),
+      earningsPercent: saleAmount > 0 ? ((earnings / saleAmount) * 100) : 0
     };
   };
 
-  const freeProfit = calculateProfit(saleValue, 15, 0);
-  const starterProfit = calculateProfit(saleValue, 10, 9);
-  const growthProfit = calculateProfit(saleValue, 8, 19);
-  const proProfit = calculateProfit(saleValue, 6, 39);
+  const freeEarnings = calculateEarnings(saleValue, 15, 0, 3); // Free plan: $3/artwork for protection
+  const starterEarnings = calculateEarnings(saleValue, 10, 9, 3); // Starter plan: $3/artwork for protection
+  const growthEarnings = calculateEarnings(saleValue, 8, 19, 3); // Growth plan: $3/artwork for protection
+  const proEarnings = calculateEarnings(saleValue, 6, 39, 0); // Pro plan: protection included
 
   return (
     <div>
@@ -222,16 +224,16 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
 
       {/* Earnings Calculator */}
       <div className="max-w-4xl mx-auto mb-12">
-        <div className="bg-gradient-to-br from-blue-600 to-green-600 dark:from-blue-700 dark:to-green-700 rounded-xl p-8 text-white">
+        <div className="bg-blue-600 dark:bg-blue-700 rounded-xl p-8 text-white">
           <h2 className="text-2xl mb-2 text-white flex items-center gap-3">
             <Calculator className="w-7 h-7" />
             Earnings Calculator
           </h2>
           <p className="text-sm text-white/90 mb-6">
-            See how much profit you'll keep from a sale with each plan
+            See how much you'll earn from a sale before subscription and protection costs
           </p>
           
-          <div className="bg-white dark:bg-neutral-800 backdrop-blur rounded-lg p-6 mb-6">
+          <div className="bg-white dark:bg-neutral-800 rounded-lg p-6 mb-6">
             <label className="block text-sm text-neutral-900 dark:text-neutral-50 font-semibold mb-3">Sale Value ($)</label>
             <div className="flex items-center gap-4 mb-4">
               <input
@@ -253,16 +255,16 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
             <p className="text-xs text-neutral-600 dark:text-neutral-400">Adjust the slider to see how your profit changes across plans</p>
           </div>
 
-          <p className="text-sm text-white/90 mb-3 font-semibold">Click a plan to see your profit breakdown:</p>
+          <p className="text-sm text-white/90 mb-3 font-semibold">Click a plan to see your earnings breakdown:</p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {[
-              { id: 'free', name: 'Free', fee: 15, price: 0, profit: freeProfit },
-              { id: 'starter', name: 'Starter', fee: 10, price: 9, profit: starterProfit },
-              { id: 'growth', name: 'Growth', fee: 8, price: 19, profit: growthProfit },
-              { id: 'pro', name: 'Pro', fee: 6, price: 39, profit: proProfit }
+              { id: 'free', name: 'Free', fee: 15, price: 0, earnings: freeEarnings },
+              { id: 'starter', name: 'Starter', fee: 10, price: 9, earnings: starterEarnings },
+              { id: 'growth', name: 'Growth', fee: 8, price: 19, earnings: growthEarnings },
+              { id: 'pro', name: 'Pro', fee: 6, price: 39, earnings: proEarnings }
             ].map((plan) => {
-              const isSelected = selectedPlanId === plan.id || (!selectedPlanId && plan.id === 'starter');
+              const isSelected = selectedPlanId === plan.id || (!selectedPlanId && plan.id === 'pro');
               return (
                 <button
                   key={plan.id}
@@ -275,10 +277,10 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                 >
                   <div className="font-semibold text-white mb-2">{plan.name}</div>
                   <div className="text-3xl font-bold text-white">
-                    ${plan.profit.profit.toFixed(0)}
+                    ${plan.earnings.earnings.toFixed(0)}
                   </div>
                   <div className="text-xs text-white/80 mt-1">
-                    you keep
+                    you earn
                   </div>
                 </button>
               );
@@ -286,13 +288,13 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
           </div>
 
           {selectedPlanId && (
-            <div className="bg-white dark:bg-neutral-800 backdrop-blur rounded-lg p-6">
+            <div className="bg-white dark:bg-neutral-800 rounded-lg p-6">
               <h3 className="font-bold text-neutral-900 dark:text-white mb-4 text-lg">
                 {selectedPlanId === 'free' && 'Free Plan'}
                 {selectedPlanId === 'starter' && 'Starter Plan'}
                 {selectedPlanId === 'growth' && 'Growth Plan'}
                 {selectedPlanId === 'pro' && 'Pro Plan'}
-                {' '}Profit Breakdown
+                {' '}Earnings Breakdown
               </h3>
               
               <div className="space-y-3">
@@ -305,15 +307,30 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                   <>
                     <div className="flex justify-between items-center pb-3 border-b border-neutral-200 dark:border-neutral-700">
                       <span className="text-neutral-700 dark:text-neutral-400">Platform Fee (15%)</span>
-                      <span className="font-semibold text-red-600 dark:text-red-400">-${freeProfit.platformFeeAmount.toFixed(0)}</span>
+                      <span className="font-semibold text-red-600 dark:text-red-400">-${freeEarnings.platformFeeAmount.toFixed(0)}</span>
                     </div>
-                    <div className="flex justify-between items-center pb-3 border-b border-neutral-200 dark:border-neutral-700">
-                      <span className="text-neutral-700 dark:text-neutral-400">Monthly Subscription</span>
-                      <span className="font-semibold text-neutral-900 dark:text-white">$0</span>
+                    <div className="flex justify-between items-center pt-3 bg-green-100 dark:bg-green-900 p-4 rounded-lg mb-4">
+                      <span className="font-bold text-neutral-900 dark:text-green-50">Your Earnings</span>
+                      <span className="font-bold text-green-700 dark:text-green-200 text-xl">${freeEarnings.earnings.toFixed(0)}</span>
                     </div>
-                    <div className="flex justify-between items-center pt-3 bg-green-100 dark:bg-green-900 p-4 rounded-lg">
-                      <span className="font-bold text-neutral-900 dark:text-green-50">Your Profit</span>
-                      <span className="font-bold text-green-700 dark:text-green-200 text-xl">${freeProfit.profit.toFixed(0)}</span>
+                    <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg border border-blue-100 dark:border-blue-800">
+                      <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-2">After Additional Costs:</h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-blue-700 dark:text-blue-400">Monthly Subscription</span>
+                          <span className="text-blue-700 dark:text-blue-400">$0</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-blue-700 dark:text-blue-400">Protection Plan (per artwork)</span>
+                          <span className="text-blue-700 dark:text-blue-400">$3/artwork</span>
+                        </div>
+                        <div className="border-t border-blue-200 dark:border-blue-700 pt-2 mt-2">
+                          <div className="flex justify-between font-semibold">
+                            <span className="text-blue-900 dark:text-blue-200">Net Income (1 artwork sold)</span>
+                            <span className="text-blue-900 dark:text-blue-200">${Math.max(0, freeEarnings.earnings - 3).toFixed(0)}</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </>
                 )}
@@ -322,15 +339,30 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                   <>
                     <div className="flex justify-between items-center pb-3 border-b border-neutral-200 dark:border-neutral-700">
                       <span className="text-neutral-700 dark:text-neutral-400">Platform Fee (10%)</span>
-                      <span className="font-semibold text-red-600 dark:text-red-400">-${starterProfit.platformFeeAmount.toFixed(0)}</span>
+                      <span className="font-semibold text-red-600 dark:text-red-400">-${starterEarnings.platformFeeAmount.toFixed(0)}</span>
                     </div>
-                    <div className="flex justify-between items-center pb-3 border-b border-neutral-200 dark:border-neutral-700">
-                      <span className="text-neutral-700 dark:text-neutral-400">Monthly Subscription</span>
-                      <span className="font-semibold text-red-600 dark:text-red-400">-${starterProfit.subscriptionPrice.toFixed(0)}</span>
+                    <div className="flex justify-between items-center pt-3 bg-green-100 dark:bg-green-900 p-4 rounded-lg mb-4">
+                      <span className="font-bold text-neutral-900 dark:text-green-50">Your Earnings</span>
+                      <span className="font-bold text-green-700 dark:text-green-200 text-xl">${starterEarnings.earnings.toFixed(0)}</span>
                     </div>
-                    <div className="flex justify-between items-center pt-3 bg-green-100 dark:bg-green-900 p-4 rounded-lg">
-                      <span className="font-bold text-neutral-900 dark:text-green-50">Your Profit</span>
-                      <span className="font-bold text-green-700 dark:text-green-200 text-xl">${starterProfit.profit.toFixed(0)}</span>
+                    <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg border border-blue-100 dark:border-blue-800">
+                      <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-2">After Additional Costs:</h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-blue-700 dark:text-blue-400">Monthly Subscription</span>
+                          <span className="text-blue-700 dark:text-blue-400">-$9</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-blue-700 dark:text-blue-400">Protection Plan (per artwork)</span>
+                          <span className="text-blue-700 dark:text-blue-400">$3/artwork</span>
+                        </div>
+                        <div className="border-t border-blue-200 dark:border-blue-700 pt-2 mt-2">
+                          <div className="flex justify-between font-semibold">
+                            <span className="text-blue-900 dark:text-blue-200">Net Income (1 artwork sold)</span>
+                            <span className="text-blue-900 dark:text-blue-200">${Math.max(0, starterEarnings.earnings - 9 - 3).toFixed(0)}</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </>
                 )}
@@ -339,15 +371,30 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                   <>
                     <div className="flex justify-between items-center pb-3 border-b border-neutral-200 dark:border-neutral-700">
                       <span className="text-neutral-700 dark:text-neutral-400">Platform Fee (8%)</span>
-                      <span className="font-semibold text-red-600 dark:text-red-400">-${growthProfit.platformFeeAmount.toFixed(0)}</span>
+                      <span className="font-semibold text-red-600 dark:text-red-400">-${growthEarnings.platformFeeAmount.toFixed(0)}</span>
                     </div>
-                    <div className="flex justify-between items-center pb-3 border-b border-neutral-200 dark:border-neutral-700">
-                      <span className="text-neutral-700 dark:text-neutral-400">Monthly Subscription</span>
-                      <span className="font-semibold text-red-600 dark:text-red-400">-${growthProfit.subscriptionPrice.toFixed(0)}</span>
+                    <div className="flex justify-between items-center pt-3 bg-green-100 dark:bg-green-900 p-4 rounded-lg mb-4">
+                      <span className="font-bold text-neutral-900 dark:text-green-50">Your Earnings</span>
+                      <span className="font-bold text-green-700 dark:text-green-200 text-xl">${growthEarnings.earnings.toFixed(0)}</span>
                     </div>
-                    <div className="flex justify-between items-center pt-3 bg-green-100 dark:bg-green-900 p-4 rounded-lg">
-                      <span className="font-bold text-neutral-900 dark:text-green-50">Your Profit</span>
-                      <span className="font-bold text-green-700 dark:text-green-200 text-xl">${growthProfit.profit.toFixed(0)}</span>
+                    <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg border border-blue-100 dark:border-blue-800">
+                      <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-2">After Additional Costs:</h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-blue-700 dark:text-blue-400">Monthly Subscription</span>
+                          <span className="text-blue-700 dark:text-blue-400">-$19</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-blue-700 dark:text-blue-400">Protection Plan (per artwork)</span>
+                          <span className="text-blue-700 dark:text-blue-400">$3/artwork</span>
+                        </div>
+                        <div className="border-t border-blue-200 dark:border-blue-700 pt-2 mt-2">
+                          <div className="flex justify-between font-semibold">
+                            <span className="text-blue-900 dark:text-blue-200">Net Income (1 artwork sold)</span>
+                            <span className="text-blue-900 dark:text-blue-200">${Math.max(0, growthEarnings.earnings - 19 - 3).toFixed(0)}</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </>
                 )}
@@ -356,22 +403,37 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                   <>
                     <div className="flex justify-between items-center pb-3 border-b border-neutral-200 dark:border-neutral-700">
                       <span className="text-neutral-700 dark:text-neutral-400">Platform Fee (6%)</span>
-                      <span className="font-semibold text-red-600 dark:text-red-400">-${proProfit.platformFeeAmount.toFixed(0)}</span>
+                      <span className="font-semibold text-red-600 dark:text-red-400">-${proEarnings.platformFeeAmount.toFixed(0)}</span>
                     </div>
-                    <div className="flex justify-between items-center pb-3 border-b border-neutral-200 dark:border-neutral-700">
-                      <span className="text-neutral-700 dark:text-neutral-400">Monthly Subscription</span>
-                      <span className="font-semibold text-red-600 dark:text-red-400">-${proProfit.subscriptionPrice.toFixed(0)}</span>
+                    <div className="flex justify-between items-center pt-3 bg-green-100 dark:bg-green-900 p-4 rounded-lg mb-4">
+                      <span className="font-bold text-neutral-900 dark:text-green-50">Your Earnings</span>
+                      <span className="font-bold text-green-700 dark:text-green-200 text-xl">${proEarnings.earnings.toFixed(0)}</span>
                     </div>
-                    <div className="flex justify-between items-center pt-3 bg-green-100 dark:bg-green-900 p-4 rounded-lg">
-                      <span className="font-bold text-neutral-900 dark:text-green-50">Your Profit</span>
-                      <span className="font-bold text-green-700 dark:text-green-200 text-xl">${proProfit.profit.toFixed(0)}</span>
+                    <div className="bg-green-50 dark:bg-green-900/30 p-4 rounded-lg border border-green-100 dark:border-green-800">
+                      <h4 className="text-sm font-semibold text-green-900 dark:text-green-300 mb-2">After Additional Costs:</h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-green-700 dark:text-green-400">Monthly Subscription</span>
+                          <span className="text-green-700 dark:text-green-400">-$39</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-green-700 dark:text-green-400">Protection Plan</span>
+                          <span className="text-green-700 dark:text-green-400">Included FREE</span>
+                        </div>
+                        <div className="border-t border-green-200 dark:border-green-700 pt-2 mt-2">
+                          <div className="flex justify-between font-semibold">
+                            <span className="text-green-900 dark:text-green-200">Net Income (1 artwork sold)</span>
+                            <span className="text-green-900 dark:text-green-200">${Math.max(0, proEarnings.earnings - 39).toFixed(0)}</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </>
                 )}
               </div>
 
               <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-4">
-                💡 <span className="font-semibold">Pro tip:</span> Higher tiers pay for themselves through lower fees as you grow!
+                💡 <span className="font-semibold">Pro tip:</span> The Pro plan includes free protection for all your artworks and offers the lowest platform fee (6%) to maximize your earnings!
               </p>
             </div>
           )}
