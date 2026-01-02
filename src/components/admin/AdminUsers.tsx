@@ -98,7 +98,7 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
       case 'Starter':
         return 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300';
       case 'Growth':
-        return 'bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300';
+        return 'bg-neutral-100 dark:bg-neutral-900/50 text-neutral-700 dark:text-neutral-300';
       case 'Pro':
         return 'bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-300';
       default:

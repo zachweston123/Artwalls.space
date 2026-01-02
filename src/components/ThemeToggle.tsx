@@ -1,9 +1,13 @@
 import { Moon, Sun } from 'lucide-react';
-import { useTheme } from '../theme/ThemeProvider';
+import { useTheme } from 'next-themes';
 
 export function ThemeToggle({ variant = 'icon' }: { variant?: 'icon' | 'button' }) {
-  const { resolvedTheme, toggle } = useTheme();
-  const isDark = resolvedTheme === 'dark';
+  const { theme, setTheme } = useTheme();
+  const isDark = theme === 'dark';
+  
+  const toggle = () => {
+    setTheme(isDark ? 'light' : 'dark');
+  };
 
   if (variant === 'button') {
     return (

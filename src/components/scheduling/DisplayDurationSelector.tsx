@@ -135,7 +135,7 @@ export function DurationBadge({ duration, size = 'md' }: DurationBadgeProps) {
   const getBadgeStyle = (days: number) => {
     if (days === 30) return 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300';
     if (days === 90) return 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300';
-    return 'bg-purple-100 dark:bg-purple-900 text-purple-700';
+    return 'bg-neutral-100 dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300';
   };
 
   return (

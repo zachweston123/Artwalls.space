@@ -34,7 +34,7 @@ export function Login({ onLogin }: LoginProps) {
           <div className="text-center mb-12">
             <h1 className="text-4xl mb-3">Welcome to Artwalls</h1>
             <p className="text-neutral-600">
-              Connecting local artists with venues to display and sell physical artwork
+              Connecting local artists with venues to display and sell physical artworks
             </p>
           </div>
 
@@ -50,7 +50,7 @@ export function Login({ onLogin }: LoginProps) {
                 <div>
                   <h2 className="text-xl mb-2 text-neutral-900">I'm an Artist</h2>
                   <p className="text-sm text-neutral-600 dark:text-neutral-300">
-                    Share your artwork with local venues and earn 80% from every sale
+                    Share and sell your artwork at local venues
                   </p>
                 </div>
               </div>
@@ -67,7 +67,7 @@ export function Login({ onLogin }: LoginProps) {
                 <div>
                   <h2 className="text-xl mb-2 text-neutral-900">I'm a Venue</h2>
                   <p className="text-sm text-neutral-600 dark:text-neutral-300">
-                    Display rotating artwork and earn 10% commission on sales
+                    Support local artists by displaying rotating artworks and earn 10% commission on sales
                   </p>
                 </div>
               </div>

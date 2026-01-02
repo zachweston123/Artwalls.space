@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Navigation } from './components/Navigation';
 import { MobileSidebar } from './components/MobileSidebar';
 import { Login } from './components/Login';
@@ -32,6 +32,8 @@ import { AdminUserDetail } from './components/admin/AdminUserDetail';
 import { AdminAnnouncements } from './components/admin/AdminAnnouncements';
 import { AdminPromoCodes } from './components/admin/AdminPromoCodes';
 import { AdminActivityLog } from './components/admin/AdminActivityLog';
+import { AdminPasswordPrompt } from './components/admin/AdminPasswordPrompt';
+import { StripePaymentSetup } from './components/admin/StripePaymentSetup';
 
 export type UserRole = 'artist' | 'venue' | 'admin' | null;
 
@@ -47,14 +49,67 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState('login');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [hasAcceptedAgreement, setHasAcceptedAgreement] = useState(false);
+  const [showAdminPasswordPrompt, setShowAdminPasswordPrompt] = useState(false);
+  const [adminPasswordVerified, setAdminPasswordVerified] = useState(false);
+  const [pendingAdminAccess, setPendingAdminAccess] = useState(false);
+
+  // Listen for keyboard shortcut to access admin login (Ctrl+Shift+A)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Check for Ctrl+Shift+A (Windows/Linux) or Cmd+Shift+A (Mac)
+      const isCtrlOrCmd = e.ctrlKey || e.metaKey;
+      const isShift = e.shiftKey;
+      const isKeyA = e.key === 'A' || e.key === 'a';
+      
+      if (isCtrlOrCmd && isShift && isKeyA) {
+        e.preventDefault();
+        if (!currentUser) {
+          setShowAdminPasswordPrompt(true);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentUser]);
 
   const handleLogin = (user: User) => {
-    setCurrentUser(user);
+    // If trying to login as admin, require password verification
     if (user.role === 'admin') {
+      if (!adminPasswordVerified) {
+        setPendingAdminAccess(true);
+        setShowAdminPasswordPrompt(true);
+        return;
+      }
+      // Password verified, proceed
+      setCurrentUser(user);
       setCurrentPage('admin-dashboard');
+      setAdminPasswordVerified(false);
+      setPendingAdminAccess(false);
     } else {
+      // Non-admin login, proceed normally
+      setCurrentUser(user);
       setCurrentPage(user.role === 'artist' ? 'artist-dashboard' : 'venue-dashboard');
     }
+  };
+
+  const handleAdminPasswordVerified = () => {
+    setShowAdminPasswordPrompt(false);
+    setAdminPasswordVerified(true);
+    setCurrentUser({
+      id: 'admin-1',
+      name: 'Admin User',
+      email: 'admin@artwalls.com',
+      role: 'admin'
+    });
+    setCurrentPage('admin-dashboard');
+    setPendingAdminAccess(false);
+  };
+
+  const handleCancelAdminPassword = () => {
+    setShowAdminPasswordPrompt(false);
+    setAdminPasswordVerified(false);
+    setPendingAdminAccess(false);
   };
 
   const handleLogout = () => {
@@ -76,21 +131,21 @@ export default function App() {
     return (
       <div>
         <Login onLogin={handleLogin} />
+        {/* Password Prompt Modal */}
+        {showAdminPasswordPrompt && (
+          <AdminPasswordPrompt
+            onVerify={handleAdminPasswordVerified}
+            onCancel={handleCancelAdminPassword}
+          />
+        )}
         {/* Demo link to simulate QR code scan */}
-        <div className="fixed bottom-6 right-6 bg-white rounded-lg shadow-lg p-4 border border-neutral-200">
-          <p className="text-sm text-neutral-600 mb-2">Demo QR Purchase Page:</p>
+        <div className="fixed bottom-6 right-6 bg-white rounded-lg shadow-lg p-4 border border-neutral-200 dark:bg-neutral-800 dark:border-neutral-700">
+          <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-2">Demo QR Purchase Page:</p>
           <button
             onClick={() => setCurrentPage('purchase-1')}
-            className="text-sm text-blue-600 hover:text-blue-700 underline mb-2 block"
+            className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline mb-2 block"
           >
             View Customer Purchase Page
-          </button>
-          <p className="text-sm text-neutral-600 mb-2 pt-2 border-t">Admin Demo:</p>
-          <button
-            onClick={() => handleLogin({ id: 'admin-1', name: 'Admin User', email: 'admin@artwalls.com', role: 'admin' })}
-            className="text-sm text-neutral-900 hover:text-neutral-700 underline"
-          >
-            Sign in as Admin
           </button>
         </div>
       </div>
@@ -117,6 +172,7 @@ export default function App() {
             {currentPage === 'admin-promo-codes' && (
               <AdminPromoCodes onCreatePromoCode={() => {/* TODO: Open modal */}} />
             )}
+            {currentPage === 'admin-stripe-payments' && <StripePaymentSetup onNavigate={handleNavigate} />}
             {currentPage === 'admin-activity-log' && <AdminActivityLog />}
           </main>
         </div>
@@ -203,6 +259,7 @@ export default function App() {
             {currentPage === 'admin-user-detail' && <AdminUserDetail onNavigate={handleNavigate} />}
             {currentPage === 'admin-announcements' && <AdminAnnouncements onNavigate={handleNavigate} />}
             {currentPage === 'admin-promo-codes' && <AdminPromoCodes onNavigate={handleNavigate} />}
+            {currentPage === 'admin-stripe-payments' && <StripePaymentSetup onNavigate={handleNavigate} />}
             {currentPage === 'admin-activity-log' && <AdminActivityLog onNavigate={handleNavigate} />}
           </>
         )}

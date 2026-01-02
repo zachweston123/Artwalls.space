@@ -43,8 +43,8 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
       delta: '89% capacity',
       deltaType: 'neutral' as const,
       icon: Frame,
-      iconBg: 'bg-purple-100 dark:bg-purple-900',
-      iconColor: 'text-purple-600 dark:text-purple-300',
+      iconBg: 'bg-neutral-100 dark:bg-neutral-900',
+      iconColor: 'text-neutral-600 dark:text-neutral-300',
     },
     {
       label: 'Pending Invites',

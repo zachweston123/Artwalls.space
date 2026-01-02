@@ -210,14 +210,14 @@ export function ArtistAgreement({ onNavigate, onAccept, hasAccepted = false }: A
                 <h2 className="text-xl mb-3 text-neutral-900">8. Subscriptions, Fees, Active Displays, and Protection Plan</h2>
                 
                 <h3 className="text-base mb-2 mt-4 text-neutral-900">Plans</h3>
-                <p className="text-neutral-700 leading-relaxed mb-3">>
+                <p className="text-neutral-700 leading-relaxed mb-3">
                   Artists may use Artwalls on a Free plan or a paid subscription plan (Starter, Growth, Pro). 
                   Plan features, limits, pricing, and overage rules are shown on the Plans & Pricing page and may 
                   be updated from time to time.
                 </p>
 
                 <h3 className="text-base mb-2 mt-4 text-neutral-900">Platform fee on sales</h3>
-                <p className="text-neutral-700 leading-relaxed mb-2">>
+                <p className="text-neutral-700 leading-relaxed mb-2">
                   For sales processed through Artwalls, Artwalls charges a platform fee that depends on your plan:
                 </p>
                 <ul className="list-disc list-inside space-y-2 text-neutral-700 leading-relaxed mb-3">

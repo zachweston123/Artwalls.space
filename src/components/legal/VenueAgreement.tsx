@@ -144,7 +144,7 @@ export function VenueAgreement({ onNavigate, onAccept, hasAccepted = false }: Ve
                 <h2 className="text-xl mb-3 text-neutral-900">4. Wallspace Safety, Duty of Care, and Damage Reporting</h2>
                 
                 <h3 className="text-base mb-2 mt-4 text-neutral-900">Wallspace safety</h3>
-                <p className="text-neutral-700 leading-relaxed mb-2">>
+                <p className="text-neutral-700 leading-relaxed mb-2">
                   You agree to list and use only wallspaces that meet these minimum conditions unless clearly 
                   disclosed and accepted by the artist:
                 </p>
@@ -156,7 +156,7 @@ export function VenueAgreement({ onNavigate, onAccept, hasAccepted = false }: Ve
                 </ul>
 
                 <h3 className="text-base mb-2 mt-4 text-neutral-900">Duty of care</h3>
-                <p className="text-neutral-700 leading-relaxed mb-3\">
+                <p className="text-neutral-700 leading-relaxed mb-3">
                   While artwork is displayed at your venue, you agree to exercise reasonable care, including 
                   preventing staff/customer handling and avoiding moving artwork without the artist's permission 
                   (except urgent safety reasons, with prompt notice).

@@ -30,10 +30,10 @@ export function UpgradePromptCard({ currentPlan, onUpgrade }: UpgradePromptCardP
   const prompt = prompts[currentPlan];
 
   return (
-    <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl p-6 text-white">
+    <div className="bg-blue-600 dark:bg-blue-500 rounded-xl p-6 text-white">
       <div className="flex items-start gap-4">
         <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center flex-shrink-0">
-          <Sparkles className="w-6 h-6" />
+          <Sparkles className="w-6 h-6 text-blue-600" />
         </div>
         <div className="flex-1">
           <h3 className="text-lg mb-2 text-white">{prompt.title}</h3>

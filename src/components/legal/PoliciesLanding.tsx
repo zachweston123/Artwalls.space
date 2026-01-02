@@ -19,19 +19,19 @@ export function PoliciesLanding({ onNavigate }: PoliciesLandingProps) {
         {/* Pricing & Plans Card */}
         <button
           onClick={() => onNavigate('plans-pricing')}
-          className="bg-white rounded-xl border border-neutral-200 p-6 hover:shadow-lg transition-shadow text-left group"
+          className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 p-6 hover:shadow-lg transition-shadow text-left group"
         >
-          <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-purple-200 transition-colors">
-            <DollarSign className="w-6 h-6 text-purple-600" />
+          <div className="w-12 h-12 bg-neutral-100 dark:bg-neutral-900 rounded-lg flex items-center justify-center mb-4 group-hover:bg-neutral-200 dark:group-hover:bg-neutral-700 transition-colors">
+            <DollarSign className="w-6 h-6 text-neutral-600 dark:text-neutral-400" />
           </div>
-          <h2 className="text-xl mb-2 text-neutral-900">Pricing & Plans</h2>
-          <p className="text-sm text-neutral-600 mb-4">
+          <h2 className="text-xl mb-2 text-neutral-900 dark:text-neutral-50">Pricing & Plans</h2>
+          <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
             Artwalls offers a Free plan plus paid subscriptions: Starter ($9/mo), Growth ($19/mo), and Pro ($39/mo). 
             Plans differ by active displays included (Free 1, Starter 4, Growth 10, Pro unlimited), platform fee on sales 
             (Free 15%, Starter 10%, Growth 8%, Pro 6%), and payout timing (Free weekly payouts; paid plans standard/faster). 
             Additional active displays may incur monthly overage charges as shown on the Plans & Pricing page.
           </p>
-          <div className="flex items-center gap-2 text-sm text-purple-600">
+          <div className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400">
             <span>View Plans & Pricing</span>
             <span>→</span>
           </div>
