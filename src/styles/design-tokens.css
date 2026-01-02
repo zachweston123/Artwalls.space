@@ -1,101 +1,265 @@
-/* ========================================
-   ARTWALLS DARK MODE DESIGN TOKENS
-   Premium, cohesive, modern aesthetic
-   ======================================== */
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════
+ * ARTWALLS COHESIVE DESIGN SYSTEM
+ * Premium SaaS Dashboard + Artist/Venue Marketplace
+ * 
+ * Token System: Light Mode + Dark Mode
+ * Philosophy: Calm, modern, art-forward. Premium feel without unnecessary complexity.
+ * 
+ * Key Principles:
+ * 1. One accent color (blue) + semantic colors (success/warn/danger)
+ * 2. 3-tier surface elevation (base, card, elevated)
+ * 3. Consistent contrast: 4.5:1 body text, 3:1 large text (WCAG AA)
+ * 4. All colors defined as tokens; no arbitrary grays or one-offs
+ * ═══════════════════════════════════════════════════════════════════════════════
+ */
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   LIGHT MODE (Default, applies to body by default)
+   ───────────────────────────────────────────────────────────────────────────── */
 
 :root {
-  /* ──────────────────────────────────────
-     BACKGROUND & SURFACES
-     Deep charcoal with elevation system
-     ────────────────────────────────────── */
-  --bg-base: #0f0f0f;           /* Deepest background - page/body */
-  --bg-secondary: #1a1a1a;      /* Subtle lift from base */
-  
-  --surface-1: #1e1e1e;         /* Primary card/container surface */
-  --surface-2: #252525;         /* Elevated card (hover, nested) */
-  --surface-3: #2d2d2d;         /* Highest elevation (modals, popovers) */
-  --surface-interactive: #323232; /* Input fields, interactive surfaces */
+  /* BACKGROUND LAYERS */
+  --bg-base: #ffffff;
+  --bg-secondary: #f9f8f7;
 
-  /* ──────────────────────────────────────
-     TEXT & TYPOGRAPHY
-     High contrast, readable hierarchy
-     ────────────────────────────────────── */
-  --text-primary: #f5f5f5;      /* Primary headings, high emphasis */
-  --text-secondary: #e0e0e0;    /* Body text, secondary content */
-  --text-muted: #a0a0a0;        /* Labels, hints, disabled text */
-  --text-subtle: #808080;       /* Captions, timestamps, tertiary */
+  /* SURFACES (Card elevation levels) */
+  --surface-1: #ffffff;
+  --surface-1-border: #e5e3e0;
+  --surface-2: #fdfcfb;
+  --surface-2-border: #ede9e6;
+  --surface-3: #f3f0eb;
+  --surface-3-border: #d9d4cf;
 
-  /* ──────────────────────────────────────
-     BORDERS & DIVIDERS
-     Subtle, low-opacity light strokes
-     ────────────────────────────────────── */
-  --border-subtle: rgba(255, 255, 255, 0.08);  /* Faint dividers */
-  --border-default: rgba(255, 255, 255, 0.12); /* Card borders */
-  --border-emphasis: rgba(255, 255, 255, 0.16); /* Focused inputs */
+  /* TEXT LAYERS */
+  --text: #1a1a18;
+  --text-secondary: #4a4a48;
+  --text-muted: #7a7a78;
+  --text-subtle: #a8a8a6;
+  --text-inverse: #ffffff;
 
-  /* ──────────────────────────────────────
-     ACCENT COLORS (Blue family, spare use)
-     Primary actions, links, badges
-     ────────────────────────────────────── */
-  --accent: #3b82f6;            /* Primary blue (Tailwind blue-500) */
-  --accent-hover: #2563eb;      /* Darker on hover (blue-600) */
-  --accent-light: #60a5fa;      /* Lighter shade for backgrounds (blue-400) */
-  --accent-contrast: #f5f5f5;   /* Text on accent background */
+  /* BORDERS */
+  --border-subtle: #f0ede8;
+  --border-default: #e5e3e0;
+  --border-emphasis: #d9d4cf;
 
-  /* ──────────────────────────────────────
-     SEMANTIC COLORS
-     Status, feedback, alerts
-     ────────────────────────────────────── */
-  --success: #10b981;           /* Green for positive actions */
-  --success-light: #d1fae5;     /* Light green for backgrounds */
-  --success-dark: #047857;      /* Dark green for text on light bg */
+  /* BRAND ACCENT (Blue) */
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-pressed: #1e40af;
+  --accent-light: #3b82f6;
+  --accent-lighter: #60a5fa;
+  --accent-bg: #eff6ff;
+  --accent-border: #bfdbfe;
 
-  --warning: #f59e0b;           /* Amber for warnings */
-  --warning-light: #fef3c7;     /* Light amber background */
-  --warning-dark: #92400e;      /* Dark amber for text */
+  /* SEMANTIC COLORS - SUCCESS (Green) */
+  --success: #059669;
+  --success-light: #10b981;
+  --success-bg: #ecfdf5;
+  --success-border: #a7f3d0;
+  --success-text: #065f46;
 
-  --danger: #ef4444;            /* Red for destructive actions */
-  --danger-light: #fee2e2;      /* Light red background */
-  --danger-dark: #7f1d1d;       /* Dark red for text */
+  /* SEMANTIC COLORS - WARNING (Amber) */
+  --warning: #d97706;
+  --warning-light: #f59e0b;
+  --warning-bg: #fffbeb;
+  --warning-border: #fde68a;
+  --warning-text: #78350f;
 
-  /* ──────────────────────────────────────
-     FOCUS & ACCESSIBILITY
-     Keyboard navigation, focus rings
-     ────────────────────────────────────── */
-  --focus-ring: #60a5fa;        /* Blue focus outline (bright enough) */
+  /* SEMANTIC COLORS - DANGER (Red) */
+  --danger: #dc2626;
+  --danger-light: #ef4444;
+  --danger-bg: #fef2f2;
+  --danger-border: #fecaca;
+  --danger-text: #7f1d1d;
+
+  /* STATE COLORS */
+  --disabled-bg: #e5e3e0;
+  --disabled-text: #a8a8a6;
+  --disabled-border: #d9d4cf;
+  --focus-ring: #2563eb;
   --focus-ring-width: 2px;
   --focus-ring-offset: 2px;
 
-  /* ──────────────────────────────────────
-     SPACING & RADIUS
-     Consistent system
-     ────────────────────────────────────── */
+  /* SHADOWS (soft, premium) */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.12);
+
+  /* SPACING SCALE */
   --radius-sm: 6px;
   --radius-md: 8px;
   --radius-lg: 12px;
   --radius-xl: 16px;
 
-  /* ──────────────────────────────────────
-     SHADOWS
-     Soft ambient, no harsh drop shadows
-     ────────────────────────────────────── */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 6px 0 rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 10px 15px 0 rgba(0, 0, 0, 0.5);
-  --shadow-glow: 0 0 20px 0 rgba(59, 130, 246, 0.2); /* Subtle blue glow for accent */
-
-  /* ──────────────────────────────────────
-     TRANSITIONS & MOTION
-     Snappy, accessible
-     ────────────────────────────────────── */
+  /* TRANSITIONS */
   --transition-fast: 150ms ease-out;
   --transition-normal: 200ms ease-out;
   --transition-slow: 300ms ease-out;
 
-  @media (prefers-reduced-motion: reduce) {
-    --transition-fast: 0ms;
-    --transition-normal: 0ms;
-    --transition-slow: 0ms;
+  color-scheme: light;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   DARK MODE (When @media (prefers-color-scheme: dark) or .dark class applied)
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* BACKGROUND LAYERS */
+    --bg-base: #0f0f0f;
+    --bg-secondary: #141412;
+
+    /* SURFACES (Card elevation levels) */
+    --surface-1: #1a1a18;
+    --surface-1-border: #2d2d2a;
+    --surface-2: #252522;
+    --surface-2-border: #3a3a36;
+    --surface-3: #2d2d2a;
+    --surface-3-border: #4a4a46;
+
+    /* TEXT LAYERS */
+    --text: #f5f5f3;
+    --text-secondary: #d9d9d6;
+    --text-muted: #a8a8a6;
+    --text-subtle: #7a7a78;
+    --text-inverse: #1a1a18;
+
+    /* BORDERS */
+    --border-subtle: #2a2a27;
+    --border-default: #3a3a36;
+    --border-emphasis: #4a4a46;
+
+    /* BRAND ACCENT (Blue) */
+    --accent: #3b82f6;
+    --accent-hover: #2563eb;
+    --accent-pressed: #1d4ed8;
+    --accent-light: #60a5fa;
+    --accent-lighter: #93c5fd;
+    --accent-bg: #1e3a8a;
+    --accent-border: #1e40af;
+
+    /* SEMANTIC COLORS - SUCCESS (Green) */
+    --success: #10b981;
+    --success-light: #34d399;
+    --success-bg: #064e3b;
+    --success-border: #047857;
+    --success-text: #d1fae5;
+
+    /* SEMANTIC COLORS - WARNING (Amber) */
+    --warning: #f59e0b;
+    --warning-light: #fbbf24;
+    --warning-bg: #78350f;
+    --warning-border: #a16207;
+    --warning-text: #fef3c7;
+
+    /* SEMANTIC COLORS - DANGER (Red) */
+    --danger: #ef4444;
+    --danger-light: #f87171;
+    --danger-bg: #7f1d1d;
+    --danger-border: #b91c1c;
+    --danger-text: #fee2e2;
+
+    /* STATE COLORS */
+    --disabled-bg: #2d2d2a;
+    --disabled-text: #7a7a78;
+    --disabled-border: #3a3a36;
+    --focus-ring: #60a5fa;
+    --focus-ring-offset: #0f0f0f;
+
+    /* SHADOWS (subtle on dark) */
+    --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6);
+
+    color-scheme: dark;
+  }
+}
+
+/* Also apply dark tokens when .dark class is on html element */
+.dark {
+  --bg-base: #0f0f0f;
+  --bg-secondary: #141412;
+  --surface-1: #1a1a18;
+  --surface-1-border: #2d2d2a;
+  --surface-2: #252522;
+  --surface-2-border: #3a3a36;
+  --surface-3: #2d2d2a;
+  --surface-3-border: #4a4a46;
+  --text: #f5f5f3;
+  --text-secondary: #d9d9d6;
+  --text-muted: #a8a8a6;
+  --text-subtle: #7a7a78;
+  --text-inverse: #1a1a18;
+  --border-subtle: #2a2a27;
+  --border-default: #3a3a36;
+  --border-emphasis: #4a4a46;
+  --accent: #3b82f6;
+  --accent-hover: #2563eb;
+  --accent-pressed: #1d4ed8;
+  --accent-light: #60a5fa;
+  --accent-lighter: #93c5fd;
+  --accent-bg: #1e3a8a;
+  --accent-border: #1e40af;
+  --success: #10b981;
+  --success-light: #34d399;
+  --success-bg: #064e3b;
+  --success-border: #047857;
+  --success-text: #d1fae5;
+  --warning: #f59e0b;
+  --warning-light: #fbbf24;
+  --warning-bg: #78350f;
+  --warning-border: #a16207;
+  --warning-text: #fef3c7;
+  --danger: #ef4444;
+  --danger-light: #f87171;
+  --danger-bg: #7f1d1d;
+  --danger-border: #b91c1c;
+  --danger-text: #fee2e2;
+  --disabled-bg: #2d2d2a;
+  --disabled-text: #7a7a78;
+  --disabled-border: #3a3a36;
+  --focus-ring: #60a5fa;
+  --focus-ring-offset: #0f0f0f;
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6);
+  color-scheme: dark;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   REDUCED MOTION SUPPORT
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --transition-fast: 0.01ms ease-out;
+    --transition-normal: 0.01ms ease-out;
+    --transition-slow: 0.01ms ease-out;
+  }
+
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   HIGH CONTRAST MODE SUPPORT
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@media (prefers-contrast: more) {
+  :root {
+    --text-subtle: var(--text-muted);
+    --border-default: var(--border-emphasis);
+    --border-subtle: var(--border-default);
   }
 }
 
