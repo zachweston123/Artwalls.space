@@ -161,8 +161,11 @@ html[data-theme="dark"] .border-neutral-300 { border-color: var(--border) !impor
 .bg-\[var\(--blue\)\] { background-color: var(--blue); }
 .bg-\[var\(--blue-hover\)\] { background-color: var(--blue-hover); }
 .bg-\[var\(--blue-muted\)\] { background-color: var(--blue-muted); }
+.bg-\[var\(--on-blue\)\] { background-color: var(--on-blue); }
 .bg-\[var\(--green\)\] { background-color: var(--green); }
 .bg-\[var\(--green-muted\)\] { background-color: var(--green-muted); }
+.bg-\[var\(--warning\)\] { background-color: var(--warning); }
+.bg-\[var\(--danger\)\] { background-color: var(--danger); }
 .bg-\[var\(--success\)\] { background-color: var(--success); }
 .bg-\[var\(--success-muted\)\] { background-color: var(--success-muted); }
 
@@ -197,6 +200,7 @@ html[data-theme="dark"] .border-neutral-300 { border-color: var(--border) !impor
 .hover\:bg-\[var\(--accent-hover\)\]:hover { background-color: var(--accent-hover); }
 .hover\:bg-\[var\(--blue\)\]:hover { background-color: var(--blue); }
 .hover\:bg-\[var\(--blue-hover\)\]:hover { background-color: var(--blue-hover); }
+.hover\:bg-\[var\(--green-muted\)\]:hover { background-color: var(--green-muted); }
 .hover\:bg-\[var\(--green\)\]:hover { background-color: var(--green); }
 .hover\:border-\[var\(--focus\)\]:hover { border-color: var(--focus); }
 .hover\:border-\[var\(--blue\)\]:hover { border-color: var(--blue); }
@@ -206,6 +210,7 @@ html[data-theme="dark"] .border-neutral-300 { border-color: var(--border) !impor
 .hover\:text-\[var\(--accent\)\]:hover { color: var(--accent); }
 
 /* Group-hover variants */
+.group:hover .group-hover\:bg-\[var\(--surface-3\)\] { background-color: var(--surface-3); }
 .group:hover .group-hover\:bg-\[var\(--blue\)\] { background-color: var(--blue); }
 .group:hover .group-hover\:bg-\[var\(--green\)\] { background-color: var(--green); }
 .group:hover .group-hover\:border-\[var\(--green\)\] { border-color: var(--green); }
