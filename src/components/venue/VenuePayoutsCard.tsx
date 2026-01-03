@@ -12,11 +12,11 @@ type ConnectStatus = {
   requirements?: any;
 };
 
-interface ArtistPayoutsCardProps {
+interface VenuePayoutsCardProps {
   user: User;
 }
 
-export function ArtistPayoutsCard({ user }: ArtistPayoutsCardProps) {
+export function VenuePayoutsCard({ user }: VenuePayoutsCardProps) {
   const [status, setStatus] = useState<ConnectStatus>({ hasAccount: false });
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState(false);
@@ -26,7 +26,7 @@ export function ArtistPayoutsCard({ user }: ArtistPayoutsCardProps) {
     setLoading(true);
     setError(null);
     try {
-      const data = await apiGet<ConnectStatus>(`/api/stripe/connect/artist/status?artistId=${encodeURIComponent(user.id)}`);
+      const data = await apiGet<ConnectStatus>(`/api/stripe/connect/venue/status?venueId=${encodeURIComponent(user.id)}`);
       setStatus(data);
     } catch (e: any) {
       setError(e?.message || 'Unable to load payout status');
@@ -46,16 +46,16 @@ export function ArtistPayoutsCard({ user }: ArtistPayoutsCardProps) {
       setError(null);
 
       // 1) Ensure account exists
-      await apiPost<{ accountId: string }>('/api/stripe/connect/artist/create-account', {
-        artistId: user.id,
+      await apiPost<{ accountId: string }>('/api/stripe/connect/venue/create-account', {
+        venueId: user.id,
         email: user.email,
         name: user.name,
       });
 
       // 2) Get onboarding link
       const { url } = await apiPost<{ url: string }>(
-        '/api/stripe/connect/artist/account-link',
-        { artistId: user.id },
+        '/api/stripe/connect/venue/account-link',
+        { venueId: user.id },
       );
 
       window.open(url, '_blank', 'noopener,noreferrer');
@@ -63,7 +63,6 @@ export function ArtistPayoutsCard({ user }: ArtistPayoutsCardProps) {
       setError(e?.message || 'Unable to start Stripe onboarding');
     } finally {
       setWorking(false);
-      // Refresh after user returns
       setTimeout(() => refresh(), 2000);
     }
   };
@@ -73,8 +72,8 @@ export function ArtistPayoutsCard({ user }: ArtistPayoutsCardProps) {
       setWorking(true);
       setError(null);
       const { url } = await apiPost<{ url: string }>(
-        '/api/stripe/connect/artist/login-link',
-        { artistId: user.id },
+        '/api/stripe/connect/venue/login-link',
+        { venueId: user.id },
       );
       window.open(url, '_blank', 'noopener,noreferrer');
     } catch (e: any) {
@@ -92,12 +91,12 @@ export function ArtistPayoutsCard({ user }: ArtistPayoutsCardProps) {
         <div>
           <div className="flex items-center gap-2 mb-2">
             <div className="w-10 h-10 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg flex items-center justify-center">
-              <CreditCard className="w-5 h-5 text-[var(--blue)]" />
+              <CreditCard className="w-5 h-5 text-[var(--green)]" />
             </div>
-            <h2 className="text-xl text-[var(--text)]">Get paid automatically</h2>
+            <h2 className="text-xl text-[var(--text)]">Enable venue payouts</h2>
           </div>
           <p className="text-sm text-[var(--text-muted)]">
-            Artwalls uses Stripe Connect to route each sale to your bank account.
+            Stripe Connect routes each sale’s venue share to your bank account.
           </p>
         </div>
         {!loading && (
@@ -134,11 +133,11 @@ export function ArtistPayoutsCard({ user }: ArtistPayoutsCardProps) {
               <div>
                 <p className="text-[var(--text)]">
                   {isReady
-                    ? 'You’re ready to receive payouts.'
-                    : 'Complete onboarding to receive payouts.'}
+                    ? 'Your venue is ready to receive payouts.'
+                    : 'Complete onboarding to receive venue payouts.'}
                 </p>
                 <p className="text-[var(--text-muted)]">
-                  Stripe will collect identity and bank info securely.
+                  Stripe will collect business and bank info securely.
                 </p>
               </div>
             </div>
@@ -148,19 +147,19 @@ export function ArtistPayoutsCard({ user }: ArtistPayoutsCardProps) {
                 <button
                   onClick={startOnboarding}
                   disabled={working}
-                  className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 bg-[var(--blue)] text-[var(--on-blue)] rounded-lg hover:bg-[var(--blue-hover)] disabled:opacity-60"
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 disabled:opacity-60"
                 >
                   {working ? <Loader2 className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-4 h-4" />}
-                  Set up payouts
+                  Set up venue payouts
                 </button>
               ) : (
                 <button
                   onClick={openStripeDashboard}
                   disabled={working}
-                  className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 bg-[var(--blue)] text-[var(--on-blue)] rounded-lg hover:bg-[var(--blue-hover)] disabled:opacity-60"
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 disabled:opacity-60"
                 >
                   {working ? <Loader2 className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-4 h-4" />}
-                  Manage payouts
+                  Manage venue payouts
                 </button>
               )}
 

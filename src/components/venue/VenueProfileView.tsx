@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { MapPin, Edit, Flag, CheckCircle, Calendar } from 'lucide-react';
+import { VenuePayoutsCard } from './VenuePayoutsCard';
 import { LabelChip } from '../LabelChip';
 import { apiGet } from '../../lib/api';
 import type { User } from '../../App';
@@ -225,6 +226,13 @@ export function VenueProfileView({
           </div>
         )}
       </div>
+
+      {/* Payouts setup (venue owner only) */}
+      {isOwnProfile && (
+        <div className="mb-6">
+          <VenuePayoutsCard user={currentUser} />
+        </div>
+      )}
 
       {/* Actions */}
       <div className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)]">
