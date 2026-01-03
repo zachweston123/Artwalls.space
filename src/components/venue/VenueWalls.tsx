@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Plus, X, Frame, Upload, Image as ImageIcon } from 'lucide-react';
 import { apiGet, apiPost } from '../../lib/api';
 import { supabase } from '../../lib/supabase';
+import { uploadWallspacePhoto } from '../../lib/storage';
 
 type WallSpace = {
   id: string;
@@ -23,6 +24,8 @@ export function VenueWalls() {
     description: '',
     photos: [] as string[],
   });
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -78,11 +81,22 @@ export function VenueWalls() {
     }
   };
 
-  const handlePhotoUpload = () => {
-    // Simulate photo upload
-    const mockPhotoUrl = 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800';
-    if (newWall.photos.length < 6) {
-      setNewWall({ ...newWall, photos: [...newWall.photos, mockPhotoUrl] });
+  const handlePhotoUpload = async (file?: File) => {
+    if (!file) return;
+    try {
+      setUploadingPhoto(true);
+      setUploadError(null);
+      const { data } = await supabase.auth.getUser();
+      const venueId = data.user?.id;
+      if (!venueId) throw new Error('Not signed in as venue');
+      const url = await uploadWallspacePhoto(venueId, file);
+      if (newWall.photos.length < 6) {
+        setNewWall({ ...newWall, photos: [...newWall.photos, url] });
+      }
+    } catch (err: any) {
+      setUploadError(err?.message || 'Upload failed');
+    } finally {
+      setUploadingPhoto(false);
     }
   };
 
@@ -182,15 +196,19 @@ export function VenueWalls() {
 
                 {/* Upload Area */}
                 {newWall.photos.length < 6 && (
-                  <button
-                    type="button"
-                    onClick={handlePhotoUpload}
-                    className="w-full border-2 border-dashed border-[var(--border)] rounded-xl p-8 sm:p-12 text-center hover:border-[var(--focus)] transition-colors cursor-pointer mb-4"
-                  >
+                  <label className="w-full border-2 border-dashed border-[var(--border)] rounded-xl p-8 sm:p-12 text-center hover:border-[var(--focus)] transition-colors cursor-pointer mb-4 inline-block">
                     <Upload className="w-10 h-10 sm:w-12 sm:h-12 text-[var(--text-muted)] mx-auto mb-3" />
                     <p className="text-[var(--text-muted)] mb-1">Click to upload or drag and drop</p>
                     <p className="text-xs text-[var(--text-muted)]">PNG, JPG up to 10MB</p>
-                  </button>
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handlePhotoUpload(e.target.files?.[0])} />
+                  </label>
+                )}
+
+                {uploadingPhoto && (
+                  <p className="text-xs text-[var(--text-muted)] mb-3">Uploading photo…</p>
+                )}
+                {uploadError && (
+                  <p className="text-xs text-[var(--danger)] mb-3">{uploadError}</p>
                 )}
 
                 {/* Photo Thumbnails */}

@@ -4,6 +4,8 @@ import { mockArtworks } from '../../data/mockData';
 import type { Artwork } from '../../data/mockData';
 import type { User } from '../../App';
 import { apiGet, apiPost } from '../../lib/api';
+import { supabase } from '../../lib/supabase';
+import { uploadArtworkImage } from '../../lib/storage';
 
 interface ArtistArtworksProps {
   user: User;
@@ -21,6 +23,8 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const refresh = async () => {
     try {
@@ -41,6 +45,24 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
     refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user.id]);
+
+  const handleFileSelected = async (file?: File) => {
+    if (!file) return;
+    try {
+      setUploading(true);
+      setUploadError(null);
+      // Ensure session exists
+      const { data } = await supabase.auth.getUser();
+      const authedId = data.user?.id;
+      const artistId = authedId || user.id;
+      const url = await uploadArtworkImage(artistId, file);
+      setNewArtwork({ ...newArtwork, imageUrl: url });
+    } catch (err: any) {
+      setUploadError(err?.message || 'Upload failed');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -128,22 +150,33 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label className="block text-sm text-[var(--text)] mb-2">Artwork Image URL</label>
-                <div className="flex gap-3">
-                  <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-[var(--surface-2)] border border-[var(--border)]">
+                <label className="block text-sm text-[var(--text)] mb-2">Artwork Image</label>
+                <div className="flex gap-3 items-center">
+                  <label className="flex items-center justify-center w-12 h-12 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] cursor-pointer">
                     <Upload className="w-5 h-5 text-[var(--text-muted)]" />
-                  </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => handleFileSelected(e.target.files?.[0])}
+                    />
+                  </label>
                   <input
                     type="url"
                     value={newArtwork.imageUrl}
                     onChange={(e) => setNewArtwork({ ...newArtwork, imageUrl: e.target.value })}
                     className="flex-1 px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
-                    placeholder="https://... (optional)"
+                    placeholder="Paste an image URL or upload a file"
                   />
                 </div>
-                <p className="text-xs text-[var(--text-muted)] mt-2">
-                  For production, replace this with real uploads (S3/Supabase Storage/Cloudinary).
-                </p>
+                {uploading && (
+                  <p className="text-xs text-[var(--text-muted)] mt-2 inline-flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" /> Uploading image…
+                  </p>
+                )}
+                {uploadError && (
+                  <p className="text-xs text-[var(--danger)] mt-2">{uploadError}</p>
+                )}
               </div>
 
               <div>
@@ -196,7 +229,7 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
                 </button>
                 <button
                   type="submit"
-                  disabled={saving}
+                  disabled={saving || uploading}
                   className="flex-1 px-4 py-2 bg-[var(--blue)] text-[var(--on-blue)] rounded-lg hover:bg-[var(--blue-hover)] transition-colors disabled:opacity-60 inline-flex items-center justify-center gap-2"
                 >
                   {saving && <Loader2 className="w-4 h-4 animate-spin" />}
