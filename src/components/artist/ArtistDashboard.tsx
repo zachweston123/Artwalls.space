@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { TrendingUp, Package, DollarSign, Eye, Search, CheckCircle, XCircle } from 'lucide-react';
 import { mockArtworks, mockSales } from '../../data/mockData';
 import { PlanBadge } from '../pricing/PlanBadge';
