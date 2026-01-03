@@ -95,7 +95,7 @@ export function Login({ onLogin }: LoginProps) {
           </p>
         </div>
 
-        <div className="bg-white dark:bg-neutral-800 rounded-2xl p-8 shadow-sm border border-neutral-200 dark:border-neutral-700">
+        <div className="bg-white dark:bg-neutral-800 rounded-2xl p-8 border border-neutral-200 dark:border-neutral-700">
           <div className={`inline-flex px-3 py-1 rounded-full text-sm mb-6 ${
             selectedRole === 'artist' 
               ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' 
