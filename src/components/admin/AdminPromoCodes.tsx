@@ -6,7 +6,7 @@ interface AdminPromoCodesProps {
 }
 
 export function AdminPromoCodes({ onCreatePromoCode }: AdminPromoCodesProps) {
-  const mockPromoCodes = [
+  const [promos, setPromos] = useState([
     {
       id: '1',
       code: 'WELCOME15',
@@ -37,7 +37,9 @@ export function AdminPromoCodes({ onCreatePromoCode }: AdminPromoCodesProps) {
       expires: null,
       status: 'Inactive',
     },
-  ];
+  ]);
+  const [selected, setSelected] = useState<any | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -84,14 +86,15 @@ export function AdminPromoCodes({ onCreatePromoCode }: AdminPromoCodesProps) {
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border)]">
-              {mockPromoCodes.map((promo) => (
+              {promos.map((promo) => (
                 <tr key={promo.id} className="hover:bg-[var(--surface-3)]">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-[var(--text)]">{promo.code}</span>
-                      <button className="p-1 text-[var(--text-muted)] hover:text-[var(--text)]">
+                      <button className="p-1 text-[var(--text-muted)] hover:text-[var(--text)]" onClick={() => { navigator.clipboard.writeText(promo.code); setCopiedId(promo.id); setTimeout(() => setCopiedId(null), 1500); }}>
                         <Copy className="w-3 h-3" />
                       </button>
+                      {copiedId === promo.id && <span className="text-xs text-[var(--green)]">Copied</span>}
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm text-[var(--text)]">{promo.discount}</td>
@@ -115,11 +118,11 @@ export function AdminPromoCodes({ onCreatePromoCode }: AdminPromoCodesProps) {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex gap-2">
-                      <button className="px-3 py-1 bg-[var(--blue)] text-[var(--on-blue)] rounded text-xs hover:bg-[var(--blue-hover)] transition-colors">
+                      <button onClick={() => setSelected(promo)} className="px-3 py-1 bg-[var(--blue)] text-[var(--on-blue)] rounded text-xs hover:bg-[var(--blue-hover)] transition-colors">
                         View
                       </button>
                       {promo.status === 'Active' && (
-                        <button className="px-3 py-1 bg-[var(--surface-3)] text-[var(--danger)] border border-[var(--border)] rounded text-xs hover:bg-[var(--surface-2)] transition-colors">
+                        <button onClick={() => setPromos(promos.map(p => p.id === promo.id ? { ...p, status: 'Inactive' } : p))} className="px-3 py-1 bg-[var(--surface-3)] text-[var(--danger)] border border-[var(--border)] rounded text-xs hover:bg-[var(--surface-2)] transition-colors">
                           Deactivate
                         </button>
                       )}
@@ -132,7 +135,7 @@ export function AdminPromoCodes({ onCreatePromoCode }: AdminPromoCodesProps) {
         </div>
       </div>
 
-      {mockPromoCodes.length === 0 && (
+      {promos.length === 0 && (
         <div className="text-center py-16 bg-[var(--surface-2)] rounded-xl border border-[var(--border)]">
           <div className="w-16 h-16 bg-[var(--surface-3)] border border-[var(--border)] rounded-full flex items-center justify-center mx-auto mb-4">
             <Tag className="w-8 h-8 text-[var(--text-muted)]" />
@@ -147,6 +150,27 @@ export function AdminPromoCodes({ onCreatePromoCode }: AdminPromoCodesProps) {
           >
             Create Promo Code
           </button>
+        </div>
+      )}
+
+      {selected && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-2xl p-6 max-w-md w-full">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl text-[var(--text)]">Promo Code Details</h3>
+              <button onClick={() => setSelected(null)} className="p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors">×</button>
+            </div>
+            <div className="space-y-2 text-sm">
+              <div><strong>Code:</strong> {selected.code}</div>
+              <div><strong>Discount:</strong> {selected.discount}</div>
+              <div><strong>Duration:</strong> {selected.duration}</div>
+              <div><strong>Expires:</strong> {selected.expires || 'Never'}</div>
+              <div><strong>Status:</strong> {selected.status}</div>
+            </div>
+            <div className="mt-4 text-right">
+              <button onClick={() => setSelected(null)} className="px-4 py-2 bg-[var(--surface-2)] rounded-lg">Close</button>
+            </div>
+          </div>
         </div>
       )}
     </div>

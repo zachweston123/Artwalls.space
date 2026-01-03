@@ -6,7 +6,7 @@ interface AdminAnnouncementsProps {
 }
 
 export function AdminAnnouncements({ onCreateAnnouncement }: AdminAnnouncementsProps) {
-  const mockAnnouncements = [
+  const [announcements, setAnnouncements] = useState([
     {
       id: '1',
       title: 'New Protection Plan Available',
@@ -27,7 +27,9 @@ export function AdminAnnouncements({ onCreateAnnouncement }: AdminAnnouncementsP
       endDate: null,
       createdBy: 'Tech Team',
     },
-  ];
+  ]);
+  const [selected, setSelected] = useState<any | null>(null);
+  const [mode, setMode] = useState<'view' | 'edit' | 'delete' | null>(null);
 
   const getAudienceColor = (audience: string) => {
     switch (audience) {
@@ -87,7 +89,7 @@ export function AdminAnnouncements({ onCreateAnnouncement }: AdminAnnouncementsP
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border)]">
-              {mockAnnouncements.map((announcement) => (
+              {announcements.map((announcement) => (
                 <tr key={announcement.id} className="hover:bg-[var(--surface-3)] transition-colors">
                   <td className="px-6 py-4 text-sm text-[var(--text)]">{announcement.title}</td>
                   <td className="px-6 py-4">
@@ -106,13 +108,13 @@ export function AdminAnnouncements({ onCreateAnnouncement }: AdminAnnouncementsP
                   <td className="px-6 py-4 text-sm text-[var(--text-muted)]">{announcement.createdBy}</td>
                   <td className="px-6 py-4">
                     <div className="flex gap-2">
-                      <button className="p-1 text-[var(--text-muted)] hover:text-[var(--text)]">
+                      <button className="p-1 text-[var(--text-muted)] hover:text-[var(--text)]" onClick={() => { setSelected(announcement); setMode('view'); }}>
                         <Eye className="w-4 h-4" />
                       </button>
-                      <button className="p-1 text-[var(--text-muted)] hover:text-[var(--text)]">
+                      <button className="p-1 text-[var(--text-muted)] hover:text-[var(--text)]" onClick={() => { setSelected(announcement); setMode('edit'); }}>
                         <Edit className="w-4 h-4" />
                       </button>
-                      <button className="p-1 text-[var(--danger)] hover:brightness-90">
+                      <button className="p-1 text-[var(--danger)] hover:brightness-90" onClick={() => { setSelected(announcement); setMode('delete'); }}>
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
@@ -124,7 +126,7 @@ export function AdminAnnouncements({ onCreateAnnouncement }: AdminAnnouncementsP
         </div>
       </div>
 
-      {mockAnnouncements.length === 0 && (
+      {announcements.length === 0 && (
         <div className="text-center py-16 bg-[var(--surface-2)] rounded-xl border border-[var(--border)]">
           <div className="w-16 h-16 bg-[var(--surface-3)] border border-[var(--border)] rounded-full flex items-center justify-center mx-auto mb-4">
             <Megaphone className="w-8 h-8 text-[var(--text-muted)]" />
@@ -139,6 +141,44 @@ export function AdminAnnouncements({ onCreateAnnouncement }: AdminAnnouncementsP
           >
             Create Announcement
           </button>
+        </div>
+      )}
+
+      {selected && mode && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-[var(--surface-1)] border border-[var(--border)] text-[var(--text)] rounded-2xl p-6 max-w-md w-full">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl">{mode === 'view' ? 'View Announcement' : mode === 'edit' ? 'Edit Announcement' : 'Delete Announcement'}</h3>
+              <button onClick={() => { setSelected(null); setMode(null); }} className="p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            {mode === 'view' && (
+              <div className="space-y-2 text-sm">
+                <div><strong>Title:</strong> {selected.title}</div>
+                <div><strong>Audience:</strong> {selected.audience}</div>
+                <div><strong>Type:</strong> {selected.type}</div>
+                <div><strong>Status:</strong> {selected.status}</div>
+                <div><strong>Start:</strong> {selected.startDate}</div>
+                <div><strong>End:</strong> {selected.endDate || '—'}</div>
+              </div>
+            )}
+            {mode === 'edit' && (
+              <div className="space-y-3">
+                <input defaultValue={selected.title} className="w-full px-3 py-2 border border-[var(--border)] rounded-lg bg-[var(--surface-2)]" />
+                <button onClick={() => { setMode(null); }} className="px-4 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg">Save</button>
+              </div>
+            )}
+            {mode === 'delete' && (
+              <div className="space-y-4">
+                <p className="text-[var(--text-muted)]">Delete "{selected.title}"?</p>
+                <div className="flex gap-3">
+                  <button onClick={() => { setSelected(null); setMode(null); }} className="flex-1 px-4 py-2 bg-[var(--surface-2)] rounded-lg">Cancel</button>
+                  <button onClick={() => { setAnnouncements(announcements.filter(a => a.id !== selected.id)); setSelected(null); setMode(null); }} className="flex-1 px-4 py-2 bg-[var(--danger)] text-white rounded-lg">Delete</button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

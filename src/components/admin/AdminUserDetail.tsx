@@ -36,6 +36,8 @@ function RoleBadge({ role }: { role: 'artist' | 'venue' }) {
 
 export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'placements' | 'orders' | 'subscriptions' | 'notes'>('overview');
+  const [pendingAction, setPendingAction] = useState<'suspend' | 'logout' | 'reset' | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
 
   // Mock user data
   const user = {
@@ -156,15 +158,15 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
           
           {/* Quick Actions */}
           <div className="flex gap-2">
-            <button className="px-4 py-2 bg-[var(--surface-3)] text-[var(--danger)] border border-[var(--border)] rounded-lg hover:bg-[var(--surface-2)] transition-colors text-sm flex items-center gap-2">
+            <button onClick={() => setPendingAction('suspend')} className="px-4 py-2 bg-[var(--surface-3)] text-[var(--danger)] border border-[var(--border)] rounded-lg hover:bg-[var(--surface-2)] transition-colors text-sm flex items-center gap-2">
               <AlertTriangle className="w-4 h-4" />
               Suspend
             </button>
-            <button className="px-4 py-2 bg-[var(--surface-3)] text-[var(--text)] border border-[var(--border)] rounded-lg hover:bg-[var(--surface-2)] transition-colors text-sm flex items-center gap-2">
+            <button onClick={() => setPendingAction('logout')} className="px-4 py-2 bg-[var(--surface-3)] text-[var(--text)] border border-[var(--border)] rounded-lg hover:bg-[var(--surface-2)] transition-colors text-sm flex items-center gap-2">
               <LogOut className="w-4 h-4 text-[var(--text-muted)]" />
               Force Logout
             </button>
-            <button className="px-4 py-2 bg-[var(--surface-3)] text-[var(--text)] border border-[var(--border)] rounded-lg hover:bg-[var(--surface-2)] transition-colors text-sm flex items-center gap-2">
+            <button onClick={() => setPendingAction('reset')} className="px-4 py-2 bg-[var(--surface-3)] text-[var(--text)] border border-[var(--border)] rounded-lg hover:bg-[var(--surface-2)] transition-colors text-sm flex items-center gap-2">
               <Key className="w-4 h-4 text-[var(--text-muted)]" />
               Reset Password
             </button>
@@ -198,6 +200,11 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
       {/* Tab Content */}
       {activeTab === 'overview' && (
         <div className="space-y-6">
+          {toast && (
+            <div className="px-4 py-2 bg-[var(--green-muted)] text-[var(--green)] border border-[var(--border)] rounded-lg">
+              {toast}
+            </div>
+          )}
           {/* Identity Card */}
           <div className="bg-[var(--surface-2)] rounded-xl p-6 border border-[var(--border)]">
             <h2 className="text-xl mb-4 text-[var(--text)]">Identity</h2>
@@ -425,6 +432,35 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
                   <p className="text-sm text-[var(--text-muted)]">{note.content}</p>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {pendingAction && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-2xl p-6 max-w-md w-full">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl text-[var(--text)]">Confirm Admin Action</h3>
+              <button onClick={() => setPendingAction(null)} className="p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors">
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
+            <p className="text-[var(--text-muted)] mb-6">
+              Are you sure you want to {pendingAction === 'suspend' ? 'suspend this user' : pendingAction === 'logout' ? 'force logout' : 'reset password'}?
+            </p>
+            <div className="flex gap-3">
+              <button onClick={() => setPendingAction(null)} className="flex-1 px-4 py-2 bg-[var(--surface-2)] text-[var(--text)] rounded-lg hover:bg-[var(--surface-3)] transition-colors">Cancel</button>
+              <button
+                onClick={() => {
+                  setPendingAction(null);
+                  setToast(pendingAction === 'suspend' ? 'User suspended' : pendingAction === 'logout' ? 'User logged out' : 'Password reset link sent');
+                  setTimeout(() => setToast(null), 3000);
+                }}
+                className="flex-1 px-4 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-opacity"
+              >
+                Confirm
+              </button>
             </div>
           </div>
         </div>

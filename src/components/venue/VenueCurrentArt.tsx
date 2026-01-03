@@ -8,6 +8,7 @@ export function VenueCurrentArt() {
   const [filter, setFilter] = useState<'all' | 'active' | 'sold' | 'ending-soon' | 'needs-pickup'>('all');
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [selectedAction, setSelectedAction] = useState<{ id: string; action: string } | null>(null);
+  const [qrArtwork, setQrArtwork] = useState<InstalledArtwork | null>(null);
 
   const filteredArtworks = artworks.filter(artwork => {
     if (filter === 'all') return true;
@@ -193,7 +194,7 @@ export function VenueCurrentArt() {
                     <QrCode className="w-4 h-4 text-[var(--text-muted)] mt-0.5 flex-shrink-0" />
                     <div>
                       <span className="text-[var(--text-muted)]">QR Code</span>
-                      <button className="text-[var(--green)] hover:opacity-80 transition-opacity underline">
+                      <button className="text-[var(--green)] hover:opacity-80 transition-opacity underline" onClick={() => setQrArtwork(artwork)}>
                         View / Print
                       </button>
                     </div>
@@ -301,6 +302,38 @@ export function VenueCurrentArt() {
               >
                 Confirm
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* QR Modal */}
+      {qrArtwork && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-[var(--surface-1)] border border-[var(--border)] text-[var(--text)] rounded-2xl p-6 max-w-md w-full">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl">Artwork QR Code</h3>
+              <button onClick={() => setQrArtwork(null)} className="p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <p className="text-[var(--text-muted)]">Use this QR for customer purchase and info.</p>
+              <div className="flex items-center justify-center">
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(`${window.location.origin}/purchase/${qrArtwork.id}`)}`}
+                  alt="QR Code"
+                  className="w-60 h-60 border border-[var(--border)] rounded-lg bg-[var(--surface-2)]"
+                />
+              </div>
+              <div className="flex gap-3">
+                <button onClick={() => setQrArtwork(null)} className="flex-1 px-4 py-2 bg-[var(--surface-2)] text-[var(--text)] rounded-lg hover:bg-[var(--surface-3)] transition-colors">
+                  Close
+                </button>
+                <button onClick={() => window.print()} className="flex-1 px-4 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-opacity">
+                  Print
+                </button>
+              </div>
             </div>
           </div>
         </div>
