@@ -128,9 +128,10 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
         // Backfill newly created Supabase users into local tables (no-op if already present)
         try { await apiPost('/api/admin/sync-users', {}); } catch {}
 
-        const [artists, venues] = await Promise.all([
+        const [artists, venues, authUsers] = await Promise.all([
           apiGet<Array<{ id: string; name?: string | null; email?: string | null; subscriptionTier?: string | null; subscriptionStatus?: string | null }>>('/api/artists'),
-          apiGet<Array<{ id: string; name?: string | null; email?: string | null; type?: string | null }>>('/api/venues'),
+          apiGet<Array<{ id: string; name?: string | null; email?: string | null; type?: string | null; suspended?: boolean }>>('/api/venues'),
+          apiGet<Array<{ id: string; name?: string | null; email?: string | null; role?: string | null }>>('/api/admin/users'),
         ]);
 
         const mappedArtists = (artists || []).map((a) => ({
@@ -157,7 +158,23 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
           agreementAccepted: true,
         }));
 
-        const combined = [...mappedArtists, ...mappedVenues];
+        // Include any Supabase Auth users not yet in our local tables
+        const authMapped = (authUsers || [])
+          .filter(u => (u.role === 'artist' || u.role === 'venue'))
+          .filter(u => ![...mappedArtists, ...mappedVenues].some(x => x.id === u.id))
+          .map(u => ({
+            id: u.id,
+            name: u.name || (u.role === 'venue' ? 'Venue' : 'Artist'),
+            email: u.email || '',
+            role: (u.role as 'artist' | 'venue') || 'artist',
+            plan: 'Free',
+            status: 'Active',
+            lastActive: '—',
+            city: '—',
+            agreementAccepted: true,
+          }));
+
+        const combined = [...mappedArtists, ...mappedVenues, ...authMapped];
         if (isMounted) setUsers(combined.length ? combined : mockUsers);
       } catch {
         if (isMounted) setUsers(mockUsers);

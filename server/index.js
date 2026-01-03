@@ -26,6 +26,8 @@ import {
   createWallspace,
   updateWallspace,
   deleteWallspace,
+  updateArtistStatus,
+  updateVenueSuspended,
 } from './db.js';
 
 dotenv.config();
@@ -693,13 +695,13 @@ app.post('/api/admin/users/:id/suspend', async (req, res) => {
 
     const artist = await getArtist(userId);
     if (artist) {
-      const updated = await upsertArtist({ id: userId, subscriptionStatus: 'suspended' });
+      const updated = await updateArtistStatus(userId, 'suspended');
       return res.json({ role: 'artist', user: updated });
     }
 
     const venue = await getVenue(userId);
     if (venue) {
-      const updated = await upsertVenue({ id: userId, suspended: true });
+      const updated = await updateVenueSuspended(userId, true);
       return res.json({ role: 'venue', user: updated });
     }
 
@@ -717,13 +719,13 @@ app.post('/api/admin/users/:id/activate', async (req, res) => {
 
     const artist = await getArtist(userId);
     if (artist) {
-      const updated = await upsertArtist({ id: userId, subscriptionStatus: 'active' });
+      const updated = await updateArtistStatus(userId, 'active');
       return res.json({ role: 'artist', user: updated });
     }
 
     const venue = await getVenue(userId);
     if (venue) {
-      const updated = await upsertVenue({ id: userId, suspended: false });
+      const updated = await updateVenueSuspended(userId, false);
       return res.json({ role: 'venue', user: updated });
     }
 

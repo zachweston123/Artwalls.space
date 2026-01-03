@@ -255,6 +255,28 @@ export async function markArtworkSold(id) {
   return mapArtworkRow(data);
 }
 
+// --- Admin moderation helpers ---
+export async function updateArtistStatus(id, status) {
+  const { data, error } = await supabaseAdmin
+    .from('artists')
+    .update({ subscription_status: status, updated_at: nowIso() })
+    .eq('id', id)
+    .select('*')
+    .maybeSingle();
+  throwIfError(error, 'updateArtistStatus');
+  return mapArtistRow(data);
+}
+
+export async function updateVenueSuspended(id, suspended) {
+  const { data, error } = await supabaseAdmin
+    .from('venues')
+    .update({ suspended, updated_at: nowIso() })
+    .eq('id', id)
+    .select('*')
+    .maybeSingle();
+  throwIfError(error, 'updateVenueSuspended');
+  return mapVenueRow(data);
+}
 // --- Orders ---
 export async function createOrder(order) {
   const payload = {
