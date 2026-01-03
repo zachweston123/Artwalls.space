@@ -14,7 +14,7 @@ on conflict (id) do update set public = excluded.public;
 DO $$ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies
-    WHERE schemaname = 'storage' AND tablename = 'objects' AND polname = 'Public read artworks'
+    WHERE schemaname = 'storage' AND tablename = 'objects' AND policyname = 'Public read artworks'
   ) THEN
     CREATE POLICY "Public read artworks" ON storage.objects
       FOR SELECT USING (bucket_id = 'artworks');
@@ -24,7 +24,7 @@ END $$;
 DO $$ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies
-    WHERE schemaname = 'storage' AND tablename = 'objects' AND polname = 'Public read wallspaces'
+    WHERE schemaname = 'storage' AND tablename = 'objects' AND policyname = 'Public read wallspaces'
   ) THEN
     CREATE POLICY "Public read wallspaces" ON storage.objects
       FOR SELECT USING (bucket_id = 'wallspaces');
@@ -36,7 +36,7 @@ END $$;
 DO $$ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies
-    WHERE schemaname = 'storage' AND tablename = 'objects' AND polname = 'Users upload own artwork images'
+    WHERE schemaname = 'storage' AND tablename = 'objects' AND policyname = 'Users upload own artwork images'
   ) THEN
     CREATE POLICY "Users upload own artwork images" ON storage.objects
       FOR INSERT TO authenticated
@@ -51,7 +51,7 @@ END $$;
 DO $$ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies
-    WHERE schemaname = 'storage' AND tablename = 'objects' AND polname = 'Users manage own artwork images'
+    WHERE schemaname = 'storage' AND tablename = 'objects' AND policyname = 'Users manage own artwork images'
   ) THEN
     CREATE POLICY "Users manage own artwork images" ON storage.objects
       FOR UPDATE TO authenticated
@@ -65,7 +65,7 @@ END $$;
 DO $$ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies
-    WHERE schemaname = 'storage' AND tablename = 'objects' AND polname = 'Users delete own artwork images'
+    WHERE schemaname = 'storage' AND tablename = 'objects' AND policyname = 'Users delete own artwork images'
   ) THEN
     CREATE POLICY "Users delete own artwork images" ON storage.objects
       FOR DELETE TO authenticated
@@ -79,7 +79,7 @@ END $$;
 DO $$ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies
-    WHERE schemaname = 'storage' AND tablename = 'objects' AND polname = 'Venues upload own wallspace photos'
+    WHERE schemaname = 'storage' AND tablename = 'objects' AND policyname = 'Venues upload own wallspace photos'
   ) THEN
     CREATE POLICY "Venues upload own wallspace photos" ON storage.objects
       FOR INSERT TO authenticated
@@ -93,7 +93,7 @@ END $$;
 DO $$ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies
-    WHERE schemaname = 'storage' AND tablename = 'objects' AND polname = 'Venues manage own wallspace photos'
+    WHERE schemaname = 'storage' AND tablename = 'objects' AND policyname = 'Venues manage own wallspace photos'
   ) THEN
     CREATE POLICY "Venues manage own wallspace photos" ON storage.objects
       FOR UPDATE TO authenticated
@@ -107,7 +107,7 @@ END $$;
 DO $$ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies
-    WHERE schemaname = 'storage' AND tablename = 'objects' AND polname = 'Venues delete own wallspace photos'
+    WHERE schemaname = 'storage' AND tablename = 'objects' AND policyname = 'Venues delete own wallspace photos'
   ) THEN
     CREATE POLICY "Venues delete own wallspace photos" ON storage.objects
       FOR DELETE TO authenticated
