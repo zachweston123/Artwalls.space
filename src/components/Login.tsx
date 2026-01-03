@@ -41,11 +41,11 @@ export function Login({ onLogin }: LoginProps) {
           <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
             <button
               onClick={() => setSelectedRole('artist')}
-              className="group bg-[var(--surface-2)] rounded-2xl p-8 border border-[var(--border)] hover:bg-[var(--surface-3)] transition-colors"
+              className="group bg-[var(--surface-2)] rounded-2xl p-8 border border-[var(--border)] hover:bg-[var(--surface-3)] hover:border-[var(--blue)] transition-colors"
             >
               <div className="flex flex-col items-center text-center gap-4">
-                <div className="w-16 h-16 bg-[var(--surface-3)] rounded-full flex items-center justify-center group-hover:bg-[var(--accent)] transition-colors">
-                  <Palette className="w-8 h-8 text-[var(--accent)] group-hover:text-[var(--accent-contrast)] transition-colors" />
+                <div className="w-16 h-16 bg-[var(--surface-3)] rounded-full flex items-center justify-center group-hover:bg-[var(--blue)] transition-colors">
+                  <Palette className="w-8 h-8 text-[var(--blue)] group-hover:text-[var(--on-blue)] transition-colors" />
                 </div>
                 <div>
                   <h2 className="text-xl mb-2 text-[var(--text)]">I'm an Artist</h2>
@@ -58,11 +58,11 @@ export function Login({ onLogin }: LoginProps) {
 
             <button
               onClick={() => setSelectedRole('venue')}
-              className="group bg-[var(--surface-2)] rounded-2xl p-8 border border-[var(--border)] hover:bg-[var(--surface-3)] transition-colors"
+              className="group bg-[var(--surface-2)] rounded-2xl p-8 border border-[var(--border)] hover:bg-[var(--surface-3)] hover:border-[var(--green)] transition-colors"
             >
               <div className="flex flex-col items-center text-center gap-4">
-                <div className="w-16 h-16 bg-[var(--surface-3)] rounded-full flex items-center justify-center group-hover:bg-[var(--accent)] transition-colors">
-                  <Store className="w-8 h-8 text-[var(--accent)] group-hover:text-[var(--accent-contrast)] transition-colors" />
+                <div className="w-16 h-16 bg-[var(--surface-3)] rounded-full flex items-center justify-center group-hover:bg-[var(--green)] transition-colors">
+                  <Store className="w-8 h-8 text-[var(--green)] group-hover:text-[var(--accent-contrast)] transition-colors" />
                 </div>
                 <div>
                   <h2 className="text-xl mb-2 text-[var(--text)]">I'm a Venue</h2>
@@ -84,9 +84,9 @@ export function Login({ onLogin }: LoginProps) {
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-4">
             {selectedRole === 'artist' ? (
-              <Palette className="w-8 h-8 text-[var(--accent)]" />
+              <Palette className="w-8 h-8 text-[var(--blue)]" />
             ) : (
-              <Store className="w-8 h-8 text-[var(--accent)]" />
+              <Store className="w-8 h-8 text-[var(--green)]" />
             )}
             <h1 className="text-3xl text-[var(--text)]">Artwalls</h1>
           </div>
@@ -96,7 +96,12 @@ export function Login({ onLogin }: LoginProps) {
         </div>
 
         <div className="bg-[var(--surface-2)] rounded-2xl p-8 shadow-sm border border-[var(--border)]">
-          <div className="inline-flex px-3 py-1 rounded-full text-sm mb-6 bg-[var(--surface-3)] text-[var(--text)] border border-[var(--border)]">
+          <div
+            className={
+              "inline-flex px-3 py-1 rounded-full text-sm mb-6 bg-[var(--surface-3)] border border-[var(--border)] " +
+              (selectedRole === 'artist' ? 'text-[var(--blue)]' : 'text-[var(--green)]')
+            }
+          >
             {selectedRole === 'artist' ? 'Artist Account' : 'Venue Account'}
           </div>
 
@@ -110,7 +115,10 @@ export function Login({ onLogin }: LoginProps) {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
+                  className={
+                    "w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 " +
+                    (selectedRole === 'artist' ? 'focus:ring-[var(--focus)]' : 'focus:ring-[var(--green)]')
+                  }
                   placeholder={selectedRole === 'artist' ? 'Your name' : 'Your venue name'}
                 />
               </div>
@@ -122,7 +130,10 @@ export function Login({ onLogin }: LoginProps) {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
+                className={
+                  "w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 " +
+                  (selectedRole === 'artist' ? 'focus:ring-[var(--focus)]' : 'focus:ring-[var(--green)]')
+                }
                 placeholder="your@email.com"
               />
             </div>
@@ -131,14 +142,22 @@ export function Login({ onLogin }: LoginProps) {
               <label className="block text-sm text-[var(--text-muted)] mb-1">Password</label>
               <input
                 type="password"
-                className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
+                className={
+                  "w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 " +
+                  (selectedRole === 'artist' ? 'focus:ring-[var(--focus)]' : 'focus:ring-[var(--green)]')
+                }
                 placeholder="••••••••"
               />
             </div>
 
             <button
               type="submit"
-              className="w-full py-3 rounded-lg bg-[var(--accent)] text-[var(--accent-contrast)] hover:brightness-95 transition"
+              className={
+                "w-full py-3 rounded-lg hover:brightness-95 transition " +
+                (selectedRole === 'artist'
+                  ? 'bg-[var(--blue)] text-[var(--on-blue)]'
+                  : 'bg-[var(--green)] text-[var(--accent-contrast)]')
+              }
             >
               {isSignup ? 'Create Account' : 'Sign In'}
             </button>
