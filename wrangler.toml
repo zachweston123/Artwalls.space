@@ -6,3 +6,6 @@ type = "javascript"
 command = "npm install && npm run build"
 cwd = "."
 watch_paths = ["src/**/*.{ts,tsx}"]
+
+[vars]
+API_BASE_URL = "https://api.artwalls.space"

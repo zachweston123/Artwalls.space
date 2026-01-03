@@ -332,7 +332,7 @@ export default function App() {
         
         {currentUser.role === 'venue' && (
           <>
-            {currentPage === 'venue-dashboard' && <VenueDashboard onNavigate={handleNavigate} />}
+            {currentPage === 'venue-dashboard' && <VenueDashboard onNavigate={handleNavigate} user={currentUser} />}
             {currentPage === 'venue-walls' && <VenueWalls />}
             {currentPage === 'venue-applications' && <VenueApplications />}
             {currentPage === 'venue-current' && <VenueCurrentArtWithScheduling />}
@@ -352,7 +352,9 @@ export default function App() {
         {currentUser.role === 'admin' && (
           <>
             {currentPage === 'admin-dashboard' && <AdminDashboard onNavigate={handleNavigate} />}
-            {currentPage === 'admin-users' && <AdminUsers onNavigate={handleNavigate} />}
+            {currentPage === 'admin-users' && (
+              <AdminUsers onViewUser={(userId: string) => handleNavigate('admin-user-detail', { userId })} />
+            )}
             {currentPage === 'admin-user-detail' && <AdminUserDetail onNavigate={handleNavigate} />}
             {currentPage === 'admin-announcements' && <AdminAnnouncements onNavigate={handleNavigate} />}
             {currentPage === 'admin-promo-codes' && <AdminPromoCodes onNavigate={handleNavigate} />}

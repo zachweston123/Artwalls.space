@@ -19,12 +19,13 @@ export function AdminSidebar({ currentPage, onNavigate }: AdminSidebarProps) {
   const navItems = [
     { id: 'admin-dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'admin-users', label: 'Users', icon: Users },
-    { id: 'admin-orders', label: 'Orders & Payments', icon: ShoppingCart },
+    // Orders & Settings are not implemented yet; hide to avoid dead links
+    // { id: 'admin-orders', label: 'Orders & Payments', icon: ShoppingCart },
     { id: 'admin-stripe-payments', label: 'Stripe Payments', icon: CreditCard },
     { id: 'admin-announcements', label: 'Announcements', icon: Megaphone },
     { id: 'admin-promo-codes', label: 'Promo Codes', icon: Tag },
     { id: 'admin-activity-log', label: 'Activity Log', icon: Activity },
-    { id: 'admin-settings', label: 'Settings', icon: Settings },
+    // { id: 'admin-settings', label: 'Settings', icon: Settings },
   ];
 
   return (
@@ -73,7 +74,7 @@ export function AdminSidebar({ currentPage, onNavigate }: AdminSidebarProps) {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm text-[var(--text)] truncate">Admin User</p>
-            <p className="text-xs text-[var(--text-muted)]">admin@artwalls.com</p>
+            <p className="text-xs text-[var(--text-muted)]">admin@artwalls.space</p>
           </div>
         </div>
       </div>

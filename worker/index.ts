@@ -2,6 +2,7 @@ import { verifyAndParseStripeEvent } from './stripeWebhook';
 
 type Env = {
   STRIPE_WEBHOOK_SECRET: string;
+  API_BASE_URL?: string;
 };
 
 export default {
@@ -27,9 +28,23 @@ export default {
         // Do work async so Stripe gets a fast 200.
         ctx.waitUntil(
           (async () => {
-            // TODO: implement your real business logic.
-            // Keep it idempotent: Stripe retries events.
-            console.log('Stripe event received', { id: event.id, type: event.type });
+            // Forward the verified event to the backend for processing
+            try {
+              const base = env.API_BASE_URL || 'https://api.artwalls.space';
+              const resp = await fetch(`${base}/api/stripe/webhook/forwarded`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ event }),
+              });
+              if (!resp.ok) {
+                const text = await resp.text();
+                console.error('Forwarded webhook failed', resp.status, text);
+              } else {
+                console.log('Forwarded webhook processed', { id: event.id, type: event.type });
+              }
+            } catch (e) {
+              console.error('Error forwarding webhook', e instanceof Error ? e.message : e);
+            }
           })(),
         );
 

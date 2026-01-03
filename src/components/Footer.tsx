@@ -86,7 +86,7 @@ export function Footer({ onNavigate }: FooterProps) {
                 </button>
               </li>
               <li>
-                <a href="mailto:support@artwalls.com" className="hover:text-[var(--text)] transition-colors">
+                <a href="mailto:support@artwalls.space" className="hover:text-[var(--text)] transition-colors">
                   Contact Support
                 </a>
               </li>
@@ -97,7 +97,7 @@ export function Footer({ onNavigate }: FooterProps) {
         {/* Bottom Bar */}
         <div className="border-t border-[var(--border)] mt-8 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-sm text-[var(--text-muted)]">
-            © 2024 Artwalls. All rights reserved.
+            © 2026 Artwalls. All rights reserved.
           </p>
           <div className="flex items-center gap-6 text-sm text-[var(--text-muted)]">
             <button onClick={() => onNavigate('policies')} className="hover:text-[var(--text)] transition-colors">
@@ -106,7 +106,7 @@ export function Footer({ onNavigate }: FooterProps) {
             <button onClick={() => onNavigate('policies')} className="hover:text-[var(--text)] transition-colors">
               Terms
             </button>
-            <a href="mailto:legal@artwalls.com" className="hover:text-[var(--text)] transition-colors">
+            <a href="mailto:legal@artwalls.space" className="hover:text-[var(--text)] transition-colors">
               Legal
             </a>
           </div>

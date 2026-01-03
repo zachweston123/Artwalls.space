@@ -1,11 +1,14 @@
 import { Frame, Users, DollarSign, Clock } from 'lucide-react';
 import { mockWallSpaces, mockApplications, mockSales } from '../../data/mockData';
+import type { User } from '../../App';
+import { VenuePayoutsCard } from './VenuePayoutsCard';
 
 interface VenueDashboardProps {
   onNavigate: (page: string) => void;
+  user?: User;
 }
 
-export function VenueDashboard({ onNavigate }: VenueDashboardProps) {
+export function VenueDashboard({ onNavigate, user }: VenueDashboardProps) {
   const totalWalls = mockWallSpaces.length;
   const availableWalls = mockWallSpaces.filter(w => w.available).length;
   const pendingApplications = mockApplications.filter(a => a.status === 'pending').length;
@@ -132,6 +135,12 @@ export function VenueDashboard({ onNavigate }: VenueDashboardProps) {
           </div>
         </div>
       </div>
+
+      {user && (
+        <div className="mt-12">
+          <VenuePayoutsCard user={user} />
+        </div>
+      )}
     </div>
   );
 }

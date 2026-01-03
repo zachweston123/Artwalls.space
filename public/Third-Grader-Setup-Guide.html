@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Artwalls Setup Guide (Super Simple)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: #fff; color: #111; }
+      .wrap { max-width: 820px; margin: 24px auto; padding: 16px; }
+      h1 { font-size: 32px; margin-bottom: 8px; }
+      h2 { font-size: 24px; margin: 24px 0 8px; }
+      p, li { font-size: 18px; line-height: 1.6; }
+      ol { padding-left: 20px; }
+      .card { border: 2px solid #eee; border-radius: 12px; padding: 16px; margin: 16px 0; }
+      .tip { background: #f7fbff; border-color: #cfe9ff; }
+      .ok { background: #f6fff7; border-color: #cce8d0; }
+      .warn { background: #fff9f6; border-color: #ffd7c2; }
+      .btn { display:inline-block; background:#007acc; color:#fff; padding:10px 16px; border-radius:8px; text-decoration:none; }
+      code { background: #f4f4f4; padding: 2px 6px; border-radius: 6px; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Artwalls Setup Guide</h1>
+      <p>This is a super simple guide to finish setup. Follow the steps, one by one. You got this!</p>
+
+      <div class="card ok">
+        <h2>1) Stripe Webhook (Cloudflare Worker)</h2>
+        <ol>
+          <li>Open Cloudflare dashboard → Workers & Pages → your Worker.</li>
+          <li>Go to Settings → Variables.</li>
+          <li>Add variable named <code>STRIPE_WEBHOOK_SECRET</code>.</li>
+          <li>Put the value from Stripe (see Step 2 below).</li>
+          <li>Already set: <code>API_BASE_URL</code> is <code>https://api.artwalls.space</code>.</li>
+        </ol>
+      </div>
+
+      <div class="card tip">
+        <h2>2) Get the Webhook Secret from Stripe</h2>
+        <ol>
+          <li>Open Stripe Dashboard → Developers → Webhooks.</li>
+          <li>Click "Add endpoint".</li>
+          <li>Set URL to <code>https://artwalls.space/api/stripe/webhook</code> (the Worker route).</li>
+          <li>Choose events: <code>checkout.session.completed</code>, <code>customer.subscription.updated</code>, <code>customer.subscription.deleted</code>.</li>
+          <li>Save. Copy the "Signing secret" value → paste into Cloudflare as <code>STRIPE_WEBHOOK_SECRET</code>.</li>
+        </ol>
+      </div>
+
+      <div class="card ok">
+        <h2>3) Pages Environment Variables (Frontend)</h2>
+        <ol>
+          <li>Open Cloudflare Pages → your site.</li>
+          <li>Settings → Environment Variables.</li>
+          <li>Set:
+            <ul>
+              <li><code>VITE_API_BASE_URL</code> → <code>https://api.artwalls.space</code></li>
+              <li><code>VITE_SUPABASE_URL</code> → your Supabase URL</li>
+              <li><code>VITE_SUPABASE_ANON_KEY</code> → your Supabase anon key</li>
+            </ul>
+          </li>
+          <li>Redeploy Pages.</li>
+        </ol>
+      </div>
+
+      <div class="card tip">
+        <h2>4) Stripe Connect (Artists + Venues)</h2>
+        <ol>
+          <li>Sign in as an artist → Dashboard → "Set up payouts" → complete onboarding.</li>
+          <li>Sign in as a venue → Dashboard → "Enable venue payouts" → complete onboarding.</li>
+          <li>After finishing, payouts show "enabled" on the cards.</li>
+        </ol>
+      </div>
+
+      <div class="card ok">
+        <h2>5) Test a Purchase</h2>
+        <ol>
+          <li>Use Stripe test card 4242 4242 4242 4242.</li>
+          <li>Buy an artwork. After success, webhooks run.</li>
+          <li>Artist/venue payouts are created automatically.</li>
+        </ol>
+      </div>
+
+      <div class="card warn">
+        <h2>6) Little Things</h2>
+        <ol>
+          <li>Create real inboxes: <code>support@artwalls.space</code>, <code>legal@artwalls.space</code>.</li>
+          <li>Publish legal PDFs if desired (optional).</li>
+          <li>Double-check links on Admin → hide pages not ready.</li>
+        </ol>
+      </div>
+
+      <p>
+        Tip: To save this as a PDF, open this page in your browser and choose "Print" → Destination "Save as PDF".
+      </p>
+
+      <p><a class="btn" href="#" onclick="window.print(); return false;">Save as PDF</a></p>
+    </div>
+  </body>
+</html>

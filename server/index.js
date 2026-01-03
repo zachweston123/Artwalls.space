@@ -68,141 +68,13 @@ app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async
     console.error('Webhook signature verification failed', err?.message);
     return res.status(400).send(`Webhook Error: ${err?.message}`);
   }
-
   // Idempotency: Stripe may retry events
   if (await wasEventProcessed(event.id)) {
     return res.json({ received: true, duplicate: true });
   }
 
   try {
-    if (event.type === 'checkout.session.completed') {
-      const session = event.data.object;
-
-      // Payment checkout (marketplace purchase)
-      if (session.mode === 'payment') {
-        const orderId = session?.metadata?.orderId;
-        const artworkId = session?.metadata?.artworkId;
-
-        if (!orderId) throw new Error('Missing orderId in session metadata');
-
-        const order = await findOrderById(orderId);
-        if (!order) throw new Error(`Order not found: ${orderId}`);
-
-        // Avoid double-paying
-        if (order.status !== 'paid') {
-          // Pull the charge so we can create transfers against it
-          const piId = session.payment_intent;
-          if (!piId) throw new Error('Missing payment_intent on completed session');
-
-          const pi = await stripe.paymentIntents.retrieve(piId, { expand: ['latest_charge'] });
-          const chargeId = typeof pi.latest_charge === 'string' ? pi.latest_charge : pi.latest_charge?.id;
-          if (!chargeId) throw new Error('Missing latest_charge on PaymentIntent');
-
-          // Create transfers (Separate Charges and Transfers) to multiple connected accounts
-          // Note: platform retains its fee automatically by transferring less than the gross amount.
-          const transfers = [];
-
-          if (order.artistPayoutCents > 0) {
-            const artist = await getArtist(order.artistId);
-            if (!artist?.stripeAccountId) throw new Error('Artist stripeAccountId missing for payout');
-            const t = await stripe.transfers.create({
-              amount: order.artistPayoutCents,
-              currency: order.currency,
-              destination: artist.stripeAccountId,
-              source_transaction: chargeId,
-              transfer_group: orderId,
-              metadata: { orderId, artworkId, recipient: 'artist', recipientId: order.artistId },
-            });
-            transfers.push({ recipient: 'artist', id: t.id });
-          }
-
-          if (order.venuePayoutCents > 0) {
-            const venue = await getVenue(order.venueId);
-            if (!venue?.stripeAccountId) throw new Error('Venue stripeAccountId missing for payout');
-            const t = await stripe.transfers.create({
-              amount: order.venuePayoutCents,
-              currency: order.currency,
-              destination: venue.stripeAccountId,
-              source_transaction: chargeId,
-              transfer_group: orderId,
-              metadata: { orderId, artworkId, recipient: 'venue', recipientId: order.venueId },
-            });
-            transfers.push({ recipient: 'venue', id: t.id });
-          }
-
-          await updateOrder(orderId, {
-            status: 'paid',
-            stripePaymentIntentId: piId,
-            stripeChargeId: chargeId,
-            transferIds: transfers,
-          });
-
-          if (artworkId) {
-            const sold = await markArtworkSold(artworkId);
-            // Optional: prevent double-sells by deactivating the Stripe price/product.
-            try {
-              const priceId = sold?.stripePriceId;
-              const productId = sold?.stripeProductId;
-              if (priceId) await stripe.prices.update(priceId, { active: false });
-              if (productId) await stripe.products.update(productId, { active: false });
-            } catch (e) {
-              console.warn('Unable to deactivate Stripe price/product', e?.message || e);
-            }
-          }
-
-          console.log('✅ Marketplace order paid + transfers created', { orderId, transfers });
-        }
-      }
-
-      // Subscription checkout (artist plan)
-      if (session.mode === 'subscription') {
-        const artistId = session?.metadata?.artistId;
-        const tier = session?.metadata?.tier;
-        const subscriptionId = session.subscription;
-        const customerId = session.customer;
-
-        if (artistId && subscriptionId && typeof subscriptionId === 'string') {
-          // Persist customer ID and then sync tier + (optional) fee bps from the Stripe Price metadata.
-          await upsertArtist({
-            id: artistId,
-            stripeCustomerId: typeof customerId === 'string' ? customerId : null,
-            stripeSubscriptionId: subscriptionId,
-            subscriptionTier: tier || 'free',
-            subscriptionStatus: 'active',
-          });
-
-          await syncArtistSubscriptionFromStripe({
-            artistId,
-            subscriptionId,
-            fallbackTier: tier,
-          });
-
-          console.log('✅ Artist subscription activated + synced', { artistId, tier, subscriptionId });
-        }
-      }
-    }
-
-    // Keep subscription status/tier accurate (plan changes, cancellations, payment failures, etc.)
-    if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.deleted') {
-      const sub = event.data.object;
-      const subscriptionId = sub?.id;
-      const artistId = sub?.metadata?.artistId;
-
-      if (artistId && subscriptionId) {
-        // If your Billing setup attaches artistId to the subscription metadata, this just works.
-        await syncArtistSubscriptionFromStripe({
-          artistId,
-          subscriptionId,
-          fallbackTier: sub?.metadata?.tier,
-        });
-        console.log('✅ Artist subscription updated', { artistId, subscriptionId, status: sub?.status });
-      }
-    }
-
-    // TODO (day-one recommended): handle refunds/disputes
-    // - charge.refunded: reverse transfers (transfer reversals)
-    // - charge.dispute.created: flag order and pause payouts if needed
-
+    await handleStripeWebhookEvent(event);
     await markEventProcessed(event.id, event.type);
     return res.json({ received: true });
   } catch (err) {
@@ -214,6 +86,24 @@ app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async
 // Middleware
 app.use(cors({ origin: CORS_ORIGIN }));
 app.use(express.json({ limit: '2mb' }));
+
+// Webhook: forwarded from Cloudflare Worker (already signature-verified)
+app.post('/api/stripe/webhook/forwarded', async (req, res) => {
+  const event = req.body?.event;
+  if (!event || !event.id || !event.type) return res.status(400).json({ error: 'Invalid forwarded event' });
+  // Idempotency: Stripe may retry events
+  if (await wasEventProcessed(event.id)) {
+    return res.json({ received: true, duplicate: true });
+  }
+  try {
+    await handleStripeWebhookEvent(event);
+    await markEventProcessed(event.id, event.type);
+    return res.json({ received: true });
+  } catch (err) {
+    console.error('Forwarded webhook handler error', err);
+    return res.status(500).json({ error: 'Forwarded webhook handler failed' });
+  }
+});
 
 // -----------------------------
 // Helpers
@@ -404,6 +294,122 @@ async function assertPayoutReady(accountId, label) {
   const acc = await stripe.accounts.retrieve(accountId);
   if (!acc.payouts_enabled) {
     throw new Error(`${label} payouts not enabled yet (complete Stripe onboarding)`);
+  }
+}
+
+// Centralized handler so Cloudflare Worker can forward verified events
+async function handleStripeWebhookEvent(event) {
+  if (!event || !event.type) return;
+
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+
+    if (session.mode === 'payment') {
+      const orderId = session?.metadata?.orderId;
+      const artworkId = session?.metadata?.artworkId;
+      if (!orderId) throw new Error('Missing orderId in session metadata');
+
+      const order = await findOrderById(orderId);
+      if (!order) throw new Error(`Order not found: ${orderId}`);
+
+      if (order.status !== 'paid') {
+        const piId = session.payment_intent;
+        if (!piId) throw new Error('Missing payment_intent on completed session');
+        const pi = await stripe.paymentIntents.retrieve(piId, { expand: ['latest_charge'] });
+        const chargeId = typeof pi.latest_charge === 'string' ? pi.latest_charge : pi.latest_charge?.id;
+        if (!chargeId) throw new Error('Missing latest_charge on PaymentIntent');
+
+        const transfers = [];
+
+        if (order.artistPayoutCents > 0) {
+          const artist = await getArtist(order.artistId);
+          if (!artist?.stripeAccountId) throw new Error('Artist stripeAccountId missing for payout');
+          const t = await stripe.transfers.create({
+            amount: order.artistPayoutCents,
+            currency: order.currency,
+            destination: artist.stripeAccountId,
+            source_transaction: chargeId,
+            transfer_group: orderId,
+            metadata: { orderId, artworkId, recipient: 'artist', recipientId: order.artistId },
+          });
+          transfers.push({ recipient: 'artist', id: t.id });
+        }
+
+        if (order.venuePayoutCents > 0) {
+          const venue = await getVenue(order.venueId);
+          if (!venue?.stripeAccountId) throw new Error('Venue stripeAccountId missing for payout');
+          const t = await stripe.transfers.create({
+            amount: order.venuePayoutCents,
+            currency: order.currency,
+            destination: venue.stripeAccountId,
+            source_transaction: chargeId,
+            transfer_group: orderId,
+            metadata: { orderId, artworkId, recipient: 'venue', recipientId: order.venueId },
+          });
+          transfers.push({ recipient: 'venue', id: t.id });
+        }
+
+        await updateOrder(orderId, {
+          status: 'paid',
+          stripePaymentIntentId: piId,
+          stripeChargeId: chargeId,
+          transferIds: transfers,
+        });
+
+        if (artworkId) {
+          const sold = await markArtworkSold(artworkId);
+          try {
+            const priceId = sold?.stripePriceId;
+            const productId = sold?.stripeProductId;
+            if (priceId) await stripe.prices.update(priceId, { active: false });
+            if (productId) await stripe.products.update(productId, { active: false });
+          } catch (e) {
+            console.warn('Unable to deactivate Stripe price/product', e?.message || e);
+          }
+        }
+
+        console.log('✅ Marketplace order paid + transfers created', { orderId, transfers });
+      }
+    }
+
+    if (session.mode === 'subscription') {
+      const artistId = session?.metadata?.artistId;
+      const tier = session?.metadata?.tier;
+      const subscriptionId = session.subscription;
+      const customerId = session.customer;
+
+      if (artistId && subscriptionId && typeof subscriptionId === 'string') {
+        await upsertArtist({
+          id: artistId,
+          stripeCustomerId: typeof customerId === 'string' ? customerId : null,
+          stripeSubscriptionId: subscriptionId,
+          subscriptionTier: tier || 'free',
+          subscriptionStatus: 'active',
+        });
+
+        await syncArtistSubscriptionFromStripe({
+          artistId,
+          subscriptionId,
+          fallbackTier: tier,
+        });
+
+        console.log('✅ Artist subscription activated + synced', { artistId, tier, subscriptionId });
+      }
+    }
+  }
+
+  if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.deleted') {
+    const sub = event.data.object;
+    const subscriptionId = sub?.id;
+    const artistId = sub?.metadata?.artistId;
+    if (artistId && subscriptionId) {
+      await syncArtistSubscriptionFromStripe({
+        artistId,
+        subscriptionId,
+        fallbackTier: sub?.metadata?.tier,
+      });
+      console.log('✅ Artist subscription updated', { artistId, subscriptionId, status: sub?.status });
+    }
   }
 }
 
