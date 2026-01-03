@@ -42,7 +42,7 @@ DO $$ BEGIN
       FOR INSERT TO authenticated
       WITH CHECK (
         bucket_id = 'artworks'
-        AND split_part(name, '/', 1) = auth.uid()
+        AND split_part(name, '/', 1) = auth.uid()::text
       );
   END IF;
 END $$;
@@ -57,7 +57,7 @@ DO $$ BEGIN
       FOR UPDATE TO authenticated
       USING (
         bucket_id = 'artworks'
-        AND split_part(name, '/', 1) = auth.uid()
+        AND split_part(name, '/', 1) = auth.uid()::text
       );
   END IF;
 END $$;
@@ -71,7 +71,7 @@ DO $$ BEGIN
       FOR DELETE TO authenticated
       USING (
         bucket_id = 'artworks'
-        AND split_part(name, '/', 1) = auth.uid()
+        AND split_part(name, '/', 1) = auth.uid()::text
       );
   END IF;
 END $$;
@@ -85,7 +85,7 @@ DO $$ BEGIN
       FOR INSERT TO authenticated
       WITH CHECK (
         bucket_id = 'wallspaces'
-        AND split_part(name, '/', 1) = auth.uid()
+        AND split_part(name, '/', 1) = auth.uid()::text
       );
   END IF;
 END $$;
@@ -99,7 +99,7 @@ DO $$ BEGIN
       FOR UPDATE TO authenticated
       USING (
         bucket_id = 'wallspaces'
-        AND split_part(name, '/', 1) = auth.uid()
+        AND split_part(name, '/', 1) = auth.uid()::text
       );
   END IF;
 END $$;
@@ -113,7 +113,7 @@ DO $$ BEGIN
       FOR DELETE TO authenticated
       USING (
         bucket_id = 'wallspaces'
-        AND split_part(name, '/', 1) = auth.uid()
+        AND split_part(name, '/', 1) = auth.uid()::text
       );
   END IF;
 END $$;
