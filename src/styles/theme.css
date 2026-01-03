@@ -156,6 +156,7 @@ html[data-theme="dark"] .border-neutral-300 { border-color: var(--border) !impor
 .bg-\[var\(--surface-1\)\] { background-color: var(--surface-1); }
 .bg-\[var\(--surface-2\)\] { background-color: var(--surface-2); }
 .bg-\[var\(--surface-3\)\] { background-color: var(--surface-3); }
+.bg-\[var\(--border\)\] { background-color: var(--border); }
 .bg-\[var\(--accent\)\] { background-color: var(--accent); }
 .bg-\[var\(--accent-hover\)\] { background-color: var(--accent-hover); }
 .bg-\[var\(--blue\)\] { background-color: var(--blue); }
@@ -208,6 +209,9 @@ html[data-theme="dark"] .border-neutral-300 { border-color: var(--border) !impor
 .hover\:text-\[var\(--text\)\]:hover { color: var(--text); }
 .hover\:text-\[var\(--text-muted\)\]:hover { color: var(--text-muted); }
 .hover\:text-\[var\(--accent\)\]:hover { color: var(--accent); }
+.hover\:text-\[var\(--blue\)\]:hover { color: var(--blue); }
+.hover\:text-\[var\(--blue-hover\)\]:hover { color: var(--blue-hover); }
+.hover\:text-\[var\(--green\)\]:hover { color: var(--green); }
 
 /* Group-hover variants */
 .group:hover .group-hover\:bg-\[var\(--surface-3\)\] { background-color: var(--surface-3); }
@@ -216,6 +220,8 @@ html[data-theme="dark"] .border-neutral-300 { border-color: var(--border) !impor
 .group:hover .group-hover\:border-\[var\(--green\)\] { border-color: var(--green); }
 .group:hover .group-hover\:text-\[var\(--on-blue\)\] { color: var(--on-blue); }
 .group:hover .group-hover\:text-\[var\(--accent-contrast\)\] { color: var(--accent-contrast); }
+.group:hover .group-hover\:text-\[var\(--blue\)\] { color: var(--blue); }
+.group:hover .group-hover\:text-\[var\(--green\)\] { color: var(--green); }
 
 /* Placeholder variant */
 .placeholder\:text-\[var\(--text-muted\)\]::placeholder { color: var(--text-muted); }
@@ -224,10 +230,15 @@ html[data-theme="dark"] .border-neutral-300 { border-color: var(--border) !impor
 .disabled\:bg-\[var\(--surface-3\)\]:disabled { background-color: var(--surface-3); }
 .disabled\:text-\[var\(--text-muted\)\]:disabled { color: var(--text-muted); }
 
+/* Form control accent-color */
+.accent-\[var\(--accent\)\] { accent-color: var(--accent); }
+.accent-\[var\(--blue\)\] { accent-color: var(--blue); }
+
 /* Focus ring color variants (pairs with existing focus:ring-* utilities) */
 .focus\:ring-\[var\(--focus\)\]:focus { --tw-ring-color: var(--focus); }
 .focus\:ring-\[var\(--blue\)\]:focus { --tw-ring-color: var(--blue); }
 .focus\:ring-\[var\(--green\)\]:focus { --tw-ring-color: var(--green); }
+.focus\:ring-\[var\(--danger\)\]:focus { --tw-ring-color: var(--danger); }
 
 /* Focus-visible variants (used in some buttons/tiles) */
 .focus-visible\:ring-\[var\(--focus\)\]:focus-visible { --tw-ring-color: var(--focus); }
