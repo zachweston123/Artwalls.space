@@ -1,4 +1,5 @@
-import { User, Mail, Link as LinkIcon, DollarSign, Edit } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { User, Mail, Link as LinkIcon, DollarSign, Edit, Save, X } from 'lucide-react';
 import { PlanBadge } from '../pricing/PlanBadge';
 
 interface ArtistProfileProps {
@@ -6,15 +7,97 @@ interface ArtistProfileProps {
 }
 
 export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
-  // Mock data - in production this would come from user state
-  const profile = {
-    name: 'Sarah Chen',
-    email: 'sarah.chen@example.com',
-    portfolioUrl: 'https://sarahchen.art',
-    totalEarnings: 2847.50,
-    pendingPayout: 236.00,
-    currentPlan: 'free' as const,
-  };
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [portfolioUrl, setPortfolioUrl] = useState('');
+  const [currentPlan, setCurrentPlan] = useState<'free' | 'starter' | 'growth' | 'pro'>('free');
+
+  const [totalEarnings] = useState(0);
+  const [pendingPayout] = useState(0);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const { supabase } = await import('../../lib/supabase');
+        const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
+        if (sessionErr) throw sessionErr;
+        const user = sessionData.session?.user;
+        if (!user) throw new Error('Not signed in');
+
+        const { data: artistRows, error: selErr } = await supabase
+          .from('artists')
+          .select('*')
+          .eq('id', user.id)
+          .limit(1);
+        if (selErr) throw selErr;
+
+        if (!artistRows || artistRows.length === 0) {
+          const defaults = {
+            id: user.id,
+            email: user.email,
+            name: (user.user_metadata?.name as string | undefined) || 'Artist',
+            role: 'artist',
+            subscription_tier: 'free',
+            subscription_status: 'inactive',
+          };
+          const { error: upErr } = await supabase.from('artists').upsert(defaults, { onConflict: 'id' });
+          if (upErr) throw upErr;
+          setName(defaults.name || 'Artist');
+          setEmail(defaults.email || '');
+          setCurrentPlan('free');
+        } else {
+          const row = artistRows[0] as any;
+          setName(row.name || (user.user_metadata?.name as string) || 'Artist');
+          setEmail(row.email || user.email || '');
+          const tier = (row.subscription_tier as 'free' | 'starter' | 'growth' | 'pro') || 'free';
+          setCurrentPlan(tier);
+        }
+
+        setPortfolioUrl(((user.user_metadata?.portfolioUrl as string) || '').trim());
+      } catch (e: any) {
+        if (mounted) setError(e?.message || 'Failed to load profile');
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  async function handleSave() {
+    setSaving(true);
+    setError(null);
+    setInfo(null);
+    try {
+      const { supabase } = await import('../../lib/supabase');
+      const { data: sessionData } = await supabase.auth.getSession();
+      const user = sessionData.session?.user;
+      if (!user) throw new Error('Not signed in');
+
+      const { error: upErr } = await supabase
+        .from('artists')
+        .upsert({ id: user.id, name, email, subscription_tier: currentPlan }, { onConflict: 'id' });
+      if (upErr) throw upErr;
+
+      const { error: metaErr } = await supabase.auth.updateUser({ data: { portfolioUrl } });
+      if (metaErr) throw metaErr;
+
+      setInfo('Profile updated successfully');
+      setIsEditing(false);
+    } catch (e: any) {
+      setError(e?.message || 'Failed to save changes');
+    } finally {
+      setSaving(false);
+    }
+  }
 
   return (
     <div>
@@ -33,40 +116,71 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
                   <User className="w-10 h-10 text-blue-600" />
                 </div>
                 <div>
-                  <h2 className="text-2xl mb-1 text-neutral-900">{profile.name}</h2>
-                  <PlanBadge plan={profile.currentPlan} size="sm" showUpgrade onUpgrade={() => onNavigate('plans-pricing')} />
+                  <h2 className="text-2xl mb-1 text-neutral-900">{name || 'Artist'}</h2>
+                  <PlanBadge plan={currentPlan} size="sm" showUpgrade onUpgrade={() => onNavigate('plans-pricing')} />
                 </div>
               </div>
-              <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
-                <Edit className="w-4 h-4" />
-                <span>Edit Profile</span>
-              </button>
+              {!isEditing ? (
+                <button onClick={() => setIsEditing(true)} className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                  <Edit className="w-4 h-4" />
+                  <span>Edit Profile</span>
+                </button>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <button disabled={saving} onClick={handleSave} className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-60">
+                    <Save className="w-4 h-4" />
+                    <span>{saving ? 'Saving…' : 'Save'}</span>
+                  </button>
+                  <button disabled={saving} onClick={() => setIsEditing(false)} className="flex items-center gap-2 px-3 py-2 bg-neutral-50 border border-neutral-200 text-neutral-700 rounded-lg transition-colors">
+                    <X className="w-4 h-4" />
+                    <span>Cancel</span>
+                  </button>
+                </div>
+              )}
             </div>
 
-            <div className="space-y-4">
-              <div className="flex items-start gap-3 p-4 bg-neutral-50 rounded-lg">
-                <Mail className="w-5 h-5 text-neutral-500 mt-0.5" />
-                <div className="flex-1">
-                  <label className="block text-sm text-neutral-500 mb-1">Email Address</label>
-                  <p className="text-neutral-900">{profile.email}</p>
-                </div>
+            {(error || info) && (
+              <div className={`mb-4 rounded-lg border px-4 py-3 text-sm ${error ? 'bg-neutral-50 border-neutral-200 text-red-600' : 'bg-neutral-50 border-neutral-200 text-neutral-900'}`}>
+                {error || info}
               </div>
+            )}
 
-              <div className="flex items-start gap-3 p-4 bg-neutral-50 rounded-lg">
-                <LinkIcon className="w-5 h-5 text-neutral-500 mt-0.5" />
-                <div className="flex-1">
-                  <label className="block text-sm text-neutral-500 mb-1">Portfolio Website</label>
-                  <a 
-                    href={profile.portfolioUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline"
-                  >
-                    {profile.portfolioUrl}
-                  </a>
+            {!isEditing ? (
+              <div className="space-y-4">
+                <div className="flex items-start gap-3 p-4 bg-neutral-50 rounded-lg">
+                  <Mail className="w-5 h-5 text-neutral-500 mt-0.5" />
+                  <div className="flex-1">
+                    <label className="block text-sm text-neutral-500 mb-1">Email Address</label>
+                    <p className="text-neutral-900">{email}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3 p-4 bg-neutral-50 rounded-lg">
+                  <LinkIcon className="w-5 h-5 text-neutral-500 mt-0.5" />
+                  <div className="flex-1">
+                    <label className="block text-sm text-neutral-500 mb-1">Portfolio Website</label>
+                    {portfolioUrl ? (
+                      <a href={portfolioUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                        {portfolioUrl}
+                      </a>
+                    ) : (
+                      <p className="text-neutral-500">Not set</p>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm text-neutral-600 mb-1">Display Name</label>
+                  <input value={name} onChange={(e) => setName(e.target.value)} className="w-full px-4 py-2 rounded-lg border border-neutral-300 bg-white text-neutral-900 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Your name" />
+                </div>
+                <div>
+                  <label className="block text-sm text-neutral-600 mb-1">Portfolio Website</label>
+                  <input value={portfolioUrl} onChange={(e) => setPortfolioUrl(e.target.value)} className="w-full px-4 py-2 rounded-lg border border-neutral-300 bg-white text-neutral-900 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="https://your-portfolio.example" />
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="border-t border-neutral-200 p-6">
@@ -96,13 +210,13 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
 
             <div className="space-y-4">
               <div>
-                <p className="text-sm text-neutral-500 mb-1">Total Earnings (80%)</p>
-                <p className="text-2xl text-neutral-900">${profile.totalEarnings.toFixed(2)}</p>
+                <p className="text-sm text-neutral-500 mb-1">Total Earnings</p>
+                <p className="text-2xl text-neutral-900">${totalEarnings.toFixed(2)}</p>
               </div>
               
               <div className="pt-4 border-t border-neutral-200">
                 <p className="text-sm text-neutral-500 mb-1">Pending Payout</p>
-                <p className="text-xl text-blue-600">${profile.pendingPayout.toFixed(2)}</p>
+                <p className="text-xl text-blue-600">${pendingPayout.toFixed(2)}</p>
                 <p className="text-xs text-neutral-500 mt-1">Processed monthly on the 15th</p>
               </div>
             </div>
@@ -120,7 +234,7 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
             <div className="space-y-2">
               <button 
                 onClick={() => onNavigate('artist-artworks')}
-              <button className="w-full text-left px-4 py-2 bg-neutral-50 text-neutral-700 rounded-lg hover:bg-neutral-100 transition-colors">
+                className="w-full text-left px-4 py-2 bg-neutral-50 text-neutral-700 rounded-lg hover:bg-neutral-100 transition-colors"
               >
                 Manage Artworks
               </button>
