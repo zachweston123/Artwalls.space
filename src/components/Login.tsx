@@ -171,7 +171,7 @@ export function Login({ onLogin }: LoginProps) {
           </p>
         </div>
 
-        <div className="bg-[var(--surface-2)] rounded-2xl p-8 shadow-sm border border-[var(--border)]">
+        <div className="bg-[var(--surface-1)] rounded-2xl p-8 border border-[var(--border)]">
           <div
             className={
               "inline-flex px-3 py-1 rounded-full text-sm mb-6 border " +
