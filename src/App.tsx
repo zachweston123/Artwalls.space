@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from './lib/supabase';
+import { apiPost } from './lib/api';
 import { Navigation } from './components/Navigation';
 import { MobileSidebar } from './components/MobileSidebar';
 import { Login } from './components/Login';
@@ -137,6 +138,21 @@ export default function App() {
       setCurrentPage(user.role === 'artist' ? 'artist-dashboard' : 'venue-dashboard');
     }
   };
+
+  // Ensure the user has a corresponding DB record immediately (discoverable in searches)
+  useEffect(() => {
+    async function syncProfile() {
+      try {
+        if (!currentUser) return;
+        if (currentUser.role === 'artist') {
+          await apiPost('/api/artists', { artistId: currentUser.id, email: currentUser.email, name: currentUser.name });
+        } else if (currentUser.role === 'venue') {
+          await apiPost('/api/venues', { venueId: currentUser.id, email: currentUser.email, name: currentUser.name });
+        }
+      } catch {}
+    }
+    syncProfile();
+  }, [currentUser]);
 
   const handleAdminPasswordVerified = () => {
     setShowAdminPasswordPrompt(false);

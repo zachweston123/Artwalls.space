@@ -145,6 +145,15 @@ export async function getArtist(id) {
   return mapArtistRow(data);
 }
 
+export async function listArtists() {
+  const { data, error } = await supabaseAdmin
+    .from('artists')
+    .select('*')
+    .order('created_at', { ascending: false });
+  throwIfError(error, 'listArtists');
+  return (data || []).map(mapArtistRow);
+}
+
 // --- Venues ---
 export async function upsertVenue({ id, email, name, type, stripeAccountId, defaultVenueFeeBps }) {
   const payload = {

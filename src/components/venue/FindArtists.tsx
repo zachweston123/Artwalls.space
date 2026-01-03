@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Search, MapPin, Filter, Users } from 'lucide-react';
 import { LabelChip } from '../LabelChip';
+import { apiGet } from '../../lib/api';
 
 interface FindArtistsProps {
   onInviteArtist: (artistId: string) => void;
@@ -26,7 +27,7 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
     'Division', 'Sellwood', 'St. Johns', 'Hollywood'
   ];
 
-  // Mock artists data
+  // Mock artists data (fallback)
   const mockArtists = [
     {
       id: '1',
@@ -88,10 +89,49 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
     setSearchQuery('');
   };
 
+  const [artists, setArtists] = useState<any[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadArtists() {
+      try {
+        const apiArtists = await apiGet<Array<{ id: string; name?: string | null; email?: string | null }>>(
+          '/api/artists'
+        );
+
+        const merged = (apiArtists || []).map((a) => {
+          const fallback = mockArtists.find((m) => m.name === a.name) || null;
+          return {
+            id: a.id,
+            name: a.name || fallback?.name || 'Artist',
+            avatar:
+              fallback?.avatar ||
+              'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400',
+            location: fallback?.location || 'Portland',
+            bio: fallback?.bio || 'Artist on Artwalls',
+            artTypes: fallback?.artTypes || ['Painter'],
+            openToNew: true,
+            portfolioCount: fallback?.portfolioCount || 0,
+          };
+        });
+
+        const next = merged.length > 0 ? merged : mockArtists;
+        if (isMounted) setArtists(next);
+      } catch {
+        if (isMounted) setArtists(mockArtists);
+      }
+    }
+
+    loadArtists();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const hasActiveFilters = filters.artTypes.length > 0 || filters.openToNew || filters.neighborhood || searchQuery;
 
   // Filter artists based on criteria
-  const filteredArtists = mockArtists.filter(artist => {
+  const filteredArtists = (artists.length ? artists : mockArtists).filter(artist => {
     if (searchQuery && !artist.name.toLowerCase().includes(searchQuery.toLowerCase())) {
       return false;
     }

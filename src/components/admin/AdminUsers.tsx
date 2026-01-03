@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Search, Filter, Download, Users as UsersIcon } from 'lucide-react';
+import { apiGet } from '../../lib/api';
 
 interface AdminUsersProps {
   onViewUser: (userId: string) => void;
@@ -29,7 +30,7 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
     agreementAccepted: 'all',
   });
 
-  // Mock users data
+  // Mock users data (fallback)
   const mockUsers = [
     {
       id: '1',
@@ -118,8 +119,56 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
     }
   };
 
+  const [users, setUsers] = useState<any[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadUsers() {
+      try {
+        const [artists, venues] = await Promise.all([
+          apiGet<Array<{ id: string; name?: string | null; email?: string | null; subscriptionTier?: string | null; subscriptionStatus?: string | null }>>('/api/artists'),
+          apiGet<Array<{ id: string; name?: string | null; email?: string | null; type?: string | null }>>('/api/venues'),
+        ]);
+
+        const mappedArtists = (artists || []).map((a) => ({
+          id: a.id,
+          name: a.name || 'Artist',
+          email: a.email || '',
+          role: 'artist' as const,
+          plan: (a.subscriptionTier || 'Free')[0].toUpperCase() + (a.subscriptionTier || 'Free').slice(1),
+          status: (a.subscriptionStatus === 'active' ? 'Active' : 'Active'),
+          lastActive: '—',
+          city: '—',
+          agreementAccepted: true,
+        }));
+
+        const mappedVenues = (venues || []).map((v) => ({
+          id: v.id,
+          name: v.name || 'Venue',
+          email: v.email || '',
+          role: 'venue' as const,
+          plan: 'Free',
+          status: 'Active',
+          lastActive: '—',
+          city: '—',
+          agreementAccepted: true,
+        }));
+
+        const combined = [...mappedArtists, ...mappedVenues];
+        if (isMounted) setUsers(combined.length ? combined : mockUsers);
+      } catch {
+        if (isMounted) setUsers(mockUsers);
+      }
+    }
+
+    loadUsers();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   // Filter users
-  const filteredUsers = mockUsers.filter(user => {
+  const filteredUsers = (users.length ? users : mockUsers).filter(user => {
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       const matchesSearch = 

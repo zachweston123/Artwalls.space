@@ -9,6 +9,7 @@ import { supabaseAdmin } from './supabaseClient.js';
 import {
   upsertArtist,
   getArtist,
+  listArtists,
   upsertVenue,
   getVenue,
   listVenues,
@@ -600,6 +601,42 @@ app.post('/api/venues', async (req, res) => {
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: err?.message || 'Venue upsert error' });
+  }
+});
+
+// -----------------------------
+// Artists (simple listing)
+// -----------------------------
+app.get('/api/artists', async (_req, res) => {
+  return res.json(await listArtists());
+});
+
+app.post('/api/artists', async (req, res) => {
+  try {
+    // In production, require Authorization and derive artistId from Supabase JWT.
+    // In dev, allow explicit artistId for convenience.
+    const authUser = await getSupabaseUserFromRequest(req);
+    if (String(process.env.NODE_ENV || '').toLowerCase() === 'production') {
+      if (!authUser) return res.status(401).json({ error: 'Missing or invalid Authorization bearer token' });
+      if (authUser.user_metadata?.role !== 'artist') {
+        return res.status(403).json({ error: 'Forbidden: artist role required' });
+      }
+    }
+
+    const { artistId: bodyArtistId, email, name } = req.body || {};
+    const artistId = authUser?.id || bodyArtistId;
+    if (!artistId || typeof artistId !== 'string') return res.status(400).json({ error: 'Missing artistId' });
+
+    const artist = await upsertArtist({
+      id: artistId,
+      email: email || authUser?.email || undefined,
+      name: name || authUser?.user_metadata?.name || undefined,
+      role: 'artist',
+    });
+    return res.json(artist);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: err?.message || 'Artist upsert error' });
   }
 });
 
