@@ -41,6 +41,7 @@ function mapVenueRow(r) {
     type: r.type,
     stripeAccountId: r.stripe_account_id,
     defaultVenueFeeBps: r.default_venue_fee_bps,
+    suspended: !!r.suspended,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
   };
@@ -155,7 +156,7 @@ export async function listArtists() {
 }
 
 // --- Venues ---
-export async function upsertVenue({ id, email, name, type, stripeAccountId, defaultVenueFeeBps }) {
+export async function upsertVenue({ id, email, name, type, stripeAccountId, defaultVenueFeeBps, suspended }) {
   const payload = {
     id,
     email: email ?? null,
@@ -163,6 +164,7 @@ export async function upsertVenue({ id, email, name, type, stripeAccountId, defa
     type: type ?? null,
     stripe_account_id: stripeAccountId ?? null,
     default_venue_fee_bps: defaultVenueFeeBps === undefined ? null : toIntOrNull(defaultVenueFeeBps),
+    suspended: suspended === undefined ? null : Boolean(suspended),
     updated_at: nowIso(),
   };
 

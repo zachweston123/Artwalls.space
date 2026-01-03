@@ -685,6 +685,55 @@ app.post('/api/admin/sync-users', async (_req, res) => {
   }
 });
 
+// Admin: suspend/activate users (artist or venue)
+app.post('/api/admin/users/:id/suspend', async (req, res) => {
+  try {
+    const userId = req.params.id;
+    if (!userId) return res.status(400).json({ error: 'Missing userId' });
+
+    const artist = await getArtist(userId);
+    if (artist) {
+      const updated = await upsertArtist({ id: userId, subscriptionStatus: 'suspended' });
+      return res.json({ role: 'artist', user: updated });
+    }
+
+    const venue = await getVenue(userId);
+    if (venue) {
+      const updated = await upsertVenue({ id: userId, suspended: true });
+      return res.json({ role: 'venue', user: updated });
+    }
+
+    return res.status(404).json({ error: 'User not found' });
+  } catch (err) {
+    console.error('admin suspend user error', err);
+    return res.status(500).json({ error: err?.message || 'Admin suspend failed' });
+  }
+});
+
+app.post('/api/admin/users/:id/activate', async (req, res) => {
+  try {
+    const userId = req.params.id;
+    if (!userId) return res.status(400).json({ error: 'Missing userId' });
+
+    const artist = await getArtist(userId);
+    if (artist) {
+      const updated = await upsertArtist({ id: userId, subscriptionStatus: 'active' });
+      return res.json({ role: 'artist', user: updated });
+    }
+
+    const venue = await getVenue(userId);
+    if (venue) {
+      const updated = await upsertVenue({ id: userId, suspended: false });
+      return res.json({ role: 'venue', user: updated });
+    }
+
+    return res.status(404).json({ error: 'User not found' });
+  } catch (err) {
+    console.error('admin activate user error', err);
+    return res.status(500).json({ error: err?.message || 'Admin activate failed' });
+  }
+});
+
 // -----------------------------
 // Wallspaces per venue
 // -----------------------------

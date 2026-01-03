@@ -151,7 +151,7 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
           email: v.email || '',
           role: 'venue' as const,
           plan: 'Free',
-          status: 'Active',
+          status: v.suspended ? 'Suspended' : 'Active',
           lastActive: '—',
           city: '—',
           agreementAccepted: true,
@@ -413,11 +413,27 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
                           View
                         </button>
                         {user.status === 'Active' ? (
-                          <button className="px-3 py-1 bg-[var(--surface-3)] text-[var(--danger)] border border-[var(--border)] rounded text-xs hover:bg-[var(--surface-2)] transition-colors">
+                          <button
+                            onClick={async () => {
+                              try {
+                                await apiPost(`/api/admin/users/${user.id}/suspend`, {});
+                                setUsers(users.map(u => u.id === user.id ? { ...u, status: 'Suspended' } : u));
+                              } catch {}
+                            }}
+                            className="px-3 py-1 bg-[var(--surface-3)] text-[var(--danger)] border border-[var(--border)] rounded text-xs hover:bg-[var(--surface-2)] transition-colors"
+                          >
                             Suspend
                           </button>
                         ) : (
-                          <button className="px-3 py-1 bg-[var(--green)] text-[var(--on-blue)] rounded text-xs hover:opacity-95 transition-colors">
+                          <button
+                            onClick={async () => {
+                              try {
+                                await apiPost(`/api/admin/users/${user.id}/activate`, {});
+                                setUsers(users.map(u => u.id === user.id ? { ...u, status: 'Active' } : u));
+                              } catch {}
+                            }}
+                            className="px-3 py-1 bg-[var(--green)] text-[var(--on-blue)] rounded text-xs hover:opacity-95 transition-colors"
+                          >
                             Activate
                           </button>
                         )}
