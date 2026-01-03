@@ -145,3 +145,85 @@ html[data-theme="dark"] .text-neutral-500 { color: var(--text-muted) !important;
 
 html[data-theme="dark"] .border-neutral-200,
 html[data-theme="dark"] .border-neutral-300 { border-color: var(--border) !important; }
+
+/* D) Token utility shims
+  This repo does not compile Tailwind at build time, so arbitrary-value
+  utilities like `bg-[var(--surface-2)]` would otherwise have no CSS.
+  Keep components token-first while ensuring production renders correctly. */
+
+/* Backgrounds */
+.bg-\[var\(--bg\)\] { background-color: var(--bg); }
+.bg-\[var\(--surface-1\)\] { background-color: var(--surface-1); }
+.bg-\[var\(--surface-2\)\] { background-color: var(--surface-2); }
+.bg-\[var\(--surface-3\)\] { background-color: var(--surface-3); }
+.bg-\[var\(--accent\)\] { background-color: var(--accent); }
+.bg-\[var\(--accent-hover\)\] { background-color: var(--accent-hover); }
+.bg-\[var\(--blue\)\] { background-color: var(--blue); }
+.bg-\[var\(--blue-hover\)\] { background-color: var(--blue-hover); }
+.bg-\[var\(--blue-muted\)\] { background-color: var(--blue-muted); }
+.bg-\[var\(--green\)\] { background-color: var(--green); }
+.bg-\[var\(--green-muted\)\] { background-color: var(--green-muted); }
+.bg-\[var\(--success\)\] { background-color: var(--success); }
+.bg-\[var\(--success-muted\)\] { background-color: var(--success-muted); }
+
+/* Text */
+.text-\[var\(--text\)\] { color: var(--text); }
+.text-\[var\(--text-muted\)\] { color: var(--text-muted); }
+.text-\[var\(--accent\)\] { color: var(--accent); }
+.text-\[var\(--accent-contrast\)\] { color: var(--accent-contrast); }
+.text-\[var\(--blue\)\] { color: var(--blue); }
+.text-\[var\(--on-blue\)\] { color: var(--on-blue); }
+.text-\[var\(--green\)\] { color: var(--green); }
+.text-\[var\(--warning\)\] { color: var(--warning); }
+.text-\[var\(--danger\)\] { color: var(--danger); }
+.text-\[var\(--success\)\] { color: var(--success); }
+
+/* Borders */
+.border-\[var\(--border\)\] { border-color: var(--border); }
+.border-\[var\(--accent\)\] { border-color: var(--accent); }
+.border-\[var\(--blue\)\] { border-color: var(--blue); }
+.border-\[var\(--green\)\] { border-color: var(--green); }
+.border-\[var\(--danger\)\] { border-color: var(--danger); }
+.border-\[var\(--warning\)\] { border-color: var(--warning); }
+.border-\[var\(--success\)\] { border-color: var(--success); }
+
+/* Divide color (pairs with existing divide-x/divide-y utilities) */
+.divide-\[var\(--border\)\] > :not([hidden]) ~ :not([hidden]) { border-color: var(--border); }
+
+/* Hover variants */
+.hover\:bg-\[var\(--surface-2\)\]:hover { background-color: var(--surface-2); }
+.hover\:bg-\[var\(--surface-3\)\]:hover { background-color: var(--surface-3); }
+.hover\:bg-\[var\(--accent\)\]:hover { background-color: var(--accent); }
+.hover\:bg-\[var\(--accent-hover\)\]:hover { background-color: var(--accent-hover); }
+.hover\:bg-\[var\(--blue\)\]:hover { background-color: var(--blue); }
+.hover\:bg-\[var\(--blue-hover\)\]:hover { background-color: var(--blue-hover); }
+.hover\:bg-\[var\(--green\)\]:hover { background-color: var(--green); }
+.hover\:border-\[var\(--focus\)\]:hover { border-color: var(--focus); }
+.hover\:border-\[var\(--blue\)\]:hover { border-color: var(--blue); }
+.hover\:border-\[var\(--green\)\]:hover { border-color: var(--green); }
+.hover\:text-\[var\(--text\)\]:hover { color: var(--text); }
+.hover\:text-\[var\(--text-muted\)\]:hover { color: var(--text-muted); }
+.hover\:text-\[var\(--accent\)\]:hover { color: var(--accent); }
+
+/* Group-hover variants */
+.group:hover .group-hover\:bg-\[var\(--blue\)\] { background-color: var(--blue); }
+.group:hover .group-hover\:bg-\[var\(--green\)\] { background-color: var(--green); }
+.group:hover .group-hover\:border-\[var\(--green\)\] { border-color: var(--green); }
+.group:hover .group-hover\:text-\[var\(--on-blue\)\] { color: var(--on-blue); }
+.group:hover .group-hover\:text-\[var\(--accent-contrast\)\] { color: var(--accent-contrast); }
+
+/* Placeholder variant */
+.placeholder\:text-\[var\(--text-muted\)\]::placeholder { color: var(--text-muted); }
+
+/* Disabled variants */
+.disabled\:bg-\[var\(--surface-3\)\]:disabled { background-color: var(--surface-3); }
+.disabled\:text-\[var\(--text-muted\)\]:disabled { color: var(--text-muted); }
+
+/* Focus ring color variants (pairs with existing focus:ring-* utilities) */
+.focus\:ring-\[var\(--focus\)\]:focus { --tw-ring-color: var(--focus); }
+.focus\:ring-\[var\(--blue\)\]:focus { --tw-ring-color: var(--blue); }
+.focus\:ring-\[var\(--green\)\]:focus { --tw-ring-color: var(--green); }
+
+/* Focus-visible variants (used in some buttons/tiles) */
+.focus-visible\:ring-\[var\(--focus\)\]:focus-visible { --tw-ring-color: var(--focus); }
+.focus-visible\:ring-offset-\[var\(--bg\)\]:focus-visible { --tw-ring-offset-color: var(--bg); }
