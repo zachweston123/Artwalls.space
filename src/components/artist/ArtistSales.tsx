@@ -10,7 +10,7 @@ export function ArtistSales() {
     <div>
       <div className="mb-8">
         <h1 className="text-3xl mb-2">Sales & Earnings</h1>
-        <p className="text-neutral-600">Track your artwork sales and income (80% payout)</p>
+        <p className="text-neutral-600">Track your artwork sales and income. Payouts vary by subscription plan.</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
@@ -117,26 +117,43 @@ export function ArtistSales() {
         )}
       </div>
 
-      <div className="mt-6 bg-blue-50 rounded-xl p-6 border border-blue-100">
-        <h3 className="text-lg mb-2">Payout Information</h3>
-        <p className="text-sm text-blue-900 mb-4">
-          You receive 80% of the sale price. The venue receives 10%, and Artwalls keeps 10% as a platform fee.
-        </p>
-        <div className="grid grid-cols-3 gap-4 text-sm">
-          <div className="bg-white rounded-lg p-3 border border-transparent">
-            <div className="text-neutral-600 mb-1">Artist</div>
-            <div className="text-xl text-blue-600">80%</div>
-          </div>
-          <div className="bg-white rounded-lg p-3 border border-transparent">
-            <div className="text-neutral-600 mb-1">Venue</div>
-            <div className="text-xl text-green-600">10%</div>
-          </div>
-          <div className="bg-white rounded-lg p-3 border border-transparent">
-            <div className="text-neutral-600 mb-1">Platform</div>
-            <div className="text-xl text-neutral-600">10%</div>
-          </div>
-        </div>
-      </div>
-    </div>
   );
+        <div className="mt-6 bg-blue-50 rounded-xl p-6 border border-blue-100">
+          <h3 className="text-lg mb-2">Payout Information (by plan)</h3>
+          <p className="text-sm text-blue-900 mb-4">
+            Artist payout depends on your subscription plan. Venue commission is 10% by default; the remaining percentage is the platform fee.
+          </p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-neutral-50">
+                <tr>
+                  <th className="text-left px-4 py-3 text-neutral-600">Plan</th>
+                  <th className="text-left px-4 py-3 text-neutral-600">Artist</th>
+                  <th className="text-left px-4 py-3 text-neutral-600">Venue</th>
+                  <th className="text-left px-4 py-3 text-neutral-600">Platform</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-neutral-100">
+                {[
+                  { id: 'free', name: 'Free', platform: 15 },
+                  { id: 'starter', name: 'Starter', platform: 10 },
+                  { id: 'growth', name: 'Growth', platform: 8 },
+                  { id: 'pro', name: 'Pro', platform: 6 },
+                ].map((plan) => {
+                  const venue = 10;
+                  const artist = Math.max(0, 100 - venue - plan.platform);
+                  return (
+                    <tr key={plan.id}>
+                      <td className="px-4 py-3 text-neutral-900">{plan.name}</td>
+                      <td className="px-4 py-3 text-blue-600">{artist}%</td>
+                      <td className="px-4 py-3 text-neutral-900">{venue}%</td>
+                      <td className="px-4 py-3 text-neutral-600">{plan.platform}%</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-xs text-neutral-500 mt-3">Actual payout amounts are calculated per sale. Example sales shown above use a simplified 80/10/10 split.</p>
+        </div>
 }
