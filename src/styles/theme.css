@@ -39,7 +39,7 @@
 }
 
 html[data-theme="dark"] {
-  --bg: #0b0f17;
+  --bg: #000000;
   --surface-1: #0f1623;
   --surface-2: #121b2b;
   --surface-3: #17233a;
