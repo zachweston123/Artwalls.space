@@ -827,10 +827,12 @@ app.post('/api/artworks', async (req, res) => {
     const priceNumber = Number(price);
     if (!Number.isFinite(priceNumber) || priceNumber <= 0) return res.status(400).json({ error: 'Invalid price' });
 
-    if (!venueId || typeof venueId !== 'string') return res.status(400).json({ error: 'Missing venueId' });
-
-    const venue = await getVenue(venueId);
-    if (!venue) return res.status(400).json({ error: 'Venue not found. Create/onboard the venue first.' });
+    // Venue is optional: artists can create listings before a venue is assigned.
+    let venue = null;
+    if (venueId && typeof venueId === 'string') {
+      venue = await getVenue(venueId);
+      if (!venue) return res.status(400).json({ error: 'Venue not found. Create/onboard the venue first.' });
+    }
 
     const artworkId = crypto.randomUUID();
 
@@ -838,7 +840,7 @@ app.post('/api/artworks', async (req, res) => {
       name: title,
       description,
       images: imageUrl ? [String(imageUrl)] : undefined,
-      metadata: { artworkId, artistId: artist.id, venueId },
+      metadata: venue ? { artworkId, artistId: artist.id, venueId } : { artworkId, artistId: artist.id },
     });
 
     const unit_amount = Math.round(priceNumber * 100);
@@ -848,7 +850,9 @@ app.post('/api/artworks', async (req, res) => {
       unit_amount,
     });
 
-    const resolvedVenueFeeBps = Number.isFinite(Number(venueFeeBps)) ? Number(venueFeeBps) : venue.defaultVenueFeeBps;
+    const resolvedVenueFeeBps = venue
+      ? (Number.isFinite(Number(venueFeeBps)) ? Number(venueFeeBps) : venue.defaultVenueFeeBps)
+      : null;
 
     const record = await createArtwork({
       id: artworkId,
@@ -859,8 +863,8 @@ app.post('/api/artworks', async (req, res) => {
       imageUrl: imageUrl || 'https://images.unsplash.com/photo-1561214115-f2f134cc4912?w=800',
       artistId: artist.id,
       artistName: artist.name || 'Artist',
-      venueId,
-      venueName: venue.name || 'Venue',
+      venueId: venue ? venueId : null,
+      venueName: venue ? (venue.name || 'Venue') : null,
       venueFeeBps: resolvedVenueFeeBps,
       status: 'available',
       stripeProductId: product.id,
