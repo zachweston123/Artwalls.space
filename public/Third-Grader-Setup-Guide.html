@@ -25,13 +25,18 @@
       <p>This is a super simple guide to finish setup. Follow the steps, one by one. You got this!</p>
 
       <div class="card ok">
-        <h2>1) Stripe Webhook (Cloudflare Worker)</h2>
+        <h2>1) Deploy from GitHub (Cloudflare Worker)</h2>
         <ol>
-          <li>Open Cloudflare dashboard → Workers & Pages → your Worker.</li>
-          <li>Go to Settings → Variables.</li>
-          <li>Add variable named <code>STRIPE_WEBHOOK_SECRET</code>.</li>
-          <li>Put the value from Stripe (see Step 2 below).</li>
-          <li>Already set: <code>API_BASE_URL</code> is <code>https://api.artwalls.space</code>.</li>
+          <li>Open GitHub → Settings → Secrets and variables → Actions.</li>
+          <li>Add three Repository secrets:
+            <ul>
+              <li><strong>CF_API_TOKEN</strong> → Cloudflare API Token with Workers write access</li>
+              <li><strong>CF_ACCOUNT_ID</strong> → Your Cloudflare Account ID</li>
+              <li><strong>STRIPE_WEBHOOK_SECRET</strong> → From Stripe (see Step 2)</li>
+            </ul>
+          </li>
+          <li>Push to <strong>main</strong>. GitHub Action will build and deploy the Worker.</li>
+          <li>Worker URL looks like <code>https://artwalls.workers.dev/api/stripe/webhook</code>.</li>
         </ol>
       </div>
 
@@ -40,7 +45,7 @@
         <ol>
           <li>Open Stripe Dashboard → Developers → Webhooks.</li>
           <li>Click "Add endpoint".</li>
-          <li>Set URL to <code>https://artwalls.space/api/stripe/webhook</code> (the Worker route).</li>
+          <li>Set URL to your Worker URL: <code>https://artwalls.workers.dev/api/stripe/webhook</code>.</li>
           <li>Choose events: <code>checkout.session.completed</code>, <code>customer.subscription.updated</code>, <code>customer.subscription.deleted</code>.</li>
           <li>Save. Copy the "Signing secret" value → paste into Cloudflare as <code>STRIPE_WEBHOOK_SECRET</code>.</li>
         </ol>
