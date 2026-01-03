@@ -10,53 +10,110 @@ insert into storage.buckets (id, name, public)
 values ('wallspaces', 'wallspaces', true)
 on conflict (id) do update set public = excluded.public;
 
--- Public read via client (listing) for these buckets
-create policy if not exists "Public read artworks" on storage.objects
-  for select using (bucket_id = 'artworks');
+-- Public read via client (listing) for these buckets (idempotent via pg_policies)
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'storage' AND tablename = 'objects' AND polname = 'Public read artworks'
+  ) THEN
+    CREATE POLICY "Public read artworks" ON storage.objects
+      FOR SELECT USING (bucket_id = 'artworks');
+  END IF;
+END $$;
 
-create policy if not exists "Public read wallspaces" on storage.objects
-  for select using (bucket_id = 'wallspaces');
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'storage' AND tablename = 'objects' AND polname = 'Public read wallspaces'
+  ) THEN
+    CREATE POLICY "Public read wallspaces" ON storage.objects
+      FOR SELECT USING (bucket_id = 'wallspaces');
+  END IF;
+END $$;
 
 -- Authenticated users can upload to their own folder prefix: <auth.uid()>/filename
-create policy if not exists "Users upload own artwork images" on storage.objects
-  for insert to authenticated
-  with check (
-    bucket_id = 'artworks'
-    and (storage.foldername(name))[1] = auth.uid()
-  );
+-- Use split_part(name, '/', 1) to match the first path segment against auth.uid()
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'storage' AND tablename = 'objects' AND polname = 'Users upload own artwork images'
+  ) THEN
+    CREATE POLICY "Users upload own artwork images" ON storage.objects
+      FOR INSERT TO authenticated
+      WITH CHECK (
+        bucket_id = 'artworks'
+        AND split_part(name, '/', 1) = auth.uid()
+      );
+  END IF;
+END $$;
 
 -- Allow update/delete for owners if needed (optional but helpful in app)
-create policy if not exists "Users manage own artwork images" on storage.objects
-  for update to authenticated
-  using (
-    bucket_id = 'artworks'
-    and (storage.foldername(name))[1] = auth.uid()
-  );
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'storage' AND tablename = 'objects' AND polname = 'Users manage own artwork images'
+  ) THEN
+    CREATE POLICY "Users manage own artwork images" ON storage.objects
+      FOR UPDATE TO authenticated
+      USING (
+        bucket_id = 'artworks'
+        AND split_part(name, '/', 1) = auth.uid()
+      );
+  END IF;
+END $$;
 
-create policy if not exists "Users delete own artwork images" on storage.objects
-  for delete to authenticated
-  using (
-    bucket_id = 'artworks'
-    and (storage.foldername(name))[1] = auth.uid()
-  );
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'storage' AND tablename = 'objects' AND polname = 'Users delete own artwork images'
+  ) THEN
+    CREATE POLICY "Users delete own artwork images" ON storage.objects
+      FOR DELETE TO authenticated
+      USING (
+        bucket_id = 'artworks'
+        AND split_part(name, '/', 1) = auth.uid()
+      );
+  END IF;
+END $$;
 
-create policy if not exists "Venues upload own wallspace photos" on storage.objects
-  for insert to authenticated
-  with check (
-    bucket_id = 'wallspaces'
-    and (storage.foldername(name))[1] = auth.uid()
-  );
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'storage' AND tablename = 'objects' AND polname = 'Venues upload own wallspace photos'
+  ) THEN
+    CREATE POLICY "Venues upload own wallspace photos" ON storage.objects
+      FOR INSERT TO authenticated
+      WITH CHECK (
+        bucket_id = 'wallspaces'
+        AND split_part(name, '/', 1) = auth.uid()
+      );
+  END IF;
+END $$;
 
-create policy if not exists "Venues manage own wallspace photos" on storage.objects
-  for update to authenticated
-  using (
-    bucket_id = 'wallspaces'
-    and (storage.foldername(name))[1] = auth.uid()
-  );
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'storage' AND tablename = 'objects' AND polname = 'Venues manage own wallspace photos'
+  ) THEN
+    CREATE POLICY "Venues manage own wallspace photos" ON storage.objects
+      FOR UPDATE TO authenticated
+      USING (
+        bucket_id = 'wallspaces'
+        AND split_part(name, '/', 1) = auth.uid()
+      );
+  END IF;
+END $$;
 
-create policy if not exists "Venues delete own wallspace photos" on storage.objects
-  for delete to authenticated
-  using (
-    bucket_id = 'wallspaces'
-    and (storage.foldername(name))[1] = auth.uid()
-  );
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'storage' AND tablename = 'objects' AND polname = 'Venues delete own wallspace photos'
+  ) THEN
+    CREATE POLICY "Venues delete own wallspace photos" ON storage.objects
+      FOR DELETE TO authenticated
+      USING (
+        bucket_id = 'wallspaces'
+        AND split_part(name, '/', 1) = auth.uid()
+      );
+  END IF;
+END $$;
