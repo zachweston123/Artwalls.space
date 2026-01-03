@@ -153,7 +153,7 @@ interface StripeSetupProps {
 ### Webhook Endpoint
 ```typescript
 // Server-side implementation
-app.post('/webhooks/stripe', async (req, res) => {
+app.post('/api/stripe/webhook', async (req, res) => {
   const sig = req.headers['stripe-signature'];
   const event = stripe.webhooks.constructEvent(
     req.body,
@@ -162,14 +162,14 @@ app.post('/webhooks/stripe', async (req, res) => {
   );
 
   switch (event.type) {
-    case 'payment_intent.succeeded':
-      // Handle successful payment
+    case 'checkout.session.completed':
+      // Handle successful Checkout (payment + subscription)
       break;
-    case 'payment_intent.payment_failed':
-      // Handle failed payment
+    case 'customer.subscription.updated':
+      // Handle subscription status/tier changes
       break;
-    case 'customer.subscription.created':
-      // Handle subscription creation
+    case 'customer.subscription.deleted':
+      // Handle subscription cancellations
       break;
     // ... handle other events
   }
@@ -218,7 +218,7 @@ User Payment → Frontend → Stripe API → Backend Webhook → Database → Co
 
 | Variable | Environment | Purpose |
 |----------|-------------|---------|
-| `REACT_APP_STRIPE_PUBLISHABLE_KEY` | Frontend | Public key for payment forms |
+| `VITE_STRIPE_PUBLISHABLE_KEY` | Frontend | Optional: only needed if you embed Stripe Elements/card forms |
 | `STRIPE_SECRET_KEY` | Backend | Confidential key for API calls |
 | `STRIPE_WEBHOOK_SECRET` | Backend | Verify webhook authenticity |
 

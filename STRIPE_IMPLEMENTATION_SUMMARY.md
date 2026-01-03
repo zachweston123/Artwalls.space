@@ -167,16 +167,20 @@ interface StripeSetupProps {
 
 **Development (.env.local)**:
 ```
-REACT_APP_STRIPE_PUBLISHABLE_KEY=pk_test_xxxxx
 STRIPE_SECRET_KEY=sk_test_xxxxx
 STRIPE_WEBHOOK_SECRET=whsec_test_xxxxx
+
+# Optional: only needed if you embed Stripe Elements in the frontend
+VITE_STRIPE_PUBLISHABLE_KEY=pk_test_xxxxx
 ```
 
 **Production (.env.production)**:
 ```
-REACT_APP_STRIPE_PUBLISHABLE_KEY=pk_live_xxxxx
 STRIPE_SECRET_KEY=sk_live_xxxxx
 STRIPE_WEBHOOK_SECRET=whsec_live_xxxxx
+
+# Optional: only needed if you embed Stripe Elements in the frontend
+VITE_STRIPE_PUBLISHABLE_KEY=pk_live_xxxxx
 ```
 
 ## ✨ Responsive & Accessible
