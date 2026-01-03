@@ -1,1 +1,3 @@
-/* /index.html 200
+# SPA routing: serve index.html for all routes that don't match actual files
+# This rule uses 301 permanent redirect which Cloudflare properly handles
+/* /index.html 301
