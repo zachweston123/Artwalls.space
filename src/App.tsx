@@ -339,7 +339,12 @@ export default function App() {
             {currentPage === 'venue-sales' && <VenueSales />}
             {currentPage === 'venue-settings' && <VenueSettingsWithEmptyState />}
             {currentPage === 'venue-profile' && <VenueProfile onNavigate={handleNavigate} />}
-            {currentPage === 'venue-find-artists' && <FindArtists onViewArtist={(artistId) => handleNavigate('artist-profile')} />}
+            {currentPage === 'venue-find-artists' && (
+              <FindArtists
+                onViewProfile={(artistId) => handleNavigate('artist-profile')}
+                onInviteArtist={(artistId) => {/* TODO: implement invite flow */}}
+              />
+            )}
             {currentPage === 'venue-notifications' && <NotificationsList />}
           </>
         )}

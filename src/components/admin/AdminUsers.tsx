@@ -136,7 +136,7 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
           email: a.email || '',
           role: 'artist' as const,
           plan: (a.subscriptionTier || 'Free')[0].toUpperCase() + (a.subscriptionTier || 'Free').slice(1),
-          status: (a.subscriptionStatus === 'active' ? 'Active' : 'Active'),
+          status: (a.subscriptionStatus === 'active' ? 'Active' : 'Suspended'),
           lastActive: '—',
           city: '—',
           agreementAccepted: true,

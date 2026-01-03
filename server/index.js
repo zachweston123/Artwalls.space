@@ -929,7 +929,7 @@ app.post('/api/stripe/create-checkout-session', async (req, res) => {
       },
     });
 
-    await await updateOrder(orderId, { stripeCheckoutSessionId: session.id });
+    await updateOrder(orderId, { stripeCheckoutSessionId: session.id });
 
     return res.json({
       url: session.url,
