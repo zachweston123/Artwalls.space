@@ -17,6 +17,8 @@ import { VenueSales } from './components/venue/VenueSales';
 import { VenueSettings } from './components/venue/VenueSettings';
 import { VenueSettingsWithEmptyState } from './components/venue/VenueSettingsWithEmptyState';
 import { VenueProfile } from './components/venue/VenueProfile';
+import { VenueProfileView } from './components/venue/VenueProfileView';
+import { VenueWallsPublic } from './components/venue/VenueWallsPublic';
 import { FindArtists } from './components/venue/FindArtists';
 import { FindVenues } from './components/artist/FindVenues';
 import { NotificationsList } from './components/notifications/NotificationsList';
@@ -50,6 +52,7 @@ export interface User {
 export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [currentPage, setCurrentPage] = useState('login');
+  const [selectedVenueId, setSelectedVenueId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [hasAcceptedAgreement, setHasAcceptedAgreement] = useState(false);
   const [showAdminPasswordPrompt, setShowAdminPasswordPrompt] = useState(false);
@@ -280,7 +283,30 @@ export default function App() {
           <>
             {currentPage === 'artist-dashboard' && <ArtistDashboard onNavigate={handleNavigate} user={currentUser} />}
             {currentPage === 'artist-artworks' && <ArtistArtworks user={currentUser} />}
-            {currentPage === 'artist-venues' && <FindVenues onViewVenue={(venueId) => handleNavigate('artist-dashboard')} onViewWallspaces={(venueId) => handleNavigate('artist-dashboard')} />}
+            {currentPage === 'artist-venues' && (
+              <FindVenues 
+                onViewVenue={(venueId) => {
+                  setSelectedVenueId(venueId);
+                  handleNavigate('venue-view-profile');
+                }} 
+                onViewWallspaces={(venueId) => {
+                  setSelectedVenueId(venueId);
+                  handleNavigate('venue-view-wallspaces');
+                }} 
+              />
+            )}
+            {currentPage === 'venue-view-profile' && (
+              <VenueProfileView 
+                isOwnProfile={false}
+                venueId={selectedVenueId || undefined}
+                onViewWallspaces={() => handleNavigate('venue-view-wallspaces')}
+                onNavigate={handleNavigate}
+                currentUser={currentUser}
+              />
+            )}
+            {currentPage === 'venue-view-wallspaces' && (
+              <VenueWallsPublic venueId={selectedVenueId || undefined} onBack={() => handleNavigate('artist-venues')} />
+            )}
             {currentPage === 'artist-applications' && <ArtistApplicationsWithScheduling />}
             {currentPage === 'artist-sales' && <ArtistSales />}
             {currentPage === 'artist-profile' && <ArtistProfile onNavigate={handleNavigate} />}

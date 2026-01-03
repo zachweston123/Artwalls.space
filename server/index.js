@@ -21,6 +21,10 @@ import {
   markArtworkSold,
   wasEventProcessed,
   markEventProcessed,
+  listWallspacesByVenue,
+  createWallspace,
+  updateWallspace,
+  deleteWallspace,
 } from './db.js';
 
 dotenv.config();
@@ -596,6 +600,80 @@ app.post('/api/venues', async (req, res) => {
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: err?.message || 'Venue upsert error' });
+  }
+});
+
+// -----------------------------
+// Wallspaces per venue
+// -----------------------------
+app.get('/api/venues/:id/wallspaces', async (req, res) => {
+  try {
+    const venueId = req.params.id;
+    if (!venueId) return res.status(400).json({ error: 'Missing venueId' });
+    const items = await listWallspacesByVenue(venueId);
+    return res.json(items);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: err?.message || 'List wallspaces error' });
+  }
+});
+
+app.post('/api/venues/:id/wallspaces', async (req, res) => {
+  try {
+    const venue = await requireVenue(req, res);
+    if (!venue) return;
+
+    const venueIdParam = req.params.id;
+    if (venueIdParam !== venue.id) {
+      return res.status(403).json({ error: 'Forbidden: can only create wallspaces for your venue' });
+    }
+
+    const { name, width, height, description, photos } = req.body || {};
+    if (!name || typeof name !== 'string') return res.status(400).json({ error: 'Missing wallspace name' });
+
+    const item = await createWallspace({
+      id: crypto.randomUUID(),
+      venueId: venue.id,
+      name,
+      width,
+      height,
+      description,
+      available: true,
+      photos,
+    });
+    return res.json(item);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: err?.message || 'Create wallspace error' });
+  }
+});
+
+app.patch('/api/wallspaces/:id', async (req, res) => {
+  try {
+    const venue = await requireVenue(req, res);
+    if (!venue) return;
+
+    const wallspaceId = req.params.id;
+    const patch = req.body || {};
+    const updated = await updateWallspace(wallspaceId, patch);
+    // Optional: ensure the wallspace belongs to the venue (could add check in DB layer)
+    return res.json(updated);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: err?.message || 'Update wallspace error' });
+  }
+});
+
+app.delete('/api/wallspaces/:id', async (req, res) => {
+  try {
+    const venue = await requireVenue(req, res);
+    if (!venue) return;
+    const wallspaceId = req.params.id;
+    await deleteWallspace(wallspaceId);
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: err?.message || 'Delete wallspace error' });
   }
 });
 

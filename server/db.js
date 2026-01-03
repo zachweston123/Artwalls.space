@@ -319,3 +319,79 @@ export async function markEventProcessed(eventId, type, note = null) {
   });
   throwIfError(error, 'markEventProcessed');
 }
+
+// --- Wallspaces ---
+function mapWallspaceRow(r) {
+  if (!r) return null;
+  return {
+    id: r.id,
+    venueId: r.venue_id,
+    name: r.name,
+    width: r.width_inches,
+    height: r.height_inches,
+    description: r.description,
+    available: r.available,
+    photos: r.photos,
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+  };
+}
+
+export async function listWallspacesByVenue(venueId) {
+  const { data, error } = await supabaseAdmin
+    .from('wallspaces')
+    .select('*')
+    .eq('venue_id', venueId)
+    .order('created_at', { ascending: false });
+  throwIfError(error, 'listWallspacesByVenue');
+  return (data || []).map(mapWallspaceRow);
+}
+
+export async function createWallspace({ id, venueId, name, width, height, description, available, photos }) {
+  const payload = {
+    id: id,
+    venue_id: venueId,
+    name,
+    width_inches: width === undefined ? null : toIntOrNull(width),
+    height_inches: height === undefined ? null : toIntOrNull(height),
+    description: description ?? null,
+    available: available === undefined ? true : Boolean(available),
+    photos: photos ?? null,
+    created_at: nowIso(),
+    updated_at: nowIso(),
+  };
+
+  const { data, error } = await supabaseAdmin
+    .from('wallspaces')
+    .insert(payload)
+    .select('*')
+    .single();
+  throwIfError(error, 'createWallspace');
+  return mapWallspaceRow(data);
+}
+
+export async function updateWallspace(id, patch) {
+  const payload = {};
+  if (patch.name !== undefined) payload.name = patch.name;
+  if (patch.width !== undefined) payload.width_inches = toIntOrNull(patch.width);
+  if (patch.height !== undefined) payload.height_inches = toIntOrNull(patch.height);
+  if (patch.description !== undefined) payload.description = patch.description;
+  if (patch.available !== undefined) payload.available = Boolean(patch.available);
+  if (patch.photos !== undefined) payload.photos = patch.photos;
+  payload.updated_at = nowIso();
+
+  const { data, error } = await supabaseAdmin
+    .from('wallspaces')
+    .update(payload)
+    .eq('id', id)
+    .select('*')
+    .single();
+  throwIfError(error, 'updateWallspace');
+  return mapWallspaceRow(data);
+}
+
+export async function deleteWallspace(id) {
+  const { error } = await supabaseAdmin.from('wallspaces').delete().eq('id', id);
+  throwIfError(error, 'deleteWallspace');
+  return { id };
+}

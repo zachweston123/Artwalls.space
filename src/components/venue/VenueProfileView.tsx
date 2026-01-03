@@ -1,18 +1,23 @@
+import { useEffect, useState } from 'react';
 import { MapPin, Edit, Flag, CheckCircle, Calendar } from 'lucide-react';
 import { LabelChip } from '../LabelChip';
-import { mockWallSpaces } from '../../data/mockData';
+import { apiGet } from '../../lib/api';
 import type { User } from '../../App';
 
 interface VenueProfileViewProps {
   isOwnProfile: boolean;
+  venueId?: string;
   onEdit?: () => void;
   onViewWallspaces?: () => void;
   onNavigate?: (page: string) => void;
   currentUser: User;
 }
 
+type WallSpace = { id: string; name: string; width?: number; height?: number; available: boolean; photos?: string[] };
+
 export function VenueProfileView({ 
   isOwnProfile, 
+  venueId,
   onEdit, 
   onViewWallspaces,
   onNavigate,
@@ -40,6 +45,22 @@ export function VenueProfileView({
   ];
 
   const yearsInBusiness = new Date().getFullYear() - venue.foundedYear;
+  const [walls, setWalls] = useState<WallSpace[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadWalls() {
+      if (!venueId) return;
+      try {
+        const items = await apiGet<WallSpace[]>(`/api/venues/${venueId}/wallspaces`);
+        if (isMounted) setWalls(items);
+      } catch {
+        setWalls([]);
+      }
+    }
+    loadWalls();
+    return () => { isMounted = false; };
+  }, [venueId]);
 
   return (
     <div className="bg-[var(--bg)] text-[var(--text)]">
@@ -144,12 +165,12 @@ export function VenueProfileView({
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl">Wall Spaces</h2>
           <span className="text-sm text-[var(--text-muted)]">
-            {mockWallSpaces.length} spaces
+            {walls.length} spaces
           </span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {mockWallSpaces.slice(0, 3).map((wall) => (
+          {walls.slice(0, 3).map((wall) => (
             <div
               key={wall.id}
               className="bg-[var(--surface-1)] rounded-xl overflow-hidden border border-[var(--border)] hover:shadow-lg transition-all group"
@@ -184,18 +205,18 @@ export function VenueProfileView({
           ))}
         </div>
 
-        {mockWallSpaces.length > 3 && (
+        {walls.length > 3 && (
           <div className="mt-4 text-center">
             <button
               onClick={onViewWallspaces}
               className="px-6 py-2 text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
             >
-              View all {mockWallSpaces.length} wall spaces →
+              View all {walls.length} wall spaces →
             </button>
           </div>
         )}
 
-        {mockWallSpaces.length === 0 && (
+        {walls.length === 0 && (
           <div className="text-center py-16 bg-[var(--surface-1)] rounded-xl border border-[var(--border)]">
             <h3 className="text-xl mb-2">No wall spaces yet</h3>
             <p className="text-[var(--text-muted)]">

@@ -1,10 +1,20 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Plus, X, Frame, Upload, Image as ImageIcon } from 'lucide-react';
-import { mockWallSpaces } from '../../data/mockData';
-import type { WallSpace } from '../../data/mockData';
+import { apiGet, apiPost } from '../../lib/api';
+import { supabase } from '../../lib/supabase';
+
+type WallSpace = {
+  id: string;
+  name: string;
+  width?: number;
+  height?: number;
+  available: boolean;
+  description?: string;
+  photos?: string[];
+};
 
 export function VenueWalls() {
-  const [wallSpaces, setWallSpaces] = useState<WallSpace[]>(mockWallSpaces);
+  const [wallSpaces, setWallSpaces] = useState<WallSpace[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newWall, setNewWall] = useState({
     name: '',
@@ -14,26 +24,58 @@ export function VenueWalls() {
     photos: [] as string[],
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    let isMounted = true;
+    async function loadWalls() {
+      const { data } = await supabase.auth.getUser();
+      const user = data.user;
+      const venueId = user?.id;
+      if (!venueId) return;
+      try {
+        const items = await apiGet<WallSpace[]>(`/api/venues/${venueId}/wallspaces`);
+        if (isMounted) setWallSpaces(items);
+      } catch {
+        // Keep empty list if none yet
+      }
+    }
+    loadWalls();
+    return () => { isMounted = false; };
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const wall: WallSpace = {
-      id: Math.random().toString(36).substr(2, 9),
-      name: newWall.name,
-      width: parseFloat(newWall.width),
-      height: parseFloat(newWall.height),
-      available: true,
-      description: newWall.description,
-      photos: newWall.photos,
-    };
-    setWallSpaces([...wallSpaces, wall]);
-    setNewWall({ name: '', width: '', height: '', description: '', photos: [] });
-    setShowAddForm(false);
+    const widthNum = newWall.width ? parseFloat(newWall.width) : undefined;
+    const heightNum = newWall.height ? parseFloat(newWall.height) : undefined;
+    try {
+      const { data } = await supabase.auth.getUser();
+      const user = data.user;
+      const venueId = user?.id;
+      if (!venueId) throw new Error('Missing venue session');
+      const created = await apiPost<WallSpace>(`/api/venues/${venueId}/wallspaces`, {
+        name: newWall.name,
+        width: widthNum,
+        height: heightNum,
+        description: newWall.description,
+        photos: newWall.photos,
+      });
+      setWallSpaces([created, ...wallSpaces]);
+      setNewWall({ name: '', width: '', height: '', description: '', photos: [] });
+      setShowAddForm(false);
+    } catch (err) {
+      // TODO: show error UI
+      console.error(err);
+    }
   };
 
-  const toggleAvailability = (id: string) => {
-    setWallSpaces(wallSpaces.map(wall =>
-      wall.id === id ? { ...wall, available: !wall.available } : wall
-    ));
+  const toggleAvailability = async (id: string) => {
+    try {
+      const target = wallSpaces.find(w => w.id === id);
+      const nextAvailable = !target?.available;
+      await apiPost(`/api/wallspaces/${id}`, { available: nextAvailable }, { 'X-HTTP-Method-Override': 'PATCH' });
+      setWallSpaces(wallSpaces.map(wall => wall.id === id ? { ...wall, available: Boolean(nextAvailable) } : wall));
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const handlePhotoUpload = () => {
