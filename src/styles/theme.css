@@ -75,12 +75,14 @@ html, body {
   background: var(--bg);
   color: var(--text);
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
-  min-height: 100%;
+  /* Use small viewport height to avoid top/bottom bars on mobile browsers */
+  min-height: 100svh;
 }
 
 #root, #app, main {
   background: var(--bg);
-  min-height: 100vh;
+  /* Keep containers full height with small viewport units */
+  min-height: 100svh;
 }
 
 /* 1) One global font (inherit everywhere). */
@@ -243,3 +245,7 @@ html[data-theme="dark"] .border-neutral-300 { border-color: var(--border) !impor
 /* Focus-visible variants (used in some buttons/tiles) */
 .focus-visible\:ring-\[var\(--focus\)\]:focus-visible { --tw-ring-color: var(--focus); }
 .focus-visible\:ring-offset-\[var\(--bg\)\]:focus-visible { --tw-ring-offset-color: var(--bg); }
+
+/* Viewport height utility shims (fix dark mode bars on mobile browsers) */
+.min-h-svh { min-height: 100svh; }
+.h-svh { height: 100svh; }
