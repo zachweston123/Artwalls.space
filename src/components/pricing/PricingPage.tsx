@@ -1,5 +1,6 @@
-import { Check, Sparkles, Shield, TrendingUp, Zap, Calculator } from 'lucide-react';
+import { Check, Sparkles, Shield, TrendingUp, Zap, Calculator, Loader2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { apiPost } from '../../lib/api';
 
 interface PricingPageProps {
   onNavigate: (page: string) => void;
@@ -11,6 +12,8 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
   const [saleValue, setSaleValue] = useState(100);
   const [artworksPerMonth, setArtworksPerMonth] = useState(5);
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+  const [subscribing, setSubscribing] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const plans = [
     {
@@ -182,6 +185,32 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
   const growthMonthly = calculateMonthlyNet('growth', growthEarnings.earnings, 19, false);
   const proMonthly = calculateMonthlyNet('pro', proEarnings.earnings, 39, true);
 
+  async function startSubscription(tier: PlanId) {
+    if (tier === 'free') return;
+    setError(null);
+    setSubscribing(tier);
+    try {
+      // Map UI tiers to backend tiers. Server supports 'starter' | 'growth' | 'pro'.
+      const mappedTier = tier;
+      // Dev fallback: include artistId if available via Supabase
+      let artistId: string | undefined = undefined;
+      try {
+        const { supabase } = await import('../../lib/supabase');
+        const { data } = await supabase.auth.getSession();
+        artistId = data.session?.user?.id;
+      } catch {}
+      const { url } = await apiPost<{ url: string }>(
+        '/api/stripe/billing/create-subscription-session',
+        { tier: mappedTier, artistId },
+      );
+      window.location.href = url;
+    } catch (e: any) {
+      setError(e?.message || 'Unable to start subscription checkout');
+    } finally {
+      setSubscribing(null);
+    }
+  }
+
   return (
     <div className="bg-[var(--bg)]">
       <div className="text-center mb-12">
@@ -246,7 +275,8 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
               </div>
 
               <button
-                disabled={plan.disabled}
+                onClick={() => startSubscription(plan.id as PlanId)}
+                disabled={plan.disabled || subscribing === plan.id}
                 className={`w-full py-3 rounded-lg transition-colors ${
                   plan.disabled
                     ? 'bg-[var(--surface-3)] text-[var(--text-muted)] cursor-not-allowed border border-[var(--border)]'
@@ -255,7 +285,14 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                     : 'bg-[var(--surface-3)] text-[var(--text)] hover:bg-[var(--surface-2)] border border-[var(--border)]'
                 }`}
               >
-                {plan.cta}
+                {subscribing === plan.id ? (
+                  <span className="inline-flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Processing…
+                  </span>
+                ) : (
+                  plan.cta
+                )}
               </button>
             </div>
           );
@@ -264,9 +301,12 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
 
       {/* Upgrade Note */}
       <div className="text-center mb-12 bg-[var(--surface-2)] rounded-xl p-6 border border-[var(--border)]">
-        <p className="text-sm text-[var(--text)]">
+          <p className="text-sm text-[var(--text)]">
           💡 You can upgrade or downgrade your plan anytime. Changes take effect at the start of your next billing cycle.
         </p>
+        {error && (
+          <p className="text-sm text-[var(--danger)] mt-2">{error}</p>
+        )}
       </div>
 
       {/* Earnings Calculator */}

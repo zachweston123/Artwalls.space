@@ -395,3 +395,60 @@ export async function deleteWallspace(id) {
   throwIfError(error, 'deleteWallspace');
   return { id };
 }
+
+// --- Settings ---
+function mapSettingsRow(r) {
+  if (!r) return null;
+  return {
+    id: r.id,
+    appUrl: r.app_url,
+    subSuccessUrl: r.sub_success_url,
+    subCancelUrl: r.sub_cancel_url,
+    subPriceStarter: r.sub_price_starter,
+    subPriceGrowth: r.sub_price_growth,
+    subPricePro: r.sub_price_pro,
+    subPriceElite: r.sub_price_elite,
+    feeBpsFree: r.fee_bps_free,
+    feeBpsStarter: r.fee_bps_starter,
+    feeBpsPro: r.fee_bps_pro,
+    feeBpsElite: r.fee_bps_elite,
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+  };
+}
+
+export async function getSettings() {
+  const { data, error } = await supabaseAdmin
+    .from('settings')
+    .select('*')
+    .eq('id', 'default')
+    .maybeSingle();
+  throwIfError(error, 'getSettings');
+  return mapSettingsRow(data);
+}
+
+export async function upsertSettings(patch) {
+  const payload = {
+    id: 'default',
+    app_url: patch.appUrl ?? null,
+    sub_success_url: patch.subSuccessUrl ?? null,
+    sub_cancel_url: patch.subCancelUrl ?? null,
+    sub_price_starter: patch.subPriceStarter ?? null,
+    sub_price_growth: patch.subPriceGrowth ?? null,
+    sub_price_pro: patch.subPricePro ?? null,
+    sub_price_elite: patch.subPriceElite ?? null,
+    fee_bps_free: patch.feeBpsFree === undefined ? null : toIntOrNull(patch.feeBpsFree),
+    fee_bps_starter: patch.feeBpsStarter === undefined ? null : toIntOrNull(patch.feeBpsStarter),
+    fee_bps_pro: patch.feeBpsPro === undefined ? null : toIntOrNull(patch.feeBpsPro),
+    fee_bps_elite: patch.feeBpsElite === undefined ? null : toIntOrNull(patch.feeBpsElite),
+    updated_at: nowIso(),
+  };
+
+  const { data, error } = await supabaseAdmin
+    .from('settings')
+    .upsert(payload, { onConflict: 'id' })
+    .select('*')
+    .single();
+  throwIfError(error, 'upsertSettings');
+  return mapSettingsRow(data);
+}

@@ -89,6 +89,24 @@ create table if not exists public.webhook_events (
   processed_at timestamptz not null default now()
 );
 
+-- Settings (admin-configurable via UI)
+create table if not exists public.settings (
+  id text primary key default 'default',
+  app_url text,
+  sub_success_url text,
+  sub_cancel_url text,
+  sub_price_starter text,
+  sub_price_growth text,
+  sub_price_pro text,
+  sub_price_elite text,
+  fee_bps_free int,
+  fee_bps_starter int,
+  fee_bps_pro int,
+  fee_bps_elite int,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 -- Optional: enable Row Level Security (RLS) for future browser access.
 -- Server uses service-role key so RLS is bypassed. Enable when you're ready.
 -- alter table public.artists enable row level security;

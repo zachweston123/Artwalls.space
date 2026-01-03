@@ -682,6 +682,7 @@ app.delete('/api/wallspaces/:id', async (req, res) => {
 // -----------------------------
 const SUB_PRICE_IDS = {
   starter: process.env.STRIPE_SUB_PRICE_STARTER,
+  growth: process.env.STRIPE_SUB_PRICE_GROWTH,
   pro: process.env.STRIPE_SUB_PRICE_PRO,
   elite: process.env.STRIPE_SUB_PRICE_ELITE,
 };

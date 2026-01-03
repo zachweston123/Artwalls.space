@@ -1,4 +1,4 @@
-import { TrendingUp, Package, DollarSign, Eye, Search } from 'lucide-react';
+import { TrendingUp, Package, DollarSign, Eye, Search, CheckCircle, XCircle } from 'lucide-react';
 import { mockArtworks, mockSales } from '../../data/mockData';
 import { PlanBadge } from '../pricing/PlanBadge';
 import { UpgradePromptCard } from '../pricing/UpgradePromptCard';
@@ -12,6 +12,24 @@ interface ArtistDashboardProps {
 }
 
 export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
+  const [subSuccess, setSubSuccess] = useState<boolean>(false);
+  const [subCancelled, setSubCancelled] = useState<boolean>(false);
+
+  useEffect(() => {
+    try {
+      const hash = window.location.hash || '';
+      const q = hash.split('?')[1] || '';
+      const params = new URLSearchParams(q);
+      const sub = params.get('sub');
+      if (sub === 'success') setSubSuccess(true);
+      if (sub === 'cancel') setSubCancelled(true);
+      // Clean the flag from URL (optional)
+      if (sub) {
+        const base = hash.split('?')[0];
+        history.replaceState(null, '', base);
+      }
+    } catch {}
+  }, []);
   const activeArtworks = mockArtworks.filter(a => a.status === 'active').length;
   const totalArtworks = mockArtworks.length;
   const totalEarnings = mockSales.reduce((sum, sale) => sum + sale.artistEarnings, 0);
@@ -54,6 +72,35 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
 
   return (
     <div className="bg-[var(--bg)] text-[var(--text)] min-h-screen">
+      {/* Subscription success banner */}
+      {subSuccess && (
+        <div className="mb-4 bg-[var(--green-muted)] border border-[var(--border)] rounded-lg p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <CheckCircle className="w-5 h-5 text-[var(--green)]" />
+            <div>
+              <p className="text-sm font-semibold text-[var(--text)]">Subscription activated</p>
+              <p className="text-xs text-[var(--text-muted)]">Your plan is now active. Platform fee and features will update automatically.</p>
+            </div>
+          </div>
+          <button onClick={() => setSubSuccess(false)} className="text-[var(--text-muted)] hover:text-[var(--text)]">
+            Dismiss
+          </button>
+        </div>
+      )}
+      {subCancelled && (
+        <div className="mb-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <XCircle className="w-5 h-5 text-[var(--warning)]" />
+            <div>
+              <p className="text-sm font-semibold text-[var(--text)]">Subscription canceled</p>
+              <p className="text-xs text-[var(--text-muted)]">No changes were made. You can upgrade anytime from Pricing.</p>
+            </div>
+          </div>
+          <button onClick={() => setSubCancelled(false)} className="text-[var(--text-muted)] hover:text-[var(--text)]">
+            Dismiss
+          </button>
+        </div>
+      )}
       {/* ════════════════════════════════════════════════════════════
           HEADER SECTION (Welcome + Plan Chip + Upgrade Button)
           ════════════════════════════════════════════════════════════ */}
