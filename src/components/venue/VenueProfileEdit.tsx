@@ -9,6 +9,7 @@ interface VenueProfileEditProps {
 
 export interface VenueProfileData {
   name: string;
+  type: string;
   bio: string;
   labels: string[];
   foundedYear: number;
@@ -18,11 +19,25 @@ export interface VenueProfileData {
 export function VenueProfileEdit({ onSave, onCancel }: VenueProfileEditProps) {
   const [formData, setFormData] = useState<VenueProfileData>({
     name: 'Brew & Palette Café',
+    type: 'Coffee Shop',
     bio: 'A cozy neighborhood café and art space in the heart of Portland\'s Pearl District. We\'ve been supporting local artists for over 8 years, providing rotating wall displays that complement our warm, inviting atmosphere. Our mission is to make art accessible while serving exceptional coffee.',
     labels: ['Locally owned', 'LGBTQ+ friendly', 'Dog-friendly', 'Student-friendly'],
     foundedYear: 2016,
     coverPhoto: 'https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=1200',
   });
+
+  const venueTypes = [
+    'Coffee Shop',
+    'Restaurant',
+    'Wine Bar',
+    'Bar',
+    'Brewery',
+    'Hotel',
+    'Gallery',
+    'Retail',
+    'Office',
+    'Other',
+  ];
 
   const allLabels = [
     'Locally owned', 'LGBTQ+ friendly', 'Women-owned', 'Black-owned',
@@ -107,6 +122,25 @@ export function VenueProfileEdit({ onSave, onCancel }: VenueProfileEditProps) {
               placeholder="Your venue name"
               required
             />
+          </div>
+
+          {/* Venue Type */}
+          <div>
+            <label className="block text-sm text-[var(--text-muted)] mb-2">
+              Venue Type
+            </label>
+            <select
+              value={formData.type}
+              onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+              className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
+              required
+            >
+              {venueTypes.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Bio */}

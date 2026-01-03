@@ -14,6 +14,7 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
     labels: [] as string[],
     acceptingArtists: false,
     neighborhood: '',
+    venueType: '',
   });
 
   const venueLabels = [
@@ -26,11 +27,24 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
     'Division', 'Sellwood', 'St. Johns', 'Hollywood'
   ];
 
+  const venueTypes = [
+    'Coffee Shop',
+    'Restaurant',
+    'Wine Bar',
+    'Bar',
+    'Hotel',
+    'Gallery',
+    'Retail',
+    'Office',
+    'Other',
+  ];
+
   // Mock venues data
   const mockVenues = [
     {
       id: '1',
       name: 'Brew & Palette Café',
+      type: 'Coffee Shop',
       coverPhoto: 'https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=800',
       location: 'Pearl District, Portland',
       bio: 'Cozy neighborhood café supporting local artists for 8+ years. Warm atmosphere, exceptional coffee.',
@@ -43,6 +57,7 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
     {
       id: '2',
       name: 'The Artisan Lounge',
+      type: 'Restaurant',
       coverPhoto: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800',
       location: 'Downtown, Portland',
       bio: 'Upscale restaurant and bar featuring rotating local art. High-traffic location, professional clientele.',
@@ -55,6 +70,7 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
     {
       id: '3',
       name: 'Revolution Coffee House',
+      type: 'Coffee Shop',
       coverPhoto: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800',
       location: 'Alberta Arts, Portland',
       bio: 'Community-focused coffee shop in the heart of the arts district. Supporting emerging artists since 2018.',
@@ -67,6 +83,7 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
     {
       id: '4',
       name: 'Nomad Wine & Spirits',
+      type: 'Wine Bar',
       coverPhoto: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=800',
       location: 'Hawthorne, Portland',
       bio: 'Contemporary wine bar showcasing bold, modern artwork. Sophisticated space for adventurous pieces.',
@@ -92,11 +109,17 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
       labels: [],
       acceptingArtists: false,
       neighborhood: '',
+      venueType: '',
     });
     setSearchQuery('');
   };
 
-  const hasActiveFilters = filters.labels.length > 0 || filters.acceptingArtists || filters.neighborhood || searchQuery;
+  const hasActiveFilters =
+    filters.labels.length > 0 ||
+    filters.acceptingArtists ||
+    filters.neighborhood ||
+    filters.venueType ||
+    searchQuery;
 
   // Filter venues based on criteria
   const filteredVenues = mockVenues.filter(venue => {
@@ -104,6 +127,9 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
       return false;
     }
     if (filters.neighborhood && !venue.location.includes(filters.neighborhood)) {
+      return false;
+    }
+    if (filters.venueType && venue.type !== filters.venueType) {
       return false;
     }
     if (filters.acceptingArtists && venue.availableSpaces === 0) {
@@ -154,7 +180,7 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
             Filters
             {hasActiveFilters && (
               <span className="ml-1 px-2 py-0.5 bg-[var(--blue)] text-[var(--on-blue)] text-xs rounded-full">
-                {(filters.labels.length + (filters.acceptingArtists ? 1 : 0) + (filters.neighborhood ? 1 : 0))}
+                {(filters.labels.length + (filters.acceptingArtists ? 1 : 0) + (filters.neighborhood ? 1 : 0) + (filters.venueType ? 1 : 0))}
               </span>
             )}
           </button>
@@ -177,6 +203,25 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
                 {neighborhoods.map((neighborhood) => (
                   <option key={neighborhood} value={neighborhood}>
                     {neighborhood}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Venue Type */}
+            <div>
+              <label className="block text-sm text-[var(--text-muted)] mb-2">
+                Venue Type
+              </label>
+              <select
+                value={filters.venueType}
+                onChange={(e) => setFilters({ ...filters, venueType: e.target.value })}
+                className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
+              >
+                <option value="">All venue types</option>
+                {venueTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
                   </option>
                 ))}
               </select>
@@ -285,6 +330,11 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
                     <MapPin className="w-3 h-3" />
                     {venue.location}
                   </div>
+                  {venue.type && (
+                    <p className="text-xs text-[var(--text-muted)] mt-1">
+                      {venue.type}
+                    </p>
+                  )}
                   <p className="text-xs text-[var(--text-muted)] mt-1">
                     Established {venue.foundedYear} • {currentYear - venue.foundedYear} years
                   </p>

@@ -1,5 +1,5 @@
 import { Check, Sparkles, Shield, TrendingUp, Zap, Calculator } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 interface PricingPageProps {
   onNavigate: (page: string) => void;
@@ -9,6 +9,7 @@ interface PricingPageProps {
 export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPageProps) {
   const [showProtectionDetails, setShowProtectionDetails] = useState(false);
   const [saleValue, setSaleValue] = useState(100);
+  const [artworksPerMonth, setArtworksPerMonth] = useState(5);
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
 
   const plans = [
@@ -114,8 +115,35 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
     },
   ];
 
-  // Calculate earnings for a given plan
-  // Earnings = Sale Value - Platform Fee (no subscription costs deducted)
+  type PlanId = 'free' | 'starter' | 'growth' | 'pro';
+
+  const planArtworkLimits: Record<PlanId, number> = {
+    free: 1,
+    starter: 10,
+    growth: 30,
+    pro: Number.POSITIVE_INFINITY,
+  };
+
+  const selectedPlanForCalculator = (selectedPlanId ?? 'pro') as PlanId;
+  const maxArtworksForCalculatorUI = useMemo(() => {
+    // For non-Pro, match the plan's listing limit.
+    // For Pro, allow a higher slider range (still unlimited in plan copy).
+    if (selectedPlanForCalculator === 'pro') return 100;
+    return planArtworkLimits[selectedPlanForCalculator];
+  }, [selectedPlanForCalculator]);
+
+  useEffect(() => {
+    // Keep the control valid when switching plans (e.g., Pro -> Free).
+    setArtworksPerMonth((current) => {
+      const next = Number.isFinite(maxArtworksForCalculatorUI)
+        ? Math.min(current, maxArtworksForCalculatorUI)
+        : current;
+      return Math.max(1, next);
+    });
+  }, [maxArtworksForCalculatorUI]);
+
+  // Calculate per-sale earnings for a given plan
+  // Earnings = Sale Value - Platform Fee (subscription/protection handled separately)
   const calculateEarnings = (saleAmount: number, platformFee: number, subscriptionPrice: number, protectionPlanCost: number = 0) => {
     const platformFeeAmount = saleAmount * (platformFee / 100);
     const earnings = saleAmount - platformFeeAmount; // Earnings from service fee only
@@ -128,10 +156,31 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
     };
   };
 
+  const calculateMonthlyNet = (planId: PlanId, perSaleEarnings: number, subscriptionPrice: number, protectionIncluded: boolean) => {
+    const artworkLimit = planArtworkLimits[planId];
+    const allowedArtworks = Math.max(0, Math.min(artworksPerMonth, artworkLimit));
+    const protectionCostPerArtwork = protectionIncluded ? 0 : 3;
+    const monthlyProtectionCost = allowedArtworks * protectionCostPerArtwork;
+    const monthlyGross = allowedArtworks * perSaleEarnings;
+    const monthlyNet = Math.max(0, monthlyGross - subscriptionPrice - monthlyProtectionCost);
+    return {
+      allowedArtworks,
+      artworkLimit,
+      monthlyGross,
+      monthlyProtectionCost,
+      monthlyNet,
+    };
+  };
+
   const freeEarnings = calculateEarnings(saleValue, 15, 0, 3); // Free plan: $3/artwork for protection
   const starterEarnings = calculateEarnings(saleValue, 10, 9, 3); // Starter plan: $3/artwork for protection
   const growthEarnings = calculateEarnings(saleValue, 8, 19, 3); // Growth plan: $3/artwork for protection
   const proEarnings = calculateEarnings(saleValue, 6, 39, 0); // Pro plan: protection included
+
+  const freeMonthly = calculateMonthlyNet('free', freeEarnings.earnings, 0, false);
+  const starterMonthly = calculateMonthlyNet('starter', starterEarnings.earnings, 9, false);
+  const growthMonthly = calculateMonthlyNet('growth', growthEarnings.earnings, 19, false);
+  const proMonthly = calculateMonthlyNet('pro', proEarnings.earnings, 39, true);
 
   return (
     <div className="bg-[var(--bg)]">
@@ -228,7 +277,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
             Earnings Calculator
           </h2>
           <p className="text-sm text-[var(--text-muted)] mb-6">
-            See how much you'll earn from a sale before subscription and protection costs
+            Estimate monthly net income based on sale value and artworks/month (capped by plan limits)
           </p>
           
           <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-lg p-6 mb-6">
@@ -253,16 +302,43 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
             <p className="text-xs text-[var(--text-muted)]">Adjust the slider to see how your profit changes across plans</p>
           </div>
 
+          <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-lg p-6 mb-6">
+            <label className="block text-sm text-[var(--text)] font-semibold mb-3">Artworks / month</label>
+            <div className="flex items-center gap-4 mb-4">
+              <input
+                type="range"
+                min="1"
+                max={maxArtworksForCalculatorUI}
+                step="1"
+                value={artworksPerMonth}
+                onChange={(e) => setArtworksPerMonth(Number(e.target.value))}
+                className="flex-1 h-2 bg-[var(--surface-3)] rounded-lg appearance-none cursor-pointer accent-[var(--accent)]"
+              />
+              <input
+                type="number"
+                min="1"
+                max={maxArtworksForCalculatorUI}
+                value={artworksPerMonth}
+                onChange={(e) => setArtworksPerMonth(Number(e.target.value))}
+                className="w-24 px-3 py-2 bg-[var(--surface-1)] border border-[var(--border)] rounded-lg text-[var(--text)] text-center font-bold"
+              />
+            </div>
+            <p className="text-xs text-[var(--text-muted)]">
+              This represents how many artworks you can list/protect and realistically sell in a month.
+            </p>
+          </div>
+
           <p className="text-sm text-[var(--text)] mb-3 font-semibold">Click a plan to see your earnings breakdown:</p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {[
-              { id: 'free', name: 'Free', fee: 15, price: 0, earnings: freeEarnings },
-              { id: 'starter', name: 'Starter', fee: 10, price: 9, earnings: starterEarnings },
-              { id: 'growth', name: 'Growth', fee: 8, price: 19, earnings: growthEarnings },
-              { id: 'pro', name: 'Pro', fee: 6, price: 39, earnings: proEarnings }
+              { id: 'free', name: 'Free', fee: 15, price: 0, earnings: freeEarnings, monthly: freeMonthly },
+              { id: 'starter', name: 'Starter', fee: 10, price: 9, earnings: starterEarnings, monthly: starterMonthly },
+              { id: 'growth', name: 'Growth', fee: 8, price: 19, earnings: growthEarnings, monthly: growthMonthly },
+              { id: 'pro', name: 'Pro', fee: 6, price: 39, earnings: proEarnings, monthly: proMonthly }
             ].map((plan) => {
               const isSelected = selectedPlanId === plan.id || (!selectedPlanId && plan.id === 'pro');
+              const isCapped = plan.monthly.allowedArtworks < artworksPerMonth;
               return (
                 <button
                   key={plan.id}
@@ -275,10 +351,16 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                 >
                   <div className="font-semibold text-[var(--text)] mb-2">{plan.name}</div>
                   <div className="text-3xl font-bold text-[var(--text)]">
-                    ${plan.earnings.earnings.toFixed(0)}
+                    ${plan.monthly.monthlyNet.toFixed(0)}
                   </div>
                   <div className="text-xs text-[var(--text-muted)] mt-1">
-                    you earn
+                    est. net / month
+                  </div>
+                  <div className="text-xs text-[var(--text-muted)] mt-1">
+                    {plan.id === 'pro'
+                      ? `${artworksPerMonth} artworks`
+                      : `${plan.monthly.allowedArtworks} of ${artworksPerMonth} artworks`}
+                    {isCapped && plan.id !== 'pro' ? ' (capped)' : ''}
                   </div>
                 </button>
               );
@@ -301,6 +383,11 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                   <span className="font-semibold text-[var(--text)]">${saleValue.toFixed(0)}</span>
                 </div>
 
+                <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
+                  <span className="text-[var(--text-muted)]">Artworks / month</span>
+                  <span className="font-semibold text-[var(--text)]">{artworksPerMonth}</span>
+                </div>
+
                 {selectedPlanId === 'free' && (
                   <>
                     <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
@@ -308,7 +395,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                       <span className="font-semibold text-[var(--text)]">-${freeEarnings.platformFeeAmount.toFixed(0)}</span>
                     </div>
                     <div className="flex justify-between items-center pt-3 bg-[var(--surface-2)] border border-[var(--border)] p-4 rounded-lg mb-4">
-                      <span className="font-bold text-[var(--text)]">Your Earnings</span>
+                      <span className="font-bold text-[var(--text)]">Per-sale earnings</span>
                       <span className="font-bold text-[var(--accent)] text-xl">${freeEarnings.earnings.toFixed(0)}</span>
                     </div>
                     <div className="bg-[var(--surface-3)] p-4 rounded-lg border border-[var(--border)]">
@@ -320,14 +407,19 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                         </div>
                         <div className="flex justify-between">
                           <span className="text-[var(--text-muted)]">Protection Plan</span>
-                          <span className="text-[var(--text)]">$3/artwork</span>
+                          <span className="text-[var(--text)]">$3/artwork/mo</span>
                         </div>
                         <div className="border-t border-[var(--border)] pt-2 mt-2">
                           <div className="flex justify-between font-semibold">
-                            <span className="text-[var(--text)]">Net Income (1 artwork sold)</span>
-                            <span className="text-[var(--text)]">${Math.max(0, freeEarnings.earnings - 3).toFixed(0)}</span>
+                            <span className="text-[var(--text)]">Est. Net Income / month</span>
+                            <span className="text-[var(--text)]">${freeMonthly.monthlyNet.toFixed(0)}</span>
                           </div>
                         </div>
+                        {freeMonthly.allowedArtworks < artworksPerMonth && (
+                          <p className="text-xs text-[var(--text-muted)] mt-2">
+                            Limited by plan: Free supports up to 1 artwork.
+                          </p>
+                        )}
                       </div>
                     </div>
                   </>
@@ -340,7 +432,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                       <span className="font-semibold text-[var(--text)]">-${starterEarnings.platformFeeAmount.toFixed(0)}</span>
                     </div>
                     <div className="flex justify-between items-center pt-3 bg-[var(--surface-2)] border border-[var(--border)] p-4 rounded-lg mb-4">
-                      <span className="font-bold text-[var(--text)]">Your Earnings</span>
+                      <span className="font-bold text-[var(--text)]">Per-sale earnings</span>
                       <span className="font-bold text-[var(--accent)] text-xl">${starterEarnings.earnings.toFixed(0)}</span>
                     </div>
                     <div className="bg-[var(--surface-3)] p-4 rounded-lg border border-[var(--border)]">
@@ -352,14 +444,19 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                         </div>
                         <div className="flex justify-between">
                           <span className="text-[var(--text-muted)]">Protection Plan</span>
-                          <span className="text-[var(--text)]">$3/artwork</span>
+                          <span className="text-[var(--text)]">$3/artwork/mo</span>
                         </div>
                         <div className="border-t border-[var(--border)] pt-2 mt-2">
                           <div className="flex justify-between font-semibold">
-                            <span className="text-[var(--text)]">Net Income (1 artwork sold)</span>
-                            <span className="text-[var(--text)]">${Math.max(0, starterEarnings.earnings - 9 - 3).toFixed(0)}</span>
+                            <span className="text-[var(--text)]">Est. Net Income / month</span>
+                            <span className="text-[var(--text)]">${starterMonthly.monthlyNet.toFixed(0)}</span>
                           </div>
                         </div>
+                        {starterMonthly.allowedArtworks < artworksPerMonth && (
+                          <p className="text-xs text-[var(--text-muted)] mt-2">
+                            Limited by plan: Starter supports up to 10 artworks.
+                          </p>
+                        )}
                       </div>
                     </div>
                   </>
@@ -372,7 +469,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                       <span className="font-semibold text-[var(--text)]">-${growthEarnings.platformFeeAmount.toFixed(0)}</span>
                     </div>
                     <div className="flex justify-between items-center pt-3 bg-[var(--surface-2)] border border-[var(--border)] p-4 rounded-lg mb-4">
-                      <span className="font-bold text-[var(--text)]">Your Earnings</span>
+                      <span className="font-bold text-[var(--text)]">Per-sale earnings</span>
                       <span className="font-bold text-[var(--accent)] text-xl">${growthEarnings.earnings.toFixed(0)}</span>
                     </div>
                     <div className="bg-[var(--surface-3)] p-4 rounded-lg border border-[var(--border)]">
@@ -384,14 +481,19 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                         </div>
                         <div className="flex justify-between">
                           <span className="text-[var(--text-muted)]">Protection Plan</span>
-                          <span className="text-[var(--text)]">$3/artwork</span>
+                          <span className="text-[var(--text)]">$3/artwork/mo</span>
                         </div>
                         <div className="border-t border-[var(--border)] pt-2 mt-2">
                           <div className="flex justify-between font-semibold">
-                            <span className="text-[var(--text)]">Net Income (1 artwork sold)</span>
-                            <span className="text-[var(--text)]">${Math.max(0, growthEarnings.earnings - 19 - 3).toFixed(0)}</span>
+                            <span className="text-[var(--text)]">Est. Net Income / month</span>
+                            <span className="text-[var(--text)]">${growthMonthly.monthlyNet.toFixed(0)}</span>
                           </div>
                         </div>
+                        {growthMonthly.allowedArtworks < artworksPerMonth && (
+                          <p className="text-xs text-[var(--text-muted)] mt-2">
+                            Limited by plan: Growth supports up to 30 artworks.
+                          </p>
+                        )}
                       </div>
                     </div>
                   </>
@@ -404,7 +506,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                       <span className="font-semibold text-[var(--text)]">-${proEarnings.platformFeeAmount.toFixed(0)}</span>
                     </div>
                     <div className="flex justify-between items-center pt-3 bg-[var(--surface-2)] border border-[var(--border)] p-4 rounded-lg mb-4">
-                      <span className="font-bold text-[var(--text)]">Your Earnings</span>
+                      <span className="font-bold text-[var(--text)]">Per-sale earnings</span>
                       <span className="font-bold text-[var(--accent)] text-xl">${proEarnings.earnings.toFixed(0)}</span>
                     </div>
                     <div className="bg-[var(--surface-3)] p-4 rounded-lg border border-[var(--border)]">
@@ -420,8 +522,8 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                         </div>
                         <div className="border-t border-[var(--border)] pt-2 mt-2">
                           <div className="flex justify-between font-semibold">
-                            <span className="text-[var(--text)]">Net Income (1 artwork sold)</span>
-                            <span className="text-[var(--text)]">${Math.max(0, proEarnings.earnings - 39).toFixed(0)}</span>
+                            <span className="text-[var(--text)]">Est. Net Income / month</span>
+                            <span className="text-[var(--text)]">${proMonthly.monthlyNet.toFixed(0)}</span>
                           </div>
                         </div>
                       </div>
