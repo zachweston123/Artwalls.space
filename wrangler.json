@@ -1,0 +1,13 @@
+{
+  "name": "artwalls",
+  "pages_build_output_dir": "dist",
+  "env": {
+    "production": {
+      "vars": {
+        "VITE_API_BASE_URL": "https://api.artwalls.space",
+        "VITE_SUPABASE_URL": "https://twclqgysvpefufpnmjcl.supabase.co",
+        "VITE_SUPABASE_ANON_KEY": "sb_publishable_LQGGLbAMQxaxgZvoRhgNkQ_WFcq3dVm"
+      }
+    }
+  }
+}
