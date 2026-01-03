@@ -10,7 +10,7 @@ export function ArtistSales() {
     <div className="bg-[var(--bg)] text-[var(--text)]">
       <div className="mb-8">
         <h1 className="text-3xl mb-2">Sales & Earnings</h1>
-        <p className="text-[var(--text-muted)]">Track your artwork sales and income (80% payout)</p>
+        <p className="text-[var(--text-muted)]">Track your artwork sales and income. Payouts vary by subscription plan.</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
@@ -118,24 +118,42 @@ export function ArtistSales() {
       </div>
 
       <div className="mt-6 bg-[var(--surface-2)] rounded-xl p-6 border border-[var(--border)]">
-        <h3 className="text-lg mb-2">Payout Information</h3>
+        <h3 className="text-lg mb-2">Payout Information (by plan)</h3>
         <p className="text-sm text-[var(--text-muted)] mb-4">
-          You receive 80% of the sale price. The venue receives 10%, and Artwalls keeps 10% as a platform fee.
+          Artist payout depends on your subscription plan. Venue commission is 10% by default; the remaining percentage is the platform fee.
         </p>
-        <div className="grid grid-cols-3 gap-4 text-sm">
-          <div className="bg-[var(--surface-1)] rounded-lg p-3 border border-[var(--border)]">
-            <div className="text-[var(--text-muted)] mb-1">Artist</div>
-            <div className="text-xl text-[var(--green)]">80%</div>
-          </div>
-          <div className="bg-[var(--surface-1)] rounded-lg p-3 border border-[var(--border)]">
-            <div className="text-[var(--text-muted)] mb-1">Venue</div>
-            <div className="text-xl text-[var(--green)]">10%</div>
-          </div>
-          <div className="bg-[var(--surface-1)] rounded-lg p-3 border border-[var(--border)]">
-            <div className="text-[var(--text-muted)] mb-1">Platform</div>
-            <div className="text-xl text-[var(--text-muted)]">10%</div>
-          </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-[var(--surface-3)]">
+              <tr>
+                <th className="text-left px-4 py-3 text-[var(--text-muted)]">Plan</th>
+                <th className="text-left px-4 py-3 text-[var(--text-muted)]">Artist</th>
+                <th className="text-left px-4 py-3 text-[var(--text-muted)]">Venue</th>
+                <th className="text-left px-4 py-3 text-[var(--text-muted)]">Platform</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[var(--border)]">
+              {[
+                { id: 'free', name: 'Free', platform: 15 },
+                { id: 'starter', name: 'Starter', platform: 10 },
+                { id: 'growth', name: 'Growth', platform: 8 },
+                { id: 'pro', name: 'Pro', platform: 6 },
+              ].map((plan) => {
+                const venue = 10;
+                const artist = Math.max(0, 100 - venue - plan.platform);
+                return (
+                  <tr key={plan.id}>
+                    <td className="px-4 py-3 text-[var(--text)]">{plan.name}</td>
+                    <td className="px-4 py-3 text-[var(--green)]">{artist}%</td>
+                    <td className="px-4 py-3 text-[var(--text)]">{venue}%</td>
+                    <td className="px-4 py-3 text-[var(--text-muted)]">{plan.platform}%</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
+        <p className="text-xs text-[var(--text-muted)] mt-3">Actual payout amounts are calculated per sale. Example sales shown above use a simplified 80/10/10 split.</p>
       </div>
     </div>
   );
