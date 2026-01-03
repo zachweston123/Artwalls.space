@@ -76,7 +76,7 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
             </div>
             <button
               onClick={() => onNavigate('plans-pricing')}
-              className="px-4 py-2 bg-[var(--blue)] hover:bg-[var(--blue-hover)] text-[var(--on-blue)] font-semibold text-sm rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]"
+              className="px-4 py-2 bg-[var(--blue)] hover:bg-[var(--blue-hover)] text-[var(--on-blue)] font-semibold text-sm rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]"
             >
               Upgrade
             </button>
@@ -101,7 +101,7 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
         </div>
         <button
           onClick={() => onNavigate('artist-profile')}
-          className="flex-shrink-0 px-4 py-2 bg-[var(--blue)] hover:bg-[var(--blue-hover)] text-[var(--on-blue)] text-sm font-semibold rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]"
+          className="flex-shrink-0 px-4 py-2 bg-[var(--blue)] hover:bg-[var(--blue-hover)] text-[var(--on-blue)] text-sm font-semibold rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]"
         >
           Complete
         </button>
@@ -122,7 +122,7 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
           </div>
           <button
             onClick={() => onNavigate('artist-venues')}
-            className="flex-shrink-0 px-4 py-2.5 bg-[var(--blue)] hover:bg-[var(--blue-hover)] text-[var(--on-blue)] font-semibold text-sm rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)] flex items-center gap-2"
+            className="flex-shrink-0 px-4 py-2.5 bg-[var(--blue)] hover:bg-[var(--blue-hover)] text-[var(--on-blue)] font-semibold text-sm rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)] flex items-center gap-2"
           >
             <Search className="w-4 h-4" />
             <span>Find Venues</span>
@@ -249,19 +249,19 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
           <div className="space-y-3">
             <button
               onClick={() => onNavigate('artist-artworks')}
-              className="w-full px-4 py-3 bg-[var(--blue)] hover:bg-[var(--blue-hover)] text-[var(--on-blue)] font-semibold text-sm rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]"
+              className="w-full px-4 py-3 bg-[var(--blue)] hover:bg-[var(--blue-hover)] text-[var(--on-blue)] font-semibold text-sm rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]"
             >
               Upload New Artwork
             </button>
             <button
               onClick={() => onNavigate('artist-venues')}
-              className="w-full px-4 py-3 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] text-[var(--text)] font-semibold text-sm rounded-md border border-[var(--border)] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]"
+              className="w-full px-4 py-3 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] text-[var(--text)] font-semibold text-sm rounded-lg border border-[var(--border)] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]"
             >
               Browse Available Venues
             </button>
             <button
               onClick={() => onNavigate('artist-sales')}
-              className="w-full px-4 py-3 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] text-[var(--text-muted)] hover:text-[var(--text)] font-semibold text-sm rounded-md border border-[var(--border)] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]"
+              className="w-full px-4 py-3 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] text-[var(--text-muted)] hover:text-[var(--text)] font-semibold text-sm rounded-lg border border-[var(--border)] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]"
             >
               View Sales Report
             </button>
