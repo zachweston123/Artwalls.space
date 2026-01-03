@@ -27,7 +27,7 @@ export function RoleButton({
     }
   } else {
     if (variant === 'primary') {
-      variantClasses = 'bg-[var(--green)] hover:opacity-90 text-white';
+      variantClasses = 'bg-[var(--green)] hover:opacity-90 text-[var(--accent-contrast)]';
     } else if (variant === 'secondary') {
       variantClasses = 'bg-[var(--green-muted)] text-[var(--green)] hover:opacity-90';
     } else if (variant === 'ghost') {

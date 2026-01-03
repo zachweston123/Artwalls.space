@@ -167,7 +167,7 @@ export function VenueSettings() {
             {/* Save Button */}
             <button
               onClick={handleSave}
-              className="flex items-center justify-center gap-2 px-6 py-3 bg-[var(--green)] text-white rounded-lg hover:opacity-90 transition-opacity w-full sm:w-auto"
+              className="flex items-center justify-center gap-2 px-6 py-3 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-opacity w-full sm:w-auto"
             >
               <Save className="w-5 h-5" />
               <span>Save Schedule</span>
@@ -225,7 +225,7 @@ export function VenueSettings() {
 
       {/* Success Toast */}
       {showToast && (
-        <div className="fixed bottom-6 right-6 bg-[var(--green)] text-white px-6 py-4 rounded-xl shadow-lg flex items-center gap-3 animate-slide-up z-50">
+        <div className="fixed bottom-6 right-6 bg-[var(--green)] text-[var(--accent-contrast)] px-6 py-4 rounded-xl shadow-lg flex items-center gap-3 animate-slide-up z-50">
           <CheckCircle className="w-5 h-5" />
           <span>Schedule updated successfully!</span>
         </div>

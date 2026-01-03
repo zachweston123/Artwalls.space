@@ -53,30 +53,30 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
   ];
 
   return (
-    <div className="bg-neutral-950 text-neutral-50 min-h-screen">
+    <div className="bg-[var(--bg)] text-[var(--text)] min-h-screen">
       {/* ════════════════════════════════════════════════════════════
           HEADER SECTION (Welcome + Plan Chip + Upgrade Button)
           ════════════════════════════════════════════════════════════ */}
-      <div className="border-b border-white/10 mb-8">
+      <div className="border-b border-[var(--border)] mb-8">
         <div className="flex items-center justify-between gap-4">
           <div className="flex-1">
-            <h1 className="text-4xl font-bold text-neutral-50 mb-1">
+            <h1 className="text-4xl font-bold text-[var(--text)] mb-1">
               Welcome back, {user.name.split(' ')[0] || 'Artist'}
             </h1>
-            <p className="text-neutral-400">
+            <p className="text-[var(--text-muted)]">
               Here's what's happening with your artwork
             </p>
           </div>
           
           {/* Plan Chip + Upgrade Button (Right side) */}
           <div className="flex items-center gap-3 flex-shrink-0">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-neutral-800 border border-white/10 rounded-full">
-              <span className="text-xs font-semibold text-neutral-300">Plan:</span>
-              <span className="text-xs font-bold text-blue-400">Free</span>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-full">
+              <span className="text-xs font-semibold text-[var(--text-muted)]">Plan:</span>
+              <span className="text-xs font-bold text-[var(--blue)]">Free</span>
             </div>
             <button
               onClick={() => onNavigate('plans-pricing')}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900"
+              className="px-4 py-2 bg-[var(--blue)] hover:bg-[var(--blue-hover)] text-[var(--on-blue)] font-semibold text-sm rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]"
             >
               Upgrade
             </button>
@@ -87,21 +87,21 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
       {/* ════════════════════════════════════════════════════════════
           ACTION REQUIRED BANNER (Compact, Clear CTA)
           ════════════════════════════════════════════════════════════ */}
-      <div className="mb-8 bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 flex items-center justify-between gap-4">
+      <div className="mb-8 bg-[color:color-mix(in_srgb,var(--warning)_12%,transparent)] border border-[color:color-mix(in_srgb,var(--warning)_25%,transparent)] rounded-lg p-4 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3 flex-1">
-          <div className="w-5 h-5 text-yellow-400 flex-shrink-0">
+          <div className="w-5 h-5 text-[var(--warning)] flex-shrink-0">
             <svg fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
             </svg>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-neutral-50">Complete your artist profile</p>
-            <p className="text-xs text-neutral-400 mt-0.5">Venues are more likely to invite artists with complete profiles</p>
+            <p className="text-sm font-semibold text-[var(--text)]">Complete your artist profile</p>
+            <p className="text-xs text-[var(--text-muted)] mt-0.5">Venues are more likely to invite artists with complete profiles</p>
           </div>
         </div>
         <button
           onClick={() => onNavigate('artist-profile')}
-          className="flex-shrink-0 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900"
+          className="flex-shrink-0 px-4 py-2 bg-[var(--blue)] hover:bg-[var(--blue-hover)] text-[var(--on-blue)] text-sm font-semibold rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]"
         >
           Complete
         </button>
@@ -110,25 +110,25 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
       {/* ════════════════════════════════════════════════════════════
           SEARCH MODULE (Compact, Clear Input + Primary Button)
           ════════════════════════════════════════════════════════════ */}
-      <div className="mb-8 bg-neutral-900 border border-white/10 rounded-lg p-4">
+      <div className="mb-8 bg-[var(--surface-1)] border border-[var(--border)] rounded-lg p-4">
         <div className="flex items-center gap-3 mb-3">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[var(--text-muted)] pointer-events-none" />
             <input
               type="text"
               placeholder="Search venues by name, location, or style..."
-              className="w-full pl-10 pr-4 py-2.5 bg-neutral-800 border border-white/10 rounded-md text-neutral-50 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all"
+              className="w-full pl-10 pr-4 py-2.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-md text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)] focus:border-transparent transition-all"
             />
           </div>
           <button
             onClick={() => onNavigate('artist-venues')}
-            className="flex-shrink-0 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 flex items-center gap-2"
+            className="flex-shrink-0 px-4 py-2.5 bg-[var(--blue)] hover:bg-[var(--blue-hover)] text-[var(--on-blue)] font-semibold text-sm rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)] flex items-center gap-2"
           >
             <Search className="w-4 h-4" />
             <span>Find Venues</span>
           </button>
         </div>
-        <p className="text-xs text-neutral-500 px-1">
+        <p className="text-xs text-[var(--text-muted)] px-1">
           Browse {Math.floor(Math.random() * 50) + 100}+ available wall spaces across your city
         </p>
       </div>
@@ -143,25 +143,25 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
             <button
               key={stat.label}
               onClick={stat.action}
-              className="group bg-neutral-900 border border-white/10 rounded-lg p-5 transition-all hover:bg-neutral-800/50 hover:border-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950 text-left"
+              className="group bg-[var(--surface-1)] border border-[var(--border)] rounded-lg p-5 transition-all hover:bg-[var(--surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)] text-left"
             >
               {/* Icon - Reduced weight/size */}
-              <div className="w-10 h-10 bg-blue-500/10 rounded-md flex items-center justify-center mb-3 group-hover:bg-blue-500/20 transition-colors">
-                <Icon className="w-5 h-5 text-blue-400" />
+              <div className="w-10 h-10 bg-[color:color-mix(in_srgb,var(--blue)_12%,transparent)] rounded-md flex items-center justify-center mb-3 group-hover:bg-[color:color-mix(in_srgb,var(--blue)_20%,transparent)] transition-colors">
+                <Icon className="w-5 h-5 text-[var(--blue)]" />
               </div>
               
               {/* Metric */}
-              <div className="text-2xl font-bold text-neutral-50 mb-1">
+              <div className="text-2xl font-bold text-[var(--text)] mb-1">
                 {stat.value}
               </div>
               
               {/* Label */}
-              <div className="text-sm font-medium text-neutral-400 mb-0.5">
+              <div className="text-sm font-medium text-[var(--text-muted)] mb-0.5">
                 {stat.label}
               </div>
               
               {/* Sublabel */}
-              <div className="text-xs text-neutral-500">
+              <div className="text-xs text-[var(--text-muted)]">
                 {stat.subtext}
               </div>
             </button>
@@ -192,10 +192,10 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
         </div>
 
         {/* Recent Activity Card */}
-        <div className="bg-neutral-900 border border-white/10 rounded-lg p-6">
+        <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-lg p-6">
           <div className="mb-6">
-            <h2 className="text-lg font-bold text-neutral-50 mb-1">Recent Activity</h2>
-            <p className="text-sm text-neutral-400">Latest updates on your artwork</p>
+            <h2 className="text-lg font-bold text-[var(--text)] mb-1">Recent Activity</h2>
+            <p className="text-sm text-[var(--text-muted)]">Latest updates on your artwork</p>
           </div>
           
           <div className="space-y-4">
@@ -216,21 +216,21 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
                 time: '1 week ago',
               },
             ].map((item, idx) => (
-              <div key={idx} className="flex items-start gap-3 pb-4 border-b border-white/10 last:border-0 last:pb-0">
+              <div key={idx} className="flex items-start gap-3 pb-4 border-b border-[var(--border)] last:border-0 last:pb-0">
                 <div
                   className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
                     item.type === 'success'
-                      ? 'bg-green-400'
+                      ? 'bg-[var(--green)]'
                       : item.type === 'info'
-                      ? 'bg-blue-400'
-                      : 'bg-neutral-600'
+                      ? 'bg-[var(--blue)]'
+                      : 'bg-[var(--text-muted)]'
                   }`}
                 />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-neutral-50">
+                  <p className="text-sm text-[var(--text)]">
                     {item.title}
                   </p>
-                  <p className="text-xs text-neutral-500 mt-0.5">
+                  <p className="text-xs text-[var(--text-muted)] mt-0.5">
                     {item.time}
                   </p>
                 </div>
@@ -240,28 +240,28 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
         </div>
 
         {/* Quick Actions Card */}
-        <div className="bg-neutral-900 border border-white/10 rounded-lg p-6">
+        <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-lg p-6">
           <div className="mb-6">
-            <h2 className="text-lg font-bold text-neutral-50 mb-1">Quick Actions</h2>
-            <p className="text-sm text-neutral-400">Common tasks</p>
+            <h2 className="text-lg font-bold text-[var(--text)] mb-1">Quick Actions</h2>
+            <p className="text-sm text-[var(--text-muted)]">Common tasks</p>
           </div>
           
           <div className="space-y-3">
             <button
               onClick={() => onNavigate('artist-artworks')}
-              className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900"
+              className="w-full px-4 py-3 bg-[var(--blue)] hover:bg-[var(--blue-hover)] text-[var(--on-blue)] font-semibold text-sm rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]"
             >
               Upload New Artwork
             </button>
             <button
               onClick={() => onNavigate('artist-venues')}
-              className="w-full px-4 py-3 bg-neutral-800 hover:bg-neutral-700 text-neutral-50 font-semibold text-sm rounded-md border border-white/10 hover:border-white/20 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900"
+              className="w-full px-4 py-3 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] text-[var(--text)] font-semibold text-sm rounded-md border border-[var(--border)] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]"
             >
               Browse Available Venues
             </button>
             <button
               onClick={() => onNavigate('artist-sales')}
-              className="w-full px-4 py-3 bg-neutral-800/50 hover:bg-neutral-700/50 text-neutral-300 hover:text-neutral-50 font-semibold text-sm rounded-md border border-white/10 hover:border-white/15 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900"
+              className="w-full px-4 py-3 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] text-[var(--text-muted)] hover:text-[var(--text)] font-semibold text-sm rounded-md border border-[var(--border)] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]"
             >
               View Sales Report
             </button>

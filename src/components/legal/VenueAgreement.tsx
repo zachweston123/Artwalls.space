@@ -309,7 +309,7 @@ export function VenueAgreement({ onNavigate, onAccept, hasAccepted = false }: Ve
                 <button
                   onClick={handleAccept}
                   disabled={!agreed || !name.trim()}
-                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-[var(--green)] text-white rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <CheckCircle className="w-5 h-5" />
                   <span>Accept Agreement</span>
@@ -350,7 +350,7 @@ export function VenueAgreement({ onNavigate, onAccept, hasAccepted = false }: Ve
 
       {/* Success Toast */}
       {showSuccessToast && (
-        <div className="fixed bottom-6 right-6 bg-[var(--green)] text-white px-6 py-4 rounded-xl shadow-lg flex items-center gap-3 animate-slide-up z-50">
+        <div className="fixed bottom-6 right-6 bg-[var(--green)] text-[var(--accent-contrast)] px-6 py-4 rounded-xl shadow-lg flex items-center gap-3 animate-slide-up z-50">
           <CheckCircle className="w-5 h-5" />
           <span>Agreement accepted successfully!</span>
         </div>

@@ -194,7 +194,7 @@ export function ArtistProfileView({
             {currentUser.role === 'venue' && (
               <button
                 onClick={onInviteToApply}
-                className="flex-1 px-6 py-3 bg-[var(--green)] text-white rounded-lg hover:opacity-90 transition-colors"
+                className="flex-1 px-6 py-3 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-colors"
               >
                 Invite to Apply
               </button>

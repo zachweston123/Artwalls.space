@@ -88,7 +88,7 @@ export function VenueApplications() {
             onClick={() => setFilter('all')}
             className={`px-4 py-2 rounded-lg transition-colors ${
               filter === 'all'
-                ? 'bg-[var(--green)] text-white'
+                ? 'bg-[var(--green)] text-[var(--accent-contrast)]'
                 : 'bg-[var(--surface-2)] text-[var(--text)] hover:bg-[var(--surface-3)]'
             }`}
           >
@@ -98,7 +98,7 @@ export function VenueApplications() {
             onClick={() => setFilter('pending')}
             className={`px-4 py-2 rounded-lg transition-colors ${
               filter === 'pending'
-                ? 'bg-[var(--green)] text-white'
+                ? 'bg-[var(--green)] text-[var(--accent-contrast)]'
                 : 'bg-[var(--surface-2)] text-[var(--text)] hover:bg-[var(--surface-3)]'
             }`}
           >
@@ -108,7 +108,7 @@ export function VenueApplications() {
             onClick={() => setFilter('approved')}
             className={`px-4 py-2 rounded-lg transition-colors ${
               filter === 'approved'
-                ? 'bg-[var(--green)] text-white'
+                ? 'bg-[var(--green)] text-[var(--accent-contrast)]'
                 : 'bg-[var(--surface-2)] text-[var(--text)] hover:bg-[var(--surface-3)]'
             }`}
           >
@@ -118,7 +118,7 @@ export function VenueApplications() {
             onClick={() => setFilter('rejected')}
             className={`px-4 py-2 rounded-lg transition-colors ${
               filter === 'rejected'
-                ? 'bg-[var(--green)] text-white'
+                ? 'bg-[var(--green)] text-[var(--accent-contrast)]'
                 : 'bg-[var(--surface-2)] text-[var(--text)] hover:bg-[var(--surface-3)]'
             }`}
           >
@@ -166,7 +166,7 @@ export function VenueApplications() {
                   <div className="flex gap-3">
                     <button
                       onClick={() => handleApprove(application.id)}
-                      className="flex items-center gap-2 px-6 py-2 bg-[var(--green)] text-white rounded-lg hover:opacity-90 transition-colors"
+                      className="flex items-center gap-2 px-6 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-colors"
                     >
                       <Check className="w-4 h-4" />
                       Approve Application
@@ -182,12 +182,12 @@ export function VenueApplications() {
                 )}
 
                 {application.status === 'approved' && (
-                  <div className="p-4 bg-green-50 rounded-lg">
-                    <p className="text-sm text-green-900 mb-2">
+                  <div className="p-4 bg-[var(--green-muted)] rounded-lg border border-[var(--border)]">
+                    <p className="text-sm text-[var(--text)] mb-2">
                       Application approved. Artist will schedule installation during your weekly window.
                     </p>
                     {(application as any).approvedDuration && (
-                      <p className="text-xs text-green-700">
+                      <p className="text-xs text-[var(--text-muted)]">
                         Display term: <strong>{(application as any).approvedDuration} days</strong>
                       </p>
                     )}
@@ -195,8 +195,8 @@ export function VenueApplications() {
                 )}
 
                 {application.status === 'rejected' && (
-                  <div className="p-4 bg-neutral-50 rounded-lg">
-                    <p className="text-sm text-neutral-600">This application was declined.</p>
+                  <div className="p-4 bg-[var(--surface-2)] rounded-lg border border-[var(--border)]">
+                    <p className="text-sm text-[var(--text-muted)]">This application was declined.</p>
                   </div>
                 )}
               </div>
@@ -318,7 +318,7 @@ export function VenueApplications() {
               </button>
               <button
                 onClick={confirmApproval}
-                className="flex-1 px-6 py-3 bg-[var(--green)] text-white rounded-lg hover:opacity-90 transition-colors"
+                className="flex-1 px-6 py-3 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-colors"
               >
                 Approve & Schedule
               </button>

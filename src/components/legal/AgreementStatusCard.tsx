@@ -56,7 +56,7 @@ export function AgreementStatusCard({
             className={
               isArtist
                 ? 'px-4 py-2 bg-[var(--blue)] text-[var(--on-blue)] rounded-lg hover:bg-[var(--blue-hover)] transition-colors text-sm'
-                : 'px-4 py-2 bg-[var(--green)] text-white rounded-lg hover:opacity-90 transition-colors text-sm'
+                : 'px-4 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-colors text-sm'
             }
           >
             Review & Accept

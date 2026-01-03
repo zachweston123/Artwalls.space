@@ -62,7 +62,7 @@ export function VenueWalls() {
         </div>
         <button
           onClick={() => setShowAddForm(true)}
-          className="flex items-center justify-center gap-2 px-4 py-2 bg-[var(--green)] text-white rounded-lg hover:opacity-90 transition-opacity"
+          className="flex items-center justify-center gap-2 px-4 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-opacity"
         >
           <Plus className="w-5 h-5" />
           <span>Add Wall Space</span>
@@ -164,7 +164,7 @@ export function VenueWalls() {
                         <button
                           type="button"
                           onClick={() => removePhoto(index)}
-                          className="absolute top-2 right-2 p-1 bg-[var(--danger)] text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="absolute top-2 right-2 p-1 bg-[var(--danger)] text-[var(--accent-contrast)] rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -184,7 +184,7 @@ export function VenueWalls() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-[var(--green)] text-white rounded-lg hover:opacity-90 transition-opacity"
+                  className="flex-1 px-4 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-opacity"
                 >
                   Add Wall Space
                 </button>
@@ -262,7 +262,7 @@ export function VenueWalls() {
                   className={`w-full px-4 py-2 rounded-lg transition-colors ${
                     wall.available
                       ? 'bg-[var(--surface-2)] text-[var(--text)] hover:bg-[var(--surface-3)]'
-                      : 'bg-[var(--green)] text-white hover:opacity-90'
+                      : 'bg-[var(--green)] text-[var(--accent-contrast)] hover:opacity-90'
                   }`}
                 >
                   {wall.available ? 'Mark as Occupied' : 'Mark as Available'}
@@ -282,7 +282,7 @@ export function VenueWalls() {
           <p className="text-[var(--text-muted)] mb-6">Add your first wall space to start displaying artwork</p>
           <button
             onClick={() => setShowAddForm(true)}
-            className="px-6 py-2 bg-[var(--green)] text-white rounded-lg hover:opacity-90 transition-opacity"
+            className="px-6 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-opacity"
           >
             Add Your First Wall Space
           </button>

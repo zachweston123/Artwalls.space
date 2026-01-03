@@ -189,7 +189,7 @@ export function VenueProfileEdit({ onSave, onCancel }: VenueProfileEditProps) {
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-2 bg-[var(--green)] text-white rounded-lg hover:opacity-90 transition-opacity"
+              className="flex-1 px-4 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-opacity"
             >
               Save Changes
             </button>

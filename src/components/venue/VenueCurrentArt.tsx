@@ -86,7 +86,7 @@ export function VenueCurrentArt() {
           onClick={() => setFilter('all')}
           className={`px-4 py-2 rounded-lg transition-colors ${
             filter === 'all'
-              ? 'bg-[var(--green)] text-white'
+              ? 'bg-[var(--green)] text-[var(--accent-contrast)]'
               : 'bg-[var(--surface-2)] text-[var(--text)] hover:bg-[var(--surface-3)]'
           }`}
         >
@@ -96,7 +96,7 @@ export function VenueCurrentArt() {
           onClick={() => setFilter('active')}
           className={`px-4 py-2 rounded-lg transition-colors ${
             filter === 'active'
-              ? 'bg-[var(--green)] text-white'
+              ? 'bg-[var(--green)] text-[var(--accent-contrast)]'
               : 'bg-[var(--surface-2)] text-[var(--text)] hover:bg-[var(--surface-3)]'
           }`}
         >
@@ -106,7 +106,7 @@ export function VenueCurrentArt() {
           onClick={() => setFilter('sold')}
           className={`px-4 py-2 rounded-lg transition-colors ${
             filter === 'sold'
-              ? 'bg-[var(--green)] text-white'
+              ? 'bg-[var(--green)] text-[var(--accent-contrast)]'
               : 'bg-[var(--surface-2)] text-[var(--text)] hover:bg-[var(--surface-3)]'
           }`}
         >
@@ -116,7 +116,7 @@ export function VenueCurrentArt() {
           onClick={() => setFilter('ending-soon')}
           className={`px-4 py-2 rounded-lg transition-colors ${
             filter === 'ending-soon'
-              ? 'bg-[var(--green)] text-white'
+              ? 'bg-[var(--green)] text-[var(--accent-contrast)]'
               : 'bg-[var(--surface-2)] text-[var(--text)] hover:bg-[var(--surface-3)]'
           }`}
         >
@@ -206,7 +206,7 @@ export function VenueCurrentArt() {
                     <>
                       <button
                         onClick={() => handleAction(artwork.id, 'mark-sold')}
-                        className="px-4 py-2 bg-[var(--green)] text-white rounded-lg hover:opacity-90 transition-opacity text-sm"
+                        className="px-4 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-opacity text-sm"
                       >
                         Mark as Sold
                       </button>
@@ -221,7 +221,7 @@ export function VenueCurrentArt() {
                   {artwork.status === 'sold' && (
                     <button
                       onClick={() => handleAction(artwork.id, 'confirm-pickup')}
-                      className="px-4 py-2 bg-[var(--green)] text-white rounded-lg hover:opacity-90 transition-opacity text-sm"
+                      className="px-4 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-opacity text-sm"
                     >
                       Confirm Pickup Completed
                     </button>
@@ -230,7 +230,7 @@ export function VenueCurrentArt() {
                     <>
                       <button
                         onClick={() => handleAction(artwork.id, 'mark-sold')}
-                        className="px-4 py-2 bg-[var(--green)] text-white rounded-lg hover:opacity-90 transition-opacity text-sm"
+                        className="px-4 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-opacity text-sm"
                       >
                         Mark as Sold
                       </button>
@@ -258,7 +258,7 @@ export function VenueCurrentArt() {
               <p className="text-[var(--text-muted)] mb-6">
                 Review artist applications to start displaying artwork
               </p>
-              <button className="px-6 py-2 bg-[var(--green)] text-white rounded-lg hover:opacity-90 transition-opacity">
+              <button className="px-6 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-opacity">
                 View Applications
               </button>
             </>
@@ -297,7 +297,7 @@ export function VenueCurrentArt() {
               </button>
               <button
                 onClick={confirmAction}
-                className="flex-1 px-4 py-2 bg-[var(--green)] text-white rounded-lg hover:opacity-90 transition-opacity"
+                className="flex-1 px-4 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-opacity"
               >
                 Confirm
               </button>

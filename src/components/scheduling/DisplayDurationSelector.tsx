@@ -53,7 +53,7 @@ export function DisplayDurationSelector({
             >
               {duration.recommended && (
                 <div className="absolute -top-2 right-3">
-                  <span className="px-2 py-0.5 bg-[var(--green)] text-white text-xs rounded-full">
+                  <span className="px-2 py-0.5 bg-[var(--green)] text-[var(--accent-contrast)] text-xs rounded-full">
                     Recommended
                   </span>
                 </div>
@@ -70,7 +70,7 @@ export function DisplayDurationSelector({
                   }`}
                 >
                   {value === duration.value && (
-                    <div className="w-2 h-2 bg-white rounded-full" />
+                    <div className="w-2 h-2 bg-[var(--on-blue)] rounded-full" />
                   )}
                 </div>
               </div>

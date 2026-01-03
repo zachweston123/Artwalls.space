@@ -91,7 +91,7 @@ export function InviteToApplyModal({ artistName, venueName, onSend, onCancel }: 
                       : 'border-[var(--border)]'
                   }`}>
                     {formData.wallspaceId === '' && (
-                      <div className="w-2 h-2 bg-white rounded-full"></div>
+                      <div className="w-2 h-2 bg-[var(--on-blue)] rounded-full"></div>
                     )}
                   </div>
                 </div>
@@ -137,7 +137,7 @@ export function InviteToApplyModal({ artistName, venueName, onSend, onCancel }: 
                         : 'border-[var(--border)]'
                     }`}>
                       {formData.wallspaceId === wall.id && (
-                        <div className="w-2 h-2 bg-white rounded-full"></div>
+                        <div className="w-2 h-2 bg-[var(--on-blue)] rounded-full"></div>
                       )}
                     </div>
                   </div>
@@ -227,7 +227,7 @@ export function InviteToApplyModal({ artistName, venueName, onSend, onCancel }: 
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-3 bg-[var(--green)] text-white rounded-lg hover:opacity-90 transition-colors"
+              className="flex-1 px-4 py-3 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-colors"
             >
               Send Invitation
             </button>

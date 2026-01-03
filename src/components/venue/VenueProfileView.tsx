@@ -79,7 +79,7 @@ export function VenueProfileView({
             {isOwnProfile && (
               <button
                 onClick={onEdit}
-                className="flex items-center gap-2 px-4 py-2 bg-[var(--green)] text-white rounded-lg hover:opacity-90 transition-opacity"
+                className="flex items-center gap-2 px-4 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-opacity"
               >
                 <Edit className="w-4 h-4" />
                 Edit Profile
@@ -211,7 +211,7 @@ export function VenueProfileView({
           {!isOwnProfile && (
             <button
               onClick={onViewWallspaces}
-              className="flex-1 px-6 py-3 bg-[var(--green)] text-white rounded-lg hover:opacity-90 transition-opacity"
+              className="flex-1 px-6 py-3 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-opacity"
             >
               View Open Wallspaces
             </button>
@@ -219,7 +219,7 @@ export function VenueProfileView({
           {isOwnProfile && (
             <button
               onClick={() => onNavigate?.('venue-find-artists')}
-              className="flex-1 px-6 py-3 bg-[var(--green)] text-white rounded-lg hover:opacity-90 transition-opacity"
+              className="flex-1 px-6 py-3 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-opacity"
             >
               Find Artists to Invite
             </button>

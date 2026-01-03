@@ -124,7 +124,7 @@ export function VenueCurrentArtWithScheduling() {
           onClick={() => setFilter('all')}
           className={`px-4 py-2 rounded-lg transition-colors ${
             filter === 'all'
-              ? 'bg-[var(--green)] text-white'
+              ? 'bg-[var(--green)] text-[var(--accent-contrast)]'
               : 'bg-[var(--surface-2)] text-[var(--text)] hover:bg-[var(--surface-3)]'
           }`}
         >
@@ -134,7 +134,7 @@ export function VenueCurrentArtWithScheduling() {
           onClick={() => setFilter('active')}
           className={`px-4 py-2 rounded-lg transition-colors ${
             filter === 'active'
-              ? 'bg-[var(--green)] text-white'
+              ? 'bg-[var(--green)] text-[var(--accent-contrast)]'
               : 'bg-[var(--surface-2)] text-[var(--text)] hover:bg-[var(--surface-3)]'
           }`}
         >
@@ -144,7 +144,7 @@ export function VenueCurrentArtWithScheduling() {
           onClick={() => setFilter('sold')}
           className={`px-4 py-2 rounded-lg transition-colors ${
             filter === 'sold'
-              ? 'bg-[var(--green)] text-white'
+              ? 'bg-[var(--green)] text-[var(--accent-contrast)]'
               : 'bg-[var(--surface-2)] text-[var(--text)] hover:bg-[var(--surface-3)]'
           }`}
         >
@@ -154,7 +154,7 @@ export function VenueCurrentArtWithScheduling() {
           onClick={() => setFilter('ending-soon')}
           className={`px-4 py-2 rounded-lg transition-colors ${
             filter === 'ending-soon'
-              ? 'bg-[var(--green)] text-white'
+              ? 'bg-[var(--green)] text-[var(--accent-contrast)]'
               : 'bg-[var(--surface-2)] text-[var(--text)] hover:bg-[var(--surface-3)]'
           }`}
         >
@@ -301,7 +301,7 @@ export function VenueCurrentArtWithScheduling() {
                       )}
                       <button
                         onClick={() => handleAction(artwork.id, 'mark-sold')}
-                        className="px-4 py-2 bg-[var(--green)] text-white rounded-lg hover:opacity-90 transition-colors text-sm"
+                        className="px-4 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-colors text-sm"
                       >
                         Mark as Sold
                       </button>
@@ -326,14 +326,14 @@ export function VenueCurrentArtWithScheduling() {
                       {!artwork.scheduledPickup ? (
                         <button
                           onClick={() => handleAction(artwork.id, 'schedule-pickup', artwork)}
-                          className="px-4 py-2 bg-[var(--green)] text-white rounded-lg hover:opacity-90 transition-colors text-sm"
+                          className="px-4 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-colors text-sm"
                         >
                           Schedule Pickup
                         </button>
                       ) : !artwork.pickupConfirmed ? (
                         <button
                           onClick={() => handleAction(artwork.id, 'confirm-pickup')}
-                          className="px-4 py-2 bg-[var(--green)] text-white rounded-lg hover:opacity-90 transition-colors text-sm"
+                          className="px-4 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-colors text-sm"
                         >
                           Confirm Pickup Completed
                         </button>
@@ -344,7 +344,7 @@ export function VenueCurrentArtWithScheduling() {
                     <>
                       <button
                         onClick={() => handleAction(artwork.id, 'mark-sold')}
-                        className="px-4 py-2 bg-[var(--green)] text-white rounded-lg hover:opacity-90 transition-colors text-sm"
+                        className="px-4 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-colors text-sm"
                       >
                         Mark as Sold
                       </button>
@@ -372,7 +372,7 @@ export function VenueCurrentArtWithScheduling() {
               <p className="text-[var(--text-muted)] mb-6">
                 Review artist applications to start displaying artwork
               </p>
-              <button className="px-6 py-2 bg-[var(--green)] text-white rounded-lg hover:opacity-90 transition-colors">
+              <button className="px-6 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-colors">
                 View Applications
               </button>
             </>
@@ -428,7 +428,7 @@ export function VenueCurrentArtWithScheduling() {
               </button>
               <button
                 onClick={confirmAction}
-                className="flex-1 px-4 py-2 bg-[var(--green)] text-white rounded-lg hover:opacity-90 transition-colors"
+                className="flex-1 px-4 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-colors"
               >
                 Confirm
               </button>

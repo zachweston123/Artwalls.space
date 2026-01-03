@@ -143,7 +143,7 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
             <Filter className="w-5 h-5" />
             Filters
             {hasActiveFilters && (
-              <span className="ml-1 px-2 py-0.5 bg-[var(--green)] text-white text-xs rounded-full">
+              <span className="ml-1 px-2 py-0.5 bg-[var(--green)] text-[var(--accent-contrast)] text-xs rounded-full">
                 {(filters.artTypes.length + (filters.openToNew ? 1 : 0) + (filters.neighborhood ? 1 : 0))}
               </span>
             )}
@@ -318,7 +318,7 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
                 </button>
                 <button
                   onClick={() => onInviteArtist(artist.id)}
-                  className="flex-1 px-4 py-2 bg-[var(--green)] text-white rounded-lg hover:opacity-90 transition-opacity text-sm"
+                  className="flex-1 px-4 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-opacity text-sm"
                 >
                   Invite to Apply
                 </button>
@@ -340,7 +340,7 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
           {hasActiveFilters && (
             <button
               onClick={clearFilters}
-              className="px-6 py-2 bg-[var(--green)] text-white rounded-lg hover:opacity-90 transition-opacity"
+              className="px-6 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-opacity"
             >
               Clear Filters
             </button>

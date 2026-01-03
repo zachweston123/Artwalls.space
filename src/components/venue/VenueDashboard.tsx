@@ -64,7 +64,7 @@ export function VenueDashboard({ onNavigate }: VenueDashboardProps) {
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="w-12 h-12 bg-[var(--green-muted)] rounded-lg flex items-center justify-center group-hover:bg-[var(--green)] transition-colors">
-                  <Icon className="w-6 h-6 text-[var(--green)] group-hover:text-white transition-colors" />
+                  <Icon className="w-6 h-6 text-[var(--green)] group-hover:text-[var(--accent-contrast)] transition-colors" />
                 </div>
               </div>
               <div className="text-3xl mb-1 text-[var(--text)]">{stat.value}</div>
@@ -108,7 +108,7 @@ export function VenueDashboard({ onNavigate }: VenueDashboardProps) {
           <div className="space-y-3">
             <button
               onClick={() => onNavigate('venue-applications')}
-              className="w-full px-4 py-3 bg-[var(--green)] text-white rounded-lg hover:opacity-90 transition-colors flex items-center justify-between"
+              className="w-full px-4 py-3 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-colors flex items-center justify-between"
             >
               <span>Review Applications</span>
               {pendingApplications > 0 && (
