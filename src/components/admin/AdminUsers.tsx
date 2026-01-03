@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Search, Filter, Download, Users as UsersIcon } from 'lucide-react';
-import { apiGet } from '../../lib/api';
+import { apiGet, apiPost } from '../../lib/api';
 
 interface AdminUsersProps {
   onViewUser: (userId: string) => void;
@@ -125,6 +125,9 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
     let isMounted = true;
     async function loadUsers() {
       try {
+        // Backfill newly created Supabase users into local tables (no-op if already present)
+        try { await apiPost('/api/admin/sync-users', {}); } catch {}
+
         const [artists, venues] = await Promise.all([
           apiGet<Array<{ id: string; name?: string | null; email?: string | null; subscriptionTier?: string | null; subscriptionStatus?: string | null }>>('/api/artists'),
           apiGet<Array<{ id: string; name?: string | null; email?: string | null; type?: string | null }>>('/api/venues'),

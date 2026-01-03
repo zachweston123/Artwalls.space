@@ -641,6 +641,51 @@ app.post('/api/artists', async (req, res) => {
 });
 
 // -----------------------------
+// Admin: list/sync users from Supabase Auth
+// -----------------------------
+app.get('/api/admin/users', async (_req, res) => {
+  try {
+    const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    if (error) throw error;
+    const users = (data?.users || []).map((u) => ({
+      id: u.id,
+      email: u.email || null,
+      name: (u.user_metadata?.name ?? null),
+      role: (u.user_metadata?.role ?? null),
+      createdAt: u.created_at,
+    }));
+    return res.json(users);
+  } catch (err) {
+    console.error('admin list users error', err);
+    return res.status(500).json({ error: err?.message || 'Admin list users failed' });
+  }
+});
+
+app.post('/api/admin/sync-users', async (_req, res) => {
+  try {
+    const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    if (error) throw error;
+    const users = data?.users || [];
+    const results = { artists: 0, venues: 0 };
+    for (const u of users) {
+      const role = (u.user_metadata?.role || '').toLowerCase();
+      const name = (u.user_metadata?.name || null);
+      if (role === 'artist') {
+        await upsertArtist({ id: u.id, email: u.email || null, name, role: 'artist' });
+        results.artists += 1;
+      } else if (role === 'venue') {
+        await upsertVenue({ id: u.id, email: u.email || null, name, type: null, defaultVenueFeeBps: 1000 });
+        results.venues += 1;
+      }
+    }
+    return res.json({ ok: true, ...results });
+  } catch (err) {
+    console.error('admin sync users error', err);
+    return res.status(500).json({ error: err?.message || 'Admin sync users failed' });
+  }
+});
+
+// -----------------------------
 // Wallspaces per venue
 // -----------------------------
 app.get('/api/venues/:id/wallspaces', async (req, res) => {
