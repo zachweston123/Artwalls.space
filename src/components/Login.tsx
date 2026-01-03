@@ -41,14 +41,14 @@ export function Login({ onLogin }: LoginProps) {
           <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
             <button
               onClick={() => setSelectedRole('artist')}
-              className="group bg-[var(--surface-2)] rounded-2xl p-8 border border-[var(--border)] hover:bg-[var(--surface-3)] hover:border-[var(--blue)] transition-colors"
+              className="group bg-[var(--blue-muted)] rounded-2xl p-8 border-2 border-[var(--blue)] hover:brightness-95 transition"
             >
               <div className="flex flex-col items-center text-center gap-4">
-                <div className="w-16 h-16 bg-[var(--surface-3)] rounded-full flex items-center justify-center group-hover:bg-[var(--blue)] transition-colors">
+                <div className="w-16 h-16 bg-[var(--surface-2)] rounded-full flex items-center justify-center group-hover:bg-[var(--blue)] transition-colors">
                   <Palette className="w-8 h-8 text-[var(--blue)] group-hover:text-[var(--on-blue)] transition-colors" />
                 </div>
                 <div>
-                  <h2 className="text-xl mb-2 text-[var(--text)]">I'm an Artist</h2>
+                  <h2 className="text-xl mb-2 text-[var(--blue)]">I'm an Artist</h2>
                   <p className="text-sm text-[var(--text-muted)]">
                     Share and sell your artwork at local venues
                   </p>
@@ -58,14 +58,14 @@ export function Login({ onLogin }: LoginProps) {
 
             <button
               onClick={() => setSelectedRole('venue')}
-              className="group bg-[var(--surface-2)] rounded-2xl p-8 border border-[var(--border)] hover:bg-[var(--surface-3)] hover:border-[var(--green)] transition-colors"
+              className="group bg-[var(--green-muted)] rounded-2xl p-8 border-2 border-[var(--green)] hover:brightness-95 transition"
             >
               <div className="flex flex-col items-center text-center gap-4">
-                <div className="w-16 h-16 bg-[var(--surface-3)] rounded-full flex items-center justify-center group-hover:bg-[var(--green)] transition-colors">
+                <div className="w-16 h-16 bg-[var(--surface-2)] rounded-full flex items-center justify-center group-hover:bg-[var(--green)] transition-colors">
                   <Store className="w-8 h-8 text-[var(--green)] group-hover:text-[var(--accent-contrast)] transition-colors" />
                 </div>
                 <div>
-                  <h2 className="text-xl mb-2 text-[var(--text)]">I'm a Venue</h2>
+                  <h2 className="text-xl mb-2 text-[var(--green)]">I'm a Venue</h2>
                   <p className="text-sm text-[var(--text-muted)]">
                     Support local artists by displaying rotating artworks and earn 10% commission on sales
                   </p>
@@ -98,8 +98,10 @@ export function Login({ onLogin }: LoginProps) {
         <div className="bg-[var(--surface-2)] rounded-2xl p-8 shadow-sm border border-[var(--border)]">
           <div
             className={
-              "inline-flex px-3 py-1 rounded-full text-sm mb-6 bg-[var(--surface-3)] border border-[var(--border)] " +
-              (selectedRole === 'artist' ? 'text-[var(--blue)]' : 'text-[var(--green)]')
+              "inline-flex px-3 py-1 rounded-full text-sm mb-6 border " +
+              (selectedRole === 'artist'
+                ? 'bg-[var(--blue-muted)] border-[var(--blue)] text-[var(--blue)]'
+                : 'bg-[var(--green-muted)] border-[var(--green)] text-[var(--green)]')
             }
           >
             {selectedRole === 'artist' ? 'Artist Account' : 'Venue Account'}
