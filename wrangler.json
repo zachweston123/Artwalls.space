@@ -5,8 +5,8 @@
     "production": {
       "vars": {
         "VITE_API_BASE_URL": "https://api.artwalls.space",
-        "VITE_SUPABASE_URL": "https://nnhxtwufsrltepkieiab.supabase.co",
-        "VITE_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5uaHh0d3Vmc3JsdGVwa2llaWFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mjk2OTkwODUsImV4cCI6MjA0NTI3NTA4NX0.N05SAf7GQA0p5CAi1sM7vl8A65qZYU4P-_8pO7X9V5w"
+        "VITE_SUPABASE_URL": "https://twclqgysvpefufpnmjcl.supabase.co",
+        "VITE_SUPABASE_ANON_KEY": "sb_publishable_LQGGLbAMQxaxgZvoRhgNkQ_WFcq3dVm"
       }
     }
   }
