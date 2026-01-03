@@ -160,7 +160,6 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
 
         // Include any Supabase Auth users not yet in our local tables
         const authMapped = (authUsers || [])
-          .filter(u => (u.role === 'artist' || u.role === 'venue'))
           .filter(u => ![...mappedArtists, ...mappedVenues].some(x => x.id === u.id))
           .map(u => ({
             id: u.id,

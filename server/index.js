@@ -228,6 +228,36 @@ async function getSupabaseUserFromRequest(req) {
   return data.user || null;
 }
 
+// Sync Supabase Auth users into local artists/venues tables so discovery lists are up-to-date.
+// This runs on-demand before listing endpoints and can also be called by admin.
+async function syncUsersFromSupabaseAuth() {
+  try {
+    const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    if (error) throw error;
+    const users = data?.users || [];
+    const results = { artists: 0, venues: 0 };
+    for (const u of users) {
+      const role = (u.user_metadata?.role || '').toLowerCase();
+      const name = u.user_metadata?.name || null;
+      if (role === 'artist') {
+        await upsertArtist({ id: u.id, email: u.email || null, name, role: 'artist' });
+        results.artists += 1;
+      } else if (role === 'venue') {
+        await upsertVenue({ id: u.id, email: u.email || null, name, type: null, defaultVenueFeeBps: 1000 });
+        results.venues += 1;
+      } else {
+        // Default backfill: treat unknown role as artist so they appear in discovery/admin
+        await upsertArtist({ id: u.id, email: u.email || null, name, role: 'artist' });
+        results.artists += 1;
+      }
+    }
+    return results;
+  } catch (err) {
+    console.warn('syncUsersFromSupabaseAuth failed', err?.message || err);
+    return { artists: 0, venues: 0, error: err?.message || String(err) };
+  }
+}
+
 function requireAuthInProduction(req, res) {
   const isProd = String(process.env.NODE_ENV || '').toLowerCase() === 'production';
   if (!isProd) return true;
@@ -573,6 +603,8 @@ app.get('/api/stripe/connect/venue/status', async (req, res) => {
 // Venues (simple listing)
 // -----------------------------
 app.get('/api/venues', async (_req, res) => {
+  // Ensure Auth users are reflected in local table before listing
+  await syncUsersFromSupabaseAuth();
   return res.json(await listVenues());
 });
 
@@ -610,6 +642,8 @@ app.post('/api/venues', async (req, res) => {
 // Artists (simple listing)
 // -----------------------------
 app.get('/api/artists', async (_req, res) => {
+  // Ensure Auth users are reflected in local table before listing
+  await syncUsersFromSupabaseAuth();
   return res.json(await listArtists());
 });
 
@@ -665,21 +699,7 @@ app.get('/api/admin/users', async (_req, res) => {
 
 app.post('/api/admin/sync-users', async (_req, res) => {
   try {
-    const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
-    if (error) throw error;
-    const users = data?.users || [];
-    const results = { artists: 0, venues: 0 };
-    for (const u of users) {
-      const role = (u.user_metadata?.role || '').toLowerCase();
-      const name = (u.user_metadata?.name || null);
-      if (role === 'artist') {
-        await upsertArtist({ id: u.id, email: u.email || null, name, role: 'artist' });
-        results.artists += 1;
-      } else if (role === 'venue') {
-        await upsertVenue({ id: u.id, email: u.email || null, name, type: null, defaultVenueFeeBps: 1000 });
-        results.venues += 1;
-      }
-    }
+    const results = await syncUsersFromSupabaseAuth();
     return res.json({ ok: true, ...results });
   } catch (err) {
     console.error('admin sync users error', err);
