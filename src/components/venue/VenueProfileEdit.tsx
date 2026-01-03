@@ -3,6 +3,7 @@ import { X, Upload, Image as ImageIcon } from 'lucide-react';
 import { LabelChip } from '../LabelChip';
 
 interface VenueProfileEditProps {
+  initialData?: Partial<VenueProfileData>;
   onSave: (data: VenueProfileData) => void;
   onCancel: () => void;
 }
@@ -16,14 +17,16 @@ export interface VenueProfileData {
   coverPhoto?: string;
 }
 
-export function VenueProfileEdit({ onSave, onCancel }: VenueProfileEditProps) {
+export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfileEditProps) {
   const [formData, setFormData] = useState<VenueProfileData>({
-    name: 'Brew & Palette Café',
-    type: 'Coffee Shop',
-    bio: 'A cozy neighborhood café and art space in the heart of Portland\'s Pearl District. We\'ve been supporting local artists for over 8 years, providing rotating wall displays that complement our warm, inviting atmosphere. Our mission is to make art accessible while serving exceptional coffee.',
-    labels: ['Locally owned', 'LGBTQ+ friendly', 'Dog-friendly', 'Student-friendly'],
-    foundedYear: 2016,
-    coverPhoto: 'https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=1200',
+    name: initialData?.name ?? 'Brew & Palette Café',
+    type: initialData?.type ?? 'Coffee Shop',
+    bio:
+      initialData?.bio ??
+      "A cozy neighborhood café and art space in the heart of Portland's Pearl District. We've been supporting local artists for over 8 years, providing rotating wall displays that complement our warm, inviting atmosphere. Our mission is to make art accessible while serving exceptional coffee.",
+    labels: initialData?.labels ?? ['Locally owned', 'LGBTQ+ friendly', 'Dog-friendly', 'Student-friendly'],
+    foundedYear: initialData?.foundedYear ?? 2016,
+    coverPhoto: initialData?.coverPhoto ?? 'https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=1200',
   });
 
   const venueTypes = [

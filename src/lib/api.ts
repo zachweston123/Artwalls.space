@@ -1,9 +1,22 @@
 const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:4242';
 
+async function getAuthHeader(): Promise<Record<string, string>> {
+  try {
+    const { supabase } = await import('./supabase');
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    if (!token) return {};
+    return { Authorization: `Bearer ${token}` };
+  } catch {
+    return {};
+  }
+}
+
 export async function apiGet<T>(path: string): Promise<T> {
+  const authHeader = await getAuthHeader();
   const res = await fetch(`${API_BASE}${path}`, {
     method: 'GET',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...authHeader },
   });
   if (!res.ok) {
     const text = await res.text();
@@ -13,10 +26,12 @@ export async function apiGet<T>(path: string): Promise<T> {
 }
 
 export async function apiPost<T>(path: string, body: unknown, headers?: Record<string, string>): Promise<T> {
+  const authHeader = await getAuthHeader();
   const res = await fetch(`${API_BASE}${path}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      ...authHeader,
       ...(headers || {}),
     },
     body: JSON.stringify(body),

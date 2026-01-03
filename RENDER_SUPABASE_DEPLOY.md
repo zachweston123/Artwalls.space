@@ -1,5 +1,8 @@
 # Deploy Artwalls on Render + Supabase (GitHub)
 
+> Using Cloudflare instead of Render?
+> See [.github/workflows/CLOUDFLARE_PAGES.md](.github/workflows/CLOUDFLARE_PAGES.md) for Cloudflare Pages setup (frontend). Note that the `server/` API is an Express app and needs a Node runtime unless you port it to Cloudflare Workers.
+
 This repo contains:
 - Frontend (Vite/React) at `/` (static build)
 - Backend (Node/Express + Stripe Connect) at `/server`
@@ -38,7 +41,9 @@ In `artwalls-api` → Environment:
   - `APP_URL`, `CORS_ORIGIN`, redirect URLs
 
 In `artwalls-web` → Environment:
-- `VITE_API_BASE_URL` = your API URL (e.g. `https://api.artwalls.space`)
+- `VITE_API_BASE_URL` = your API URL (e.g. `https://api.artwalls.space` or the Render service URL during initial setup)
+- `VITE_SUPABASE_URL` = Supabase Project URL (safe for frontend)
+- `VITE_SUPABASE_ANON_KEY` = Supabase Anon/Public key (safe for frontend)
 
 ## 5) Add custom domains
 In Render:

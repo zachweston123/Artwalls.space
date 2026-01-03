@@ -62,7 +62,7 @@ Stripe Payment Setup Interface
 ├─────────────────────────────────────────────────────────────────┤
 │ WEBHOOK CONFIGURATION                                          │
 │ Webhook URL:                                                    │
-│ [https://api.artwalls.space/webhooks/stripe] [Copy]           │
+│ [https://api.artwalls.space/api/stripe/webhook] [Copy]       │
 │                                                                 │
 │ [Configure in Stripe Dashboard →]                             │
 ├─────────────────────────────────────────────────────────────────┤

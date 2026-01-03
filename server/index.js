@@ -4,6 +4,8 @@ import dotenv from 'dotenv';
 import Stripe from 'stripe';
 import crypto from 'node:crypto';
 
+import { supabaseAdmin } from './supabaseClient.js';
+
 import {
   upsertArtist,
   getArtist,
@@ -209,10 +211,53 @@ app.use(express.json({ limit: '2mb' }));
 // -----------------------------
 // Helpers
 // -----------------------------
+async function getSupabaseUserFromRequest(req) {
+  const authHeader = req.headers?.authorization;
+  if (!authHeader || typeof authHeader !== 'string') return null;
+  const [scheme, token] = authHeader.split(' ');
+  if (!scheme || scheme.toLowerCase() !== 'bearer' || !token) return null;
+  const { data, error } = await supabaseAdmin.auth.getUser(token);
+  if (error) return null;
+  return data.user || null;
+}
+
+function requireAuthInProduction(req, res) {
+  const isProd = String(process.env.NODE_ENV || '').toLowerCase() === 'production';
+  if (!isProd) return true;
+  const authHeader = req.headers?.authorization;
+  if (!authHeader || typeof authHeader !== 'string' || !authHeader.toLowerCase().startsWith('bearer ')) {
+    res.status(401).json({ error: 'Missing Authorization: Bearer <token>' });
+    return false;
+  }
+  return true;
+}
+
 async function requireArtist(req, res) {
+  if (!requireAuthInProduction(req, res)) return null;
+
+  const authUser = await getSupabaseUserFromRequest(req);
+  const authRole = authUser?.user_metadata?.role;
+
+  // Preferred path: Supabase JWT
+  if (authUser) {
+    if (authRole !== 'artist') {
+      res.status(403).json({ error: 'Forbidden: artist role required' });
+      return null;
+    }
+    const artistId = authUser.id;
+    const artist = await getArtist(artistId);
+    if (!artist) {
+      const email = authUser.email || 'unknown@artist.local';
+      const name = authUser.user_metadata?.name || 'Artist';
+      return await upsertArtist({ id: artistId, email, name, role: 'artist' });
+    }
+    return artist;
+  }
+
+  // Dev-only fallback: x-artist-id / artistId
   const artistId = req.body?.artistId || req.query?.artistId || req.headers['x-artist-id'];
   if (!artistId || typeof artistId !== 'string') {
-    res.status(401).json({ error: 'Missing artistId (send x-artist-id header or artistId in body)' });
+    res.status(401).json({ error: 'Missing Authorization bearer token' });
     return null;
   }
   const artist = await getArtist(artistId);
@@ -225,9 +270,33 @@ async function requireArtist(req, res) {
 }
 
 async function requireVenue(req, res) {
+  if (!requireAuthInProduction(req, res)) return null;
+
+  const authUser = await getSupabaseUserFromRequest(req);
+  const authRole = authUser?.user_metadata?.role;
+
+  // Preferred path: Supabase JWT
+  if (authUser) {
+    if (authRole !== 'venue') {
+      res.status(403).json({ error: 'Forbidden: venue role required' });
+      return null;
+    }
+    const venueId = authUser.id;
+    const venue = await getVenue(venueId);
+    if (!venue) {
+      const email = authUser.email || 'unknown@venue.local';
+      const name = authUser.user_metadata?.name || 'Venue';
+      const type = authUser.user_metadata?.type || null;
+      const defaultVenueFeeBps = 1000;
+      return await upsertVenue({ id: venueId, email, name, type, defaultVenueFeeBps });
+    }
+    return venue;
+  }
+
+  // Dev-only fallback: x-venue-id / venueId
   const venueId = req.body?.venueId || req.query?.venueId || req.headers['x-venue-id'];
   if (!venueId || typeof venueId !== 'string') {
-    res.status(401).json({ error: 'Missing venueId (send x-venue-id header or venueId in body)' });
+    res.status(401).json({ error: 'Missing Authorization bearer token' });
     return null;
   }
   const venue = await getVenue(venueId);
@@ -502,14 +571,25 @@ app.get('/api/venues', async (_req, res) => {
 
 app.post('/api/venues', async (req, res) => {
   try {
-    const { venueId, email, name, defaultVenueFeeBps } = req.body || {};
-    if (!venueId || typeof venueId !== 'string') {
-      return res.status(400).json({ error: 'Missing venueId' });
+    // In production, require Authorization and derive venueId from Supabase JWT.
+    // In dev, allow explicit venueId for convenience.
+    const authUser = await getSupabaseUserFromRequest(req);
+    if (String(process.env.NODE_ENV || '').toLowerCase() === 'production') {
+      if (!authUser) return res.status(401).json({ error: 'Missing or invalid Authorization bearer token' });
+      if (authUser.user_metadata?.role !== 'venue') {
+        return res.status(403).json({ error: 'Forbidden: venue role required' });
+      }
     }
+
+    const { venueId: bodyVenueId, email, name, defaultVenueFeeBps, type } = req.body || {};
+    const venueId = authUser?.id || bodyVenueId;
+    if (!venueId || typeof venueId !== 'string') return res.status(400).json({ error: 'Missing venueId' });
+
     const venue = await upsertVenue({
       id: venueId,
-      email: email || undefined,
-      name: name || undefined,
+      email: email || authUser?.email || undefined,
+      name: name || authUser?.user_metadata?.name || undefined,
+      type: type || undefined,
       defaultVenueFeeBps,
     });
     return res.json(venue);

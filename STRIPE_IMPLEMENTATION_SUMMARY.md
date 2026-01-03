@@ -145,7 +145,7 @@ interface StripeSetupProps {
 
 2. Create webhook endpoint:
    ```typescript
-   app.post('/webhooks/stripe', verifySignature, handleStripeEvent);
+   app.post('/api/stripe/webhook', verifySignature, handleStripeEvent);
    ```
 
 3. Implement payment processing:

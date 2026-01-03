@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { supabase } from './lib/supabase';
 import { Navigation } from './components/Navigation';
 import { MobileSidebar } from './components/MobileSidebar';
 import { Login } from './components/Login';
@@ -54,6 +55,45 @@ export default function App() {
   const [showAdminPasswordPrompt, setShowAdminPasswordPrompt] = useState(false);
   const [adminPasswordVerified, setAdminPasswordVerified] = useState(false);
   const [pendingAdminAccess, setPendingAdminAccess] = useState(false);
+
+  const userFromSupabase = (supaUser: any): User | null => {
+    if (!supaUser?.id) return null;
+    const role = (supaUser.user_metadata?.role as UserRole) || null;
+    if (role !== 'artist' && role !== 'venue') return null;
+    return {
+      id: supaUser.id,
+      name:
+        (supaUser.user_metadata?.name as string | undefined) ||
+        (role === 'artist' ? 'Artist' : 'Venue'),
+      email: (supaUser.email as string | undefined) || '',
+      role,
+    };
+  };
+
+  // Restore auth session and keep UI in sync across refreshes/tabs
+  useEffect(() => {
+    let isMounted = true;
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (!isMounted) return;
+      const nextUser = userFromSupabase(data.session?.user);
+      if (nextUser) {
+        setCurrentUser(nextUser);
+        setCurrentPage(nextUser.role === 'artist' ? 'artist-dashboard' : 'venue-dashboard');
+      }
+    });
+
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      const nextUser = userFromSupabase(session?.user);
+      setCurrentUser(nextUser);
+      setCurrentPage(nextUser ? (nextUser.role === 'artist' ? 'artist-dashboard' : 'venue-dashboard') : 'login');
+    });
+
+    return () => {
+      isMounted = false;
+      sub?.subscription?.unsubscribe();
+    };
+  }, []);
 
   // Listen for keyboard shortcut to access admin login (Ctrl+Shift+A)
   useEffect(() => {
@@ -114,7 +154,13 @@ export default function App() {
     setPendingAdminAccess(false);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    if (currentUser?.role === 'admin') {
+      setCurrentUser(null);
+      setCurrentPage('login');
+      return;
+    }
+    await supabase.auth.signOut();
     setCurrentUser(null);
     setCurrentPage('login');
   };

@@ -25,6 +25,7 @@ create table if not exists public.venues (
   id uuid primary key,
   email text,
   name text,
+  type text,
   stripe_account_id text,
   default_venue_fee_bps int not null default 1000,
   created_at timestamptz not null default now(),

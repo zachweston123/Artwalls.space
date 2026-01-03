@@ -14,6 +14,7 @@ import {
   Zap,
   ShoppingCart
 } from 'lucide-react';
+import { API_BASE } from '../../lib/api';
 
 interface StripeSetupProps {
   onNavigate?: (page: string) => void;
@@ -28,6 +29,7 @@ export function StripePaymentSetup({ onNavigate }: StripeSetupProps) {
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(true);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const webhookUrl = `${String(API_BASE).replace(/\/$/, '')}/api/stripe/webhook`;
 
   const handleCopyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text);
@@ -275,10 +277,10 @@ export function StripePaymentSetup({ onNavigate }: StripeSetupProps) {
           <p className="text-xs text-[var(--text-muted)] mb-2">Webhook URL:</p>
           <div className="flex gap-2">
             <code className="flex-1 text-sm bg-[var(--surface-1)] p-2 rounded text-[var(--text)] break-all border border-[var(--border)]">
-              https://api.artwalls.space/webhooks/stripe
+              {webhookUrl}
             </code>
             <button
-              onClick={() => handleCopyToClipboard('https://api.artwalls.space/webhooks/stripe', 'webhook')}
+              onClick={() => handleCopyToClipboard(webhookUrl, 'webhook')}
               className="px-3 py-2 bg-[var(--surface-1)] hover:bg-[var(--surface-3)] rounded transition-colors border border-[var(--border)]"
             >
               {copiedField === 'webhook' ? (
@@ -322,7 +324,7 @@ export function StripePaymentSetup({ onNavigate }: StripeSetupProps) {
             <span className="flex-shrink-0 w-6 h-6 bg-[var(--blue)] text-[var(--on-blue)] rounded-full flex items-center justify-center text-sm font-semibold">3</span>
             <div>
               <p className="font-medium text-[var(--text)]">Configure Environment Variables</p>
-              <p className="text-sm text-[var(--text-muted)]">Add REACT_APP_STRIPE_PUBLISHABLE_KEY and STRIPE_SECRET_KEY</p>
+              <p className="text-sm text-[var(--text-muted)]">Set server vars: STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET</p>
             </div>
           </li>
           <li className="flex gap-3">

@@ -11,6 +11,8 @@ Quick setup (recommended):
 
 2. Environment variables for the Pages project
    - VITE_API_BASE_URL = https://api.artwalls.space
+   - VITE_SUPABASE_URL = https://<your-project-ref>.supabase.co
+   - VITE_SUPABASE_ANON_KEY = <your-supabase-anon-key>
 
    Add any other `VITE_*` variables your app expects in the Pages project UI under "Variables & Secrets".
 
@@ -30,4 +32,4 @@ Quick setup (recommended):
 If you want, I can also:
 - Add a Pages preview branch configuration.
 - Add instructions for setting preview env vars.
-- Remove Render-specific files or add a README note explaining the API remains on Render (server/) if you want to keep the Node server running there.
+- Add instructions for hosting the API (the `server/` Express app) separately (Cloudflare Workers requires a port; it won't run Express as-is).

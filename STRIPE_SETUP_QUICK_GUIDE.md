@@ -57,23 +57,23 @@ Copy: Secret Key (sk_...)
 
 ### 3️⃣ Set Environment Variables
 ```bash
-# .env.local (Development)
-REACT_APP_STRIPE_PUBLISHABLE_KEY=pk_test_xxxxx
+# Server (Node/Express in `server/`)
+# Development
 STRIPE_SECRET_KEY=sk_test_xxxxx
+STRIPE_WEBHOOK_SECRET=whsec_xxxxx
 
-# .env.production (Production)
-REACT_APP_STRIPE_PUBLISHABLE_KEY=pk_live_xxxxx
+# Production
 STRIPE_SECRET_KEY=sk_live_xxxxx
+STRIPE_WEBHOOK_SECRET=whsec_xxxxx
 ```
 
 ### 4️⃣ Configure Webhooks
 ```
 Stripe Dashboard → Webhooks → Add Endpoint
-URL: https://api.artwalls.space/webhooks/stripe
-Events: ✓ payment_intent.succeeded
-        ✓ payment_intent.payment_failed
-        ✓ charge.refunded
-        ✓ subscription events
+URL: https://api.artwalls.space/api/stripe/webhook
+Events: ✓ checkout.session.completed
+        ✓ customer.subscription.updated
+        ✓ customer.subscription.deleted
 ```
 
 ### 5️⃣ Test Payments

@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Search, MapPin, Filter, Frame, CheckCircle } from 'lucide-react';
 import { LabelChip } from '../LabelChip';
+import { apiGet } from '../../lib/api';
 
 interface FindVenuesProps {
   onViewVenue: (venueId: string) => void;
@@ -10,6 +11,7 @@ interface FindVenuesProps {
 export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [venues, setVenues] = useState<any[]>([]);
   const [filters, setFilters] = useState({
     labels: [] as string[],
     acceptingArtists: false,
@@ -39,7 +41,7 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
     'Other',
   ];
 
-  // Mock venues data
+  // Mock venue details (used as a UI fallback / enrichment layer)
   const mockVenues = [
     {
       id: '1',
@@ -95,6 +97,51 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
     },
   ];
 
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadVenues() {
+      try {
+        const apiVenues = await apiGet<Array<{ id: string; name?: string | null; email?: string | null; type?: string | null }>>(
+          '/api/venues'
+        );
+
+        const merged = (apiVenues || []).map((v) => {
+          const fallback = mockVenues.find((m) => m.name === v.name) || null;
+
+          // Preserve the existing UI shape, but prefer API values when present.
+          return {
+            id: v.id,
+            name: v.name || fallback?.name || 'Venue',
+            type: v.type || fallback?.type || 'Other',
+            coverPhoto:
+              fallback?.coverPhoto ||
+              'https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=800',
+            location: fallback?.location || '',
+            bio: fallback?.bio || '',
+            labels: fallback?.labels || [],
+            foundedYear: fallback?.foundedYear || new Date().getFullYear(),
+            wallSpaces: fallback?.wallSpaces || 0,
+            availableSpaces: fallback?.availableSpaces || 0,
+            verified: fallback?.verified || false,
+          };
+        });
+
+        // If API has no venues yet (fresh DB), keep the current mock list so the page isn't empty.
+        const next = merged.length > 0 ? merged : mockVenues;
+        if (isMounted) setVenues(next);
+      } catch {
+        if (isMounted) setVenues(mockVenues);
+      }
+    }
+
+    loadVenues();
+    return () => {
+      isMounted = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const toggleLabel = (label: string) => {
     setFilters(prev => ({
       ...prev,
@@ -122,7 +169,7 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
     searchQuery;
 
   // Filter venues based on criteria
-  const filteredVenues = mockVenues.filter(venue => {
+  const filteredVenues = (venues.length ? venues : mockVenues).filter(venue => {
     if (searchQuery && !venue.name.toLowerCase().includes(searchQuery.toLowerCase())) {
       return false;
     }

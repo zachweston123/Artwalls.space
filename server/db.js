@@ -38,6 +38,7 @@ function mapVenueRow(r) {
     id: r.id,
     email: r.email,
     name: r.name,
+    type: r.type,
     stripeAccountId: r.stripe_account_id,
     defaultVenueFeeBps: r.default_venue_fee_bps,
     createdAt: r.created_at,
@@ -145,11 +146,12 @@ export async function getArtist(id) {
 }
 
 // --- Venues ---
-export async function upsertVenue({ id, email, name, stripeAccountId, defaultVenueFeeBps }) {
+export async function upsertVenue({ id, email, name, type, stripeAccountId, defaultVenueFeeBps }) {
   const payload = {
     id,
     email: email ?? null,
     name: name ?? null,
+    type: type ?? null,
     stripe_account_id: stripeAccountId ?? null,
     default_venue_fee_bps: defaultVenueFeeBps === undefined ? null : toIntOrNull(defaultVenueFeeBps),
     updated_at: nowIso(),

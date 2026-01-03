@@ -580,7 +580,7 @@ app.get('/api/short/:code', async (req, res) => {
 ```tsx
 // Critical: Store Stripe event IDs to prevent duplicate processing
 
-app.post('/webhooks/stripe', async (req, res) => {
+app.post('/api/stripe/webhook', async (req, res) => {
   const event = req.body
   
   // Check if already processed

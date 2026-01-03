@@ -40,7 +40,7 @@ The "Stripe Payments" option appears in the admin sidebar between "Orders & Paym
 - Toggle between modes easily
 
 ### 4. Webhook Configuration
-- Webhook URL: `https://api.artwalls.space/webhooks/stripe`
+- Webhook URL: `https://api.artwalls.space/api/stripe/webhook`
 - One-click copy to clipboard
 - Direct link to Stripe Dashboard for configuration
 
@@ -79,29 +79,26 @@ Shows enabled payment features when connected:
 
 ### Step 3: Update Environment Variables
 
-**For Development (.env.local):**
+**Server (Node/Express in `server/`) — Development:**
 ```
-REACT_APP_STRIPE_PUBLISHABLE_KEY=pk_test_xxxxxxxxxxxxx
 STRIPE_SECRET_KEY=sk_test_xxxxxxxxxxxxx
+STRIPE_WEBHOOK_SECRET=whsec_xxxxxxxxxxxxx
 ```
 
-**For Production (.env.production):**
+**Server (Node/Express in `server/`) — Production:**
 ```
-REACT_APP_STRIPE_PUBLISHABLE_KEY=pk_live_xxxxxxxxxxxxx
 STRIPE_SECRET_KEY=sk_live_xxxxxxxxxxxxx
+STRIPE_WEBHOOK_SECRET=whsec_xxxxxxxxxxxxx
 ```
 
 ### Step 4: Configure Webhooks
 1. In Stripe Dashboard, go to Developers → Webhooks
 2. Add Webhook Endpoint
-3. URL: `https://api.artwalls.space/webhooks/stripe`
+3. URL: `https://api.artwalls.space/api/stripe/webhook`
 4. Select events:
-   - `payment_intent.succeeded`
-   - `payment_intent.payment_failed`
-   - `charge.refunded`
-   - `customer.subscription.created`
    - `customer.subscription.updated`
    - `customer.subscription.deleted`
+  - `checkout.session.completed`
 
 ### Step 5: Test Payments
 Use Stripe test card numbers:
