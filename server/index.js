@@ -148,6 +148,32 @@ app.post('/api/stripe/billing/create-portal-session', async (req, res) => {
 // Middleware
 app.use(cors({ origin: CORS_ORIGIN }));
 app.use(express.json({ limit: '2mb' }));
+
+// -----------------------------
+// Health + Debug (no secrets)
+// -----------------------------
+app.get('/api/health', (_req, res) => {
+  return res.json({ ok: true });
+});
+
+app.get('/api/debug/env', (_req, res) => {
+  try {
+    return res.json({
+      ok: true,
+      env: {
+        nodeEnv: process.env.NODE_ENV || null,
+        appUrl: APP_URL || null,
+        corsOrigin: CORS_ORIGIN,
+        stripe: {
+          secretKey: !!process.env.STRIPE_SECRET_KEY,
+          webhookSecret: !!process.env.STRIPE_WEBHOOK_SECRET,
+        },
+      },
+    });
+  } catch (e) {
+    return res.status(500).json({ ok: false, error: e?.message || 'debug error' });
+  }
+});
 // -----------------------------
 // QR Codes + Purchase URLs
 // -----------------------------
