@@ -174,6 +174,16 @@ app.get('/api/debug/env', (_req, res) => {
     return res.status(500).json({ ok: false, error: e?.message || 'debug error' });
   }
 });
+
+// Root landing: help when visiting the domain directly
+app.get('/', (_req, res) => {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  return res.send(JSON.stringify({
+    ok: true,
+    name: 'Artwalls API',
+    docs: '/api/health',
+  }));
+});
 // -----------------------------
 // QR Codes + Purchase URLs
 // -----------------------------
