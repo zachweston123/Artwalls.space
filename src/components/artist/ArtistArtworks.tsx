@@ -266,6 +266,17 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
                   <span className="text-[10px] text-[var(--text-muted)]">Stripe ready</span>
                 )}
               </div>
+              {/* Mini QR Preview */}
+              <div className="mt-3 flex items-center gap-3">
+                <img
+                  src={`${API_BASE}/api/artworks/${encodeURIComponent(String(artwork.id))}/qrcode.svg?w=96`}
+                  alt="QR code"
+                  className="w-16 h-16 bg-[var(--surface-2)] border border-[var(--border)] rounded-md"
+                />
+                <div className="text-xs text-[var(--text-muted)]">
+                  Scan to open purchase page
+                </div>
+              </div>
               <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <a
                   href={`#/purchase-${artwork.id}`}
@@ -282,6 +293,20 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
                   className="inline-flex items-center justify-center px-3 py-2 bg-[var(--surface-2)] text-[var(--text)] border border-[var(--border)] rounded-lg hover:bg-[var(--surface-3)] text-sm"
                 >
                   View QR Code
+                </a>
+                <a
+                  href={`${API_BASE}/api/artworks/${encodeURIComponent(String(artwork.id))}/qrcode.png`}
+                  className="inline-flex items-center justify-center px-3 py-2 bg-[var(--surface-2)] text-[var(--text)] border border-[var(--border)] rounded-lg hover:bg-[var(--surface-3)] text-sm"
+                >
+                  Download QR (PNG)
+                </a>
+                <a
+                  href={`${API_BASE}/api/artworks/${encodeURIComponent(String(artwork.id))}/qr-poster`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center px-3 py-2 bg-[var(--green-muted)] text-[var(--green)] rounded-lg hover:opacity-90 text-sm"
+                >
+                  Print Poster
                 </a>
               </div>
             </div>

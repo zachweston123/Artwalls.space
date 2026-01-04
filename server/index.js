@@ -112,12 +112,89 @@ app.get('/api/artworks/:id/qrcode.svg', async (req, res) => {
     const art = await getArtwork(id);
     if (!art) return res.status(404).send('Artwork not found');
     const url = purchaseUrlForArtwork(id);
-    const svgString = await QRCode.toString(url, { type: 'svg', margin: 1, width: 512 });
+    const width = Number(req.query.w) && Number(req.query.w) > 0 ? Number(req.query.w) : 512;
+    const margin = Number(req.query.margin) && Number(req.query.margin) >= 0 ? Number(req.query.margin) : 1;
+    const svgString = await QRCode.toString(url, { type: 'svg', margin, width });
     res.setHeader('Content-Type', 'image/svg+xml');
     return res.send(svgString);
   } catch (e) {
     console.error('QR code generation failed', e);
     return res.status(500).send('QR code generation failed');
+  }
+});
+
+app.get('/api/artworks/:id/qrcode.png', async (req, res) => {
+  const id = req.params.id;
+  try {
+    const art = await getArtwork(id);
+    if (!art) return res.status(404).send('Artwork not found');
+    const url = purchaseUrlForArtwork(id);
+    const width = Number(req.query.w) && Number(req.query.w) > 0 ? Number(req.query.w) : 1024;
+    const margin = Number(req.query.margin) && Number(req.query.margin) >= 0 ? Number(req.query.margin) : 1;
+    const buf = await QRCode.toBuffer(url, { type: 'png', margin, width });
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Content-Disposition', 'attachment; filename="artwork-'+id+'-qr.png"');
+    return res.send(buf);
+  } catch (e) {
+    console.error('QR code PNG generation failed', e);
+    return res.status(500).send('QR code PNG generation failed');
+  }
+});
+
+app.get('/api/artworks/:id/qr-poster', async (req, res) => {
+  const id = req.params.id;
+  try {
+    const art = await getArtwork(id);
+    if (!art) return res.status(404).send('Artwork not found');
+    const url = purchaseUrlForArtwork(id);
+    const dataUrl = await QRCode.toDataURL(url, { type: 'image/png', margin: 1, width: 1024 });
+    const html = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Artwork QR Poster</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root { color-scheme: light; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 0; padding: 0; }
+    .page { width: 8.5in; min-height: 11in; margin: 0 auto; padding: 0.75in; box-sizing: border-box; }
+    .title { font-size: 36px; font-weight: 700; margin: 0 0 12px; }
+    .subtitle { font-size: 18px; margin: 6px 0 18px; color: #555; }
+    .qr { width: 6in; height: auto; display: block; margin: 16px auto; }
+    .row { display: flex; gap: 24px; align-items: center; }
+    .art { width: 2.5in; height: 2.5in; object-fit: cover; border: 2px solid #eee; border-radius: 12px; }
+    .info { flex: 1; }
+    .price { font-size: 28px; margin: 8px 0; }
+    .btn { display:inline-block; margin-top: 16px; font-size: 16px; color: #007acc; text-decoration: none; }
+    @media print {
+      .btn { display: none; }
+      .page { padding: 0.5in; }
+    }
+  </style>
+  <script>function printPage(){window.print();}</script>
+</head>
+<body>
+  <div class="page">
+    <div class="row">
+      <img class="art" src="${art.imageUrl || ''}" alt="Artwork image" />
+      <div class="info">
+        <div class="title">${art.title || 'Artwork'}</div>
+        <div class="subtitle">by ${art.artistName || 'Artist'}${art.venueName ? ' • at '+art.venueName : ''}</div>
+        <div class="price">${art.price != null ? '$'+art.price.toFixed(2) : ''}</div>
+        <div class="subtitle">Scan to buy instantly</div>
+      </div>
+    </div>
+    <img class="qr" src="${dataUrl}" alt="QR code to purchase" />
+    <div class="subtitle" style="text-align:center">Or visit: ${url}</div>
+    <p style="text-align:center"><a class="btn" href="#" onclick="printPage();return false;">Print</a></p>
+  </div>
+</body>
+</html>`;
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.send(html);
+  } catch (e) {
+    console.error('QR poster generation failed', e);
+    return res.status(500).send('QR poster generation failed');
   }
 });
 
