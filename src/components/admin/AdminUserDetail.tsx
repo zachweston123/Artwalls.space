@@ -423,7 +423,7 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
                   </div>
                   <p className="text-sm text-neutral-600">{note.content}</p>
                 </div>
-              ))}}
+              ))}
             </div>
           </div>
         </div>

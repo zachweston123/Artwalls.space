@@ -144,7 +144,7 @@ export function VenueAgreement({ onNavigate, onAccept, hasAccepted = false }: Ve
                 <h2 className="text-xl mb-3 text-neutral-900">4. Wallspace Safety, Duty of Care, and Damage Reporting</h2>
                 
                 <h3 className="text-base mb-2 mt-4 text-neutral-900">Wallspace safety</h3>
-                <p className="text-neutral-700 leading-relaxed mb-2">>
+                <p className="text-neutral-700 leading-relaxed mb-2">
                   You agree to list and use only wallspaces that meet these minimum conditions unless clearly 
                   disclosed and accepted by the artist:
                 </p>

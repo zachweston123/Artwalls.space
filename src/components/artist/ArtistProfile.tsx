@@ -1,3 +1,4 @@
+import { supabase } from "../../lib/supabase";
 import { useEffect, useState } from 'react';
 import { User, Mail, Link as LinkIcon, DollarSign, Edit, Save, X } from 'lucide-react';
 import { PlanBadge } from '../pricing/PlanBadge';
@@ -25,7 +26,7 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
     let mounted = true;
     (async () => {
       try {
-        const { supabase } = await import('../../lib/supabase');
+        
         const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
         if (sessionErr) throw sessionErr;
         const user = sessionData.session?.user;
@@ -77,7 +78,7 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
     setError(null);
     setInfo(null);
     try {
-      const { supabase } = await import('../../lib/supabase');
+      
       const { data: sessionData } = await supabase.auth.getSession();
       const user = sessionData.session?.user;
       if (!user) throw new Error('Not signed in');
