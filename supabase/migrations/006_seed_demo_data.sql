@@ -1,6 +1,12 @@
 -- Seed demo data for artists, venues, and artworks
 -- Idempotent: uses fixed UUIDs and upserts on conflict(id)
 
+-- Ensure required columns exist in target DB
+alter table if exists public.venues
+  add column if not exists type text;
+alter table if exists public.venues
+  add column if not exists default_venue_fee_bps int not null default 1000;
+
 -- Demo Artist: Sarah Chen
 insert into public.artists (id, email, name, role, subscription_tier, subscription_status)
 values (
