@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { CreditCard, ExternalLink, Loader2, ShieldCheck } from 'lucide-react';
 import type { User } from '../../App';
 import { apiGet, apiPost } from '../../lib/api';
+import { supabase } from '../../lib/supabase';
 
 type ConnectStatus = {
   hasAccount: boolean;
@@ -45,6 +46,13 @@ export function VenuePayoutsCard({ user }: VenuePayoutsCardProps) {
       setWorking(true);
       setError(null);
 
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      if (!token) {
+        setError('Please sign in to set up venue payouts.');
+        return;
+      }
+
       // 1) Ensure account exists
       await apiPost<{ accountId: string }>('/api/stripe/connect/venue/create-account', {
         venueId: user.id,
@@ -71,6 +79,12 @@ export function VenuePayoutsCard({ user }: VenuePayoutsCardProps) {
     try {
       setWorking(true);
       setError(null);
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      if (!token) {
+        setError('Please sign in to manage venue payouts.');
+        return;
+      }
       const { url } = await apiPost<{ url: string }>(
         '/api/stripe/connect/venue/login-link',
         { venueId: user.id },

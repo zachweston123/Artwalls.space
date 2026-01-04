@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { X, Upload, Image as ImageIcon } from 'lucide-react';
 import { LabelChip } from '../LabelChip';
+import { VENUE_HIGHLIGHTS_GROUPS } from '../../data/highlights';
 
 interface VenueProfileEditProps {
   initialData?: Partial<VenueProfileData>;
@@ -42,12 +43,7 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
     'Other',
   ];
 
-  const allLabels = [
-    'Locally owned', 'LGBTQ+ friendly', 'Women-owned', 'Black-owned',
-    'Veteran-owned', 'Student-friendly', 'Family-friendly', 'Dog-friendly',
-    'Wheelchair accessible', 'Live music venue', 'Late night hours',
-    'Outdoor seating', 'Full bar', 'Wine & beer only'
-  ];
+  const grouped = VENUE_HIGHLIGHTS_GROUPS;
 
   const toggleLabel = (label: string) => {
     setFormData(prev => ({
@@ -192,15 +188,23 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
             <label className="block text-sm text-[var(--text-muted)] mb-3">
               Venue Highlights <span className="text-[var(--text-muted)]">(Select all that apply)</span>
             </label>
-            <div className="flex flex-wrap gap-2">
-              {allLabels.map((label) => (
-                <LabelChip
-                  key={label}
-                  label={label}
-                  selected={formData.labels.includes(label)}
-                  onClick={() => toggleLabel(label)}
-                  role="venue"
-                />
+            <div className="space-y-4">
+              {Object.entries(grouped).map(([groupName, items]) => (
+                <div key={groupName}>
+                  <p className="text-xs text-[var(--text-muted)] mb-2">{groupName}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {items.map(({ label, tooltip }) => (
+                      <LabelChip
+                        key={label}
+                        label={label}
+                        selected={formData.labels.includes(label)}
+                        onClick={() => toggleLabel(label)}
+                        role="venue"
+                        title={tooltip}
+                      />
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
             <p className="text-xs text-[var(--text-muted)] mt-2">

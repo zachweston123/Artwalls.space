@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { MapPin, Edit, Flag, CheckCircle, Calendar } from 'lucide-react';
 import { VenuePayoutsCard } from './VenuePayoutsCard';
 import { LabelChip } from '../LabelChip';
+import { VENUE_HIGHLIGHTS } from '../../data/highlights';
 import { apiGet } from '../../lib/api';
 import type { User } from '../../App';
 
@@ -39,11 +40,8 @@ export function VenueProfileView({
     verified: true,
   };
 
-  const allLabels = [
-    'Locally owned', 'LGBTQ+ friendly', 'Women-owned', 'Black-owned',
-    'Veteran-owned', 'Student-friendly', 'Family-friendly', 'Dog-friendly',
-    'Wheelchair accessible', 'Live music venue', 'Late night hours'
-  ];
+  // Show only highlights the venue has selected (filtered to known highlights)
+  const selectedLabels = (venue.labels ?? []).filter((l) => VENUE_HIGHLIGHTS.includes(l));
 
   const yearsInBusiness = new Date().getFullYear() - venue.foundedYear;
   const [walls, setWalls] = useState<WallSpace[]>([]);
@@ -133,11 +131,11 @@ export function VenueProfileView({
       <div className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)] mb-6">
         <h2 className="text-xl mb-4">Venue Highlights</h2>
         <div className="flex flex-wrap gap-2">
-          {allLabels.map((label) => (
+          {selectedLabels.map((label) => (
             <LabelChip
               key={label}
               label={label}
-              selected={venue.labels.includes(label)}
+              selected
               role="venue"
             />
           ))}

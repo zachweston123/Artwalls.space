@@ -49,6 +49,7 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
       await apiPost('/api/venues', {
         name: data.name,
         type: data.type,
+        labels: data.labels,
       });
 
       // Optional: also backfill auth metadata so refreshes keep the same display values.

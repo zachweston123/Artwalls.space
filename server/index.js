@@ -794,7 +794,7 @@ app.post('/api/venues', async (req, res) => {
       }
     }
 
-    const { venueId: bodyVenueId, email, name, defaultVenueFeeBps, type } = req.body || {};
+    const { venueId: bodyVenueId, email, name, defaultVenueFeeBps, type, labels } = req.body || {};
     const venueId = authUser?.id || bodyVenueId;
     if (!venueId || typeof venueId !== 'string') return res.status(400).json({ error: 'Missing venueId' });
 
@@ -803,6 +803,7 @@ app.post('/api/venues', async (req, res) => {
       email: email || authUser?.email || undefined,
       name: name || authUser?.user_metadata?.name || undefined,
       type: type || undefined,
+      labels: Array.isArray(labels) ? labels : undefined,
       defaultVenueFeeBps,
     });
     return res.json(venue);

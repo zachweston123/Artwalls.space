@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { CreditCard, ExternalLink, Loader2, ShieldCheck } from 'lucide-react';
 import type { User } from '../../App';
 import { apiGet, apiPost } from '../../lib/api';
+import { supabase } from '../../lib/supabase';
 
 type ConnectStatus = {
   hasAccount: boolean;
@@ -45,6 +46,14 @@ export function ArtistPayoutsCard({ user }: ArtistPayoutsCardProps) {
       setWorking(true);
       setError(null);
 
+      // Require login in production so the server can validate role
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      if (!token) {
+        setError('Please sign in to set up payouts.');
+        return;
+      }
+
       // 1) Ensure account exists
       await apiPost<{ accountId: string }>('/api/stripe/connect/artist/create-account', {
         artistId: user.id,
@@ -72,6 +81,12 @@ export function ArtistPayoutsCard({ user }: ArtistPayoutsCardProps) {
     try {
       setWorking(true);
       setError(null);
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      if (!token) {
+        setError('Please sign in to manage payouts.');
+        return;
+      }
       const { url } = await apiPost<{ url: string }>(
         '/api/stripe/connect/artist/login-link',
         { artistId: user.id },

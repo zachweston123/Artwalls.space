@@ -41,6 +41,7 @@ function mapVenueRow(r) {
     type: r.type,
     stripeAccountId: r.stripe_account_id,
     defaultVenueFeeBps: r.default_venue_fee_bps,
+    labels: Array.isArray(r.labels) ? r.labels : (r.labels ? r.labels : []),
     suspended: !!r.suspended,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
@@ -156,7 +157,7 @@ export async function listArtists() {
 }
 
 // --- Venues ---
-export async function upsertVenue({ id, email, name, type, stripeAccountId, defaultVenueFeeBps, suspended }) {
+export async function upsertVenue({ id, email, name, type, stripeAccountId, defaultVenueFeeBps, suspended, labels }) {
   const payload = {
     id,
     email: email ?? null,
@@ -164,6 +165,7 @@ export async function upsertVenue({ id, email, name, type, stripeAccountId, defa
     type: type ?? null,
     stripe_account_id: stripeAccountId ?? null,
     default_venue_fee_bps: defaultVenueFeeBps === undefined ? null : toIntOrNull(defaultVenueFeeBps),
+    labels: labels === undefined ? undefined : (Array.isArray(labels) ? labels : null),
     suspended: suspended === undefined ? null : Boolean(suspended),
     updated_at: nowIso(),
   };

@@ -5,6 +5,7 @@ interface LabelChipProps {
   role?: 'artist' | 'venue';
   size?: 'sm' | 'md';
   disabled?: boolean;
+  title?: string;
 }
 
 export function LabelChip({ 
@@ -13,7 +14,8 @@ export function LabelChip({
   onClick, 
   role = 'artist',
   size = 'md',
-  disabled = false 
+  disabled = false,
+  title,
 }: LabelChipProps) {
   const sizeClasses = size === 'sm' ? 'px-2 py-1 text-xs' : 'px-3 py-1.5 text-sm';
   
@@ -34,6 +36,7 @@ export function LabelChip({
       type="button"
       onClick={onClick && !disabled ? onClick : undefined}
       disabled={disabled}
+      title={title}
       className={`inline-flex items-center rounded-full ${sizeClasses} ${baseClasses} ${colorClasses}`}
     >
       {label}

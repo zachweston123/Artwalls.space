@@ -751,6 +751,41 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
         )}
       </div>
 
+      {/* Payout Information by Plan */}
+      <div className="max-w-4xl mx-auto mb-12">
+        <div className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-6">
+          <h2 className="text-2xl mb-2 text-[var(--text)]">Payout Information by Plan</h2>
+          <p className="text-sm text-[var(--text-muted)] mb-4">
+            Listing and application limits per subscription tier.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { id: 'free', name: 'Free', listings: '1', applications: '1/month' },
+              { id: 'starter', name: 'Starter', listings: '10', applications: '3/month' },
+              { id: 'growth', name: 'Growth', listings: '30', applications: 'Unlimited' },
+              { id: 'pro', name: 'Pro', listings: 'Unlimited', applications: 'Unlimited' },
+            ].map((p) => (
+              <div key={p.id} className="bg-[var(--surface-1)] rounded-lg border border-[var(--border)] p-4">
+                <h3 className="text-lg text-[var(--text)] mb-2">{p.name}</h3>
+                <div className="text-sm">
+                  <div className="flex items-center justify-between py-1">
+                    <span className="text-[var(--text-muted)]">Artwork listings</span>
+                    <span className="text-[var(--text)] font-semibold">{p.listings}</span>
+                  </div>
+                  <div className="flex items-center justify-between py-1">
+                    <span className="text-[var(--text-muted)]">Venue applications</span>
+                    <span className="text-[var(--text)] font-semibold">{p.applications}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-[var(--text-muted)] mt-3">
+            Limits apply per billing cycle. Upgrade anytime to increase caps.
+          </p>
+        </div>
+      </div>
+
       {/* Feature Comparison Table */}
       <div className="max-w-6xl mx-auto mb-12">
         <h2 className="text-2xl mb-6 text-center text-[var(--text)]">Compare All Features</h2>

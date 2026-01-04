@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Search, MapPin, Filter, Frame, CheckCircle } from 'lucide-react';
 import { LabelChip } from '../LabelChip';
+import { VENUE_HIGHLIGHTS } from '../../data/highlights';
 import { apiGet } from '../../lib/api';
 
 interface FindVenuesProps {
@@ -19,10 +20,7 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
     venueType: '',
   });
 
-  const venueLabels = [
-    'Locally owned', 'LGBTQ+ friendly', 'Women-owned', 'Black-owned',
-    'Veteran-owned', 'Student-friendly', 'Family-friendly', 'Dog-friendly'
-  ];
+  const venueLabels = VENUE_HIGHLIGHTS;
 
   const neighborhoods = [
     'Downtown', 'Pearl District', 'Alberta Arts', 'Hawthorne',
@@ -106,11 +104,11 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
           '/api/venues'
         );
 
-        const merged = (apiVenues || []).map((v) => {
+          const merged = (apiVenues || []).map((v) => {
           const fallback = mockVenues.find((m) => m.name === v.name) || null;
 
           // Preserve the existing UI shape, but prefer API values when present.
-          return {
+            return {
             id: v.id,
             name: v.name || fallback?.name || 'Venue',
             type: v.type || fallback?.type || 'Other',
@@ -119,7 +117,7 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
               'https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=800',
             location: fallback?.location || '',
             bio: fallback?.bio || '',
-            labels: fallback?.labels || [],
+              labels: (v as any).labels || fallback?.labels || [],
             foundedYear: fallback?.foundedYear || new Date().getFullYear(),
             wallSpaces: fallback?.wallSpaces || 0,
             availableSpaces: fallback?.availableSpaces || 0,
