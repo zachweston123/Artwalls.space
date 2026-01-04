@@ -101,6 +101,48 @@ export default {
       return json({ ok: true });
     }
 
+    // Demo check: verify seeded data is accessible in Supabase
+    if (url.pathname === '/api/demo/check' && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const { data: artists, error: artistsErr } = await supabaseAdmin
+        .from('artists')
+        .select('id,name,email')
+        .limit(3);
+      const { data: venues, error: venuesErr } = await supabaseAdmin
+        .from('venues')
+        .select('id,name,type')
+        .limit(4);
+      const { data: artworks, error: artworksErr } = await supabaseAdmin
+        .from('artworks')
+        .select('id,title,status,price_cents')
+        .limit(4);
+
+      if (artistsErr || venuesErr || artworksErr) {
+        return json({
+          ok: false,
+          errors: {
+            artists: artistsErr?.message,
+            venues: venuesErr?.message,
+            artworks: artworksErr?.message,
+          },
+        }, { status: 500 });
+      }
+
+      return json({
+        ok: true,
+        counts: {
+          artists: artists?.length ?? 0,
+          venues: venues?.length ?? 0,
+          artworks: artworks?.length ?? 0,
+        },
+        sample: {
+          artists: artists ?? [],
+          venues: venues ?? [],
+          artworks: artworks ?? [],
+        },
+      });
+    }
+
     // -----------------------------
     // Minimal API endpoints (Stripe Connect) to remove dependency on external API
     // -----------------------------
