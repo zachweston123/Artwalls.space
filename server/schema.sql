@@ -28,9 +28,13 @@ create table if not exists public.venues (
   type text,
   stripe_account_id text,
   default_venue_fee_bps int not null default 1000,
+  labels jsonb not null default '[]'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- Helpful index for labels lookups
+create index if not exists venues_labels_gin_idx on public.venues using gin (labels);
 
 -- Artworks / listings
 create table if not exists public.artworks (

@@ -67,6 +67,17 @@
         </ol>
       </div>
 
+      <div class="card warn">
+        <h2>Fix “Failing to fetch” (Easy list)</h2>
+        <ol>
+          <li><strong>Are you signed in?</strong> You must log in first. If you aren’t, the buttons won’t work.</li>
+          <li><strong>Is your website talking to the right API?</strong> In Pages settings, set <code>VITE_API_BASE_URL</code> to your API (like <code>https://api.artwalls.space</code>). Then redeploy.</li>
+          <li><strong>Did you add the Stripe secret?</strong> In Cloudflare Worker, add <code>STRIPE_WEBHOOK_SECRET</code>. This lets Stripe tell your site about payments.</li>
+          <li><strong>Does your API allow your website?</strong> If you changed security, make sure your API CORS allows your site domain (like <code>https://artwalls.space</code>).</li>
+        </ol>
+        <p>If you check these 4 things, it works!</p>
+      </div>
+
       <div class="card tip">
         <h2>4) Stripe Connect (Artists + Venues)</h2>
         <ol>
@@ -91,17 +102,6 @@
           <li>Create real inboxes: <code>support@artwalls.space</code>, <code>legal@artwalls.space</code>.</li>
           <li>Publish legal PDFs if desired (optional).</li>
           <li>Double-check links on Admin → hide pages not ready.</li>
-        </ol>
-      </div>
-
-      <div class="card ok">
-        <h2>7) QR Codes (Easy)</h2>
-        <ol>
-          <li>As an artist, add an artwork (title, description, price, image).</li>
-          <li>Open "My Artworks" → find your piece.</li>
-          <li>Click "Open Purchase Page" to see the real customer page.</li>
-          <li>Click "View QR Code" to open a big QR image you can print.</li>
-          <li>QR goes to a link like <code>https://artwalls.space/#/purchase-ABC123</code> for that artwork.</li>
         </ol>
       </div>
 

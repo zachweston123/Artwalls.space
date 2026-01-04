@@ -139,6 +139,18 @@ export function ArtistPayoutsCard({ user }: ArtistPayoutsCardProps) {
             {error && (
               <div className="bg-[var(--surface-2)] rounded-lg p-3 border border-[var(--danger)]">
                 <p className="text-sm text-[var(--danger)]">{error}</p>
+                <div className="mt-2 text-xs text-[var(--text-muted)]">
+                  <p>Common fixes:</p>
+                  <ul className="list-disc list-inside">
+                    <li>Sign in first (required)</li>
+                    <li>Check site settings → VITE_API_BASE_URL</li>
+                    <li>Add STRIPE_WEBHOOK_SECRET to Worker</li>
+                    <li>Server CORS should allow your Pages domain</li>
+                  </ul>
+                  <p className="mt-1">
+                    <a href="/Third-Grader-Setup-Guide.html" target="_blank" rel="noopener noreferrer" className="underline">Open setup guide</a>
+                  </p>
+                </div>
               </div>
             )}
 
