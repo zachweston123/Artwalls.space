@@ -92,41 +92,109 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
   const plans = ['Free', 'Starter', 'Growth', 'Pro'];
   const statuses = ['Active', 'Suspended'];
   const cities = ['Portland', 'Seattle', 'San Francisco', 'Los Angeles'];
-          setUsers(combined.length ? combined : mockUsers);
-        } catch {
-          setUsers(mockUsers);
-        } finally {
-          setIsLoading(false);
+
+  const [users, setUsers] = useState<Array<{
+    id: string;
+    name: string;
+    email: string | null;
+    role: 'artist' | 'venue';
+    plan: string;
+    status: 'Active' | 'Suspended';
+    lastActive?: string;
+    city?: string;
+    agreementAccepted?: boolean;
+  }>>([]);
+  const [toast, setToast] = useState<string | null>(null);
+
+  function getPlanBadgeColor(plan: string) {
+    const base = 'border border-[var(--border)]';
+    if (plan.toLowerCase() === 'free') return `${base} bg-[var(--surface-3)] text-[var(--text)]`;
+    if (plan.toLowerCase() === 'starter') return `${base} bg-[var(--surface-3)] text-[var(--accent)]`;
+    if (plan.toLowerCase() === 'growth') return `${base} bg-[var(--surface-3)] text-[var(--blue)]`;
+    if (plan.toLowerCase() === 'pro') return `${base} bg-[var(--surface-3)] text-[var(--green)]`;
+    return `${base} bg-[var(--surface-3)] text-[var(--text)]`;
+  }
+
+  function getStatusColor(status: string) {
+    const base = 'border border-[var(--border)]';
+    if (status === 'Active') return `${base} bg-[var(--green-muted)] text-[var(--green)]`;
+    if (status === 'Suspended') return `${base} bg-[var(--danger-muted)] text-[var(--danger)]`;
+    return `${base} bg-[var(--surface-3)] text-[var(--text)]`;
+  }
+
+  async function reload() {
+    setIsLoading(true);
+    try {
+      // Ensure local tables are synced from Supabase Auth
+      try { await apiPost('/api/admin/sync-users', {}); } catch {}
+
+      const [artists, venues, auth] = await Promise.all([
+        apiGet<any[]>('/api/artists').catch(() => []),
+        apiGet<any[]>('/api/venues').catch(() => []),
+        apiGet<any[]>('/api/admin/users').catch(() => []),
+      ]);
+
+      const mappedArtists = (artists || []).map(a => ({
+        id: a.id,
+        name: a.name || 'Artist',
+        email: a.email || null,
+        role: 'artist' as const,
+        plan: (a.subscriptionTier || 'free').toString().replace(/^(.)/, (m: string) => m.toUpperCase()),
+        status: (a.subscriptionStatus === 'suspended') ? 'Suspended' : 'Active',
+        lastActive: '—',
+        city: '—',
+        agreementAccepted: true,
+      }));
+
+      const mappedVenues = (venues || []).map(v => ({
+        id: v.id,
+        name: v.name || 'Venue',
+        email: v.email || null,
+        role: 'venue' as const,
+        plan: '—',
+        status: v.suspended ? 'Suspended' : 'Active',
+        lastActive: '—',
+        city: '—',
+        agreementAccepted: true,
+      }));
+
+      // Basic merge of auth users to fill any missing profiles
+      const authMapped = (auth || []).map(u => ({
+        id: u.id,
+        name: u.name || 'User',
+        email: u.email || null,
+        role: (u.role === 'venue' ? 'venue' : 'artist') as 'artist' | 'venue',
+        plan: '—',
+        status: 'Active',
+        lastActive: '—',
+        city: '—',
+        agreementAccepted: true,
+      }));
+
+      const seen = new Set<string>();
+      const combined: typeof users = [];
+      for (const list of [mappedArtists, mappedVenues, authMapped]) {
+        for (const item of list) {
+          if (seen.has(item.id)) continue;
+          seen.add(item.id);
+          combined.push(item);
         }
       }
-      case 'Starter':
-      useEffect(() => {
-        reload();
-        const interval = setInterval(reload, 30000);
-        return () => clearInterval(interval);
-      }, []);
-            city: '—',
-            agreementAccepted: true,
-          }));
 
-        const combined = [...mappedArtists, ...mappedVenues, ...authMapped];
-        if (isMounted) setUsers(combined.length ? combined : mockUsers);
-      } catch {
-        if (isMounted) setUsers(mockUsers);
-      }
+      setUsers(combined.length ? combined : mockUsers);
+      setToast('Users refreshed');
+      setTimeout(() => setToast(null), 2000);
+    } catch {
+      setUsers(mockUsers);
+    } finally {
+      setIsLoading(false);
     }
+  }
 
-    loadUsers();
-
-    // Auto-refresh periodically to keep list in sync
-    const interval = setInterval(() => {
-      loadUsers();
-    }, 30000);
-
-    return () => {
-      isMounted = false;
-      clearInterval(interval);
-    };
+  useEffect(() => {
+    reload();
+    const interval = setInterval(reload, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   // Filter users
