@@ -11,6 +11,6 @@ watch_paths = ["src/**/*.{ts,tsx}"]
 
 [vars]
 API_BASE_URL = "https://api.artwalls.space"
-SUPABASE_URL = "https://YOUR_SUPABASE_PROJECT.supabase.co"
+SUPABASE_URL = "https://twclqgysvpefufpnmjcl.supabase.co"
 # Set this in Cloudflare Worker secrets: wrangler secret put SUPABASE_SERVICE_ROLE_KEY
 # Set this in Cloudflare Worker secrets: wrangler secret put STRIPE_SECRET_KEY
