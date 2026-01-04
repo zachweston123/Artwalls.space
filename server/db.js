@@ -237,6 +237,11 @@ export async function updateArtwork(id, patch) {
   if (patch.status !== undefined) payload.status = patch.status;
   if (patch.stripeProductId !== undefined) payload.stripe_product_id = patch.stripeProductId;
   if (patch.stripePriceId !== undefined) payload.stripe_price_id = patch.stripePriceId;
+  if (patch.venueId !== undefined) payload.venue_id = patch.venueId === null ? null : String(patch.venueId);
+  if (patch.venueName !== undefined) payload.venue_name = patch.venueName === null ? null : String(patch.venueName);
+  if (patch.venueFeeBps !== undefined) payload.venue_fee_bps = patch.venueFeeBps === null ? null : toIntOrNull(patch.venueFeeBps);
+  if (patch.artistName !== undefined) payload.artist_name = patch.artistName === null ? null : String(patch.artistName);
+  if (patch.imageUrl !== undefined) payload.image_url = patch.imageUrl === null ? null : String(patch.imageUrl);
   payload.updated_at = nowIso();
 
   const { data, error } = await supabaseAdmin.from('artworks').update(payload).eq('id', id).select('*').single();

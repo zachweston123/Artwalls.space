@@ -40,10 +40,9 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
       role: 'artist' as const,
       plan: 'Growth',
       status: 'Active',
-      // Shared reload function
-      async function reload() {
-        setIsLoading(true);
-    },
+      lastActive: '—',
+      city: '—',
+      agreementAccepted: true,
     {
       id: '2',
       name: 'Brew & Palette Café',

@@ -76,6 +76,12 @@ function getPlanLimitsForArtist(artist) {
   return isActive ? l : limits.free;
 }
 
+// Count "active displays": artworks by this artist assigned to a venue and not sold
+async function countActiveDisplaysForArtist(artistId) {
+  const list = await listArtworksByArtist(artistId);
+  return (list || []).filter(a => a.venueId && a.status !== 'sold').length;
+}
+
 // -----------------------------
 // Webhook (must be before json)
 // -----------------------------
@@ -105,6 +111,40 @@ app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async
   }
 });
 
+// Billing Portal: manage subscription and payment methods
+app.post('/api/stripe/billing/create-portal-session', async (req, res) => {
+  try {
+    const artist = await requireArtist(req, res);
+    if (!artist) return;
+
+    let customerId = artist.stripeCustomerId;
+    if (!customerId) {
+      const customer = await stripe.customers.create({
+        email: artist.email || undefined,
+        name: artist.name || undefined,
+        metadata: { artistId: artist.id },
+      });
+      customerId = customer.id;
+      await upsertArtist({ id: artist.id, stripeCustomerId: customerId });
+    }
+
+    // Prefer settings.app_url if present, else APP_URL
+    let returnUrl = APP_URL;
+    try {
+      const s = await getSettings();
+      if (s?.appUrl) returnUrl = s.appUrl;
+    } catch {}
+
+    const session = await stripe.billingPortal.sessions.create({
+      customer: customerId,
+      return_url: returnUrl,
+    });
+    return res.json({ url: session.url });
+  } catch (err) {
+    console.error('billing portal error', err);
+    return res.status(500).json({ error: err?.message || 'Billing portal error' });
+  }
+});
 // Middleware
 app.use(cors({ origin: CORS_ORIGIN }));
 app.use(express.json({ limit: '2mb' }));
@@ -1074,6 +1114,14 @@ app.post('/api/artworks', async (req, res) => {
       return res.status(403).json({ error: `Artwork limit reached for your plan. Upgrade to add more listings.` });
     }
 
+    // If assigning to a venue at creation, enforce active displays cap
+    if (venue) {
+      const activeDisplays = await countActiveDisplaysForArtist(artist.id);
+      if (Number.isFinite(limits.activeDisplays) && activeDisplays >= limits.activeDisplays) {
+        return res.status(403).json({ error: 'Active displays limit reached for your plan. Upgrade to place artwork at more venues.' });
+      }
+    }
+
     const artworkId = crypto.randomUUID();
 
     const product = await stripe.products.create({
@@ -1131,6 +1179,45 @@ app.get('/api/artworks/:id', async (req, res) => {
   const artwork = await getArtwork(req.params.id);
   if (!artwork) return res.status(404).json({ error: 'Not found' });
   return res.json(artwork);
+});
+
+// Assign or change an artwork's venue with subscription cap enforcement
+app.patch('/api/artworks/:id/assign-venue', async (req, res) => {
+  try {
+    const artist = await requireArtist(req, res);
+    if (!artist) return;
+
+    const artworkId = req.params.id;
+    const { venueId, venueFeeBps } = req.body || {};
+    if (!venueId || typeof venueId !== 'string') return res.status(400).json({ error: 'Missing venueId' });
+
+    const artwork = await getArtwork(artworkId);
+    if (!artwork) return res.status(404).json({ error: 'Artwork not found' });
+    if (artwork.artistId !== artist.id) return res.status(403).json({ error: 'Forbidden: can only assign your own artwork' });
+    if (artwork.status === 'sold') return res.status(409).json({ error: 'Cannot assign a sold artwork' });
+
+    const venue = await getVenue(venueId);
+    if (!venue) return res.status(400).json({ error: 'Venue not found' });
+
+    // Enforce active displays limit (ignore this artwork's current assignment when counting)
+    const limits = getPlanLimitsForArtist(artist);
+    const activeDisplays = await countActiveDisplaysForArtist(artist.id);
+    const currentlyAssignedHere = Boolean(artwork.venueId);
+    const projected = currentlyAssignedHere ? activeDisplays : activeDisplays + 1;
+    if (Number.isFinite(limits.activeDisplays) && projected > limits.activeDisplays) {
+      return res.status(403).json({ error: 'Active displays limit reached for your plan. Upgrade to place artwork at more venues.' });
+    }
+
+    const updated = await updateArtwork(artworkId, {
+      venueId,
+      venueName: venue.name || null,
+      venueFeeBps: Number.isFinite(Number(venueFeeBps)) ? Number(venueFeeBps) : venue.defaultVenueFeeBps,
+    });
+    return res.json(updated);
+  } catch (err) {
+    console.error('assign-venue error', err);
+    return res.status(500).json({ error: err?.message || 'Assign venue failed' });
+  }
 });
 
 // -----------------------------

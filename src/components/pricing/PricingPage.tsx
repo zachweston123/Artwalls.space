@@ -14,6 +14,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [subscribing, setSubscribing] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [managingPortal, setManagingPortal] = useState<boolean>(false);
 
   const plans = [
     {
@@ -216,6 +217,32 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
     }
   }
 
+  async function openBillingPortal() {
+    setError(null);
+    setManagingPortal(true);
+    try {
+      let token: string | undefined = undefined;
+      try {
+        const { supabase } = await import('../../lib/supabase');
+        const { data } = await supabase.auth.getSession();
+        token = data.session?.access_token;
+      } catch {}
+      if (!token) {
+        setError('Please sign in to manage your subscription.');
+        return;
+      }
+      const { url } = await apiPost<{ url: string }>(
+        '/api/stripe/billing/create-portal-session',
+        {}
+      );
+      window.location.href = url;
+    } catch (e: any) {
+      setError(e?.message || 'Unable to open Billing Portal');
+    } finally {
+      setManagingPortal(false);
+    }
+  }
+
   return (
     <div className="bg-[var(--bg)]">
       <div className="text-center mb-12">
@@ -309,6 +336,15 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
           <p className="text-sm text-[var(--text)]">
           💡 You can upgrade or downgrade your plan anytime. Changes take effect at the start of your next billing cycle.
         </p>
+        <div className="mt-4 flex items-center justify-center gap-3">
+          <button
+            onClick={openBillingPortal}
+            disabled={managingPortal}
+            className={`px-6 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] hover:bg-[var(--surface-3)] transition-colors ${managingPortal ? 'opacity-70 cursor-not-allowed' : ''}`}
+          >
+            {managingPortal ? 'Opening Billing Portal…' : 'Manage Subscription'}
+          </button>
+        </div>
         {error && (
           <p className="text-sm text-[var(--danger)] mt-2">{error}</p>
         )}
