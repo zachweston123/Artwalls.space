@@ -43,6 +43,7 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
       lastActive: '—',
       city: '—',
       agreementAccepted: true,
+    },
     {
       id: '2',
       name: 'Brew & Palette Café',
