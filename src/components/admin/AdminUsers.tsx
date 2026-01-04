@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Search, Filter, Download, Users as UsersIcon } from 'lucide-react';
+import { Search, Filter, Download, RefreshCcw, Users as UsersIcon } from 'lucide-react';
 import { apiGet, apiPost } from '../../lib/api';
 
 interface AdminUsersProps {
@@ -22,6 +22,7 @@ function RoleBadge({ role }: { role: 'artist' | 'venue' }) {
 export function AdminUsers({ onViewUser }: AdminUsersProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [filters, setFilters] = useState({
     role: 'all',
     plan: 'all',
@@ -39,9 +40,9 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
       role: 'artist' as const,
       plan: 'Growth',
       status: 'Active',
-      lastActive: '5 minutes ago',
-      city: 'Portland',
-      agreementAccepted: true,
+      // Shared reload function
+      async function reload() {
+        setIsLoading(true);
     },
     {
       id: '2',
@@ -92,83 +93,19 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
   const plans = ['Free', 'Starter', 'Growth', 'Pro'];
   const statuses = ['Active', 'Suspended'];
   const cities = ['Portland', 'Seattle', 'San Francisco', 'Los Angeles'];
-
-  const getPlanBadgeColor = (plan: string) => {
-    switch (plan) {
-      case 'Free':
-        return 'bg-[var(--surface-3)] text-[var(--text-muted)] border border-[var(--border)]';
+          setUsers(combined.length ? combined : mockUsers);
+        } catch {
+          setUsers(mockUsers);
+        } finally {
+          setIsLoading(false);
+        }
+      }
       case 'Starter':
-        return 'bg-[var(--surface-3)] text-[var(--blue)] border border-[var(--border)]';
-      case 'Growth':
-        return 'bg-[var(--surface-3)] text-[var(--text)] border border-[var(--border)]';
-      case 'Pro':
-        return 'bg-[var(--surface-3)] text-[var(--warning)] border border-[var(--border)]';
-      default:
-        return 'bg-[var(--surface-3)] text-[var(--text-muted)] border border-[var(--border)]';
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Active':
-        return 'bg-[var(--green-muted)] text-[var(--green)] border border-[var(--border)]';
-      case 'Suspended':
-        return 'bg-[var(--surface-3)] text-[var(--danger)] border border-[var(--border)]';
-      default:
-        return 'bg-[var(--surface-3)] text-[var(--text-muted)] border border-[var(--border)]';
-    }
-  };
-
-  const [users, setUsers] = useState<any[]>([]);
-
-  useEffect(() => {
-    let isMounted = true;
-    async function loadUsers() {
-      try {
-        // Backfill newly created Supabase users into local tables (no-op if already present)
-        try { await apiPost('/api/admin/sync-users', {}); } catch {}
-
-        const [artists, venues, authUsers] = await Promise.all([
-          apiGet<Array<{ id: string; name?: string | null; email?: string | null; subscriptionTier?: string | null; subscriptionStatus?: string | null }>>('/api/artists'),
-          apiGet<Array<{ id: string; name?: string | null; email?: string | null; type?: string | null; suspended?: boolean }>>('/api/venues'),
-          apiGet<Array<{ id: string; name?: string | null; email?: string | null; role?: string | null }>>('/api/admin/users'),
-        ]);
-
-        const mappedArtists = (artists || []).map((a) => ({
-          id: a.id,
-          name: a.name || 'Artist',
-          email: a.email || '',
-          role: 'artist' as const,
-          plan: (a.subscriptionTier || 'Free')[0].toUpperCase() + (a.subscriptionTier || 'Free').slice(1),
-          status: (a.subscriptionStatus === 'active' ? 'Active' : 'Suspended'),
-          lastActive: '—',
-          city: '—',
-          agreementAccepted: true,
-        }));
-
-        const mappedVenues = (venues || []).map((v) => ({
-          id: v.id,
-          name: v.name || 'Venue',
-          email: v.email || '',
-          role: 'venue' as const,
-          plan: 'Free',
-          status: v.suspended ? 'Suspended' : 'Active',
-          lastActive: '—',
-          city: '—',
-          agreementAccepted: true,
-        }));
-
-        // Include any Supabase Auth users not yet in our local tables
-        const authMapped = (authUsers || [])
-          .filter(u => ![...mappedArtists, ...mappedVenues].some(x => x.id === u.id))
-          .map(u => ({
-            id: u.id,
-            name: u.name || (u.role === 'venue' ? 'Venue' : 'Artist'),
-            email: u.email || '',
-            role: (u.role as 'artist' | 'venue') || 'artist',
-            plan: 'Free',
-            status: 'Active',
-            lastActive: '—',
+      useEffect(() => {
+        reload();
+        const interval = setInterval(reload, 30000);
+        return () => clearInterval(interval);
+      }, []);
             city: '—',
             agreementAccepted: true,
           }));
@@ -181,8 +118,15 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
     }
 
     loadUsers();
+
+    // Auto-refresh periodically to keep list in sync
+    const interval = setInterval(() => {
+      loadUsers();
+    }, 30000);
+
     return () => {
       isMounted = false;
+      clearInterval(interval);
     };
   }, []);
 
@@ -192,7 +136,10 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
       const query = searchQuery.toLowerCase();
       const matchesSearch = 
         user.name.toLowerCase().includes(query) ||
-        user.email.toLowerCase().includes(query);
+        user.email.toLowerCase().includes(query) ||
+        String(user.id).toLowerCase().includes(query) ||
+        String(user.role || '').toLowerCase().includes(query) ||
+        String(user.plan || '').toLowerCase().includes(query);
       if (!matchesSearch) return false;
     }
     if (filters.role !== 'all' && user.role !== filters.role) return false;
@@ -264,6 +211,14 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
                 Active
               </span>
             )}
+          </button>
+          <button
+            onClick={reload}
+            disabled={isLoading}
+            className={`px-6 py-3 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] hover:bg-[var(--surface-3)] transition-colors flex items-center gap-2 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+          >
+            <RefreshCcw className="w-5 h-5" />
+            {isLoading ? 'Refreshing…' : 'Refresh'}
           </button>
           <button className="px-6 py-3 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] hover:bg-[var(--surface-3)] transition-colors flex items-center gap-2">
             <Download className="w-5 h-5" />
