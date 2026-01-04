@@ -186,7 +186,27 @@ export default function App() {
 
   const handleNavigate = (page: string) => {
     setCurrentPage(page);
+    if (page.startsWith('purchase-')) {
+      window.location.hash = `#/purchase-${page.split('-')[1]}`;
+    } else if (window.location.hash) {
+      // Clear hash for non-purchase pages
+      window.location.hash = '';
+    }
   };
+
+  // Initialize from URL hash (QR deep link) and keep in sync
+  useEffect(() => {
+    const applyHash = () => {
+      const hash = window.location.hash || '';
+      if (hash.startsWith('#/purchase-')) {
+        const id = hash.replace('#/purchase-', '');
+        if (id) setCurrentPage(`purchase-${id}`);
+      }
+    };
+    applyHash();
+    window.addEventListener('hashchange', applyHash);
+    return () => window.removeEventListener('hashchange', applyHash);
+  }, []);
 
   // Check if this is a purchase page (QR code flow)
   if (currentPage.startsWith('purchase-')) {

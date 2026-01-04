@@ -3,7 +3,7 @@ import { Plus, X, Upload, Loader2 } from 'lucide-react';
 import { mockArtworks } from '../../data/mockData';
 import type { Artwork } from '../../data/mockData';
 import type { User } from '../../App';
-import { apiGet, apiPost } from '../../lib/api';
+import { apiGet, apiPost, API_BASE } from '../../lib/api';
 import { supabase } from '../../lib/supabase';
 import { uploadArtworkImage } from '../../lib/storage';
 
@@ -265,6 +265,24 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
                 {artwork.stripePriceId && (
                   <span className="text-[10px] text-[var(--text-muted)]">Stripe ready</span>
                 )}
+              </div>
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <a
+                  href={`#/purchase-${artwork.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center px-3 py-2 bg-[var(--blue)] text-[var(--on-blue)] rounded-lg hover:bg-[var(--blue-hover)] text-sm"
+                >
+                  Open Purchase Page
+                </a>
+                <a
+                  href={`${API_BASE}/api/artworks/${encodeURIComponent(String(artwork.id))}/qrcode.svg`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center px-3 py-2 bg-[var(--surface-2)] text-[var(--text)] border border-[var(--border)] rounded-lg hover:bg-[var(--surface-3)] text-sm"
+                >
+                  View QR Code
+                </a>
               </div>
             </div>
           </div>

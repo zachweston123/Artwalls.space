@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import Stripe from 'stripe';
 import crypto from 'node:crypto';
+import QRCode from 'qrcode';
 
 import { supabaseAdmin } from './supabaseClient.js';
 
@@ -54,6 +55,11 @@ const SUB_CANCEL_URL = process.env.SUB_CANCEL_URL || `${APP_URL}/#/artist-dashbo
 
 const CORS_ORIGIN = process.env.CORS_ORIGIN || true;
 
+// Purchase page URL for QR codes
+function purchaseUrlForArtwork(artworkId) {
+  return `${APP_URL}/#/purchase-${artworkId}`;
+}
+
 // -----------------------------
 // Webhook (must be before json)
 // -----------------------------
@@ -86,6 +92,35 @@ app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async
 // Middleware
 app.use(cors({ origin: CORS_ORIGIN }));
 app.use(express.json({ limit: '2mb' }));
+// -----------------------------
+// QR Codes + Purchase URLs
+// -----------------------------
+app.get('/api/artworks/:id/purchase-url', async (req, res) => {
+  const id = req.params.id;
+  try {
+    const art = await getArtwork(id);
+    if (!art) return res.status(404).json({ error: 'Artwork not found' });
+    return res.json({ url: purchaseUrlForArtwork(id) });
+  } catch (e) {
+    return res.status(500).json({ error: e?.message || 'Unable to generate URL' });
+  }
+});
+
+app.get('/api/artworks/:id/qrcode.svg', async (req, res) => {
+  const id = req.params.id;
+  try {
+    const art = await getArtwork(id);
+    if (!art) return res.status(404).send('Artwork not found');
+    const url = purchaseUrlForArtwork(id);
+    const svgString = await QRCode.toString(url, { type: 'svg', margin: 1, width: 512 });
+    res.setHeader('Content-Type', 'image/svg+xml');
+    return res.send(svgString);
+  } catch (e) {
+    console.error('QR code generation failed', e);
+    return res.status(500).send('QR code generation failed');
+  }
+});
+
 
 // Webhook: forwarded from Cloudflare Worker (already signature-verified)
 app.post('/api/stripe/webhook/forwarded', async (req, res) => {
