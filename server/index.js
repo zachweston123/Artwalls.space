@@ -29,6 +29,7 @@ import {
   deleteWallspace,
   updateArtistStatus,
   updateVenueSuspended,
+  getSettings,
 } from './db.js';
 
 dotenv.config();
@@ -58,6 +59,21 @@ const CORS_ORIGIN = process.env.CORS_ORIGIN || true;
 // Purchase page URL for QR codes
 function purchaseUrlForArtwork(artworkId) {
   return `${APP_URL}/#/purchase-${artworkId}`;
+}
+
+// Plan limits per tier (refer to Pricing page)
+function getPlanLimitsForArtist(artist) {
+  const tier = String(artist?.subscriptionTier || 'free').toLowerCase();
+  const isActive = String(artist?.subscriptionStatus || '').toLowerCase() === 'active';
+  const limits = {
+    free: { artworks: 1, activeDisplays: 1 },
+    starter: { artworks: 10, activeDisplays: 4 },
+    growth: { artworks: 30, activeDisplays: 10 },
+    pro: { artworks: Number.POSITIVE_INFINITY, activeDisplays: Number.POSITIVE_INFINITY },
+  };
+  const l = limits[tier] || limits.free;
+  // If subscription not active, treat as free tier limits
+  return isActive ? l : limits.free;
 }
 
 // -----------------------------
@@ -765,6 +781,20 @@ app.get('/api/artists', async (_req, res) => {
   return res.json(await listArtists());
 });
 
+// Fetch a single artist by id
+app.get('/api/artists/:id', async (req, res) => {
+  try {
+    const artistId = req.params.id;
+    if (!artistId) return res.status(400).json({ error: 'Missing artistId' });
+    const artist = await getArtist(artistId);
+    if (!artist) return res.status(404).json({ error: 'Artist not found' });
+    return res.json(artist);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: err?.message || 'Get artist error' });
+  }
+});
+
 app.post('/api/artists', async (req, res) => {
   try {
     // In production, require Authorization and derive artistId from Supabase JWT.
@@ -964,9 +994,22 @@ app.post('/api/stripe/billing/create-subscription-session', async (req, res) => 
     if (!artist) return;
 
     const tier = String(req.body?.tier || '').toLowerCase();
-    const priceId = SUB_PRICE_IDS[tier];
+    let priceId = SUB_PRICE_IDS[tier];
     if (!priceId) {
-      return res.status(400).json({ error: 'Invalid tier or missing STRIPE_SUB_PRICE_* env for that tier' });
+      // Fallback to settings table values if env not set
+      try {
+        const s = await getSettings();
+        const fromSettings = {
+          starter: s?.subPriceStarter,
+          growth: s?.subPriceGrowth,
+          pro: s?.subPricePro,
+          elite: s?.subPriceElite,
+        };
+        priceId = fromSettings[tier];
+      } catch {}
+    }
+    if (!priceId) {
+      return res.status(400).json({ error: 'Invalid tier or missing subscription price ID (env or settings)' });
     }
 
     let customerId = artist.stripeCustomerId;
@@ -1021,6 +1064,14 @@ app.post('/api/artworks', async (req, res) => {
     if (venueId && typeof venueId === 'string') {
       venue = await getVenue(venueId);
       if (!venue) return res.status(400).json({ error: 'Venue not found. Create/onboard the venue first.' });
+    }
+
+    // Enforce plan artwork listing limits
+    const limits = getPlanLimitsForArtist(artist);
+    const existing = await listArtworksByArtist(artist.id);
+    const activeOrPublishedCount = (existing || []).filter(a => a.status !== 'sold').length;
+    if (Number.isFinite(limits.artworks) && activeOrPublishedCount >= limits.artworks) {
+      return res.status(403).json({ error: `Artwork limit reached for your plan. Upgrade to add more listings.` });
     }
 
     const artworkId = crypto.randomUUID();

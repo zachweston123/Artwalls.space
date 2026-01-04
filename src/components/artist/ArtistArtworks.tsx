@@ -4,6 +4,7 @@ import { mockArtworks } from '../../data/mockData';
 import type { Artwork } from '../../data/mockData';
 import type { User } from '../../App';
 import { apiGet, apiPost, API_BASE } from '../../lib/api';
+import { entitlementsFor } from '../../lib/entitlements';
 import { supabase } from '../../lib/supabase';
 import { uploadArtworkImage } from '../../lib/storage';
 
@@ -25,6 +26,7 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [artistPlan, setArtistPlan] = useState<{ tier: 'free' | 'starter' | 'growth' | 'pro'; status: string } | null>(null);
 
   const refresh = async () => {
     try {
@@ -43,6 +45,15 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
 
   useEffect(() => {
     refresh();
+    // Fetch artist plan info for gating
+    (async () => {
+      try {
+        const artist = await apiGet<any>(`/api/artists/${encodeURIComponent(user.id)}`);
+        const tier = String(artist?.subscriptionTier || 'free').toLowerCase() as any;
+        const status = String(artist?.subscriptionStatus || 'inactive');
+        setArtistPlan({ tier, status });
+      } catch {}
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user.id]);
 
@@ -120,13 +131,37 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
             {loading ? 'Loading…' : `${artworks.length} pieces in your collection`}
           </p>
         </div>
-        <button
-          onClick={() => setShowAddForm(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-[var(--blue)] text-[var(--on-blue)] rounded-lg hover:bg-[var(--blue-hover)] transition-colors"
-        >
-          <Plus className="w-5 h-5" />
-          Add New Artwork
-        </button>
+        {(() => {
+          const planId = (artistPlan?.tier || 'free') as 'free' | 'starter' | 'growth' | 'pro';
+          const isActive = String(artistPlan?.status || '').toLowerCase() === 'active';
+          const ent = entitlementsFor(planId, isActive);
+          const activeCount = artworks.filter(a => a.status !== 'sold').length;
+          const atLimit = Number.isFinite(ent.artworksLimit) && activeCount >= ent.artworksLimit;
+          return (
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowAddForm(true)}
+                disabled={atLimit}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                  atLimit
+                    ? 'bg-[var(--surface-3)] text-[var(--text-muted)] cursor-not-allowed border border-[var(--border)]'
+                    : 'bg-[var(--blue)] text-[var(--on-blue)] hover:bg-[var(--blue-hover)]'
+                }`}
+              >
+                <Plus className="w-5 h-5" />
+                Add New Artwork
+              </button>
+              {atLimit && (
+                <a
+                  href="#/plans-pricing"
+                  className="px-3 py-2 text-sm bg-[var(--accent)] text-[var(--accent-contrast)] rounded-lg"
+                >
+                  Upgrade to add more
+                </a>
+              )}
+            </div>
+          );
+        })()}
       </div>
 
       {error && (

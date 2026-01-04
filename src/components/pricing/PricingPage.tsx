@@ -198,6 +198,11 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
         const { supabase } = await import('../../lib/supabase');
         const { data } = await supabase.auth.getSession();
         artistId = data.session?.user?.id;
+        const token = data.session?.access_token;
+        if (!token) {
+          setError('Please sign in to purchase a subscription plan.');
+          return;
+        }
       } catch {}
       const { url } = await apiPost<{ url: string }>(
         '/api/stripe/billing/create-subscription-session',
