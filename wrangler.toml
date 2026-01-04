@@ -1,4 +1,4 @@
-name = "artwalls"
+name = "artwallsspacee"
 compatibility_date = "2024-01-01"
 type = "javascript"
 main = "worker/index.ts"
