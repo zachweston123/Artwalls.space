@@ -27,6 +27,8 @@ import { PoliciesLanding } from './components/legal/PoliciesLanding';
 import { ArtistAgreement } from './components/legal/ArtistAgreement';
 import { VenueAgreement } from './components/legal/VenueAgreement';
 import { AgreementBanner } from './components/legal/AgreementBanner';
+import { PrivacyPolicy } from './components/legal/PrivacyPolicy';
+import { TermsOfService } from './components/legal/TermsOfService';
 import { Footer } from './components/Footer';
 import { PricingPage } from './components/pricing/PricingPage';
 import { PurchasePage } from './components/PurchasePage';
@@ -299,6 +301,8 @@ export default function App() {
 
         {/* Legal Pages (available to both roles) */}
         {currentPage === 'policies' && <PoliciesLanding onNavigate={handleNavigate} />}
+        {currentPage === 'privacy-policy' && <PrivacyPolicy onNavigate={handleNavigate} />}
+        {currentPage === 'terms-of-service' && <TermsOfService onNavigate={handleNavigate} />}
         {currentPage === 'plans-pricing' && <PricingPage onNavigate={handleNavigate} currentPlan="free" />}
         {currentPage === 'artist-agreement' && (
           <ArtistAgreement 

@@ -73,37 +73,39 @@ export function PoliciesLanding({ onNavigate }: PoliciesLandingProps) {
           </div>
         </button>
 
-        {/* Privacy Policy Placeholder */}
+        {/* Privacy Policy */}
         <button
-          className="bg-[var(--surface-1)] rounded-xl border border-[var(--border)] p-6 hover:shadow-lg transition-shadow text-left group opacity-75 cursor-not-allowed"
-          disabled
+          onClick={() => onNavigate('privacy-policy')}
+          className="bg-[var(--surface-1)] rounded-xl border border-[var(--border)] p-6 hover:shadow-lg transition-shadow text-left group"
         >
-          <div className="w-12 h-12 bg-[var(--surface-2)] rounded-lg flex items-center justify-center mb-4">
-            <Shield className="w-6 h-6 text-[var(--text-muted)]" />
+          <div className="w-12 h-12 bg-[var(--surface-2)] rounded-lg flex items-center justify-center mb-4 group-hover:bg-[var(--surface-3)] transition-colors">
+            <Shield className="w-6 h-6 text-[var(--blue)]" />
           </div>
           <h2 className="text-xl mb-2 text-[var(--text)]">Privacy Policy</h2>
           <p className="text-sm text-[var(--text-muted)] mb-4">
             How we collect, use, and protect your personal information.
           </p>
-          <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
-            <span>Coming Soon</span>
+          <div className="flex items-center gap-2 text-sm text-[var(--blue)]">
+            <span>Read Policy</span>
+            <span>→</span>
           </div>
         </button>
 
-        {/* Terms of Service Placeholder */}
+        {/* Terms of Service */}
         <button
-          className="bg-[var(--surface-1)] rounded-xl border border-[var(--border)] p-6 hover:shadow-lg transition-shadow text-left group opacity-75 cursor-not-allowed"
-          disabled
+          onClick={() => onNavigate('terms-of-service')}
+          className="bg-[var(--surface-1)] rounded-xl border border-[var(--border)] p-6 hover:shadow-lg transition-shadow text-left group"
         >
-          <div className="w-12 h-12 bg-[var(--surface-2)] rounded-lg flex items-center justify-center mb-4">
-            <Scale className="w-6 h-6 text-[var(--text-muted)]" />
+          <div className="w-12 h-12 bg-[var(--surface-2)] rounded-lg flex items-center justify-center mb-4 group-hover:bg-[var(--surface-3)] transition-colors">
+            <Scale className="w-6 h-6 text-[var(--green)]" />
           </div>
           <h2 className="text-xl mb-2 text-[var(--text)]">Terms of Service</h2>
           <p className="text-sm text-[var(--text-muted)] mb-4">
             General terms governing your use of the Artwalls platform.
           </p>
-          <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
-            <span>Coming Soon</span>
+          <div className="flex items-center gap-2 text-sm text-[var(--green)]">
+            <span>Read Terms</span>
+            <span>→</span>
           </div>
         </button>
       </div>

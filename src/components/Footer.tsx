@@ -100,10 +100,10 @@ export function Footer({ onNavigate }: FooterProps) {
             © 2026 Artwalls. All rights reserved.
           </p>
           <div className="flex items-center gap-6 text-sm text-[var(--text-muted)]">
-            <button onClick={() => onNavigate('policies')} className="hover:text-[var(--text)] transition-colors">
+            <button onClick={() => onNavigate('privacy-policy')} className="hover:text-[var(--text)] transition-colors">
               Privacy
             </button>
-            <button onClick={() => onNavigate('policies')} className="hover:text-[var(--text)] transition-colors">
+            <button onClick={() => onNavigate('terms-of-service')} className="hover:text-[var(--text)] transition-colors">
               Terms
             </button>
             <a href="mailto:legal@artwalls.space" className="hover:text-[var(--text)] transition-colors">
