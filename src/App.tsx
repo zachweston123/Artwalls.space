@@ -201,8 +201,9 @@ export default function App() {
     const applyHash = () => {
       const hash = window.location.hash || '';
       if (hash.startsWith('#/purchase-')) {
-        const id = hash.replace('#/purchase-', '');
-        if (id) setCurrentPage(`purchase-${id}`);
+        const raw = hash.replace('#/purchase-', '');
+        const pureId = raw.includes('?') ? raw.split('?')[0] : raw;
+        if (pureId) setCurrentPage(`purchase-${pureId}`);
       }
     };
     applyHash();

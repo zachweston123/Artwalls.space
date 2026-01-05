@@ -829,10 +829,11 @@ export default {
                 const venuePayoutCents = Math.floor((amountTotal * venueFeeBps) / 10000);
                 const artistPayoutCents = Math.max(0, amountTotal - platformFeeCents - venuePayoutCents);
 
-                // Insert order record
+                // Insert order record and capture id
                 try {
+                  const orderId = crypto.randomUUID();
                   await supabaseAdmin.from('orders').insert({
-                    id: crypto.randomUUID(),
+                    id: orderId,
                     artwork_id: art.id,
                     artist_id: art.artist_id,
                     venue_id: art.venue_id,
@@ -851,6 +852,65 @@ export default {
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString(),
                   });
+                  // Save Stripe receipt URL if available
+                  try {
+                    const receiptUrl = paymentIntent?.charges?.data?.[0]?.receipt_url || null;
+                    if (receiptUrl) {
+                      await supabaseAdmin
+                        .from('orders')
+                        .update({ stripe_receipt_url: receiptUrl, updated_at: new Date().toISOString() })
+                        .eq('id', orderId);
+                    }
+                  } catch (e) {
+                    console.error('Failed to save receipt URL', e instanceof Error ? e.message : e);
+                  }
+                  // Notifications: artist, venue, platform
+                  try {
+                    const msgs = [
+                      {
+                        id: crypto.randomUUID(),
+                        user_id: art.artist_id,
+                        role: 'artist',
+                        title: 'Artwork sold',
+                        message: `Your artwork "${art.title}" sold for $${Math.round(amountTotal / 100)}.`,
+                        artwork_id: art.id,
+                        order_id: orderId,
+                        created_at: new Date().toISOString(),
+                      },
+                      {
+                        id: crypto.randomUUID(),
+                        user_id: art.venue_id,
+                        role: 'venue',
+                        title: 'Artwork sold',
+                        message: `Artwork "${art.title}" sold for $${Math.round(amountTotal / 100)}.`,
+                        artwork_id: art.id,
+                        order_id: orderId,
+                        created_at: new Date().toISOString(),
+                      },
+                      {
+                        id: crypto.randomUUID(),
+                        user_id: null,
+                        role: 'platform',
+                        title: 'Sale completed',
+                        message: `"${art.title}" sold. Platform fee: $${Math.round(platformFeeCents / 100)}.`,
+                        artwork_id: art.id,
+                        order_id: orderId,
+                        created_at: new Date().toISOString(),
+                      },
+                    ];
+                    await supabaseAdmin.from('notifications').insert(msgs);
+                  } catch (e) {
+                    console.error('Notifications insert failed', e instanceof Error ? e.message : e);
+                  }
+                  // Mark artwork as sold
+                  try {
+                    await supabaseAdmin
+                      .from('artworks')
+                      .update({ status: 'sold', updated_at: new Date().toISOString() })
+                      .eq('id', art.id);
+                  } catch (e) {
+                    console.error('Failed to mark artwork sold', e instanceof Error ? e.message : e);
+                  }
                 } catch (e) {
                   console.error('Order insert failed', e instanceof Error ? e.message : e);
                 }
@@ -945,6 +1005,30 @@ export default {
         saleDate: o.created_at,
       }));
       return json({ sales });
+    }
+
+    // Latest order by artwork (for receipt display)
+    if (url.pathname === '/api/orders/by-artwork' && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const artworkId = url.searchParams.get('artworkId');
+      if (!artworkId) return json({ error: 'Missing artworkId' }, { status: 400 });
+      const { data, error } = await supabaseAdmin
+        .from('orders')
+        .select('id,amount_cents,currency,stripe_receipt_url,status,created_at')
+        .eq('artwork_id', artworkId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) return json({ error: error.message }, { status: 500 });
+      if (!data) return json({ order: null });
+      return json({ order: {
+        id: data.id,
+        price: Math.round((data.amount_cents || 0) / 100),
+        currency: data.currency || 'usd',
+        receiptUrl: data.stripe_receipt_url || null,
+        status: data.status || 'paid',
+        createdAt: data.created_at,
+      }});
     }
 
     return new Response('Not found', { status: 404 });

@@ -24,6 +24,32 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
   const [loading, setLoading] = useState(true);
   const [buying, setBuying] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
+
+  // Read purchase status from hash query (?status=success|cancel)
+  const purchaseStatus = useMemo(() => {
+    const hash = window.location.hash || '';
+    const query = hash.includes('?') ? hash.split('?')[1] : '';
+    const params = new URLSearchParams(query);
+    return params.get('status');
+  }, [artworkId]);
+
+  // After success/cancel, refresh artwork and retrieve receipt
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (purchaseStatus === 'success') {
+        try {
+          const data = await apiGet<{ order: { receiptUrl: string | null } | null }>(`/api/orders/by-artwork?artworkId=${encodeURIComponent(artworkId)}`);
+          if (!cancelled) setReceiptUrl(data.order?.receiptUrl || null);
+          // Refresh artwork to reflect sold status
+          const art = await apiGet<Artwork>(`/api/artworks/${encodeURIComponent(artworkId)}`);
+          if (!cancelled) setArtwork(art);
+        } catch {}
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [purchaseStatus, artworkId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -42,7 +68,7 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
     return () => {
       cancelled = true;
     };
-  }, [artworkId, fallback]);
+  }, [artworkId]);
 
   const handlePurchase = async () => {
     try {
@@ -134,6 +160,23 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
               </p>
             </div>
 
+            {purchaseStatus === 'success' && (
+              <div className="bg-[var(--surface-3)] rounded-xl p-4 border border-[var(--border)] mb-4">
+                <p className="text-sm text-[var(--text)]">
+                  Payment successful! Show this to venue staff to collect the artwork.
+                </p>
+                {receiptUrl && (
+                  <p className="text-sm mt-2">
+                    <a href={receiptUrl} target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] underline">View Stripe Receipt</a>
+                  </p>
+                )}
+              </div>
+            )}
+            {purchaseStatus === 'cancel' && (
+              <div className="bg-[var(--surface-3)] rounded-xl p-4 border border-[var(--border)] mb-4">
+                <p className="text-sm text-[var(--text)]">Checkout canceled. You can try again below.</p>
+              </div>
+            )}
             {error && (
               <div className="bg-[var(--surface-3)] rounded-xl p-4 border border-[var(--border)] mb-4">
                 <p className="text-sm text-[var(--text)]">{error}</p>
@@ -142,11 +185,13 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
 
             <button
               onClick={handlePurchase}
-              disabled={buying || artwork?.status === 'sold' || !artwork}
+              disabled={buying || artwork?.status === 'sold' || purchaseStatus === 'success' || !artwork}
               className="w-full flex items-center justify-center gap-3 px-6 py-3 sm:py-4 bg-[var(--accent)] disabled:bg-[var(--surface-3)] text-[var(--accent-contrast)] disabled:text-[var(--text-muted)] rounded-xl hover:brightness-95 transition shadow-lg mb-4"
             >
               {buying ? <Loader2 className="w-5 h-5 animate-spin" /> : <ShoppingCart className="w-5 h-5" />}
-              <span className="text-base sm:text-lg">{artwork?.status === 'sold' ? 'Already Sold' : 'Buy This Artwork'}</span>
+              <span className="text-base sm:text-lg">
+                {artwork?.status === 'sold' ? 'Already Sold' : purchaseStatus === 'success' ? 'Payment Complete' : 'Buy This Artwork'}
+              </span>
             </button>
 
             {loading && (
