@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Frame, MapPin } from 'lucide-react';
 import { apiGet } from '../../lib/api';
-import { mockVenues } from '../../data/mockData';
 
 interface VenueWallsPublicProps {
   venueId?: string;
@@ -19,7 +18,7 @@ type WallSpace = {
 };
 
 export function VenueWallsPublic({ venueId, onBack }: VenueWallsPublicProps) {
-  const venue = venueId ? mockVenues.find(v => v.id === venueId) : null;
+  const [venue, setVenue] = useState<{ id: string; name: string; address?: string } | null>(null);
   const [walls, setWalls] = useState<WallSpace[]>([]);
 
   useEffect(() => {
@@ -27,9 +26,13 @@ export function VenueWallsPublic({ venueId, onBack }: VenueWallsPublicProps) {
     async function load() {
       if (!venueId) return;
       try {
+        // Fetch venue details
+        const v = await apiGet<any>(`/api/venues/${venueId}`);
+        if (isMounted) setVenue({ id: v.id, name: v.name, address: v.address });
         const items = await apiGet<WallSpace[]>(`/api/venues/${venueId}/wallspaces`);
         if (isMounted) setWalls(items);
       } catch {
+        setVenue(null);
         setWalls([]);
       }
     }

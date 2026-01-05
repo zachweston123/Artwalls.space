@@ -217,19 +217,130 @@ export default {
         .order('name', { ascending: true })
         .limit(50);
       if (error) return json({ error: error.message }, { status: 500 });
-      return json({ venues: data });
+      const venues = (data || []).map(v => ({
+        id: v.id,
+        name: v.name,
+        type: v.type,
+        labels: v.labels,
+        defaultVenueFeeBps: v.default_venue_fee_bps,
+      }));
+      return json({ venues });
+    }
+
+    // Public: single venue
+    if (url.pathname.startsWith('/api/venues/') && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const parts = url.pathname.split('/');
+      const id = parts[3];
+      if (!id) return json({ error: 'Missing venue id' }, { status: 400 });
+      const { data, error } = await supabaseAdmin
+        .from('venues')
+        .select('id,name,type,labels,default_venue_fee_bps')
+        .eq('id', id)
+        .maybeSingle();
+      if (error) return json({ error: error.message }, { status: 500 });
+      if (!data) return json({ error: 'Not found' }, { status: 404 });
+      const venue = {
+        id: data.id,
+        name: data.name,
+        type: data.type,
+        labels: data.labels,
+        defaultVenueFeeBps: data.default_venue_fee_bps,
+      };
+      return json(venue);
     }
 
     // Public listings: artworks
     if (url.pathname === '/api/artworks' && method === 'GET') {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
-      const { data, error } = await supabaseAdmin
+      const artistId = url.searchParams.get('artistId');
+      let query = supabaseAdmin
         .from('artworks')
         .select('id,title,status,price_cents,currency,image_url,artist_name,venue_name')
         .order('created_at', { ascending: false })
         .limit(50);
+      if (artistId) query = query.eq('artist_id', artistId);
+      const { data, error } = await query;
       if (error) return json({ error: error.message }, { status: 500 });
-      return json({ artworks: data });
+      const artworks = (data || []).map(a => ({
+        id: a.id,
+        title: a.title,
+        status: a.status,
+        price: Math.round((a.price_cents || 0) / 100),
+        currency: a.currency,
+        imageUrl: a.image_url,
+        artistName: a.artist_name,
+        venueName: a.venue_name,
+      }));
+      return json({ artworks });
+    }
+
+    // Public: single artwork
+    if (url.pathname.startsWith('/api/artworks/') && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const parts = url.pathname.split('/');
+      const id = parts[3];
+      if (!id) return json({ error: 'Missing artwork id' }, { status: 400 });
+      const { data, error } = await supabaseAdmin
+        .from('artworks')
+        .select('id,title,status,price_cents,currency,image_url,artist_name,venue_name,description')
+        .eq('id', id)
+        .maybeSingle();
+      if (error) return json({ error: error.message }, { status: 500 });
+      if (!data) return json({ error: 'Not found' }, { status: 404 });
+      const artwork = {
+        id: data.id,
+        title: data.title,
+        status: data.status,
+        price: Math.round((data.price_cents || 0) / 100),
+        currency: data.currency,
+        imageUrl: data.image_url,
+        artistName: data.artist_name,
+        venueName: data.venue_name,
+        description: data.description,
+      };
+      return json(artwork);
+    }
+
+    // Create artwork (artist)
+    if (url.pathname === '/api/artworks' && method === 'POST') {
+      const user = await getSupabaseUserFromRequest(request);
+      if (!user) return json({ error: 'Missing or invalid Authorization bearer token' }, { status: 401 });
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const role = (user.user_metadata?.role as string) || 'artist';
+      if (role !== 'artist') return json({ error: 'Only artists can create artworks' }, { status: 403 });
+      const payload = await request.json().catch(() => ({}));
+      const priceNumber = Number(payload?.price);
+      const price_cents = Number.isFinite(priceNumber) ? Math.round(priceNumber * 100) : 0;
+      const insert = {
+        id: crypto.randomUUID(),
+        artist_id: user.id,
+        artist_name: payload?.name || user.user_metadata?.name || null,
+        venue_id: null,
+        venue_name: null,
+        title: String(payload?.title || ''),
+        description: payload?.description || null,
+        price_cents,
+        currency: String(payload?.currency || 'usd'),
+        image_url: payload?.imageUrl || null,
+        status: 'available',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      const { data, error } = await supabaseAdmin.from('artworks').insert(insert).select('*').single();
+      if (error) return json({ error: error.message }, { status: 500 });
+      const shaped = {
+        id: data.id,
+        title: data.title,
+        status: data.status,
+        price: Math.round((data.price_cents || 0) / 100),
+        currency: data.currency,
+        imageUrl: data.image_url,
+        artistName: data.artist_name,
+        venueName: data.venue_name,
+        description: data.description,
+      };
+      return json(shaped, { status: 201 });
     }
 
     // -----------------------------

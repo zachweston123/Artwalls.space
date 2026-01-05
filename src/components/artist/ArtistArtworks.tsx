@@ -1,7 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Plus, X, Upload, Loader2 } from 'lucide-react';
-import { mockArtworks } from '../../data/mockData';
-import type { Artwork } from '../../data/mockData';
+type Artwork = {
+  id: string;
+  title: string;
+  description?: string;
+  price: number;
+  imageUrl?: string;
+  status: 'available' | 'pending' | 'active' | 'sold';
+  artistName?: string;
+  venueName?: string;
+};
 import type { User } from '../../App';
 import { apiGet, apiPost, API_BASE } from '../../lib/api';
 import { entitlementsFor } from '../../lib/entitlements';
@@ -14,7 +22,7 @@ interface ArtistArtworksProps {
 
 export function ArtistArtworks({ user }: ArtistArtworksProps) {
   const [showAddForm, setShowAddForm] = useState(false);
-  const [artworks, setArtworks] = useState<Artwork[]>(mockArtworks);
+  const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [newArtwork, setNewArtwork] = useState({
     title: '',
     description: '',
@@ -32,9 +40,9 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
     try {
       setLoading(true);
       setError(null);
-      const items = await apiGet<any[]>(`/api/artworks?artistId=${encodeURIComponent(user.id)}`);
-      if (Array.isArray(items) && items.length) {
-        setArtworks(items as Artwork[]);
+      const res = await apiGet<{ artworks: Artwork[] }>(`/api/artworks?artistId=${encodeURIComponent(user.id)}`);
+      if (Array.isArray(res.artworks)) {
+        setArtworks(res.artworks);
       }
     } catch {
       // Backend not available -> keep mock data
@@ -48,9 +56,9 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
     // Fetch artist plan info for gating
     (async () => {
       try {
-        const artist = await apiGet<any>(`/api/artists/${encodeURIComponent(user.id)}`);
-        const tier = String(artist?.subscriptionTier || 'free').toLowerCase() as any;
-        const status = String(artist?.subscriptionStatus || 'inactive');
+        const me = await apiGet<any>(`/api/profile/me`);
+        const tier = String(me?.profile?.subscription_tier || 'free').toLowerCase() as any;
+        const status = String(me?.profile?.subscription_status || 'inactive');
         setArtistPlan({ tier, status });
       } catch {}
     })();

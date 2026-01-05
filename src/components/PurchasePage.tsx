@@ -1,7 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ShoppingCart, MapPin, User, ArrowLeft, Loader2 } from 'lucide-react';
-import { mockArtworks } from '../data/mockData';
-import type { Artwork } from '../data/mockData';
+type Artwork = {
+  id: string;
+  title: string;
+  description?: string;
+  price: number; // dollars
+  currency?: string;
+  imageUrl?: string;
+  status: 'available' | 'pending' | 'active' | 'sold';
+  artistName?: string;
+  venueName?: string;
+  checkoutUrl?: string;
+};
 import { apiGet, apiPost } from '../lib/api';
 
 interface PurchasePageProps {
@@ -10,8 +20,7 @@ interface PurchasePageProps {
 }
 
 export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
-  const fallback = useMemo(() => mockArtworks.find(a => a.id === artworkId) || mockArtworks[0], [artworkId]);
-  const [artwork, setArtwork] = useState<Artwork | any>(fallback);
+  const [artwork, setArtwork] = useState<Artwork | null>(null);
   const [loading, setLoading] = useState(true);
   const [buying, setBuying] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,11 +31,10 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
       try {
         setLoading(true);
         setError(null);
-        const data = await apiGet<any>(`/api/artworks/${encodeURIComponent(artworkId)}`);
+        const data = await apiGet<Artwork>(`/api/artworks/${encodeURIComponent(artworkId)}`);
         if (!cancelled) setArtwork(data);
       } catch (e: any) {
-        // If backend not running, still show mock data
-        if (!cancelled) setArtwork(fallback);
+        if (!cancelled) setArtwork(null);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -87,11 +95,11 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
           {/* Image */}
           <div className="bg-[var(--surface-2)] rounded-2xl overflow-hidden border border-[var(--border)] shadow-lg">
             <div className="aspect-square bg-[var(--surface-3)]">
-              <img
-                src={artwork.imageUrl}
-                alt={artwork.title}
-                className="w-full h-full object-cover"
-              />
+              {artwork?.imageUrl ? (
+                <img src={artwork.imageUrl} alt={artwork.title} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-[var(--text-muted)]">No image</div>
+              )}
             </div>
           </div>
 
@@ -99,27 +107,27 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
           <div>
             <div className="mb-6">
               <span className="inline-block px-3 py-1 bg-[var(--surface-3)] text-[var(--text)] border border-[var(--border)] rounded-full text-sm mb-4">
-                {artwork.status === 'sold' ? 'Sold' : 'Available for Purchase'}
+                {artwork?.status === 'sold' ? 'Sold' : 'Available for Purchase'}
               </span>
-              <h1 className="text-3xl sm:text-4xl mb-3 text-[var(--text)]">{artwork.title}</h1>
+              <h1 className="text-3xl sm:text-4xl mb-3 text-[var(--text)]">{artwork?.title || 'Artwork'}</h1>
                 <div className="flex items-center gap-2 text-[var(--text-muted)] mb-4">
                 <User className="w-5 h-5" />
-                <span className="text-base sm:text-lg">by {artwork.artistName}</span>
+                <span className="text-base sm:text-lg">by {artwork?.artistName || 'Artist'}</span>
               </div>
                 <div className="flex items-start gap-2 text-[var(--text-muted)] mb-6">
                 <MapPin className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                <span className="text-sm sm:text-base">Currently on display at {artwork.venueName || 'Local Venue'}</span>
+                <span className="text-sm sm:text-base">Currently on display at {artwork?.venueName || 'Local Venue'}</span>
               </div>
             </div>
 
             <div className="mb-8">
-              <p className="text-[var(--text)] leading-relaxed">{artwork.description}</p>
+              <p className="text-[var(--text)] leading-relaxed">{artwork?.description || 'No description provided.'}</p>
             </div>
 
             <div className="bg-[var(--surface-3)] rounded-xl p-4 sm:p-6 mb-6 border border-[var(--border)]">
               <div className="flex items-baseline justify-between mb-2">
                 <span className="text-[var(--text-muted)]">Price</span>
-                <span className="text-3xl sm:text-4xl text-[var(--text)]">${artwork.price}</span>
+                <span className="text-3xl sm:text-4xl text-[var(--text)]">${artwork?.price ?? 0}</span>
               </div>
               <p className="text-sm text-[var(--text-muted)]">
                 Supports local artist with ~80% of the sale going to the creator (before Stripe fees)
@@ -134,11 +142,11 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
 
             <button
               onClick={handlePurchase}
-              disabled={buying || artwork.status === 'sold'}
+              disabled={buying || artwork?.status === 'sold' || !artwork}
               className="w-full flex items-center justify-center gap-3 px-6 py-3 sm:py-4 bg-[var(--accent)] disabled:bg-[var(--surface-3)] text-[var(--accent-contrast)] disabled:text-[var(--text-muted)] rounded-xl hover:brightness-95 transition shadow-lg mb-4"
             >
               {buying ? <Loader2 className="w-5 h-5 animate-spin" /> : <ShoppingCart className="w-5 h-5" />}
-              <span className="text-base sm:text-lg">{artwork.status === 'sold' ? 'Already Sold' : 'Buy This Artwork'}</span>
+              <span className="text-base sm:text-lg">{artwork?.status === 'sold' ? 'Already Sold' : 'Buy This Artwork'}</span>
             </button>
 
             {loading && (
