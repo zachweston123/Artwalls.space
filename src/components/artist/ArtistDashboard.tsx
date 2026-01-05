@@ -61,7 +61,7 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
   const totalEarnings = stats ? stats.sales.totalEarnings : artworks.filter(a => a.status === 'sold').reduce((sum, a) => sum + (a.price || 0), 0);
   const recentSales = stats ? stats.sales.total : artworks.filter(a => a.status === 'sold').length;
 
-  const stats = [
+  const dashboardStats = [
     {
       label: 'Active Artworks',
       value: activeArtworks,
@@ -210,7 +210,7 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
           STAT CARDS GRID (Minimal, Balanced)
           ════════════════════════════════════════════════════════════ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-        {stats.map((stat) => {
+        {dashboardStats.map((stat) => {
           const Icon = stat.icon;
           return (
             <button

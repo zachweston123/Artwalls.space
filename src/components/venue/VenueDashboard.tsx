@@ -14,7 +14,7 @@ export function VenueDashboard({ onNavigate, user }: VenueDashboardProps) {
   const pendingApplications = mockApplications.filter(a => a.status === 'pending').length;
   const venueEarnings = mockSales.reduce((sum, sale) => sum + sale.venueEarnings, 0);
 
-  const stats = [
+  const venueStats = [
     {
       label: 'Wall Spaces',
       value: `${totalWalls - availableWalls}/${totalWalls}`,
@@ -57,7 +57,7 @@ export function VenueDashboard({ onNavigate, user }: VenueDashboardProps) {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-        {stats.map((stat) => {
+        {venueStats.map((stat) => {
           const Icon = stat.icon;
           return (
             <button

@@ -307,12 +307,13 @@ export default {
       return json({ venues });
     }
 
-    // Public listings: artists
+    // Public listings: artists (only show live artists)
     if (url.pathname === '/api/artists' && method === 'GET') {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
       const { data, error } = await supabaseAdmin
         .from('artists')
         .select('id,name,email')
+        .eq('is_live', true)
         .order('name', { ascending: true })
         .limit(50);
       if (error) return json({ error: error.message }, { status: 500 });

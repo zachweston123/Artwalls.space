@@ -6,6 +6,14 @@ alter table if exists public.venues
   add column if not exists type text;
 alter table if exists public.venues
   add column if not exists default_venue_fee_bps int not null default 1000;
+-- Ensure artists live flag exists
+alter table if exists public.artists
+  add column if not exists is_live boolean not null default true;
+-- Ensure artwork QR/purchase fields exist (idempotent)
+alter table if exists public.artworks
+  add column if not exists purchase_url text;
+alter table if exists public.artworks
+  add column if not exists qr_svg text;
 
 -- Demo Artist: Sarah Chen
 insert into public.artists (id, email, name, role, subscription_tier, subscription_status)
@@ -15,7 +23,7 @@ values (
   'Sarah Chen',
   'artist',
   'free',
-  'inactive'
+  'active'
 )
 on conflict (id) do update set
   email = excluded.email,
@@ -23,6 +31,7 @@ on conflict (id) do update set
   role = excluded.role,
   subscription_tier = excluded.subscription_tier,
   subscription_status = excluded.subscription_status,
+  is_live = true,
   updated_at = now();
 
 -- Demo Venues
@@ -51,7 +60,9 @@ insert into public.artworks (
   price_cents,
   currency,
   image_url,
-  status
+  status,
+  purchase_url,
+  qr_svg
 )
 values
   (
@@ -65,7 +76,9 @@ values
     45000,
     'usd',
     'https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=800',
-    'active'
+    'active',
+    null,
+    null
   ),
   (
     '33333333-3333-3333-3333-333333333332'::uuid,
@@ -78,7 +91,9 @@ values
     38000,
     'usd',
     'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=800',
-    'available'
+    'available',
+    null,
+    null
   ),
   (
     '33333333-3333-3333-3333-333333333333'::uuid,
@@ -91,7 +106,9 @@ values
     52000,
     'usd',
     'https://images.unsplash.com/photo-1549887534-1541e9326642?w=800',
-    'pending'
+    'pending',
+    null,
+    null
   ),
   (
     '33333333-3333-3333-3333-333333333334'::uuid,
@@ -104,7 +121,9 @@ values
     29500,
     'usd',
     'https://images.unsplash.com/photo-1547826039-bfc35e0f1ea8?w=800',
-    'sold'
+    'sold',
+    null,
+    null
   )
 on conflict (id) do update set
   artist_id = excluded.artist_id,
@@ -117,4 +136,6 @@ on conflict (id) do update set
   currency = excluded.currency,
   image_url = excluded.image_url,
   status = excluded.status,
+  purchase_url = excluded.purchase_url,
+  qr_svg = excluded.qr_svg,
   updated_at = now();
