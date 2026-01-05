@@ -1145,6 +1145,54 @@ export default {
       }});
     }
 
+    // Admin: platform metrics and recent activity
+    if (url.pathname === '/api/admin/metrics' && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+
+      const now = new Date();
+      const past30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+      const [artistsAgg, venuesAgg, activeAgg] = await Promise.all([
+        supabaseAdmin.from('artists').select('id', { count: 'exact', head: true }),
+        supabaseAdmin.from('venues').select('id', { count: 'exact', head: true }),
+        supabaseAdmin.from('artworks').select('id', { count: 'exact', head: true }).eq('status', 'active'),
+      ]);
+
+      const { data: ordersMonth, error: ordersErr } = await supabaseAdmin
+        .from('orders')
+        .select('amount_cents,platform_fee_cents,created_at,artist_id,venue_id,artwork_id')
+        .gte('created_at', past30)
+        .order('created_at', { ascending: false })
+        .limit(1000);
+      if (ordersErr) return json({ error: ordersErr.message }, { status: 500 });
+      const gmvCents = (ordersMonth || []).reduce((sum: number, o: any) => sum + (o.amount_cents || 0), 0);
+      const platformFeeCents = (ordersMonth || []).reduce((sum: number, o: any) => sum + (o.platform_fee_cents || 0), 0);
+
+      // Recent activity from orders
+      const recentActivity = (ordersMonth || []).slice(0, 10).map((o: any) => ({
+        type: 'payment',
+        timestamp: o.created_at,
+        amount_cents: o.amount_cents || 0,
+        artist_id: o.artist_id,
+        venue_id: o.venue_id,
+        artwork_id: o.artwork_id,
+      }));
+
+      return json({
+        totals: {
+          artists: (artistsAgg as any)?.count || 0,
+          venues: (venuesAgg as any)?.count || 0,
+          activeDisplays: (activeAgg as any)?.count || 0,
+        },
+        month: {
+          gmv: Math.round(gmvCents / 100),
+          platformRevenue: Math.round(platformFeeCents / 100),
+        },
+        recentActivity,
+      });
+    }
+
+
     return new Response('Not found', { status: 404 });
   },
 };

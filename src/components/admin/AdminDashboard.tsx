@@ -12,39 +12,65 @@ import {
   CheckCircle,
   AlertTriangle
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { apiGet } from '../../lib/api';
 
 interface AdminDashboardProps {
   onNavigate: (page: string, params?: any) => void;
 }
 
 export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [metrics, setMetrics] = useState<{ totals: { artists: number; venues: number; activeDisplays: number }; month: { gmv: number; platformRevenue: number }; recentActivity: Array<{ type: string; timestamp: string; amount_cents: number }> } | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const resp = await apiGet<{ totals: { artists: number; venues: number; activeDisplays: number }; month: { gmv: number; platformRevenue: number }; recentActivity: Array<{ type: string; timestamp: string; amount_cents: number }> }>(
+          '/api/admin/metrics'
+        );
+        if (mounted) setMetrics(resp);
+      } catch (e: any) {
+        if (mounted) setError(e?.message || 'Failed to load metrics');
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
   const kpis = [
     {
       label: 'Total Artists',
-      value: '1,247',
+      value: metrics ? String(metrics.totals.artists) : '-',
       delta: '+32 this month',
       deltaType: 'positive' as const,
       icon: Users,
       iconBg: 'bg-[var(--surface-3)] border border-[var(--border)]',
       iconColor: 'text-[var(--blue)]',
+      onClick: () => onNavigate('admin-users', { type: 'artists' }),
     },
     {
       label: 'Total Venues',
-      value: '387',
+      value: metrics ? String(metrics.totals.venues) : '-',
       delta: '+12 this month',
       deltaType: 'positive' as const,
       icon: Building,
       iconBg: 'bg-[var(--surface-3)] border border-[var(--border)]',
       iconColor: 'text-[var(--green)]',
+      onClick: () => onNavigate('admin-users', { type: 'venues' }),
     },
     {
       label: 'Active Displays',
-      value: '542',
+      value: metrics ? String(metrics.totals.activeDisplays) : '-',
       delta: '89% capacity',
       deltaType: 'neutral' as const,
       icon: Frame,
       iconBg: 'bg-[var(--surface-3)] border border-[var(--border)]',
       iconColor: 'text-[var(--text-muted)]',
+      onClick: () => onNavigate('admin-current-displays'),
     },
     {
       label: 'Pending Invites',
@@ -54,24 +80,27 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
       icon: Mail,
       iconBg: 'bg-[var(--surface-3)] border border-[var(--border)]',
       iconColor: 'text-[var(--warning)]',
+      onClick: () => onNavigate('admin-invites'),
     },
     {
       label: 'Total GMV (Month)',
-      value: '$48,392',
+      value: metrics ? `$${metrics.month.gmv}` : '-',
       delta: '+18% vs last month',
       deltaType: 'positive' as const,
       icon: DollarSign,
       iconBg: 'bg-[var(--surface-3)] border border-[var(--border)]',
       iconColor: 'text-[var(--green)]',
+      onClick: () => onNavigate('admin-sales'),
     },
     {
       label: 'Platform Revenue',
-      value: '$4,839',
+      value: metrics ? `$${metrics.month.platformRevenue}` : '-',
       delta: '10% platform fee',
       deltaType: 'neutral' as const,
       icon: TrendingUp,
       iconBg: 'bg-[var(--surface-3)] border border-[var(--border)]',
       iconColor: 'text-[var(--blue)]',
+      onClick: () => onNavigate('admin-revenue'),
     },
     {
       label: 'Support Queue',
@@ -81,6 +110,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
       icon: AlertCircle,
       iconBg: 'bg-[var(--surface-3)] border border-[var(--border)]',
       iconColor: 'text-[var(--danger)]',
+      onClick: () => onNavigate('admin-support'),
     },
   ];
 
@@ -102,48 +132,14 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
     },
   ];
 
-  const recentActivity = [
-    {
-      id: '1',
-      type: 'payment',
-      description: 'Payment completed: "Urban Sunset" sold for $850',
-      user: 'Sarah Chen',
-      timestamp: '5 minutes ago',
-      status: 'success' as const,
-    },
-    {
-      id: '2',
-      type: 'venue',
-      description: 'New venue registered: The Artisan Lounge',
-      user: 'Michael Torres',
-      timestamp: '32 minutes ago',
-      status: 'info' as const,
-    },
-    {
-      id: '3',
-      type: 'dispute',
-      description: 'Dispute opened: Artwork damaged during installation',
-      user: 'Emma Liu',
-      timestamp: '1 hour ago',
-      status: 'warning' as const,
-    },
-    {
-      id: '4',
-      type: 'subscription',
-      description: 'Subscription upgraded: Free → Growth',
-      user: 'Jordan Taylor',
-      timestamp: '2 hours ago',
-      status: 'success' as const,
-    },
-    {
-      id: '5',
-      type: 'payment',
-      description: 'Payment completed: "City Lights" sold for $1,200',
-      user: 'Marcus Rodriguez',
-      timestamp: '3 hours ago',
-      status: 'success' as const,
-    },
-  ];
+  const recentActivity = (metrics?.recentActivity || []).map((a, idx) => ({
+    id: String(idx + 1),
+    type: a.type,
+    description: `Payment completed: Sale for $${Math.round((a.amount_cents || 0) / 100)}`,
+    user: 'Sale',
+    timestamp: new Date(a.timestamp).toLocaleString(),
+    status: 'success' as const,
+  }));
 
   const systemStatus = [
     {
@@ -215,7 +211,8 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
           return (
             <div
               key={kpi.label}
-              className="bg-[var(--surface-2)] rounded-xl p-6 border border-[var(--border)]"
+              onClick={kpi.onClick}
+              className="bg-[var(--surface-2)] rounded-xl p-6 border border-[var(--border)] hover:bg-[var(--surface-3)] transition-colors cursor-pointer"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className={`w-12 h-12 ${kpi.iconBg} rounded-lg flex items-center justify-center`}>
