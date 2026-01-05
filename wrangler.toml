@@ -2,7 +2,14 @@ name = "artwallsspacee"
 compatibility_date = "2024-01-01"
 type = "javascript"
 main = "worker/index.ts"
-main = "worker/index.ts"
+
+# Required: set your Cloudflare account_id
+# account_id = "940b4ccc48653a5ea5bdf7c01279d832"
+
+# Bind the Worker to the api subdomain
+routes = [
+	{ pattern = "api.artwalls.space/*", zone_name = "artwalls.space" }
+]
 
 [build]
 command = "npm install && npm run build"
@@ -12,5 +19,7 @@ watch_paths = ["src/**/*.{ts,tsx}"]
 [vars]
 API_BASE_URL = "https://api.artwalls.space"
 SUPABASE_URL = "https://twclqgysvpefufpnmjcl.supabase.co"
+# Used for CORS and purchase URL generation in the Worker
+PAGES_ORIGIN = "https://artwalls.space"
 # Set this in Cloudflare Worker secrets: wrangler secret put SUPABASE_SERVICE_ROLE_KEY
 # Set this in Cloudflare Worker secrets: wrangler secret put STRIPE_SECRET_KEY
