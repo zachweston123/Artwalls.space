@@ -1007,6 +1007,38 @@ export default {
       return json({ sales });
     }
 
+    // Notifications: fetch latest for a user/role (or platform)
+    if (url.pathname === '/api/notifications' && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const userId = url.searchParams.get('userId');
+      const role = url.searchParams.get('role');
+      if (!role) return json({ error: 'Missing role' }, { status: 400 });
+      let query = supabaseAdmin
+        .from('notifications')
+        .select('id,title,message,artwork_id,order_id,created_at')
+        .eq('role', role)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (role === 'platform' && !userId) {
+        query = query.is('user_id', null);
+      } else if (userId) {
+        query = query.eq('user_id', userId);
+      } else {
+        return json({ error: 'Missing userId for role' }, { status: 400 });
+      }
+      const { data, error } = await query;
+      if (error) return json({ error: error.message }, { status: 500 });
+      const notifications = (data || []).map((n: any) => ({
+        id: n.id,
+        title: n.title,
+        message: n.message,
+        artworkId: n.artwork_id || null,
+        orderId: n.order_id || null,
+        createdAt: n.created_at,
+      }));
+      return json({ notifications });
+    }
+
     // Latest order by artwork (for receipt display)
     if (url.pathname === '/api/orders/by-artwork' && method === 'GET') {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
