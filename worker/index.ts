@@ -371,6 +371,16 @@ export default {
       return json(artwork);
     }
 
+    // Artwork purchase link + QR
+    if (url.pathname.startsWith('/api/artworks/') && method === 'GET' && url.pathname.endsWith('/link')) {
+      const parts = url.pathname.split('/');
+      const id = parts[3];
+      if (!id) return json({ error: 'Missing artwork id' }, { status: 400 });
+      const purchaseUrl = `${allowOrigin}/#/purchase-${id}`;
+      const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(purchaseUrl)}`;
+      return json({ purchaseUrl, qrImageUrl });
+    }
+
     // Create artwork (artist)
     if (url.pathname === '/api/artworks' && method === 'POST') {
       const user = await getSupabaseUserFromRequest(request);
@@ -410,6 +420,28 @@ export default {
         description: data.description,
       };
       return json(shaped, { status: 201 });
+    }
+
+    // Approve artwork for display (venue)
+    if (url.pathname.startsWith('/api/artworks/') && method === 'POST' && url.pathname.endsWith('/approve')) {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const user = await requireVenue(request);
+      if (!user) return json({ error: 'Missing or invalid Authorization bearer token (venue required)' }, { status: 401 });
+      const parts = url.pathname.split('/');
+      const id = parts[3];
+      if (!id) return json({ error: 'Missing artwork id' }, { status: 400 });
+      const venueName = user.user_metadata?.name || null;
+      const { data: updated, error } = await supabaseAdmin
+        .from('artworks')
+        .update({ status: 'active', venue_id: user.id, venue_name: venueName, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select('*')
+        .maybeSingle();
+      if (error) return json({ error: error.message }, { status: 500 });
+      if (!updated) return json({ error: 'Not found' }, { status: 404 });
+      const purchaseUrl = `${allowOrigin}/#/purchase-${id}`;
+      const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(purchaseUrl)}`;
+      return json({ ok: true, purchaseUrl, qrImageUrl });
     }
 
     // Upsert artist profile (used by app bootstrap)
@@ -498,6 +530,40 @@ export default {
       // Save accountId
       await upsertArtist({ id: user.id, stripeAccountId: json.id });
       return json({ accountId: json.id, alreadyExists: false });
+    }
+
+    // Create Stripe Checkout Session for artwork purchase
+    if (url.pathname === '/api/stripe/create-checkout-session' && method === 'POST') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const payload = await request.json().catch(() => ({}));
+      const artworkId = String(payload?.artworkId || '').trim();
+      if (!artworkId) return json({ error: 'Missing artworkId' }, { status: 400 });
+      const { data: art, error: artErr } = await supabaseAdmin
+        .from('artworks')
+        .select('id,title,price_cents,currency,status')
+        .eq('id', artworkId)
+        .maybeSingle();
+      if (artErr) return json({ error: artErr.message }, { status: 500 });
+      if (!art) return json({ error: 'Artwork not found' }, { status: 404 });
+      if (art.status === 'sold') return json({ error: 'Artwork already sold' }, { status: 400 });
+      const amount = Number(art.price_cents || 0);
+      const currency = art.currency || 'usd';
+      const success_url = `${allowOrigin}/#/purchase-${artworkId}?status=success`;
+      const cancel_url = `${allowOrigin}/#/purchase-${artworkId}?status=cancel`;
+      const body = toForm({
+        mode: 'payment',
+        success_url,
+        cancel_url,
+        'line_items[0][price_data][currency]': currency,
+        'line_items[0][price_data][unit_amount]': String(amount),
+        'line_items[0][price_data][product_data][name]': art.title || 'Artwork',
+        'line_items[0][quantity]': '1',
+        'metadata[artworkId]': artworkId,
+      });
+      const resp = await stripeFetch('/v1/checkout/sessions', { method: 'POST', body });
+      const session = await resp.json();
+      if (!resp.ok) return json(session, { status: resp.status });
+      return json({ url: session.url });
     }
 
     // Connect: Artist account link
