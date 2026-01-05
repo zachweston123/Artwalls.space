@@ -158,6 +158,80 @@ export default {
       });
     }
 
+    // Profile: provision record in artists or venues based on Supabase user role
+    if (url.pathname === '/api/profile/provision' && method === 'POST') {
+      const user = await getSupabaseUserFromRequest(request);
+      if (!user) return json({ error: 'Missing or invalid Authorization bearer token' }, { status: 401 });
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+
+      const role = (user.user_metadata?.role as string) || 'artist';
+      const name = (user.user_metadata?.name as string | undefined) || null;
+
+      if (role === 'venue') {
+        const { data: venue } = await supabaseAdmin
+          .from('venues')
+          .select('*')
+          .eq('id', user.id)
+          .maybeSingle();
+        const updated = await upsertVenue({
+          id: user.id,
+          email: user.email ?? null,
+          name,
+          type: user.user_metadata?.type ?? null,
+          defaultVenueFeeBps: 1000,
+        });
+        return updated;
+      }
+
+      const updated = await upsertArtist({
+        id: user.id,
+        email: user.email ?? null,
+        name,
+        role: 'artist',
+      });
+      return updated;
+    }
+
+    // Profile: get current user profile (artist or venue)
+    if (url.pathname === '/api/profile/me' && method === 'GET') {
+      const user = await getSupabaseUserFromRequest(request);
+      if (!user) return json({ error: 'Missing or invalid Authorization bearer token' }, { status: 401 });
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const role = (user.user_metadata?.role as string) || 'artist';
+      if (role === 'venue') {
+        const { data, error } = await supabaseAdmin.from('venues').select('*').eq('id', user.id).maybeSingle();
+        if (error) return json({ error: error.message }, { status: 500 });
+        return json({ role: 'venue', profile: data });
+      }
+      const { data, error } = await supabaseAdmin.from('artists').select('*').eq('id', user.id).maybeSingle();
+      if (error) return json({ error: error.message }, { status: 500 });
+      return json({ role: 'artist', profile: data });
+    }
+
+    // Public listings: venues
+    if (url.pathname === '/api/venues' && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const { data, error } = await supabaseAdmin
+        .from('venues')
+        .select('id,name,type,labels,default_venue_fee_bps')
+        .order('name', { ascending: true })
+        .limit(50);
+      if (error) return json({ error: error.message }, { status: 500 });
+      return json({ venues: data });
+    }
+
+    // Public listings: artworks
+    if (url.pathname === '/api/artworks' && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const { data, error } = await supabaseAdmin
+        .from('artworks')
+        .select('id,title,status,price_cents,currency,image_url,artist_name,venue_name')
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (error) return json({ error: error.message }, { status: 500 });
+      return json({ artworks: data });
+    }
+
     // -----------------------------
     // Minimal API endpoints (Stripe Connect) to remove dependency on external API
     // -----------------------------

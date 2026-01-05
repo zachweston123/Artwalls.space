@@ -57,6 +57,15 @@ export function Login({ onLogin }: LoginProps) {
         const supaUser = data.user;
         if (!supaUser) throw new Error('Sign up succeeded but no user returned.');
 
+        // Provision a profile in Supabase (artist/venue)
+        try {
+          const { apiPost } = await import('../lib/api');
+          await apiPost('/api/profile/provision', {});
+        } catch (e) {
+          // non-blocking: log and continue
+          console.warn('Profile provision failed', e);
+        }
+
         onLogin({
           id: supaUser.id,
           name: (supaUser.user_metadata?.name as string | undefined) || safeName || 'User',
@@ -84,6 +93,14 @@ export function Login({ onLogin }: LoginProps) {
             name: safeName || (data.user.user_metadata?.name as string | undefined) || null,
           },
         });
+      }
+
+      // Provision a profile in Supabase (artist/venue)
+      try {
+        const { apiPost } = await import('../lib/api');
+        await apiPost('/api/profile/provision', {});
+      } catch (e) {
+        console.warn('Profile provision failed', e);
       }
 
       onLogin({
