@@ -45,6 +45,16 @@ export default {
       return new Response(body, { status: init?.status ?? 200, headers });
     }
 
+    function text(body: string, init?: ResponseInit): Response {
+      const headers = new Headers(init?.headers);
+      headers.set('Content-Type', 'text/plain; charset=utf-8');
+      headers.set('Access-Control-Allow-Origin', allowOrigin);
+      headers.set('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+      headers.set('Access-Control-Allow-Headers', 'authorization, content-type');
+      headers.set('Vary', 'Origin');
+      return new Response(body, { status: init?.status ?? 200, headers });
+    }
+
     async function generateQrSvg(data: string, size = 300): Promise<string> {
       try {
         const svg = await QRCode.toString(data, { type: 'svg', width: size, margin: 0 });
@@ -135,6 +145,10 @@ export default {
 
     if (url.pathname === '/api/health') {
       return json({ ok: true });
+    }
+
+    if (url.pathname === '/') {
+      return text('Artwalls API OK');
     }
 
     // Env check: verify required configuration without leaking secrets
