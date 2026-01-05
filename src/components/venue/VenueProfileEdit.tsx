@@ -18,6 +18,7 @@ export interface VenueProfileData {
   coverPhoto?: string;
   email?: string;
   phoneNumber?: string;
+  city?: string;
 }
 
 export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfileEditProps) {
@@ -32,6 +33,7 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
     coverPhoto: initialData?.coverPhoto ?? 'https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=1200',
     email: initialData?.email ?? '',
     phoneNumber: initialData?.phoneNumber ?? '',
+    city: (initialData as any)?.city ?? '',
   });
 
   const venueTypes = [
@@ -150,6 +152,19 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
               placeholder="e.g. +15551234567"
             />
             <p className="text-xs text-[var(--text-muted)] mt-1">Sale notifications will be sent to this number.</p>
+          </div>
+
+          {/* City */}
+          <div>
+            <label className="block text-sm text-[var(--text-muted)] mb-2">City</label>
+            <input
+              type="text"
+              value={formData.city || ''}
+              onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+              className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
+              placeholder="e.g. Portland"
+            />
+            <p className="text-xs text-[var(--text-muted)] mt-1">Helps artists find you by location.</p>
           </div>
 
           {/* Venue Type */}

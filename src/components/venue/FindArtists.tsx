@@ -48,20 +48,28 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
   };
 
   const [artists, setArtists] = useState<any[]>([]);
+  const [venueCity, setVenueCity] = useState<string>('');
 
   useEffect(() => {
     let isMounted = true;
     async function loadArtists() {
       try {
+        // Load venue profile to determine local city
+        const me = await apiGet<{ role: string; profile: { id: string; city?: string | null } }>(
+          '/api/profile/me'
+        );
+        const city = (me?.profile?.city || '').trim();
+        if (isMounted) setVenueCity(city);
+        const path = city ? `/api/artists?city=${encodeURIComponent(city)}` : '/api/artists';
         const resp = await apiGet<{ artists: Array<{ id: string; name?: string | null; email?: string | null }> }>(
-          '/api/artists'
+          path
         );
         const apiArtists = resp?.artists || [];
         const shaped = apiArtists.map((a) => ({
           id: a.id,
           name: a.name || 'Artist',
           avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400',
-          location: 'Portland',
+          location: city || 'Local',
           bio: 'Artist on Artwalls',
           artTypes: ['Painter'],
           openToNew: true,
@@ -105,7 +113,7 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
       <div className="mb-8">
         <h1 className="text-3xl mb-2">Find Artists</h1>
         <p className="text-[var(--text-muted)]">
-          Discover local artists and invite them to display at your venue
+          Discover {venueCity ? `${venueCity} ` : ''}artists and invite them to display at your venue
         </p>
       </div>
 

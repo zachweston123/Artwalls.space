@@ -17,6 +17,8 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
   const [email, setEmail] = useState('');
   const [portfolioUrl, setPortfolioUrl] = useState('');
   const [phone, setPhone] = useState('');
+  const [cityPrimary, setCityPrimary] = useState('');
+  const [citySecondary, setCitySecondary] = useState('');
   const [currentPlan, setCurrentPlan] = useState<'free' | 'starter' | 'growth' | 'pro'>('free');
 
   // Demo values for summary (would come from orders on real data)
@@ -56,11 +58,15 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
           setEmail(defaults.email || '');
           setPhone(((user.user_metadata?.phone as string) || '').trim());
           setCurrentPlan('free');
+          setCityPrimary('');
+          setCitySecondary('');
         } else {
           const row = artistRows[0] as any;
           setName(row.name || (user.user_metadata?.name as string) || 'Artist');
           setEmail(row.email || user.email || '');
           setPhone((row.phone_number as string) || ((user.user_metadata?.phone as string) || ''));
+          setCityPrimary((row.city_primary as string) || '');
+          setCitySecondary((row.city_secondary as string) || '');
           const tier = (row.subscription_tier as 'free' | 'starter' | 'growth' | 'pro') || 'free';
           setCurrentPlan(tier);
         }
@@ -91,11 +97,11 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
       // Update artists table (name only; email matches auth)
       const { error: upErr } = await supabase
         .from('artists')
-        .upsert({ id: user.id, name, email, phone_number: phone, subscription_tier: currentPlan }, { onConflict: 'id' });
+        .upsert({ id: user.id, name, email, phone_number: phone, city_primary: cityPrimary || null, city_secondary: citySecondary || null, subscription_tier: currentPlan }, { onConflict: 'id' });
       if (upErr) throw upErr;
 
       // Update metadata and email in auth
-      const { error: metaErr } = await supabase.auth.updateUser({ data: { portfolioUrl, phone }, email });
+      const { error: metaErr } = await supabase.auth.updateUser({ data: { portfolioUrl, phone, cityPrimary, citySecondary }, email });
       if (metaErr) throw metaErr;
 
       setInfo('Profile updated successfully');
@@ -198,6 +204,17 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
                   <label className="block text-sm text-[var(--text-muted)] mb-1">Phone Number</label>
                   <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]" placeholder="e.g. +15551234567" />
                   <p className="text-xs text-[var(--text-muted)] mt-1">Sale notifications will be sent to this number.</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm text-[var(--text-muted)] mb-1">Preferred City (Primary)</label>
+                    <input value={cityPrimary} onChange={(e) => setCityPrimary(e.target.value)} className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]" placeholder="e.g. Portland" />
+                    <p className="text-xs text-[var(--text-muted)] mt-1">Used to recommend venues in your city.</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-[var(--text-muted)] mb-1">Preferred City (Secondary)</label>
+                    <input value={citySecondary} onChange={(e) => setCitySecondary(e.target.value)} className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]" placeholder="e.g. Seattle" />
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm text-[var(--text-muted)] mb-1">Portfolio Website</label>

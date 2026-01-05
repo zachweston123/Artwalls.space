@@ -90,7 +90,7 @@ export default {
       }
     }
 
-    async function upsertArtist(artist: { id: string; email?: string | null; name?: string | null; role?: string; phoneNumber?: string | null; stripeAccountId?: string | null; stripeCustomerId?: string | null; subscriptionTier?: string | null; subscriptionStatus?: string | null; stripeSubscriptionId?: string | null; platformFeeBps?: number | null; }): Promise<Response> {
+    async function upsertArtist(artist: { id: string; email?: string | null; name?: string | null; role?: string; phoneNumber?: string | null; cityPrimary?: string | null; citySecondary?: string | null; stripeAccountId?: string | null; stripeCustomerId?: string | null; subscriptionTier?: string | null; subscriptionStatus?: string | null; stripeSubscriptionId?: string | null; platformFeeBps?: number | null; }): Promise<Response> {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
       const payload = {
         id: artist.id,
@@ -104,6 +104,8 @@ export default {
         subscription_status: artist.subscriptionStatus ?? 'inactive',
         stripe_subscription_id: artist.stripeSubscriptionId ?? null,
         platform_fee_bps: artist.platformFeeBps ?? null,
+        city_primary: artist.cityPrimary ?? null,
+        city_secondary: artist.citySecondary ?? null,
         updated_at: new Date().toISOString(),
       };
       const { data, error } = await supabaseAdmin.from('artists').upsert(payload, { onConflict: 'id' }).select('*').single();
@@ -111,7 +113,7 @@ export default {
       return json(data);
     }
 
-    async function upsertVenue(venue: { id: string; email?: string | null; name?: string | null; type?: string | null; phoneNumber?: string | null; stripeAccountId?: string | null; defaultVenueFeeBps?: number | null; labels?: any; suspended?: boolean | null; }): Promise<Response> {
+    async function upsertVenue(venue: { id: string; email?: string | null; name?: string | null; type?: string | null; phoneNumber?: string | null; city?: string | null; stripeAccountId?: string | null; defaultVenueFeeBps?: number | null; labels?: any; suspended?: boolean | null; }): Promise<Response> {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
       const payload = {
         id: venue.id,
@@ -119,6 +121,7 @@ export default {
         name: venue.name ?? null,
         type: venue.type ?? null,
         phone_number: venue.phoneNumber ?? null,
+        city: venue.city ?? null,
         stripe_account_id: venue.stripeAccountId ?? null,
         default_venue_fee_bps: typeof venue.defaultVenueFeeBps === 'number' ? venue.defaultVenueFeeBps : null,
         labels: venue.labels ?? undefined,
@@ -299,11 +302,32 @@ export default {
     // Public listings: venues
     if (url.pathname === '/api/venues' && method === 'GET') {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
-      const { data, error } = await supabaseAdmin
+      // Optional filters: by artistId (use artist's preferred cities) or by cities query
+      const artistId = url.searchParams.get('artistId');
+      const citiesParam = url.searchParams.get('cities');
+      let cities: string[] | null = null;
+      if (citiesParam) {
+        cities = citiesParam.split(',').map(c => c.trim()).filter(Boolean);
+      } else if (artistId) {
+        const { data: artistRow } = await supabaseAdmin
+          .from('artists')
+          .select('city_primary,city_secondary')
+          .eq('id', artistId)
+          .maybeSingle();
+        const cp = (artistRow?.city_primary || '').trim();
+        const cs = (artistRow?.city_secondary || '').trim();
+        cities = [cp, cs].filter(Boolean);
+      }
+
+      let query = supabaseAdmin
         .from('venues')
-        .select('id,name,type,labels,default_venue_fee_bps')
+        .select('id,name,type,labels,default_venue_fee_bps,city')
         .order('name', { ascending: true })
         .limit(50);
+      if (cities && cities.length > 0) {
+        query = query.in('city', cities);
+      }
+      const { data, error } = await query;
       if (error) return json({ error: error.message }, { status: 500 });
       const venues = (data || []).map(v => ({
         id: v.id,
@@ -311,6 +335,7 @@ export default {
         type: v.type,
         labels: v.labels,
         defaultVenueFeeBps: v.default_venue_fee_bps,
+        city: (v as any).city || null,
       }));
       return json({ venues });
     }
@@ -318,12 +343,18 @@ export default {
     // Public listings: artists (only show live artists)
     if (url.pathname === '/api/artists' && method === 'GET') {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
-      const { data, error } = await supabaseAdmin
+      const city = (url.searchParams.get('city') || '').trim();
+      let query = supabaseAdmin
         .from('artists')
         .select('id,name,email')
         .eq('is_live', true)
         .order('name', { ascending: true })
         .limit(50);
+      if (city) {
+        // Match either primary or secondary city
+        query = query.or(`city_primary.eq.${city},city_secondary.eq.${city}`);
+      }
+      const { data, error } = await query;
       if (error) return json({ error: error.message }, { status: 500 });
       const artists = (data || []).map(a => ({ id: a.id, name: a.name, email: a.email }));
       return json({ artists });

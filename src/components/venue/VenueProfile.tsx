@@ -55,6 +55,7 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
         labels: data.labels,
         phoneNumber: data.phoneNumber,
         email: data.email,
+        city: data.city,
       });
 
       // Optional: also backfill auth metadata so refreshes keep the same display values.
@@ -63,6 +64,7 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
           name: data.name,
           type: data.type,
           phone: data.phoneNumber,
+          city: data.city,
         },
         email: data.email,
       });
@@ -73,6 +75,7 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
         type: data.type,
         email: data.email || prev.email,
         phoneNumber: data.phoneNumber || prev.phoneNumber,
+        address: prev.address, // address remains; city stored separately
       }));
       setIsEditing(false);
     } catch (err: any) {
@@ -288,7 +291,7 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
 
       {isEditing && (
         <VenueProfileEdit
-          initialData={{ name: profile.name, type: profile.type, email: profile.email, phoneNumber: profile.phoneNumber }}
+          initialData={{ name: profile.name, type: profile.type, email: profile.email, phoneNumber: profile.phoneNumber, city: undefined }}
           onSave={handleSave}
           onCancel={() => setIsEditing(false)}
         />

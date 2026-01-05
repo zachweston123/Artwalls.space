@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { MapPin, Users, X, Image as ImageIcon } from 'lucide-react';
-import { mockVenues, mockArtworks, mockWallSpaces } from '../../data/mockData';
+import { mockArtworks, mockWallSpaces } from '../../data/mockData';
 import type { Venue } from '../../data/mockData';
+import { apiGet } from '../../lib/api';
 
 export function ArtistVenues() {
   const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null);
@@ -9,6 +10,52 @@ export function ArtistVenues() {
   const [showApplicationForm, setShowApplicationForm] = useState(false);
 
   const availableArtworks = mockArtworks.filter(a => a.status === 'available');
+  const [venues, setVenues] = useState<Array<{ id: string; name: string; type?: string | null; city?: string | null; availableSpaces?: number; wallSpaces?: number; imageUrl?: string; address?: string; description?: string }>>([]);
+
+  useEffect(() => {
+    let mounted = true;
+    async function loadRecommendedVenues() {
+      try {
+        // Fetch current artist profile to read preferred cities
+        const me = await apiGet<{ role: string; profile: { id: string; city_primary?: string | null; city_secondary?: string | null } }>(
+          '/api/profile/me'
+        );
+        const artistId = me?.profile?.id;
+        const cp = (me?.profile?.city_primary || '').trim();
+        const cs = (me?.profile?.city_secondary || '').trim();
+        let path = '/api/venues';
+        if (artistId || cp || cs) {
+          const cities = [cp, cs].filter(Boolean).join(',');
+          if (cities) {
+            path = `/api/venues?cities=${encodeURIComponent(cities)}`;
+          } else if (artistId) {
+            path = `/api/venues?artistId=${encodeURIComponent(artistId)}`;
+          }
+        }
+        const resp = await apiGet<{ venues: Array<{ id: string; name: string; type?: string | null; city?: string | null }> }>(path);
+        const vns = resp?.venues || [];
+        // Shape with demo fields for UI continuity
+        const shaped = vns.map(v => ({
+          id: v.id,
+          name: v.name,
+          type: v.type || null,
+          city: v.city || null,
+          availableSpaces: 2,
+          wallSpaces: 3,
+          imageUrl: 'https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=1200',
+          address: v.city || 'Local area',
+          description: 'Venue on Artwalls',
+        }));
+        if (mounted) setVenues(shaped);
+      } catch {
+        if (mounted) setVenues([]);
+      }
+    }
+    loadRecommendedVenues();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const handleApply = () => {
     // Mock application submission
@@ -26,7 +73,7 @@ export function ArtistVenues() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {mockVenues.map((venue) => (
+        {(venues.length ? venues : []).map((venue) => (
           <div key={venue.id} className="bg-[var(--surface-1)] rounded-xl overflow-hidden border border-[var(--border)] hover:shadow-lg transition-shadow">
             <div className="h-48 bg-[var(--surface-3)] overflow-hidden">
               <img
