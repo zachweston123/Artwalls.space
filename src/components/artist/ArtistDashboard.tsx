@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { TrendingUp, Package, DollarSign, Eye, Search, CheckCircle, XCircle } from 'lucide-react';
-import { mockArtworks, mockSales } from '../../data/mockData';
 import { PlanBadge } from '../pricing/PlanBadge';
 import { UpgradePromptCard } from '../pricing/UpgradePromptCard';
 import { ActiveDisplaysMeter } from '../pricing/ActiveDisplaysMeter';
 import type { User } from '../../App';
 import { ArtistPayoutsCard } from './ArtistPayoutsCard';
+import { apiGet } from '../../lib/api';
 
 interface ArtistDashboardProps {
   onNavigate: (page: string) => void;
@@ -15,6 +15,8 @@ interface ArtistDashboardProps {
 export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
   const [subSuccess, setSubSuccess] = useState<boolean>(false);
   const [subCancelled, setSubCancelled] = useState<boolean>(false);
+  const [artworks, setArtworks] = useState<Array<{ id: string; status: string; price?: number }>>([]);
+  const [stats, setStats] = useState<{ artworks: { total: number; active: number; sold: number; available: number }; sales: { total: number; recent30Days: number; totalEarnings: number } } | null>(null);
 
   useEffect(() => {
     try {
@@ -31,10 +33,33 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
       }
     } catch {}
   }, []);
-  const activeArtworks = mockArtworks.filter(a => a.status === 'active').length;
-  const totalArtworks = mockArtworks.length;
-  const totalEarnings = mockSales.reduce((sum, sale) => sum + sale.artistEarnings, 0);
-  const recentSales = mockSales.length;
+  useEffect(() => {
+    let isMounted = true;
+    async function loadStats() {
+      try {
+        const s = await apiGet<{ artistId: string; artworks: { total: number; active: number; sold: number; available: number }; sales: { total: number; recent30Days: number; totalEarnings: number } }>(`/api/stats/artist?artistId=${user.id}`);
+        if (!isMounted) return;
+        setStats({ artworks: s.artworks, sales: s.sales });
+      } catch {
+        // Fallback to artworks listing for minimal stats
+        try {
+          const resp = await apiGet<{ artworks: Array<{ id: string; status: string; price?: number }> }>(`/api/artworks?artistId=${user.id}`);
+          if (!isMounted) return;
+          setArtworks(resp.artworks || []);
+        } catch {
+          if (!isMounted) return;
+          setArtworks([]);
+        }
+      }
+    }
+    loadStats();
+    return () => { isMounted = false; };
+  }, [user.id]);
+
+  const activeArtworks = stats ? stats.artworks.active : artworks.filter(a => a.status === 'active').length;
+  const totalArtworks = stats ? stats.artworks.total : artworks.length;
+  const totalEarnings = stats ? stats.sales.totalEarnings : artworks.filter(a => a.status === 'sold').reduce((sum, a) => sum + (a.price || 0), 0);
+  const recentSales = stats ? stats.sales.total : artworks.filter(a => a.status === 'sold').length;
 
   const stats = [
     {

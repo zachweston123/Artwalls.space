@@ -227,16 +227,6 @@ export default function App() {
             onCancel={handleCancelAdminPassword}
           />
         )}
-        {/* Demo link to simulate QR code scan */}
-        <div className="fixed bottom-6 right-6 bg-[var(--surface-2)] rounded-lg shadow-lg p-4 border border-[var(--border)]">
-          <p className="text-sm text-[var(--text-muted)] mb-2">Demo QR Purchase Page:</p>
-          <button
-            onClick={() => setCurrentPage('purchase-1')}
-            className="text-sm text-[var(--accent)] hover:underline mb-2 block"
-          >
-            View Customer Purchase Page
-          </button>
-        </div>
       </div>
     );
   }
@@ -348,7 +338,7 @@ export default function App() {
               <VenueWallsPublic venueId={selectedVenueId || undefined} onBack={() => handleNavigate('artist-venues')} />
             )}
             {currentPage === 'artist-applications' && <ArtistApplicationsWithScheduling />}
-            {currentPage === 'artist-sales' && <ArtistSales />}
+            {currentPage === 'artist-sales' && <ArtistSales user={currentUser} />}
             {currentPage === 'artist-profile' && <ArtistProfile onNavigate={handleNavigate} />}
             {currentPage === 'artist-notifications' && <NotificationsList />}
           </>

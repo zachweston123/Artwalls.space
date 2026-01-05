@@ -99,6 +99,62 @@ export default {
 
     if (url.pathname === '/api/health') {
       return json({ ok: true });
+        // Artist stats (artworks + orders aggregates)
+        if (url.pathname === '/api/stats/artist' && method === 'GET') {
+          if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+          const artistId = url.searchParams.get('artistId');
+          if (!artistId) return json({ error: 'Missing artistId' }, { status: 400 });
+
+          // Count totals via lightweight count queries
+          const [{ count: totalArtworks }, { count: activeArtworks }, { count: soldArtworks }, { count: availableArtworks }] = await Promise.all([
+            supabaseAdmin.from('artworks').select('id', { count: 'exact', head: true }).eq('artist_id', artistId),
+            supabaseAdmin.from('artworks').select('id', { count: 'exact', head: true }).eq('artist_id', artistId).eq('status', 'active'),
+            supabaseAdmin.from('artworks').select('id', { count: 'exact', head: true }).eq('artist_id', artistId).eq('status', 'sold'),
+            supabaseAdmin.from('artworks').select('id', { count: 'exact', head: true }).eq('artist_id', artistId).eq('status', 'available'),
+          ]).then((results) => results.map((r: any) => ({ count: r.count || 0 })));
+
+          // Orders aggregates: total sales count and total artist earnings
+          const now = new Date();
+          const past30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+          // Total sales count
+          const { count: totalSales } = await supabaseAdmin
+            .from('orders')
+            .select('id', { count: 'exact', head: true })
+            .eq('artist_id', artistId);
+
+          // Recent sales count (30 days)
+          const { count: recentSales } = await supabaseAdmin
+            .from('orders')
+            .select('id', { count: 'exact', head: true })
+            .eq('artist_id', artistId)
+            .gte('created_at', past30);
+
+          // Sum artist payout cents (limited range for safety)
+          const { data: payouts, error: payoutsErr } = await supabaseAdmin
+            .from('orders')
+            .select('artist_payout_cents')
+            .eq('artist_id', artistId)
+            .order('created_at', { ascending: false })
+            .limit(1000);
+          if (payoutsErr) return json({ error: payoutsErr.message }, { status: 500 });
+          const totalArtistPayoutCents = (payouts || []).reduce((sum: number, row: any) => sum + (row.artist_payout_cents || 0), 0);
+
+          return json({
+            artistId,
+            artworks: {
+              total: totalArtworks || 0,
+              active: activeArtworks || 0,
+              available: availableArtworks || 0,
+              sold: soldArtworks || 0,
+            },
+            sales: {
+              total: totalSales || 0,
+              recent30Days: recentSales || 0,
+              totalEarnings: Math.round(totalArtistPayoutCents / 100),
+            },
+          });
+        }
     }
 
     // Env check: verify required configuration without leaking secrets
@@ -227,6 +283,19 @@ export default {
       return json({ venues });
     }
 
+    // Public listings: artists
+    if (url.pathname === '/api/artists' && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const { data, error } = await supabaseAdmin
+        .from('artists')
+        .select('id,name,email')
+        .order('name', { ascending: true })
+        .limit(50);
+      if (error) return json({ error: error.message }, { status: 500 });
+      const artists = (data || []).map(a => ({ id: a.id, name: a.name, email: a.email }));
+      return json({ artists });
+    }
+
     // Public: single venue
     if (url.pathname.startsWith('/api/venues/') && method === 'GET') {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
@@ -341,6 +410,37 @@ export default {
         description: data.description,
       };
       return json(shaped, { status: 201 });
+    }
+
+    // Upsert artist profile (used by app bootstrap)
+    if (url.pathname === '/api/artists' && method === 'POST') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const payload = await request.json().catch(() => ({}));
+      const id = String(payload?.artistId || '').trim();
+      if (!id) return json({ error: 'Missing artistId' }, { status: 400 });
+      const resp = await upsertArtist({
+        id,
+        email: payload?.email || null,
+        name: payload?.name || null,
+        role: 'artist',
+      });
+      return resp;
+    }
+
+    // Upsert venue profile (used by app bootstrap)
+    if (url.pathname === '/api/venues' && method === 'POST') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const payload = await request.json().catch(() => ({}));
+      const id = String(payload?.venueId || '').trim();
+      if (!id) return json({ error: 'Missing venueId' }, { status: 400 });
+      const resp = await upsertVenue({
+        id,
+        email: payload?.email || null,
+        name: payload?.name || null,
+        type: payload?.type || null,
+        defaultVenueFeeBps: typeof payload?.defaultVenueFeeBps === 'number' ? payload.defaultVenueFeeBps : 1000,
+      });
+      return resp;
     }
 
     // -----------------------------
@@ -564,6 +664,31 @@ export default {
         const message = err instanceof Error ? err.message : 'Webhook error';
         return new Response(message, { status: 400 });
       }
+    }
+
+    // Artist sales history
+    if (url.pathname === '/api/sales/artist' && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const artistId = url.searchParams.get('artistId');
+      if (!artistId) return json({ error: 'Missing artistId' }, { status: 400 });
+      const { data, error } = await supabaseAdmin
+        .from('orders')
+        .select('id,amount_cents,currency,artist_payout_cents,venue_payout_cents,created_at,artwork:artworks(id,title,image_url,venue_name),venue:venues(id,name)')
+        .eq('artist_id', artistId)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (error) return json({ error: error.message }, { status: 500 });
+      const sales = (data || []).map((o: any) => ({
+        id: o.id,
+        price: Math.round((o.amount_cents || 0) / 100),
+        currency: o.currency || 'usd',
+        artistEarnings: Math.round((o.artist_payout_cents || 0) / 100),
+        venueName: o.artwork?.venue_name || o.venue?.name || null,
+        artworkTitle: o.artwork?.title || 'Artwork',
+        artworkImage: o.artwork?.image_url || null,
+        saleDate: o.created_at,
+      }));
+      return json({ sales });
     }
 
     return new Response('Not found', { status: 404 });

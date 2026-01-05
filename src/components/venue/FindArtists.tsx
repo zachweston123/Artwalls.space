@@ -27,49 +27,7 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
     'Division', 'Sellwood', 'St. Johns', 'Hollywood'
   ];
 
-  // Mock artists data (fallback)
-  const mockArtists = [
-    {
-      id: '1',
-      name: 'Sarah Chen',
-      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400',
-      location: 'Downtown, Portland',
-      bio: 'Contemporary mixed media artist exploring urban life and human connection through layered, textured pieces.',
-      artTypes: ['Painter', 'Mixed Media', 'Digital'],
-      openToNew: true,
-      portfolioCount: 24,
-    },
-    {
-      id: '2',
-      name: 'Marcus Rodriguez',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
-      location: 'Pearl District, Portland',
-      bio: 'Street photographer capturing the raw energy of urban spaces. Bold compositions and dramatic lighting.',
-      artTypes: ['Photographer', 'Digital'],
-      openToNew: true,
-      portfolioCount: 47,
-    },
-    {
-      id: '3',
-      name: 'Emma Liu',
-      avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400',
-      location: 'Alberta Arts, Portland',
-      bio: 'Traditional painter working in oils. Landscapes and botanical studies with contemporary sensibilities.',
-      artTypes: ['Painter', 'Illustrator'],
-      openToNew: false,
-      portfolioCount: 31,
-    },
-    {
-      id: '4',
-      name: 'Jordan Taylor',
-      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400',
-      location: 'Hawthorne, Portland',
-      bio: 'Printmaker and collage artist. I create bold, graphic works inspired by nature and pop culture.',
-      artTypes: ['Printmaker', 'Collage', 'Mixed Media'],
-      openToNew: true,
-      portfolioCount: 19,
-    },
-  ];
+  // Live artists data
 
   const toggleArtType = (type: string) => {
     setFilters(prev => ({
@@ -95,30 +53,23 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
     let isMounted = true;
     async function loadArtists() {
       try {
-        const apiArtists = await apiGet<Array<{ id: string; name?: string | null; email?: string | null }>>(
+        const resp = await apiGet<{ artists: Array<{ id: string; name?: string | null; email?: string | null }> }>(
           '/api/artists'
         );
-
-        const merged = (apiArtists || []).map((a) => {
-          const fallback = mockArtists.find((m) => m.name === a.name) || null;
-          return {
-            id: a.id,
-            name: a.name || fallback?.name || 'Artist',
-            avatar:
-              fallback?.avatar ||
-              'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400',
-            location: fallback?.location || 'Portland',
-            bio: fallback?.bio || 'Artist on Artwalls',
-            artTypes: fallback?.artTypes || ['Painter'],
-            openToNew: true,
-            portfolioCount: fallback?.portfolioCount || 0,
-          };
-        });
-
-        const next = merged.length > 0 ? merged : mockArtists;
-        if (isMounted) setArtists(next);
+        const apiArtists = resp?.artists || [];
+        const shaped = apiArtists.map((a) => ({
+          id: a.id,
+          name: a.name || 'Artist',
+          avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400',
+          location: 'Portland',
+          bio: 'Artist on Artwalls',
+          artTypes: ['Painter'],
+          openToNew: true,
+          portfolioCount: 0,
+        }));
+        if (isMounted) setArtists(shaped);
       } catch {
-        if (isMounted) setArtists(mockArtists);
+        if (isMounted) setArtists([]);
       }
     }
 
@@ -131,7 +82,7 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
   const hasActiveFilters = filters.artTypes.length > 0 || filters.openToNew || filters.neighborhood || searchQuery;
 
   // Filter artists based on criteria
-  const filteredArtists = (artists.length ? artists : mockArtists).filter(artist => {
+  const filteredArtists = (artists.length ? artists : []).filter(artist => {
     if (searchQuery && !artist.name.toLowerCase().includes(searchQuery.toLowerCase())) {
       return false;
     }
