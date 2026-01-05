@@ -101,6 +101,21 @@ export default {
       return json({ ok: true });
     }
 
+    // Env check: verify required configuration without leaking secrets
+    if (url.pathname === '/api/env/check' && method === 'GET') {
+      return json({
+        ok: true,
+        vars: {
+          STRIPE_WEBHOOK_SECRET: Boolean(env.STRIPE_WEBHOOK_SECRET),
+          STRIPE_SECRET_KEY: Boolean(env.STRIPE_SECRET_KEY),
+          SUPABASE_URL: Boolean(env.SUPABASE_URL),
+          SUPABASE_SERVICE_ROLE_KEY: Boolean(env.SUPABASE_SERVICE_ROLE_KEY),
+          API_BASE_URL: env.API_BASE_URL || null,
+          PAGES_ORIGIN: env.PAGES_ORIGIN || 'https://artwalls.space',
+        },
+      });
+    }
+
     // Demo check: verify seeded data is accessible in Supabase
     if (url.pathname === '/api/demo/check' && method === 'GET') {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
