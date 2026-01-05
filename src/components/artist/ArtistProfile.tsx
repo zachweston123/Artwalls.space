@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { User, Mail, Link as LinkIcon, DollarSign, Edit, Save, X } from 'lucide-react';
+import { User, Mail, Phone, Link as LinkIcon, DollarSign, Edit, Save, X } from 'lucide-react';
 import { PlanBadge } from '../pricing/PlanBadge';
 
 interface ArtistProfileProps {
@@ -16,6 +16,7 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [portfolioUrl, setPortfolioUrl] = useState('');
+  const [phone, setPhone] = useState('');
   const [currentPlan, setCurrentPlan] = useState<'free' | 'starter' | 'growth' | 'pro'>('free');
 
   // Demo values for summary (would come from orders on real data)
@@ -53,11 +54,13 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
           if (upErr) throw upErr;
           setName(defaults.name || 'Artist');
           setEmail(defaults.email || '');
+          setPhone(((user.user_metadata?.phone as string) || '').trim());
           setCurrentPlan('free');
         } else {
           const row = artistRows[0] as any;
           setName(row.name || (user.user_metadata?.name as string) || 'Artist');
           setEmail(row.email || user.email || '');
+          setPhone((row.phone_number as string) || ((user.user_metadata?.phone as string) || ''));
           const tier = (row.subscription_tier as 'free' | 'starter' | 'growth' | 'pro') || 'free';
           setCurrentPlan(tier);
         }
@@ -88,11 +91,11 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
       // Update artists table (name only; email matches auth)
       const { error: upErr } = await supabase
         .from('artists')
-        .upsert({ id: user.id, name, email, subscription_tier: currentPlan }, { onConflict: 'id' });
+        .upsert({ id: user.id, name, email, phone_number: phone, subscription_tier: currentPlan }, { onConflict: 'id' });
       if (upErr) throw upErr;
 
-      // Update portfolio URL in auth metadata
-      const { error: metaErr } = await supabase.auth.updateUser({ data: { portfolioUrl } });
+      // Update metadata and email in auth
+      const { error: metaErr } = await supabase.auth.updateUser({ data: { portfolioUrl, phone }, email });
       if (metaErr) throw metaErr;
 
       setInfo('Profile updated successfully');
@@ -160,6 +163,14 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
                 </div>
 
                 <div className="flex items-start gap-3 p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg">
+                  <Phone className="w-5 h-5 text-[var(--text-muted)] mt-0.5" />
+                  <div className="flex-1">
+                    <label className="block text-sm text-[var(--text-muted)] mb-1">Phone Number</label>
+                    <p className="text-[var(--text)]">{phone || 'Not set'}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3 p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg">
                   <LinkIcon className="w-5 h-5 text-[var(--text-muted)] mt-0.5" />
                   <div className="flex-1">
                     <label className="block text-sm text-[var(--text-muted)] mb-1">Portfolio Website</label>
@@ -178,6 +189,15 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
                 <div>
                   <label className="block text-sm text-[var(--text-muted)] mb-1">Display Name</label>
                   <input value={name} onChange={(e) => setName(e.target.value)} className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]" placeholder="Your name" />
+                </div>
+                <div>
+                  <label className="block text-sm text-[var(--text-muted)] mb-1">Email Address</label>
+                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]" placeholder="your@email.com" />
+                </div>
+                <div>
+                  <label className="block text-sm text-[var(--text-muted)] mb-1">Phone Number</label>
+                  <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]" placeholder="e.g. +15551234567" />
+                  <p className="text-xs text-[var(--text-muted)] mt-1">Sale notifications will be sent to this number.</p>
                 </div>
                 <div>
                   <label className="block text-sm text-[var(--text-muted)] mb-1">Portfolio Website</label>

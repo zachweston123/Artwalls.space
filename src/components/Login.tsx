@@ -12,6 +12,7 @@ export function Login({ onLogin }: LoginProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [phone, setPhone] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -34,6 +35,12 @@ export function Login({ onLogin }: LoginProps) {
       const safeName = name.trim();
 
       if (isSignup) {
+        const phoneTrim = phone.trim();
+        if (!phoneTrim) {
+          setErrorMessage('Phone number is required.');
+          setIsLoading(false);
+          return;
+        }
         const { data, error } = await supabase.auth.signUp({
           email: email.trim(),
           password,
@@ -41,6 +48,7 @@ export function Login({ onLogin }: LoginProps) {
             data: {
               role: selectedRole,
               name: safeName || null,
+              phone: phoneTrim,
             },
           },
         });
@@ -60,7 +68,7 @@ export function Login({ onLogin }: LoginProps) {
         // Provision a profile in Supabase (artist/venue)
         try {
           const { apiPost } = await import('../lib/api');
-          await apiPost('/api/profile/provision', {});
+          await apiPost('/api/profile/provision', { phoneNumber: phoneTrim });
         } catch (e) {
           // non-blocking: log and continue
           console.warn('Profile provision failed', e);
@@ -230,6 +238,23 @@ export function Login({ onLogin }: LoginProps) {
                   }
                   placeholder={selectedRole === 'artist' ? 'Your name' : 'Your venue name'}
                 />
+              </div>
+            )}
+
+            {isSignup && (
+              <div>
+                <label className="block text-sm text-[var(--text-muted)] mb-1">Phone Number</label>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className={
+                    "w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 " +
+                    (selectedRole === 'artist' ? 'focus:ring-[var(--focus)]' : 'focus:ring-[var(--green)]')
+                  }
+                  placeholder="e.g. +15551234567"
+                />
+                <p className="text-xs text-[var(--text-muted)] mt-1">We’ll send sale notifications to this number.</p>
               </div>
             )}
 

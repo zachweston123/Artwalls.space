@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Store, Mail, MapPin, Clock, DollarSign, Edit, Instagram } from 'lucide-react';
+import { Store, Mail, Phone, MapPin, Clock, DollarSign, Edit, Instagram } from 'lucide-react';
 import { VenueProfileEdit, type VenueProfileData } from './VenueProfileEdit';
 import { apiPost } from '../../lib/api';
 import { supabase } from '../../lib/supabase';
@@ -17,6 +18,7 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
     name: 'Brew & Palette Café',
     type: 'Coffee Shop',
     email: 'contact@brewpalette.com',
+    phoneNumber: '',
     address: '123 Arts District, Portland, OR 97209',
     instagram: '@brewpalettecafe',
     totalEarnings: 487.5,
@@ -39,6 +41,7 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
         email: user.email || prev.email,
         name: user.user_metadata?.name || prev.name,
         type: user.user_metadata?.type || prev.type,
+        phoneNumber: (user.user_metadata?.phone as string | undefined) || prev.phoneNumber,
       }));
     });
   }, []);
@@ -50,6 +53,8 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
         name: data.name,
         type: data.type,
         labels: data.labels,
+        phoneNumber: data.phoneNumber,
+        email: data.email,
       });
 
       // Optional: also backfill auth metadata so refreshes keep the same display values.
@@ -57,13 +62,17 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
         data: {
           name: data.name,
           type: data.type,
+          phone: data.phoneNumber,
         },
+        email: data.email,
       });
 
       setProfile((prev) => ({
         ...prev,
         name: data.name,
         type: data.type,
+        email: data.email || prev.email,
+        phoneNumber: data.phoneNumber || prev.phoneNumber,
       }));
       setIsEditing(false);
     } catch (err: any) {
@@ -123,6 +132,14 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
                 <div className="flex-1">
                   <label className="block text-sm text-[var(--text-muted)] mb-1">Contact Email</label>
                   <p className="text-[var(--text)]">{profile.email}</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 p-4 bg-[var(--surface-1)] rounded-lg border border-[var(--border)]">
+                <Phone className="w-5 h-5 text-[var(--text-muted)] mt-0.5" />
+                <div className="flex-1">
+                  <label className="block text-sm text-[var(--text-muted)] mb-1">Phone Number</label>
+                  <p className="text-[var(--text)]">{profile.phoneNumber || 'Not set'}</p>
                 </div>
               </div>
 
@@ -271,7 +288,7 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
 
       {isEditing && (
         <VenueProfileEdit
-          initialData={{ name: profile.name, type: profile.type }}
+          initialData={{ name: profile.name, type: profile.type, email: profile.email, phoneNumber: profile.phoneNumber }}
           onSave={handleSave}
           onCancel={() => setIsEditing(false)}
         />

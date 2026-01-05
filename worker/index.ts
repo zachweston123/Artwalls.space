@@ -9,6 +9,9 @@ type Env = {
   SUPABASE_URL?: string;
   SUPABASE_SERVICE_ROLE_KEY?: string;
   PAGES_ORIGIN?: string;
+  TWILIO_ACCOUNT_SID?: string;
+  TWILIO_AUTH_TOKEN?: string;
+  TWILIO_FROM_NUMBER?: string;
 };
 
 export default {
@@ -87,13 +90,14 @@ export default {
       }
     }
 
-    async function upsertArtist(artist: { id: string; email?: string | null; name?: string | null; role?: string; stripeAccountId?: string | null; stripeCustomerId?: string | null; subscriptionTier?: string | null; subscriptionStatus?: string | null; stripeSubscriptionId?: string | null; platformFeeBps?: number | null; }): Promise<Response> {
+    async function upsertArtist(artist: { id: string; email?: string | null; name?: string | null; role?: string; phoneNumber?: string | null; stripeAccountId?: string | null; stripeCustomerId?: string | null; subscriptionTier?: string | null; subscriptionStatus?: string | null; stripeSubscriptionId?: string | null; platformFeeBps?: number | null; }): Promise<Response> {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
       const payload = {
         id: artist.id,
         email: artist.email ?? null,
         name: artist.name ?? null,
         role: artist.role ?? 'artist',
+        phone_number: artist.phoneNumber ?? null,
         stripe_account_id: artist.stripeAccountId ?? null,
         stripe_customer_id: artist.stripeCustomerId ?? null,
         subscription_tier: artist.subscriptionTier ?? 'free',
@@ -107,13 +111,14 @@ export default {
       return json(data);
     }
 
-    async function upsertVenue(venue: { id: string; email?: string | null; name?: string | null; type?: string | null; stripeAccountId?: string | null; defaultVenueFeeBps?: number | null; labels?: any; suspended?: boolean | null; }): Promise<Response> {
+    async function upsertVenue(venue: { id: string; email?: string | null; name?: string | null; type?: string | null; phoneNumber?: string | null; stripeAccountId?: string | null; defaultVenueFeeBps?: number | null; labels?: any; suspended?: boolean | null; }): Promise<Response> {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
       const payload = {
         id: venue.id,
         email: venue.email ?? null,
         name: venue.name ?? null,
         type: venue.type ?? null,
+        phone_number: venue.phoneNumber ?? null,
         stripe_account_id: venue.stripeAccountId ?? null,
         default_venue_fee_bps: typeof venue.defaultVenueFeeBps === 'number' ? venue.defaultVenueFeeBps : null,
         labels: venue.labels ?? undefined,
@@ -246,6 +251,7 @@ export default {
 
       const role = (user.user_metadata?.role as string) || 'artist';
       const name = (user.user_metadata?.name as string | undefined) || null;
+      const phone = (user.user_metadata?.phone as string | undefined) || null;
 
       if (role === 'venue') {
         const { data: venue } = await supabaseAdmin
@@ -258,6 +264,7 @@ export default {
           email: user.email ?? null,
           name,
           type: user.user_metadata?.type ?? null,
+          phoneNumber: phone,
           defaultVenueFeeBps: 1000,
         });
         return updated;
@@ -268,6 +275,7 @@ export default {
         email: user.email ?? null,
         name,
         role: 'artist',
+        phoneNumber: phone,
       });
       return updated;
     }
@@ -486,6 +494,7 @@ export default {
         email: payload?.email || null,
         name: payload?.name || null,
         role: 'artist',
+        phoneNumber: payload?.phoneNumber || null,
       });
       return resp;
     }
@@ -501,6 +510,7 @@ export default {
         email: payload?.email || null,
         name: payload?.name || null,
         type: payload?.type || null,
+        phoneNumber: payload?.phoneNumber || null,
         defaultVenueFeeBps: typeof payload?.defaultVenueFeeBps === 'number' ? payload.defaultVenueFeeBps : 1000,
       });
       return resp;
@@ -545,7 +555,7 @@ export default {
       if (!user) return json({ error: 'Missing or invalid Authorization bearer token (artist required)' }, { status: 401 });
 
       // Ensure DB record exists
-      await upsertArtist({ id: user.id, email: user.email ?? null, name: user.user_metadata?.name ?? null, role: 'artist' });
+      await upsertArtist({ id: user.id, email: user.email ?? null, name: user.user_metadata?.name ?? null, role: 'artist', phoneNumber: (user.user_metadata?.phone as string | undefined) || null });
 
       // Create Stripe account
       const body = toForm({
@@ -633,6 +643,7 @@ export default {
       // Fetch artist record
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
       const { data: artist } = await supabaseAdmin.from('artists').select('*').eq('id', user.id).maybeSingle();
+      if (!artist?.phone_number) return json({ error: 'Phone number required. Please add your phone to your profile.' }, { status: 400 });
       if (!artist?.stripe_account_id) return json({ error: 'Artist has no stripeAccountId yet. Call /create-account first.' }, { status: 400 });
 
       const appUrl = 'https://artwalls.space';
@@ -651,6 +662,7 @@ export default {
       if (!user) return json({ error: 'Missing or invalid Authorization bearer token (artist required)' }, { status: 401 });
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
       const { data: artist } = await supabaseAdmin.from('artists').select('*').eq('id', user.id).maybeSingle();
+      if (!artist?.phone_number) return json({ error: 'Phone number required. Please add your phone to your profile.' }, { status: 400 });
       if (!artist?.stripe_account_id) return json({ error: 'Artist has no stripeAccountId yet.' }, { status: 400 });
       const body = toForm({ account: artist.stripe_account_id });
       const resp = await stripeFetch('/v1/accounts/create_login_link', { method: 'POST', body });
@@ -683,7 +695,7 @@ export default {
     if (url.pathname === '/api/stripe/connect/venue/create-account' && method === 'POST') {
       const user = await requireVenue(request);
       if (!user) return json({ error: 'Missing or invalid Authorization bearer token (venue required)' }, { status: 401 });
-      await upsertVenue({ id: user.id, email: user.email ?? null, name: user.user_metadata?.name ?? null, type: user.user_metadata?.type ?? null, defaultVenueFeeBps: 1000 });
+      await upsertVenue({ id: user.id, email: user.email ?? null, name: user.user_metadata?.name ?? null, type: user.user_metadata?.type ?? null, phoneNumber: (user.user_metadata?.phone as string | undefined) || null, defaultVenueFeeBps: 1000 });
       const body = toForm({
         type: 'express',
         email: user.email ?? undefined,
@@ -704,6 +716,7 @@ export default {
       if (!user) return json({ error: 'Missing or invalid Authorization bearer token (venue required)' }, { status: 401 });
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
       const { data: venue } = await supabaseAdmin.from('venues').select('*').eq('id', user.id).maybeSingle();
+      if (!venue?.phone_number) return json({ error: 'Phone number required. Please add your phone to your profile.' }, { status: 400 });
       if (!venue?.stripe_account_id) return json({ error: 'Venue has no stripeAccountId yet. Call /create-account first.' }, { status: 400 });
       const appUrl = 'https://artwalls.space';
       const refresh_url = `${appUrl}/#/venue-dashboard`;
@@ -721,7 +734,33 @@ export default {
       if (!user) return json({ error: 'Missing or invalid Authorization bearer token (venue required)' }, { status: 401 });
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
       const { data: venue } = await supabaseAdmin.from('venues').select('*').eq('id', user.id).maybeSingle();
+      if (!venue?.phone_number) return json({ error: 'Phone number required. Please add your phone to your profile.' }, { status: 400 });
       if (!venue?.stripe_account_id) return json({ error: 'Venue has no stripeAccountId yet.' }, { status: 400 });
+          // Twilio SMS helper
+          async function sendSms(to: string, body: string): Promise<void> {
+            const sid = env.TWILIO_ACCOUNT_SID || '';
+            const token = env.TWILIO_AUTH_TOKEN || '';
+            const from = env.TWILIO_FROM_NUMBER || '';
+            if (!sid || !token || !from || !to) return;
+            const auth = btoa(`${sid}:${token}`);
+            const form = new URLSearchParams();
+            form.set('To', to);
+            form.set('From', from);
+            form.set('Body', body);
+            try {
+              const resp = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
+                method: 'POST',
+                headers: { 'Authorization': `Basic ${auth}` },
+                body: form,
+              });
+              if (!resp.ok) {
+                const t = await resp.text();
+                console.error('Twilio SMS failed', resp.status, t);
+              }
+            } catch (e) {
+              console.error('Twilio SMS error', e instanceof Error ? e.message : e);
+            }
+          }
       const body = toForm({ account: venue.stripe_account_id });
       const resp = await stripeFetch('/v1/accounts/create_login_link', { method: 'POST', body });
       const json = await resp.json();
@@ -813,13 +852,13 @@ export default {
 
                 const { data: artist } = await supabaseAdmin
                   .from('artists')
-                  .select('stripe_account_id,platform_fee_bps')
+                  .select('stripe_account_id,platform_fee_bps,phone_number')
                   .eq('id', art.artist_id)
                   .maybeSingle();
 
                 const { data: venue } = await supabaseAdmin
                   .from('venues')
-                  .select('stripe_account_id,default_venue_fee_bps')
+                  .select('stripe_account_id,default_venue_fee_bps,phone_number')
                   .eq('id', art.venue_id)
                   .maybeSingle();
 
@@ -901,6 +940,18 @@ export default {
                     await supabaseAdmin.from('notifications').insert(msgs);
                   } catch (e) {
                     console.error('Notifications insert failed', e instanceof Error ? e.message : e);
+                  }
+                  // SMS alerts (best-effort)
+                  try {
+                    const priceStr = `$${Math.round(amountTotal / 100)}`;
+                    if (artist?.phone_number) {
+                      await sendSms(artist.phone_number, `Artwalls: Your artwork "${art.title}" sold for ${priceStr}.`);
+                    }
+                    if (venue?.phone_number) {
+                      await sendSms(venue.phone_number, `Artwalls: Artwork "${art.title}" sold for ${priceStr} at your venue.`);
+                    }
+                  } catch (e) {
+                    console.error('SMS send failed', e instanceof Error ? e.message : e);
                   }
                   // Mark artwork as sold
                   try {

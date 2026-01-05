@@ -16,6 +16,8 @@ export interface VenueProfileData {
   labels: string[];
   foundedYear: number;
   coverPhoto?: string;
+  email?: string;
+  phoneNumber?: string;
 }
 
 export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfileEditProps) {
@@ -28,6 +30,8 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
     labels: initialData?.labels ?? ['Locally owned', 'LGBTQ+ friendly', 'Dog-friendly', 'Student-friendly'],
     foundedYear: initialData?.foundedYear ?? 2016,
     coverPhoto: initialData?.coverPhoto ?? 'https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=1200',
+    email: initialData?.email ?? '',
+    phoneNumber: initialData?.phoneNumber ?? '',
   });
 
   const venueTypes = [
@@ -121,6 +125,31 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
               placeholder="Your venue name"
               required
             />
+          </div>
+
+          {/* Contact Email */}
+          <div>
+            <label className="block text-sm text-[var(--text-muted)] mb-2">Contact Email</label>
+            <input
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
+              placeholder="you@venue.com"
+            />
+          </div>
+
+          {/* Phone Number */}
+          <div>
+            <label className="block text-sm text-[var(--text-muted)] mb-2">Phone Number</label>
+            <input
+              type="tel"
+              value={formData.phoneNumber}
+              onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+              className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
+              placeholder="e.g. +15551234567"
+            />
+            <p className="text-xs text-[var(--text-muted)] mt-1">Sale notifications will be sent to this number.</p>
           </div>
 
           {/* Venue Type */}

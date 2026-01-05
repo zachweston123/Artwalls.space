@@ -23,3 +23,7 @@ SUPABASE_URL = "https://twclqgysvpefufpnmjcl.supabase.co"
 PAGES_ORIGIN = "https://artwalls.space"
 # Set this in Cloudflare Worker secrets: wrangler secret put SUPABASE_SERVICE_ROLE_KEY
 # Set this in Cloudflare Worker secrets: wrangler secret put STRIPE_SECRET_KEY
+ # Twilio SMS configuration (set via secrets)
+ # Set: wrangler secret put TWILIO_ACCOUNT_SID
+ # Set: wrangler secret put TWILIO_AUTH_TOKEN
+ # Set: wrangler secret put TWILIO_FROM_NUMBER
