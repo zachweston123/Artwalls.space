@@ -50,6 +50,7 @@
           "sonner": "^2.0.3",
           "tailwind-merge": "*",
           "vaul": "^1.1.2"
+      , "qrcode": "^1.5.3"
       },
       "devDependencies": {
           "@types/node": "^20.10.0",

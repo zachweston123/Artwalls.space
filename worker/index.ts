@@ -1,5 +1,6 @@
 import { verifyAndParseStripeEvent } from './stripeWebhook';
 import { createClient } from '@supabase/supabase-js';
+import QRCode from 'qrcode';
 
 type Env = {
   STRIPE_WEBHOOK_SECRET: string;
@@ -39,6 +40,33 @@ export default {
       headers.set('Vary', 'Origin');
       const body = JSON.stringify(obj);
       return new Response(body, { status: init?.status ?? 200, headers });
+    }
+
+    async function generateQrSvg(data: string, size = 300): Promise<string> {
+      try {
+        const svg = await QRCode.toString(data, { type: 'svg', width: size, margin: 0 });
+        return svg;
+      } catch {
+        const modules = 29; // fallback grid
+        const cell = Math.floor(size / modules);
+        const padding = Math.floor((size - modules * cell) / 2);
+        let hash = 0;
+        for (let i = 0; i < data.length; i++) hash = (hash * 31 + data.charCodeAt(i)) >>> 0;
+        let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><rect width="100%" height="100%" fill="#fff"/>`;
+        for (let y = 0; y < modules; y++) {
+          for (let x = 0; x < modules; x++) {
+            hash = (hash * 1103515245 + 12345) & 0x7fffffff;
+            const on = (hash & 1) === 1;
+            if (on) {
+              const rx = padding + x * cell;
+              const ry = padding + y * cell;
+              svg += `<rect x="${rx}" y="${ry}" width="${cell}" height="${cell}" fill="#000"/>`;
+            }
+          }
+        }
+        svg += `</svg>`;
+        return svg;
+      }
     }
 
     // Initialize Supabase Admin client (optional endpoints)
@@ -99,62 +127,6 @@ export default {
 
     if (url.pathname === '/api/health') {
       return json({ ok: true });
-        // Artist stats (artworks + orders aggregates)
-        if (url.pathname === '/api/stats/artist' && method === 'GET') {
-          if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
-          const artistId = url.searchParams.get('artistId');
-          if (!artistId) return json({ error: 'Missing artistId' }, { status: 400 });
-
-          // Count totals via lightweight count queries
-          const [{ count: totalArtworks }, { count: activeArtworks }, { count: soldArtworks }, { count: availableArtworks }] = await Promise.all([
-            supabaseAdmin.from('artworks').select('id', { count: 'exact', head: true }).eq('artist_id', artistId),
-            supabaseAdmin.from('artworks').select('id', { count: 'exact', head: true }).eq('artist_id', artistId).eq('status', 'active'),
-            supabaseAdmin.from('artworks').select('id', { count: 'exact', head: true }).eq('artist_id', artistId).eq('status', 'sold'),
-            supabaseAdmin.from('artworks').select('id', { count: 'exact', head: true }).eq('artist_id', artistId).eq('status', 'available'),
-          ]).then((results) => results.map((r: any) => ({ count: r.count || 0 })));
-
-          // Orders aggregates: total sales count and total artist earnings
-          const now = new Date();
-          const past30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
-
-          // Total sales count
-          const { count: totalSales } = await supabaseAdmin
-            .from('orders')
-            .select('id', { count: 'exact', head: true })
-            .eq('artist_id', artistId);
-
-          // Recent sales count (30 days)
-          const { count: recentSales } = await supabaseAdmin
-            .from('orders')
-            .select('id', { count: 'exact', head: true })
-            .eq('artist_id', artistId)
-            .gte('created_at', past30);
-
-          // Sum artist payout cents (limited range for safety)
-          const { data: payouts, error: payoutsErr } = await supabaseAdmin
-            .from('orders')
-            .select('artist_payout_cents')
-            .eq('artist_id', artistId)
-            .order('created_at', { ascending: false })
-            .limit(1000);
-          if (payoutsErr) return json({ error: payoutsErr.message }, { status: 500 });
-          const totalArtistPayoutCents = (payouts || []).reduce((sum: number, row: any) => sum + (row.artist_payout_cents || 0), 0);
-
-          return json({
-            artistId,
-            artworks: {
-              total: totalArtworks || 0,
-              active: activeArtworks || 0,
-              available: availableArtworks || 0,
-              sold: soldArtworks || 0,
-            },
-            sales: {
-              total: totalSales || 0,
-              recent30Days: recentSales || 0,
-              totalEarnings: Math.round(totalArtistPayoutCents / 100),
-            },
-          });
-        }
     }
 
     // Env check: verify required configuration without leaking secrets
@@ -168,6 +140,58 @@ export default {
           SUPABASE_SERVICE_ROLE_KEY: Boolean(env.SUPABASE_SERVICE_ROLE_KEY),
           API_BASE_URL: env.API_BASE_URL || null,
           PAGES_ORIGIN: env.PAGES_ORIGIN || 'https://artwalls.space',
+        },
+      });
+    }
+
+    // Artist stats (artworks + orders aggregates)
+    if (url.pathname === '/api/stats/artist' && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const artistId = url.searchParams.get('artistId');
+      if (!artistId) return json({ error: 'Missing artistId' }, { status: 400 });
+
+      const [{ count: totalArtworks }, { count: activeArtworks }, { count: soldArtworks }, { count: availableArtworks }] = await Promise.all([
+        supabaseAdmin.from('artworks').select('id', { count: 'exact', head: true }).eq('artist_id', artistId),
+        supabaseAdmin.from('artworks').select('id', { count: 'exact', head: true }).eq('artist_id', artistId).eq('status', 'active'),
+        supabaseAdmin.from('artworks').select('id', { count: 'exact', head: true }).eq('artist_id', artistId).eq('status', 'sold'),
+        supabaseAdmin.from('artworks').select('id', { count: 'exact', head: true }).eq('artist_id', artistId).eq('status', 'available'),
+      ]).then((results) => results.map((r: any) => ({ count: r.count || 0 })));
+
+      const now = new Date();
+      const past30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+      const { count: totalSales } = await supabaseAdmin
+        .from('orders')
+        .select('id', { count: 'exact', head: true })
+        .eq('artist_id', artistId);
+
+      const { count: recentSales } = await supabaseAdmin
+        .from('orders')
+        .select('id', { count: 'exact', head: true })
+        .eq('artist_id', artistId)
+        .gte('created_at', past30);
+
+      const { data: payouts, error: payoutsErr } = await supabaseAdmin
+        .from('orders')
+        .select('artist_payout_cents')
+        .eq('artist_id', artistId)
+        .order('created_at', { ascending: false })
+        .limit(1000);
+      if (payoutsErr) return json({ error: payoutsErr.message }, { status: 500 });
+      const totalArtistPayoutCents = (payouts || []).reduce((sum: number, row: any) => sum + (row.artist_payout_cents || 0), 0);
+
+      return json({
+        artistId,
+        artworks: {
+          total: totalArtworks || 0,
+          active: activeArtworks || 0,
+          available: availableArtworks || 0,
+          sold: soldArtworks || 0,
+        },
+        sales: {
+          total: totalSales || 0,
+          recent30Days: recentSales || 0,
+          totalEarnings: Math.round(totalArtistPayoutCents / 100),
         },
       });
     }
@@ -352,7 +376,7 @@ export default {
       if (!id) return json({ error: 'Missing artwork id' }, { status: 400 });
       const { data, error } = await supabaseAdmin
         .from('artworks')
-        .select('id,title,status,price_cents,currency,image_url,artist_name,venue_name,description')
+        .select('id,title,status,price_cents,currency,image_url,artist_name,venue_name,description,purchase_url,qr_svg')
         .eq('id', id)
         .maybeSingle();
       if (error) return json({ error: error.message }, { status: 500 });
@@ -367,6 +391,8 @@ export default {
         artistName: data.artist_name,
         venueName: data.venue_name,
         description: data.description,
+        purchaseUrl: data.purchase_url || null,
+        qrSvg: data.qr_svg || null,
       };
       return json(artwork);
     }
@@ -377,8 +403,11 @@ export default {
       const id = parts[3];
       if (!id) return json({ error: 'Missing artwork id' }, { status: 400 });
       const purchaseUrl = `${allowOrigin}/#/purchase-${id}`;
-      const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(purchaseUrl)}`;
-      return json({ purchaseUrl, qrImageUrl });
+      const qrSvg = await generateQrSvg(purchaseUrl, 300);
+      if (supabaseAdmin) {
+        await supabaseAdmin.from('artworks').update({ purchase_url: purchaseUrl, qr_svg: qrSvg, updated_at: new Date().toISOString() }).eq('id', id);
+      }
+      return json({ purchaseUrl, qrSvg });
     }
 
     // Create artwork (artist)
@@ -433,15 +462,16 @@ export default {
       const venueName = user.user_metadata?.name || null;
       const { data: updated, error } = await supabaseAdmin
         .from('artworks')
-        .update({ status: 'active', venue_id: user.id, venue_name: venueName, updated_at: new Date().toISOString() })
+        .update({ status: 'active', venue_id: user.id, venue_name: venueName, purchase_url: `${allowOrigin}/#/purchase-${id}`, updated_at: new Date().toISOString() })
         .eq('id', id)
         .select('*')
         .maybeSingle();
       if (error) return json({ error: error.message }, { status: 500 });
       if (!updated) return json({ error: 'Not found' }, { status: 404 });
       const purchaseUrl = `${allowOrigin}/#/purchase-${id}`;
-      const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(purchaseUrl)}`;
-      return json({ ok: true, purchaseUrl, qrImageUrl });
+      const qrSvg = await generateQrSvg(purchaseUrl, 300);
+      await supabaseAdmin.from('artworks').update({ qr_svg: qrSvg }).eq('id', id);
+      return json({ ok: true, purchaseUrl, qrSvg });
     }
 
     // Upsert artist profile (used by app bootstrap)
@@ -550,15 +580,43 @@ export default {
       const currency = art.currency || 'usd';
       const success_url = `${allowOrigin}/#/purchase-${artworkId}?status=success`;
       const cancel_url = `${allowOrigin}/#/purchase-${artworkId}?status=cancel`;
+
+      // Attempt to include Connect split logic if artist account exists; otherwise fallback
+      let paymentIntentExtras: Record<string, string> = {};
+      try {
+        const { data: artRelations } = await supabaseAdmin
+          .from('artworks')
+          .select('artist_id,venue_id')
+          .eq('id', artworkId)
+          .maybeSingle();
+        const artistId = artRelations?.artist_id || null;
+        const venueId = artRelations?.venue_id || null;
+        const { data: artist } = artistId ? await supabaseAdmin.from('artists').select('stripe_account_id,subscription_tier,platform_fee_bps').eq('id', artistId).maybeSingle() : { data: null };
+        const { data: venue } = venueId ? await supabaseAdmin.from('venues').select('default_venue_fee_bps').eq('id', venueId).maybeSingle() : { data: null };
+        const venueFeeBps = typeof venue?.default_venue_fee_bps === 'number' ? venue.default_venue_fee_bps : 1000;
+        const platformFeeBps = typeof artist?.platform_fee_bps === 'number' ? artist.platform_fee_bps : 1500; // fallback by plan
+        const platformFeeCents = Math.floor((amount * platformFeeBps) / 10000);
+        if (artist?.stripe_account_id) {
+          paymentIntentExtras = {
+            'payment_intent_data[application_fee_amount]': String(platformFeeCents),
+            'payment_intent_data[transfer_data][destination]': artist.stripe_account_id,
+            'metadata[platform_fee_bps]': String(platformFeeBps),
+            'metadata[venue_fee_bps]': String(venueFeeBps),
+          };
+        }
+      } catch {}
+
       const body = toForm({
         mode: 'payment',
         success_url,
         cancel_url,
+        'payment_intent_data[transfer_group]': `artwork_${artworkId}`,
         'line_items[0][price_data][currency]': currency,
         'line_items[0][price_data][unit_amount]': String(amount),
         'line_items[0][price_data][product_data][name]': art.title || 'Artwork',
         'line_items[0][quantity]': '1',
         'metadata[artworkId]': artworkId,
+        ...paymentIntentExtras,
       });
       const resp = await stripeFetch('/v1/checkout/sessions', { method: 'POST', body });
       const session = await resp.json();
@@ -721,6 +779,137 @@ export default {
               }
             } catch (e) {
               console.error('Error forwarding webhook', e instanceof Error ? e.message : e);
+            }
+
+            // Process venue/artist transfers and record order
+            try {
+              if ((event as any).type === 'checkout.session.completed' && supabaseAdmin) {
+                const sessionObj = (event as any).data?.object;
+                const sessionId = sessionObj?.id;
+                if (!sessionId) return;
+                const sResp = await stripeFetch(`/v1/checkout/sessions/${sessionId}?expand[]=payment_intent.charges`);
+                const s = await sResp.json();
+                if (!sResp.ok) {
+                  console.error('Failed to retrieve session', sResp.status, s);
+                  return;
+                }
+
+                const amountTotal = Number(s.amount_total || 0);
+                const currency = s.currency || 'usd';
+                const artworkId = s.metadata?.artworkId || null;
+                const paymentIntent = s.payment_intent || null;
+                const chargeId = paymentIntent?.charges?.data?.[0]?.id || null;
+                const transferDest = paymentIntent?.transfer_data?.destination || null;
+                const transferGroup = paymentIntent?.transfer_group || (artworkId ? `artwork_${artworkId}` : undefined);
+                if (!artworkId) return;
+
+                const { data: art } = await supabaseAdmin
+                  .from('artworks')
+                  .select('id,title,artist_id,venue_id')
+                  .eq('id', artworkId)
+                  .maybeSingle();
+                if (!art) return;
+
+                const { data: artist } = await supabaseAdmin
+                  .from('artists')
+                  .select('stripe_account_id,platform_fee_bps')
+                  .eq('id', art.artist_id)
+                  .maybeSingle();
+
+                const { data: venue } = await supabaseAdmin
+                  .from('venues')
+                  .select('stripe_account_id,default_venue_fee_bps')
+                  .eq('id', art.venue_id)
+                  .maybeSingle();
+
+                const venueFeeBps = typeof venue?.default_venue_fee_bps === 'number' ? venue.default_venue_fee_bps : 1000;
+                const platformFeeBps = typeof artist?.platform_fee_bps === 'number' ? artist.platform_fee_bps : 1500;
+                const platformFeeCents = Math.floor((amountTotal * platformFeeBps) / 10000);
+                const venuePayoutCents = Math.floor((amountTotal * venueFeeBps) / 10000);
+                const artistPayoutCents = Math.max(0, amountTotal - platformFeeCents - venuePayoutCents);
+
+                // Insert order record
+                try {
+                  await supabaseAdmin.from('orders').insert({
+                    id: crypto.randomUUID(),
+                    artwork_id: art.id,
+                    artist_id: art.artist_id,
+                    venue_id: art.venue_id,
+                    amount_cents: amountTotal,
+                    currency,
+                    platform_fee_bps: platformFeeBps,
+                    venue_fee_bps: venueFeeBps,
+                    platform_fee_cents: platformFeeCents,
+                    artist_payout_cents: artistPayoutCents,
+                    venue_payout_cents: venuePayoutCents,
+                    status: 'paid',
+                    stripe_checkout_session_id: sessionId,
+                    stripe_payment_intent_id: paymentIntent?.id || null,
+                    stripe_charge_id: chargeId,
+                    transfer_ids: [],
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                  });
+                } catch (e) {
+                  console.error('Order insert failed', e instanceof Error ? e.message : e);
+                }
+
+                // Venue transfer (best-effort)
+                try {
+                  if (venue?.stripe_account_id && venuePayoutCents > 0) {
+                    const tBody = toForm({
+                      amount: String(venuePayoutCents),
+                      currency,
+                      destination: venue.stripe_account_id,
+                      ...(chargeId ? { source_transaction: chargeId } : transferGroup ? { transfer_group: transferGroup } : {}),
+                    });
+                    const tResp = await stripeFetch('/v1/transfers', { method: 'POST', body: tBody });
+                    const t = await tResp.json();
+                    if (!tResp.ok) {
+                      console.error('Venue transfer failed', tResp.status, t);
+                    } else {
+                      console.log('Venue transfer created', t.id);
+                      try {
+                        await supabaseAdmin
+                          .from('orders')
+                          .update({ transfer_ids: [{ venue_transfer_id: t.id }] })
+                          .eq('stripe_checkout_session_id', sessionId);
+                      } catch {}
+                    }
+                  }
+                } catch (e) {
+                  console.error('Venue transfer error', e instanceof Error ? e.message : e);
+                }
+
+                // Artist transfer (only if not destination charge)
+                try {
+                  if (!transferDest && artist?.stripe_account_id && artistPayoutCents > 0) {
+                    const aBody = toForm({
+                      amount: String(artistPayoutCents),
+                      currency,
+                      destination: artist.stripe_account_id,
+                      ...(chargeId ? { source_transaction: chargeId } : transferGroup ? { transfer_group: transferGroup } : {}),
+                    });
+                    const aResp = await stripeFetch('/v1/transfers', { method: 'POST', body: aBody });
+                    const a = await aResp.json();
+                    if (!aResp.ok) {
+                      console.error('Artist transfer failed', aResp.status, a);
+                    } else {
+                      console.log('Artist transfer created', a.id);
+                      try {
+                        await supabaseAdmin
+                          .from('orders')
+                          .update({ transfer_ids: [{ artist_transfer_id: a.id }] })
+                          .eq('stripe_checkout_session_id', sessionId);
+                      } catch {}
+                    }
+                  }
+                } catch (e) {
+                  console.error('Artist transfer error', e instanceof Error ? e.message : e);
+                }
+              }
+            } catch (e) {
+              console.error('Webhook processing error', e instanceof Error ? e.message : e);
             }
           })(),
         );
