@@ -4,7 +4,7 @@ type = "javascript"
 main = "worker/index.ts"
 
 # Required: set your Cloudflare account_id
-# account_id = "940b4ccc48653a5ea5bdf7c01279d832"
+account_id = "940b4ccc48653a5ea5bdf7c01279d832"
 
 # Bind the Worker to the api subdomain
 routes = [
