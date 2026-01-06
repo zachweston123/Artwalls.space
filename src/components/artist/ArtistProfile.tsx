@@ -94,11 +94,16 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
       const user = sessionData.session?.user;
       if (!user) throw new Error('Not signed in');
 
-      // Update artists table (name only; email matches auth)
-      const { error: upErr } = await supabase
-        .from('artists')
-        .upsert({ id: user.id, name, email, phone_number: phone, city_primary: cityPrimary || null, city_secondary: citySecondary || null, subscription_tier: currentPlan }, { onConflict: 'id' });
-      if (upErr) throw upErr;
+      // Update via API (server/worker) to avoid client-side schema/permission issues
+      const { apiPost } = await import('../../lib/api');
+      await apiPost('/api/artists', {
+        name,
+        email,
+        phoneNumber: phone,
+        cityPrimary: cityPrimary || null,
+        citySecondary: citySecondary || null,
+        subscriptionTier: currentPlan,
+      });
 
       // Update metadata and email in auth
       const { error: metaErr } = await supabase.auth.updateUser({ data: { portfolioUrl, phone, cityPrimary, citySecondary }, email });

@@ -918,7 +918,7 @@ app.post('/api/artists', async (req, res) => {
       }
     }
 
-    const { artistId: bodyArtistId, email, name } = req.body || {};
+    const { artistId: bodyArtistId, email, name, phoneNumber, cityPrimary, citySecondary, subscriptionTier } = req.body || {};
     const artistId = authUser?.id || bodyArtistId;
     if (!artistId || typeof artistId !== 'string') return res.status(400).json({ error: 'Missing artistId' });
 
@@ -927,6 +927,10 @@ app.post('/api/artists', async (req, res) => {
       email: email || authUser?.email || undefined,
       name: name || authUser?.user_metadata?.name || undefined,
       role: 'artist',
+      phoneNumber: phoneNumber ?? undefined,
+      cityPrimary: cityPrimary ?? undefined,
+      citySecondary: citySecondary ?? undefined,
+      subscriptionTier: subscriptionTier ?? undefined,
     });
     return res.json(artist);
   } catch (err) {

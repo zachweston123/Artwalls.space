@@ -116,18 +116,24 @@ export async function upsertArtist({
   subscriptionStatus,
   stripeSubscriptionId,
   platformFeeBps,
+  phoneNumber,
+  cityPrimary,
+  citySecondary,
 }) {
   const payload = {
     id,
     email: email ?? null,
     name: name ?? null,
     role: role ?? 'artist',
+    phone_number: phoneNumber ?? null,
     stripe_account_id: stripeAccountId ?? null,
     stripe_customer_id: stripeCustomerId ?? null,
     subscription_tier: subscriptionTier ?? 'free',
     subscription_status: subscriptionStatus ?? 'inactive',
     stripe_subscription_id: stripeSubscriptionId ?? null,
     platform_fee_bps: platformFeeBps === undefined ? null : toIntOrNull(platformFeeBps),
+    city_primary: cityPrimary ?? null,
+    city_secondary: citySecondary ?? null,
     updated_at: nowIso(),
   };
 
