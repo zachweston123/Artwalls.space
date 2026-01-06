@@ -106,6 +106,7 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
     agreementAccepted?: boolean;
   }>>([]);
   const [toast, setToast] = useState<string | null>(null);
+  const [isBackfilling, setIsBackfilling] = useState(false);
 
   function getPlanBadgeColor(plan: string) {
     const base = 'border border-[var(--border)]';
@@ -192,6 +193,23 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
     }
   }
 
+  async function backfillUsers() {
+    setIsBackfilling(true);
+    try {
+      const res = await apiPost('/api/admin/sync-users', {});
+      const artists = (res?.artists as number) ?? 0;
+      const venues = (res?.venues as number) ?? 0;
+      setToast(`Backfilled users: ${artists} artists, ${venues} venues`);
+      setTimeout(() => setToast(null), 2500);
+      await reload();
+    } catch (e: any) {
+      setToast(e?.message || 'Backfill failed');
+      setTimeout(() => setToast(null), 2500);
+    } finally {
+      setIsBackfilling(false);
+    }
+  }
+
   useEffect(() => {
     reload();
     const interval = setInterval(reload, 30000);
@@ -250,6 +268,12 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
         </p>
       </div>
 
+      {toast && (
+        <div className="mb-4 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 text-sm text-[var(--text)]" role="status">
+          {toast}
+        </div>
+      )}
+
       {/* Search & Filters */}
       <div className="bg-[var(--surface-2)] rounded-xl p-6 border border-[var(--border)] mb-6">
         {/* Search Bar */}
@@ -287,6 +311,14 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
           >
             <RefreshCcw className="w-5 h-5" />
             {isLoading ? 'Refreshing…' : 'Refresh'}
+          </button>
+          <button
+            onClick={backfillUsers}
+            disabled={isBackfilling}
+            className={`px-6 py-3 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] hover:bg-[var(--surface-3)] transition-colors flex items-center gap-2 ${isBackfilling ? 'opacity-70 cursor-not-allowed' : ''}`}
+          >
+            <UsersIcon className="w-5 h-5" />
+            {isBackfilling ? 'Backfilling…' : 'Backfill Users'}
           </button>
           <button className="px-6 py-3 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] hover:bg-[var(--surface-3)] transition-colors flex items-center gap-2">
             <Download className="w-5 h-5" />

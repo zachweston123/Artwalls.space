@@ -5,8 +5,13 @@ async function getAuthHeader(): Promise<Record<string, string>> {
     const { supabase } = await import('./supabase');
     const { data } = await supabase.auth.getSession();
     const token = data.session?.access_token;
-    if (!token) return {};
-    return { Authorization: `Bearer ${token}` };
+    const headers: Record<string, string> = {};
+    if (token) headers.Authorization = `Bearer ${token}`;
+    try {
+      const adminPass = typeof window !== 'undefined' ? window.localStorage.getItem('adminPassword') : null;
+      if (adminPass) headers['x-admin-password'] = adminPass;
+    } catch {}
+    return headers;
   } catch {
     return {};
   }

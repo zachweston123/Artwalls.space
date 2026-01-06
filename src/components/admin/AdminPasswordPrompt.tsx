@@ -23,6 +23,9 @@ export function AdminPasswordPrompt({ onVerify, onCancel }: AdminPasswordPromptP
     // Simulate brief verification delay
     setTimeout(() => {
       if (password === ADMIN_PASSWORD) {
+        try {
+          localStorage.setItem('adminPassword', password);
+        } catch {}
         setPassword('');
         setIsLoading(false);
         onVerify();

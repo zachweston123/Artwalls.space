@@ -212,12 +212,12 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm text-[var(--text-muted)] mb-1">Preferred City (Primary)</label>
+                    <label className="block text-sm text-[var(--text-muted)] mb-1">City</label>
                     <input value={cityPrimary} onChange={(e) => setCityPrimary(e.target.value)} className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]" placeholder="e.g. Portland" />
-                    <p className="text-xs text-[var(--text-muted)] mt-1">Used to recommend venues in your city.</p>
+                    <p className="text-xs text-[var(--text-muted)] mt-1">Used to recommend venues in your area.</p>
                   </div>
                   <div>
-                    <label className="block text-sm text-[var(--text-muted)] mb-1">Preferred City (Secondary)</label>
+                    <label className="block text-sm text-[var(--text-muted)] mb-1">Secondary City (optional)</label>
                     <input value={citySecondary} onChange={(e) => setCitySecondary(e.target.value)} className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]" placeholder="e.g. Seattle" />
                   </div>
                 </div>
