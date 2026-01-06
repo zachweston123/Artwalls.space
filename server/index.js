@@ -184,6 +184,31 @@ app.get('/api/debug/env', (_req, res) => {
   }
 });
 
+// Profile provisioning: ensure an artist/venue row exists based on Supabase auth role
+app.post('/api/profile/provision', async (req, res) => {
+  try {
+    const user = await getSupabaseUserFromRequest(req);
+    if (!user) return res.status(401).json({ error: 'Missing or invalid Authorization bearer token' });
+
+    const role = (user.user_metadata?.role || 'artist').toLowerCase();
+    const name = user.user_metadata?.name || null;
+    const email = user.email || null;
+
+    if (role === 'venue') {
+      const type = user.user_metadata?.type || null;
+      const defaultVenueFeeBps = 1000;
+      const venue = await upsertVenue({ id: user.id, email, name, type, defaultVenueFeeBps });
+      return res.json(venue);
+    }
+
+    const artist = await upsertArtist({ id: user.id, email, name, role: 'artist' });
+    return res.json(artist);
+  } catch (e) {
+    console.error('profile provision error', e);
+    return res.status(500).json({ error: e?.message || 'Provision failed' });
+  }
+});
+
 // Root landing: help when visiting the domain directly
 app.get('/', (_req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
