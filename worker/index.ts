@@ -185,6 +185,39 @@ export default {
       return json({ ok: true });
     }
 
+    // Debug auth endpoint - test if authorization header is being passed correctly
+    if (url.pathname === '/api/debug/auth' && method === 'GET') {
+      const authHeader = request.headers.get('authorization') || '';
+      const hasAuth = authHeader.startsWith('Bearer ');
+      const tokenPreview = hasAuth ? authHeader.substring(7, 27) + '...' : 'NONE';
+      
+      if (!hasAuth) {
+        return json({
+          ok: false,
+          error: 'No Authorization header',
+          authHeader: authHeader || 'EMPTY',
+        }, { status: 401 });
+      }
+      
+      const user = await getSupabaseUserFromRequest(request);
+      if (!user) {
+        return json({
+          ok: false,
+          error: 'Invalid or expired token',
+          tokenPreview,
+          supabaseConfigured: !!supabaseAdmin,
+        }, { status: 401 });
+      }
+      
+      return json({
+        ok: true,
+        userId: user.id,
+        email: user.email,
+        role: user.user_metadata?.role || 'artist',
+        tokenPreview,
+      });
+    }
+
     if (url.pathname === '/') {
       return text('Artwalls API OK');
     }
