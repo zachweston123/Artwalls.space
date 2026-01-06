@@ -399,24 +399,36 @@ function requireAuthInProduction(req, res) {
 
 async function requireAdmin(req, res) {
   const isProd = String(process.env.NODE_ENV || '').toLowerCase() === 'production';
-  // Try Supabase JWT first
-  const authUser = await getSupabaseUserFromRequest(req);
-  const isJwtAdmin = authUser && (authUser.user_metadata?.role === 'admin' || authUser.user_metadata?.isAdmin === true);
-  if (isJwtAdmin) return authUser;
 
-  // Fallback: shared admin password header (use env var; optional dev fallback)
-  const header = req.headers['x-admin-password'] || req.headers['X-Admin-Password'] || req.headers['x-admin-secret'];
-  const supplied = Array.isArray(header) ? header[0] : (header || '');
-  const envPass = process.env.ADMIN_PASSWORD || process.env.ADMIN_SECRET || 'StormBL26';
-  if (supplied && supplied === envPass) {
-    return { id: 'admin', email: null, user_metadata: { role: 'admin' } };
+  // Require Supabase JWT in production
+  const authUser = await getSupabaseUserFromRequest(req);
+  if (!authUser) {
+    return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  // In non-prod, allow explicit query param for manual testing
+  // Allow via explicit admin role flag in user metadata
+  const role = authUser.user_metadata?.role;
+  const isAdminRole = role === 'admin' || authUser.user_metadata?.isAdmin === true;
+
+  // Or allow via email allowlist (comma-separated)
+  const allowlist = (process.env.ADMIN_EMAILS || '')
+    .split(',')
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+  const isAllowlisted = !!(authUser.email && allowlist.includes(authUser.email.toLowerCase()));
+
+  if (isAdminRole || isAllowlisted) {
+    return authUser;
+  }
+
+  // In non-production, optionally accept a shared password or dev flag for convenience
   if (!isProd) {
+    const header = req.headers['x-admin-password'] || req.headers['x-admin-secret'];
+    const supplied = Array.isArray(header) ? header[0] : (header || '');
+    const envPass = process.env.ADMIN_PASSWORD || process.env.ADMIN_SECRET || 'StormBL26';
     const q = req.query?.admin || req.headers['x-admin'];
-    if (q === '1' || q === 'true') {
-      return { id: 'admin-dev', email: null, user_metadata: { role: 'admin' } };
+    if ((supplied && supplied === envPass) || q === '1' || q === 'true') {
+      return { id: 'admin-dev', email: authUser.email || null, user_metadata: { role: 'admin' } };
     }
   }
 
