@@ -278,6 +278,34 @@ export default {
       }
     }
 
+    // Debug: test auth token
+    if (url.pathname === '/api/debug/auth' && method === 'GET') {
+      const authHeader = request.headers.get('authorization') || '';
+      const [scheme, token] = authHeader.split(' ');
+      if (!scheme || scheme.toLowerCase() !== 'bearer' || !token) {
+        return json({ ok: false, error: 'Missing or invalid Authorization header', scheme, hasToken: !!token });
+      }
+      if (!supabaseAdmin) {
+        return json({ ok: false, error: 'Supabase not configured' });
+      }
+      try {
+        const { data, error } = await supabaseAdmin.auth.getUser(token);
+        if (error) {
+          return json({ ok: false, error: error.message, code: (error as any).code });
+        }
+        return json({ 
+          ok: true, 
+          userId: data.user?.id, 
+          email: data.user?.email,
+          role: data.user?.user_metadata?.role,
+          metadata: data.user?.user_metadata,
+        });
+      } catch (e: any) {
+        return json({ ok: false, error: e?.message || 'Unknown error' });
+      }
+    }
+
+
     // Artist stats (artworks + orders aggregates)
     if (url.pathname === '/api/stats/artist' && method === 'GET') {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
