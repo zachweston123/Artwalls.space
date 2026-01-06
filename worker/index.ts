@@ -55,6 +55,32 @@ export default {
       return new Response(body, { status: init?.status ?? 200, headers });
     }
 
+    // Twilio SMS helper (available to all routes)
+    async function sendSms(to: string, body: string): Promise<void> {
+      const sid = env.TWILIO_ACCOUNT_SID || '';
+      const token = env.TWILIO_AUTH_TOKEN || '';
+      const from = env.TWILIO_FROM_NUMBER || '';
+      if (!sid || !token || !from || !to) return;
+      const auth = btoa(`${sid}:${token}`);
+      const form = new URLSearchParams();
+      form.set('To', to);
+      form.set('From', from);
+      form.set('Body', body);
+      try {
+        const resp = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
+          method: 'POST',
+          headers: { 'Authorization': `Basic ${auth}` },
+          body: form,
+        });
+        if (!resp.ok) {
+          const t = await resp.text();
+          console.error('Twilio SMS failed', resp.status, t);
+        }
+      } catch (e) {
+        console.error('Twilio SMS error', e instanceof Error ? e.message : e);
+      }
+    }
+
     async function generateQrSvg(data: string, size = 300): Promise<string> {
       try {
         const svg = await QRCode.toString(data, { type: 'svg', width: size, margin: 0 });
@@ -848,31 +874,6 @@ export default {
       const { data: venue } = await supabaseAdmin.from('venues').select('*').eq('id', user.id).maybeSingle();
       if (!venue?.phone_number) return json({ error: 'Phone number required. Please add your phone to your profile.' }, { status: 400 });
       if (!venue?.stripe_account_id) return json({ error: 'Venue has no stripeAccountId yet.' }, { status: 400 });
-          // Twilio SMS helper
-          async function sendSms(to: string, body: string): Promise<void> {
-            const sid = env.TWILIO_ACCOUNT_SID || '';
-            const token = env.TWILIO_AUTH_TOKEN || '';
-            const from = env.TWILIO_FROM_NUMBER || '';
-            if (!sid || !token || !from || !to) return;
-            const auth = btoa(`${sid}:${token}`);
-            const form = new URLSearchParams();
-            form.set('To', to);
-            form.set('From', from);
-            form.set('Body', body);
-            try {
-              const resp = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
-                method: 'POST',
-                headers: { 'Authorization': `Basic ${auth}` },
-                body: form,
-              });
-              if (!resp.ok) {
-                const t = await resp.text();
-                console.error('Twilio SMS failed', resp.status, t);
-              }
-            } catch (e) {
-              console.error('Twilio SMS error', e instanceof Error ? e.message : e);
-            }
-          }
       const body = toForm({ account: venue.stripe_account_id });
       const resp = await stripeFetch('/v1/accounts/create_login_link', { method: 'POST', body });
       const json = await resp.json();
