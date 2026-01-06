@@ -127,7 +127,7 @@ export default {
     }
 
     async function upsertArtist(artist: { id: string; email?: string | null; name?: string | null; role?: string; phoneNumber?: string | null; cityPrimary?: string | null; citySecondary?: string | null; stripeAccountId?: string | null; stripeCustomerId?: string | null; subscriptionTier?: string | null; subscriptionStatus?: string | null; stripeSubscriptionId?: string | null; platformFeeBps?: number | null; }): Promise<Response> {
-      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured - check SUPABASE_SERVICE_ROLE_KEY secret' }, { status: 500 });
       const payload = {
         id: artist.id,
         email: artist.email ?? null,
@@ -145,12 +145,15 @@ export default {
         updated_at: new Date().toISOString(),
       };
       const { data, error } = await supabaseAdmin.from('artists').upsert(payload, { onConflict: 'id' }).select('*').single();
-      if (error) return json({ error: error.message }, { status: 500 });
+      if (error) {
+        console.error('[upsertArtist] Error:', error.message, error.code, (error as any).hint);
+        return json({ error: error.message, code: error.code, hint: (error as any).hint || null }, { status: 500 });
+      }
       return json(data);
     }
 
     async function upsertVenue(venue: { id: string; email?: string | null; name?: string | null; type?: string | null; phoneNumber?: string | null; city?: string | null; stripeAccountId?: string | null; defaultVenueFeeBps?: number | null; labels?: any; suspended?: boolean | null; }): Promise<Response> {
-      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured - check SUPABASE_SERVICE_ROLE_KEY secret' }, { status: 500 });
       const payload = {
         id: venue.id,
         email: venue.email ?? null,
@@ -165,7 +168,10 @@ export default {
         updated_at: new Date().toISOString(),
       };
       const { data, error } = await supabaseAdmin.from('venues').upsert(payload, { onConflict: 'id' }).select('*').single();
-      if (error) return json({ error: error.message }, { status: 500 });
+      if (error) {
+        console.error('[upsertVenue] Error:', error.message, error.code, (error as any).hint);
+        return json({ error: error.message, code: error.code, hint: (error as any).hint || null }, { status: 500 });
+      }
       return json(data);
     }
 
@@ -190,6 +196,61 @@ export default {
           PAGES_ORIGIN: env.PAGES_ORIGIN || 'https://artwalls.space',
         },
       });
+    }
+
+    // Supabase debug: test connection and table access
+    if (url.pathname === '/api/debug/supabase' && method === 'GET') {
+      if (!supabaseAdmin) {
+        return json({
+          ok: false,
+          error: 'Supabase not configured',
+          config: {
+            SUPABASE_URL: Boolean(env.SUPABASE_URL),
+            SUPABASE_SERVICE_ROLE_KEY: Boolean(env.SUPABASE_SERVICE_ROLE_KEY),
+            urlPreview: env.SUPABASE_URL ? env.SUPABASE_URL.substring(0, 40) + '...' : 'MISSING',
+          },
+        }, { status: 500 });
+      }
+
+      try {
+        const { data: artistsTest, error: artistsError } = await supabaseAdmin
+          .from('artists')
+          .select('id')
+          .limit(1);
+
+        const { data: venuesTest, error: venuesError } = await supabaseAdmin
+          .from('venues')
+          .select('id')
+          .limit(1);
+
+        return json({
+          ok: !artistsError && !venuesError,
+          config: {
+            SUPABASE_URL: Boolean(env.SUPABASE_URL),
+            SUPABASE_SERVICE_ROLE_KEY: Boolean(env.SUPABASE_SERVICE_ROLE_KEY),
+            urlPreview: env.SUPABASE_URL ? env.SUPABASE_URL.substring(0, 40) + '...' : 'MISSING',
+          },
+          artists: {
+            ok: !artistsError,
+            count: artistsTest?.length ?? 0,
+            error: artistsError?.message || null,
+            code: artistsError?.code || null,
+            hint: (artistsError as any)?.hint || null,
+          },
+          venues: {
+            ok: !venuesError,
+            count: venuesTest?.length ?? 0,
+            error: venuesError?.message || null,
+            code: venuesError?.code || null,
+            hint: (venuesError as any)?.hint || null,
+          },
+        });
+      } catch (e: any) {
+        return json({
+          ok: false,
+          error: e?.message || 'Supabase test error',
+        }, { status: 500 });
+      }
     }
 
     // Artist stats (artworks + orders aggregates)
