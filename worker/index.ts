@@ -342,7 +342,7 @@ export default {
       if (!id) return json({ error: 'Missing venue id' }, { status: 400 });
       const { data, error } = await supabaseAdmin
         .from('venues')
-        .select('id,name,type,labels,default_venue_fee_bps')
+        .select('id,name,type,labels,default_venue_fee_bps,address')
         .eq('id', id)
         .maybeSingle();
       if (error) return json({ error: error.message }, { status: 500 });
@@ -353,8 +353,115 @@ export default {
         type: data.type,
         labels: data.labels,
         defaultVenueFeeBps: data.default_venue_fee_bps,
+        address: (data as any).address || null,
       };
       return json(venue);
+    }
+
+    // Venue wallspaces: list (public)
+    if (url.pathname.match(/^\/api\/venues\/[\w-]+\/wallspaces$/) && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const parts = url.pathname.split('/');
+      const venueId = parts[3];
+      if (!venueId) return json({ error: 'Missing venue id' }, { status: 400 });
+      const { data, error } = await supabaseAdmin
+        .from('wallspaces')
+        .select('id,name,width_inches,height_inches,available,description,photos')
+        .eq('venue_id', venueId)
+        .order('created_at', { ascending: false });
+      if (error) return json({ error: error.message }, { status: 500 });
+      const items = (data || []).map((w: any) => ({
+        id: w.id,
+        name: w.name,
+        width: typeof w.width_inches === 'number' ? w.width_inches : undefined,
+        height: typeof w.height_inches === 'number' ? w.height_inches : undefined,
+        available: Boolean(w.available),
+        description: w.description || undefined,
+        photos: Array.isArray(w.photos) ? w.photos : [],
+      }));
+      // Return bare array to match frontend expectations
+      return json(items);
+    }
+
+    // Venue wallspaces: create (venue-auth)
+    if (url.pathname.match(/^\/api\/venues\/[\w-]+\/wallspaces$/) && method === 'POST') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const user = await requireVenue(request);
+      if (!user) return json({ error: 'Missing or invalid Authorization bearer token (venue required)' }, { status: 401 });
+      const parts = url.pathname.split('/');
+      const venueId = parts[3];
+      if (!venueId) return json({ error: 'Missing venue id' }, { status: 400 });
+      if (user.id !== venueId) return json({ error: 'Cannot create for another venue' }, { status: 403 });
+      const body = await request.json().catch(() => ({}));
+      const insert = {
+        id: crypto.randomUUID(),
+        venue_id: venueId,
+        name: String(body?.name || '').trim(),
+        width_inches: typeof body?.width === 'number' ? body.width : undefined,
+        height_inches: typeof body?.height === 'number' ? body.height : undefined,
+        description: body?.description || null,
+        available: true,
+        photos: Array.isArray(body?.photos) ? body.photos : [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      } as any;
+      if (!insert.name) return json({ error: 'Name is required' }, { status: 400 });
+      const { data, error } = await supabaseAdmin.from('wallspaces').insert(insert).select('*').single();
+      if (error) return json({ error: error.message }, { status: 500 });
+      const created = {
+        id: data.id,
+        name: data.name,
+        width: typeof data.width_inches === 'number' ? data.width_inches : undefined,
+        height: typeof data.height_inches === 'number' ? data.height_inches : undefined,
+        available: Boolean(data.available),
+        description: data.description || undefined,
+        photos: Array.isArray(data.photos) ? data.photos : [],
+      };
+      return json(created, { status: 201 });
+    }
+
+    // Wallspace update (venue-auth). Supports PATCH and POST with X-HTTP-Method-Override: PATCH
+    if ((url.pathname.match(/^\/api\/wallspaces\/[\w-]+$/) && (method === 'PATCH' || (method === 'POST' && (request.headers.get('X-HTTP-Method-Override') || '').toUpperCase() === 'PATCH')))) {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const user = await requireVenue(request);
+      if (!user) return json({ error: 'Missing or invalid Authorization bearer token (venue required)' }, { status: 401 });
+      const parts = url.pathname.split('/');
+      const wallId = parts[3];
+      if (!wallId) return json({ error: 'Missing wallspace id' }, { status: 400 });
+      const { data: existing, error: exErr } = await supabaseAdmin
+        .from('wallspaces')
+        .select('id,venue_id')
+        .eq('id', wallId)
+        .maybeSingle();
+      if (exErr) return json({ error: exErr.message }, { status: 500 });
+      if (!existing) return json({ error: 'Not found' }, { status: 404 });
+      if (existing.venue_id !== user.id) return json({ error: 'Forbidden' }, { status: 403 });
+      const body = await request.json().catch(() => ({}));
+      const update: any = { updated_at: new Date().toISOString() };
+      if (typeof body?.name === 'string') update.name = body.name.trim();
+      if (typeof body?.width === 'number') update.width_inches = body.width;
+      if (typeof body?.height === 'number') update.height_inches = body.height;
+      if (typeof body?.description === 'string' || body?.description === null) update.description = body.description;
+      if (typeof body?.available === 'boolean') update.available = body.available;
+      if (Array.isArray(body?.photos)) update.photos = body.photos;
+      const { data, error } = await supabaseAdmin
+        .from('wallspaces')
+        .update(update)
+        .eq('id', wallId)
+        .select('*')
+        .maybeSingle();
+      if (error) return json({ error: error.message }, { status: 500 });
+      if (!data) return json({ error: 'Not found' }, { status: 404 });
+      const updated = {
+        id: data.id,
+        name: data.name,
+        width: typeof data.width_inches === 'number' ? data.width_inches : undefined,
+        height: typeof data.height_inches === 'number' ? data.height_inches : undefined,
+        available: Boolean(data.available),
+        description: data.description || undefined,
+        photos: Array.isArray(data.photos) ? data.photos : [],
+      };
+      return json(updated);
     }
 
     // Public listings: artworks
