@@ -56,7 +56,7 @@ Quick setup (recommended):
    - For preview deployments you can add preview environment variables in the Pages dashboard.
 
 If you want, I can also:
-- Add a short README section noting the Node API remains in `server/` and suggesting you keep it on Render (or elsewhere) for now.
+- Add a short README section noting the API runs on Cloudflare Workers (see `wrangler.toml`, `worker/index.ts`).
 - Produce a single patch/commit message you can run locally to add these files.
 
 Local verification

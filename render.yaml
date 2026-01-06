@@ -1,71 +1,8 @@
-services:
-  - type: web
-    name: artwalls-api
-    runtime: node
-    rootDir: server
-    buildCommand: npm install
-    startCommand: npm start
-    healthCheckPath: /api/health
-    autoDeploy: true
-    envVars:
-      - key: NODE_ENV
-        value: production
-      # Set these in the Render Dashboard (Secrets recommended)
-      - key: STRIPE_SECRET_KEY
-        sync: false
-      - key: STRIPE_WEBHOOK_SECRET
-        sync: false
-      - key: SUPABASE_URL
-        sync: false
-      - key: SUPABASE_SERVICE_ROLE_KEY
-        sync: false
-
-      - key: APP_URL
-        value: https://artwalls.space
-      - key: CORS_ORIGIN
-        value: https://artwalls.space
-
-      - key: CHECKOUT_SUCCESS_URL
-        value: https://artwalls.space/#/purchase-success
-      - key: CHECKOUT_CANCEL_URL
-        value: https://artwalls.space/#/purchase-cancel
-      - key: SUB_SUCCESS_URL
-        value: https://artwalls.space/#/artist-dashboard?sub=success
-      - key: SUB_CANCEL_URL
-        value: https://artwalls.space/#/artist-dashboard?sub=cancel
-      - key: CONNECT_REFRESH_URL
-        value: https://artwalls.space/#/dashboard
-      - key: CONNECT_RETURN_URL
-        value: https://artwalls.space/#/dashboard
-
-      - key: FEE_BPS_FREE
-        value: "2000"
-      - key: FEE_BPS_STARTER
-        value: "1500"
-      - key: FEE_BPS_PRO
-        value: "1000"
-      - key: FEE_BPS_ELITE
-        value: "500"
-
-      - key: STRIPE_SUB_PRICE_STARTER
-        sync: false
-      - key: STRIPE_SUB_PRICE_PRO
-        sync: false
-      - key: STRIPE_SUB_PRICE_ELITE
-        sync: false
-
-  - type: web
-    name: artwalls-web
-    runtime: static
-    rootDir: .
-    buildCommand: npm install && npm run build
-    staticPublishPath: dist
-    autoDeploy: true
-    envVars:
-      - key: VITE_API_BASE_URL
-        value: https://api.artwalls.space
-      - key: VITE_SUPABASE_URL
-        sync: false
-      - key: VITE_SUPABASE_ANON_KEY
-        sync: false
+## Legacy Render blueprint (not used).
+## This project now deploys with Cloudflare Pages (frontend) and Cloudflare Workers (API).
+## See:
+##  - .github/workflows/CLOUDFLARE_PAGES.md
+##  - wrangler.toml
+##  - worker/index.ts
+##  - DEPLOY_WORKER.md
 

@@ -54,7 +54,16 @@ const CANCEL_URL = process.env.CHECKOUT_CANCEL_URL || `${APP_URL}/#/purchase-can
 const SUB_SUCCESS_URL = process.env.SUB_SUCCESS_URL || `${APP_URL}/#/artist-dashboard?sub=success`;
 const SUB_CANCEL_URL = process.env.SUB_CANCEL_URL || `${APP_URL}/#/artist-dashboard?sub=cancel`;
 
-const CORS_ORIGIN = process.env.CORS_ORIGIN || true;
+// Allow setting multiple origins via comma-separated env var
+// Examples:
+//   CORS_ORIGIN=https://artwalls.space
+//   CORS_ORIGIN=https://artwalls.space,https://*.pages.dev
+const rawCors = process.env.CORS_ORIGIN;
+const CORS_ORIGIN = !rawCors
+  ? true
+  : rawCors.includes(',')
+    ? rawCors.split(',').map(s => s.trim()).filter(Boolean)
+    : rawCors;
 
 // Purchase page URL for QR codes
 function purchaseUrlForArtwork(artworkId) {
