@@ -108,9 +108,15 @@ export default {
       }
     }
 
+    // Clean and validate Supabase config
+    const rawSupabaseUrl = (env.SUPABASE_URL || '').trim().replace(/\/+$/, '');
+    const rawServiceKey = (env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
+
     // Initialize Supabase Admin client (optional endpoints)
-    const supabaseAdmin = env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY
-      ? createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false, autoRefreshToken: false } })
+    const supabaseAdmin = rawSupabaseUrl && rawServiceKey
+      ? createClient(rawSupabaseUrl, rawServiceKey, { 
+          auth: { persistSession: false, autoRefreshToken: false },
+        })
       : null;
 
     async function getSupabaseUserFromRequest(req: Request): Promise<any | null> {
@@ -195,19 +201,33 @@ export default {
           API_BASE_URL: env.API_BASE_URL || null,
           PAGES_ORIGIN: env.PAGES_ORIGIN || 'https://artwalls.space',
         },
+        debug: {
+          supabaseUrlLength: (env.SUPABASE_URL || '').length,
+          serviceKeyLength: (env.SUPABASE_SERVICE_ROLE_KEY || '').length,
+          serviceKeyPrefix: (env.SUPABASE_SERVICE_ROLE_KEY || '').substring(0, 10),
+          supabaseClientCreated: !!supabaseAdmin,
+        },
       });
     }
 
     // Supabase debug: test connection and table access
     if (url.pathname === '/api/debug/supabase' && method === 'GET') {
+      const keyLen = rawServiceKey.length;
+      const keyPrefix = rawServiceKey.substring(0, 15);
+      const keySuffix = rawServiceKey.substring(rawServiceKey.length - 10);
+      
       if (!supabaseAdmin) {
         return json({
           ok: false,
-          error: 'Supabase not configured',
-          config: {
-            SUPABASE_URL: Boolean(env.SUPABASE_URL),
-            SUPABASE_SERVICE_ROLE_KEY: Boolean(env.SUPABASE_SERVICE_ROLE_KEY),
-            urlPreview: env.SUPABASE_URL ? env.SUPABASE_URL.substring(0, 40) + '...' : 'MISSING',
+          error: 'Supabase client not created',
+          diagnosis: {
+            urlConfigured: !!rawSupabaseUrl,
+            urlValue: rawSupabaseUrl || 'MISSING',
+            keyConfigured: !!rawServiceKey,
+            keyLength: keyLen,
+            keyPrefix: keyPrefix || 'EMPTY',
+            keySuffix: keySuffix || 'EMPTY',
+            keyLooksValid: keyLen > 100 && keyPrefix.startsWith('eyJ'),
           },
         }, { status: 500 });
       }
@@ -226,9 +246,11 @@ export default {
         return json({
           ok: !artistsError && !venuesError,
           config: {
-            SUPABASE_URL: Boolean(env.SUPABASE_URL),
-            SUPABASE_SERVICE_ROLE_KEY: Boolean(env.SUPABASE_SERVICE_ROLE_KEY),
-            urlPreview: env.SUPABASE_URL ? env.SUPABASE_URL.substring(0, 40) + '...' : 'MISSING',
+            supabaseUrl: rawSupabaseUrl,
+            keyLength: keyLen,
+            keyPrefix: keyPrefix,
+            keySuffix: keySuffix,
+            keyLooksValid: keyLen > 100 && keyPrefix.startsWith('eyJ'),
           },
           artists: {
             ok: !artistsError,
@@ -236,6 +258,7 @@ export default {
             error: artistsError?.message || null,
             code: artistsError?.code || null,
             hint: (artistsError as any)?.hint || null,
+            details: (artistsError as any)?.details || null,
           },
           venues: {
             ok: !venuesError,
@@ -243,12 +266,14 @@ export default {
             error: venuesError?.message || null,
             code: venuesError?.code || null,
             hint: (venuesError as any)?.hint || null,
+            details: (venuesError as any)?.details || null,
           },
         });
       } catch (e: any) {
         return json({
           ok: false,
           error: e?.message || 'Supabase test error',
+          stack: e?.stack?.substring(0, 500) || null,
         }, { status: 500 });
       }
     }
