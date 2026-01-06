@@ -40,9 +40,10 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
     try {
       setLoading(true);
       setError(null);
-      const res = await apiGet<{ artworks: Artwork[] }>(`/api/artworks?artistId=${encodeURIComponent(user.id)}`);
-      if (Array.isArray(res.artworks)) {
-        setArtworks(res.artworks);
+      const res = await apiGet<any>(`/api/artworks?artistId=${encodeURIComponent(user.id)}`);
+      const items = Array.isArray(res) ? res : res?.artworks;
+      if (Array.isArray(items)) {
+        setArtworks(items as Artwork[]);
       }
     } catch {
       // Backend not available -> keep mock data
