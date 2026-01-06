@@ -3,6 +3,7 @@ name: Deploy Artwalls (Pages + Worker)
 on:
   push:
     branches: [ "main" ]
+  workflow_dispatch:
 
 permissions:
   contents: read
