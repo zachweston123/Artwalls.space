@@ -1307,6 +1307,39 @@ app.post('/api/admin/sync-users', async (req, res) => {
   }
 });
 
+// Admin: schema check (verifies expected tables/columns exist)
+app.get('/api/admin/schema-check', async (req, res) => {
+  const admin = await requireAdmin(req, res); if (!admin) return;
+  const checks = [];
+  async function check(label, fn) {
+    try { await fn(); checks.push({ label, ok: true }); } catch (e) { checks.push({ label, ok: false, error: e?.message || String(e) }); }
+  }
+  await check('artists table exists', async () => {
+    const { data, error } = await supabaseAdmin.from('artists').select('id').limit(1);
+    if (error) throw error;
+  });
+  await check('artists profile columns present', async () => {
+    const { data, error } = await supabaseAdmin.from('artists').select('phone_number, city_primary, city_secondary').limit(1);
+    if (error) throw error;
+  });
+  await check('venues table exists', async () => {
+    const { data, error } = await supabaseAdmin.from('venues').select('id').limit(1);
+    if (error) throw error;
+  });
+  await check('venues suspended column present', async () => {
+    const { data, error } = await supabaseAdmin.from('venues').select('suspended').limit(1);
+    if (error) throw error;
+  });
+  await check('scheduling tables exist', async () => {
+    const a = await supabaseAdmin.from('venue_schedules').select('id').limit(1);
+    if (a.error) throw a.error;
+    const b = await supabaseAdmin.from('bookings').select('id').limit(1);
+    if (b.error) throw b.error;
+    const c = await supabaseAdmin.from('notifications').select('id').limit(1);
+    if (c.error) throw c.error;
+  });
+  return res.json({ ok: true, checks });
+});
 // Admin: send a test email with ICS attachment (uses SMTP_* env)
 app.post('/api/admin/test-email', async (req, res) => {
   const admin = await requireAdmin(req, res); if (!admin) return;
