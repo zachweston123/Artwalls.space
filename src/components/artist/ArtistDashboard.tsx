@@ -201,9 +201,6 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
             <span>Find Venues</span>
           </button>
         </div>
-            <span>Find Venues</span>
-          </button>
-        </div>
         <p className="text-xs text-[var(--text-muted)] px-1">
           Browse {Math.floor(Math.random() * 50) + 100}+ available wall spaces across your city
         </p>
