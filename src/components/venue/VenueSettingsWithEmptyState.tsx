@@ -84,7 +84,7 @@ export function VenueSettingsWithEmptyState() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (validateConfig() && venueId) {
       setScheduleConfig(tempConfig);
       try {
