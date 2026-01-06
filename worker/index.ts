@@ -707,22 +707,31 @@ export default {
       return json({ ok: true, purchaseUrl, qrSvg });
     }
 
-    // Upsert artist profile (used by app bootstrap)
+    // Upsert artist profile (used by app bootstrap and profile edit)
     if (url.pathname === '/api/artists' && method === 'POST') {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
       const payload = await request.json().catch(() => ({}));
-      const id = String(payload?.artistId || '').trim();
-      if (!id) return json({ error: 'Missing artistId' }, { status: 400 });
+      // Allow artistId from body OR extract from auth token
+      let id = String(payload?.artistId || '').trim();
+      if (!id) {
+        const user = await getSupabaseUserFromRequest(request);
+        if (user && (user.user_metadata?.role === 'artist' || !user.user_metadata?.role)) {
+          id = user.id;
+        }
+      }
+      if (!id) return json({ error: 'Missing artistId or Authorization token' }, { status: 400 });
       const resp = await upsertArtist({
         id,
         email: payload?.email || null,
         name: payload?.name || null,
         role: 'artist',
         phoneNumber: payload?.phoneNumber || null,
+        cityPrimary: payload?.cityPrimary || null,
+        citySecondary: payload?.citySecondary || null,
+        subscriptionTier: payload?.subscriptionTier || null,
       });
       return resp;
     }
-
     // Upsert venue profile (used by app bootstrap)
     if (url.pathname === '/api/venues' && method === 'POST') {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
