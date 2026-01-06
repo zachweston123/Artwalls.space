@@ -172,6 +172,7 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
             </div>
           );
         })()}
+        </div>
       </div>
 
       {error && (
