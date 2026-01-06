@@ -10,6 +10,9 @@ create table if not exists public.artists (
   email text,
   name text,
   role text not null default 'artist',
+  phone_number text,
+  city_primary text,
+  city_secondary text,
   stripe_account_id text,
   stripe_customer_id text,
   subscription_tier text not null default 'free',
@@ -20,21 +23,29 @@ create table if not exists public.artists (
   updated_at timestamptz not null default now()
 );
 
+-- Helpful indexes for artists
+create index if not exists artists_city_primary_idx on public.artists(city_primary);
+create index if not exists artists_city_secondary_idx on public.artists(city_secondary);
+
 -- Venues
 create table if not exists public.venues (
   id uuid primary key,
   email text,
   name text,
   type text,
+  city text,
+  phone_number text,
   stripe_account_id text,
   default_venue_fee_bps int not null default 1000,
   labels jsonb not null default '[]'::jsonb,
+  suspended boolean default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
--- Helpful index for labels lookups
+-- Helpful index for labels lookups and city
 create index if not exists venues_labels_gin_idx on public.venues using gin (labels);
+create index if not exists venues_city_idx on public.venues(city);
 
 -- Artworks / listings
 create table if not exists public.artworks (
