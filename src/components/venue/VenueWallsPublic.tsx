@@ -104,7 +104,7 @@ export function VenueWallsPublic({ venueId, onBack }: VenueWallsPublicProps) {
 
               {/* Read-only view for artists; no edit controls */}
               <div className="text-sm text-[var(--text-muted)]">
-                {wall.available ? 'This space is open for applications.' : 'This space currently has an artwork on display.'}
+                {wall.available ? 'This space is open for applications.' : 'This space currently has artwork on display.'}
               </div>
             </div>
           </div>
@@ -116,7 +116,7 @@ export function VenueWallsPublic({ venueId, onBack }: VenueWallsPublicProps) {
           <div className="w-16 h-16 bg-[var(--surface-3)] rounded-full flex items-center justify-center mx-auto mb-4">
             <Frame className="w-8 h-8 text-[var(--text-muted)]" />
           </div>
-          <h3 className="text-xl mb-2">No wall spaces listed</h3>
+          <h3 className="text-xl mb-2">No wall spaces available</h3>
           <p className="text-[var(--text-muted)]">Check back later as the venue adds spaces.</p>
         </div>
       )}

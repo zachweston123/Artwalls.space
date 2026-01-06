@@ -55,10 +55,12 @@
       "devDependencies": {
           "@types/node": "^20.10.0",
           "@vitejs/plugin-react-swc": "^3.10.2",
-          "vite": "6.3.5"
+          "vite": "6.3.5",
+          "cspell": "^8.13.2"
       },
       "scripts": {
           "dev": "vite",
-          "build": "vite build"
+          "build": "vite build",
+          "spellcheck": "cspell --no-progress --no-summary \"**/*\" --exclude \"**/node_modules/**\" --exclude \"**/dist/**\" --exclude \"**/.git/**\""
       }
   }

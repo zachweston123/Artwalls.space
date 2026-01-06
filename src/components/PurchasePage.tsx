@@ -156,7 +156,7 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
                 <span className="text-3xl sm:text-4xl text-[var(--text)]">${artwork?.price ?? 0}</span>
               </div>
               <p className="text-sm text-[var(--text-muted)]">
-                Supports local artist with ~80% of the sale going to the creator (before Stripe fees)
+                Supports the local artist with ~80% of the sale going to the creator (before Stripe fees)
               </p>
             </div>
 
