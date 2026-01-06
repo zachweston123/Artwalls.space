@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { Store, Mail, MapPin, Clock, DollarSign, Edit, Instagram } from 'lucide-react';
 import { Store, Mail, Phone, MapPin, Clock, DollarSign, Edit, Instagram } from 'lucide-react';
 import { VenueProfileEdit, type VenueProfileData } from './VenueProfileEdit';
 import { apiPost } from '../../lib/api';

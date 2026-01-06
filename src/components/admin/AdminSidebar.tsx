@@ -19,8 +19,7 @@ export function AdminSidebar({ currentPage, onNavigate }: AdminSidebarProps) {
   const navItems = [
     { id: 'admin-dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'admin-users', label: 'Users', icon: Users },
-    // Orders & Settings are not implemented yet; hide to avoid dead links
-    // { id: 'admin-orders', label: 'Orders & Payments', icon: ShoppingCart },
+    { id: 'admin-sales', label: 'Sales & GMV', icon: ShoppingCart },
     { id: 'admin-stripe-payments', label: 'Stripe Payments', icon: CreditCard },
     { id: 'admin-announcements', label: 'Announcements', icon: Megaphone },
     { id: 'admin-promo-codes', label: 'Promo Codes', icon: Tag },

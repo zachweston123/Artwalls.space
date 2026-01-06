@@ -92,7 +92,7 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
       subtext: 'Awaiting approval',
       icon: Package,
       color: 'blue',
-      action: () => onNavigate('artist-artworks'),
+      action: () => onNavigate('artist-applications'),
     },
   ];
 

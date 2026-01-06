@@ -10,6 +10,8 @@ import { ArtistVenues } from './components/artist/ArtistVenues';
 import { ArtistApplicationsWithScheduling } from './components/artist/ArtistApplicationsWithScheduling';
 import { ArtistSales } from './components/artist/ArtistSales';
 import { ArtistProfile } from './components/artist/ArtistProfile';
+import { ArtistProfileView } from './components/artist/ArtistProfileView';
+import { ArtistInvites } from './components/artist/ArtistInvites';
 import { VenueDashboard } from './components/venue/VenueDashboard';
 import { VenueWalls } from './components/venue/VenueWalls';
 import { VenueApplications } from './components/venue/VenueApplications';
@@ -40,6 +42,9 @@ import { AdminUserDetail } from './components/admin/AdminUserDetail';
 import { AdminAnnouncements } from './components/admin/AdminAnnouncements';
 import { AdminPromoCodes } from './components/admin/AdminPromoCodes';
 import { AdminActivityLog } from './components/admin/AdminActivityLog';
+import { AdminInvites } from './components/admin/AdminInvites';
+import { AdminSales as AdminSalesPage } from './components/admin/AdminSales';
+import { AdminCurrentDisplays } from './components/admin/AdminCurrentDisplays';
 import { AdminPasswordPrompt } from './components/admin/AdminPasswordPrompt';
 import { StripePaymentSetup } from './components/admin/StripePaymentSetup';
 
@@ -56,6 +61,7 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [currentPage, setCurrentPage] = useState('login');
   const [selectedVenueId, setSelectedVenueId] = useState<string | null>(null);
+  const [selectedArtistId, setSelectedArtistId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [hasAcceptedAgreement, setHasAcceptedAgreement] = useState(false);
   const [showAdminPasswordPrompt, setShowAdminPasswordPrompt] = useState(false);
@@ -186,8 +192,12 @@ export default function App() {
     setCurrentPage('login');
   };
 
-  const handleNavigate = (page: string) => {
+  const handleNavigate = (page: string, params?: any) => {
     setCurrentPage(page);
+    if (params?.userId) setSelectedArtistId(params.userId);
+    if (params?.venueId) setSelectedVenueId(params.venueId);
+    if (params?.artistId) setSelectedArtistId(params.artistId);
+    
     if (page.startsWith('purchase-')) {
       window.location.hash = `#/purchase-${page.split('-')[1]}`;
     } else if (window.location.hash) {
@@ -339,6 +349,13 @@ export default function App() {
               <VenueWallsPublic venueId={selectedVenueId || undefined} onBack={() => handleNavigate('artist-venues')} />
             )}
             {currentPage === 'artist-applications' && <ArtistApplicationsWithScheduling />}
+            {currentPage === 'artist-invites' && (
+              <ArtistInvites 
+                onApply={(inviteId) => handleNavigate('artist-applications')}
+                onDecline={(inviteId) => {/* TODO */}}
+                onNavigate={handleNavigate}
+              />
+            )}
             {currentPage === 'artist-sales' && <ArtistSales user={currentUser} />}
             {currentPage === 'artist-profile' && <ArtistProfile onNavigate={handleNavigate} />}
             {currentPage === 'artist-notifications' && <NotificationsList />}
@@ -356,8 +373,18 @@ export default function App() {
             {currentPage === 'venue-profile' && <VenueProfile onNavigate={handleNavigate} />}
             {currentPage === 'venue-find-artists' && (
               <FindArtists
-                onViewProfile={(artistId) => handleNavigate('artist-profile')}
+                onViewProfile={(artistId) => {
+                  setSelectedArtistId(artistId);
+                  handleNavigate('artist-view-profile');
+                }}
                 onInviteArtist={(artistId) => {/* TODO: implement invite flow */}}
+              />
+            )}
+            {currentPage === 'artist-view-profile' && (
+              <ArtistProfileView
+                isOwnProfile={false}
+                currentUser={currentUser}
+                onInviteToApply={() => {/* TODO */}}
               />
             )}
             {currentPage === 'venue-notifications' && <NotificationsList />}
@@ -375,6 +402,9 @@ export default function App() {
             {currentPage === 'admin-promo-codes' && <AdminPromoCodes onNavigate={handleNavigate} />}
             {currentPage === 'admin-stripe-payments' && <StripePaymentSetup onNavigate={handleNavigate} />}
             {currentPage === 'admin-activity-log' && <AdminActivityLog onNavigate={handleNavigate} />}
+            {currentPage === 'admin-invites' && <AdminInvites />}
+            {currentPage === 'admin-sales' && <AdminSalesPage />}
+            {currentPage === 'admin-current-displays' && <AdminCurrentDisplays />}
           </>
         )}
       </main>

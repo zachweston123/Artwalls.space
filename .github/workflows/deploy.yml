@@ -15,8 +15,8 @@ concurrency:
 jobs:
   pages:
     name: Build and deploy Pages
-    # Run only if you opt in via repo secret DEPLOY_PAGES_VIA_GHA = 'true'
-    if: ${{ secrets.DEPLOY_PAGES_VIA_GHA == 'true' }}
+    # Run only if you opt in via repo VAR DEPLOY_PAGES_VIA_GHA = 'true'
+    if: vars.DEPLOY_PAGES_VIA_GHA == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
