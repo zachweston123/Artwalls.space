@@ -42,7 +42,8 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name artwalls-space
+          wranglerVersion: latest
+          command: pages deploy dist --project-name artwalls-space --verbose
 
   worker:
     name: Deploy Worker (api.artwalls.space)
@@ -57,6 +58,7 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: worker
-          command: deploy
+          wranglerVersion: latest
+          command: deploy --verbose
 
     # Note: Set Worker secrets once in Cloudflare Dashboard (Workers & Pages → Workers → artwalls-api → Settings → Variables & Secrets)
