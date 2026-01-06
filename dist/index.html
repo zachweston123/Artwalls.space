@@ -5,8 +5,40 @@
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <title>Artwalls Marketplace Web App</title>
-      <script type="module" crossorigin src="/assets/index-CrGLcaHH.js"></script>
-      <link rel="stylesheet" crossorigin href="/assets/index-Dz7rSoIk.css">
+
+      <script>
+        (function () {
+          try {
+            var STORAGE_KEY = 'theme';
+            var pref = localStorage.getItem(STORAGE_KEY) || 'system';
+            var mql = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
+
+            function resolveTheme(preference) {
+              if (preference === 'dark' || preference === 'light') return preference;
+              return mql && mql.matches ? 'dark' : 'light';
+            }
+
+            function apply(preference) {
+              var resolved = resolveTheme(preference);
+              document.documentElement.setAttribute('data-theme', resolved);
+            }
+
+            apply(pref);
+
+            if (mql) {
+              mql.addEventListener('change', function () {
+                var currentPref = localStorage.getItem(STORAGE_KEY) || 'system';
+                if (currentPref === 'system') apply(currentPref);
+              });
+            }
+          } catch (e) {
+            // If anything fails, default to light without blocking render.
+            document.documentElement.setAttribute('data-theme', 'light');
+          }
+        })();
+      </script>
+      <script type="module" crossorigin src="/assets/index-lDsufPwi.js"></script>
+      <link rel="stylesheet" crossorigin href="/assets/index-B6V2l51k.css">
     </head>
 
     <body>
