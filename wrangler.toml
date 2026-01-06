@@ -1,6 +1,5 @@
-name = "artwalls-spacess"
+name = "artwalls-api"
 compatibility_date = "2024-01-01"
-type = "javascript"
 main = "worker/index.ts"
 
 # Required: set your Cloudflare account_id
@@ -11,19 +10,15 @@ routes = [
 	{ pattern = "api.artwalls.space/*", zone_name = "artwalls.space" }
 ]
 
-[build]
-command = "npm install && npm run build"
-cwd = "."
-watch_paths = ["src/**/*.{ts,tsx}"]
-
 [vars]
 API_BASE_URL = "https://api.artwalls.space"
 SUPABASE_URL = "https://twclqgysvpefufpnmjcl.supabase.co"
-# Used for CORS and purchase URL generation in the Worker
 PAGES_ORIGIN = "https://artwalls.space"
-# Set this in Cloudflare Worker secrets: wrangler secret put SUPABASE_SERVICE_ROLE_KEY
-# Set this in Cloudflare Worker secrets: wrangler secret put STRIPE_SECRET_KEY
- # Twilio SMS configuration (set via secrets)
- # Set: wrangler secret put TWILIO_ACCOUNT_SID
- # Set: wrangler secret put TWILIO_AUTH_TOKEN
- # Set: wrangler secret put TWILIO_FROM_NUMBER
+
+# Secrets to set via CLI:
+# wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+# wrangler secret put STRIPE_SECRET_KEY
+# wrangler secret put STRIPE_WEBHOOK_SECRET
+# wrangler secret put TWILIO_ACCOUNT_SID
+# wrangler secret put TWILIO_AUTH_TOKEN
+# wrangler secret put TWILIO_FROM_NUMBER
