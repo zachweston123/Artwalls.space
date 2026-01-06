@@ -1274,6 +1274,28 @@ export default {
       });
     }
 
+    // Admin: send test SMS (requires auth; uses user's phone if 'to' not provided)
+    if (url.pathname === '/api/admin/test-sms' && method === 'POST') {
+      const user = await getSupabaseUserFromRequest(request);
+      if (!user) return json({ error: 'Missing or invalid Authorization bearer token' }, { status: 401 });
+      const body = await request.json().catch(() => ({}));
+      const msg = String(body?.body || 'Artwalls: Test SMS').slice(0, 160);
+      let to = String(body?.to || '').trim();
+      if (!to && supabaseAdmin) {
+        const role = (user.user_metadata?.role as string) || 'artist';
+        if (role === 'venue') {
+          const { data: v } = await supabaseAdmin.from('venues').select('phone_number').eq('id', user.id).maybeSingle();
+          to = (v?.phone_number || '').trim();
+        } else {
+          const { data: a } = await supabaseAdmin.from('artists').select('phone_number').eq('id', user.id).maybeSingle();
+          to = (a?.phone_number || '').trim();
+        }
+      }
+      if (!to) return json({ error: 'No destination phone. Provide "to" or add a phone to your profile.' }, { status: 400 });
+      await sendSms(to, msg);
+      return json({ ok: true });
+    }
+
 
     return new Response('Not found', { status: 404 });
   },

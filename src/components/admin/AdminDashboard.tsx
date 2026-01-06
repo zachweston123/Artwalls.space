@@ -13,7 +13,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { apiGet } from '../../lib/api';
+import { apiGet, apiPost } from '../../lib/api';
 
 interface AdminDashboardProps {
   onNavigate: (page: string, params?: any) => void;
@@ -158,6 +158,25 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
       lastCheck: '5 minutes ago',
     },
   ];
+
+  // Test SMS state
+  const [testTo, setTestTo] = useState('');
+  const [testMsg, setTestMsg] = useState('Artwalls: Test SMS');
+  const [sendingSms, setSendingSms] = useState(false);
+  const [smsResult, setSmsResult] = useState<string | null>(null);
+
+  async function sendTestSms() {
+    try {
+      setSendingSms(true);
+      setSmsResult(null);
+      await apiPost('/api/admin/test-sms', { to: testTo || undefined, body: testMsg });
+      setSmsResult('Sent');
+    } catch (e: any) {
+      setSmsResult(e?.message || 'Failed');
+    } finally {
+      setSendingSms(false);
+    }
+  }
 
   const getDeltaColor = (type: string) => {
     switch (type) {
@@ -316,6 +335,41 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                   </p>
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* Test SMS */}
+          <div className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] mt-6">
+            <div className="p-6 border-b border-[var(--border)]">
+              <h2 className="text-xl text-[var(--text)]">Send Test SMS</h2>
+              <p className="text-xs text-[var(--text-muted)] mt-1">Leave number empty to send to your profile phone.</p>
+            </div>
+            <div className="p-6 space-y-3">
+              <input
+                type="tel"
+                value={testTo}
+                onChange={(e) => setTestTo(e.target.value)}
+                placeholder="+15551234567"
+                className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-3)] text-[var(--text)]"
+              />
+              <input
+                type="text"
+                value={testMsg}
+                onChange={(e) => setTestMsg(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-3)] text-[var(--text)]"
+              />
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={sendTestSms}
+                  disabled={sendingSms}
+                  className="px-4 py-2 bg-[var(--blue)] text-[var(--on-blue)] rounded-lg hover:opacity-90 disabled:opacity-60"
+                >
+                  {sendingSms ? 'Sending…' : 'Send Test SMS'}
+                </button>
+                {smsResult && (
+                  <span className="text-sm text-[var(--text-muted)]">{smsResult}</span>
+                )}
+              </div>
             </div>
           </div>
         </div>
