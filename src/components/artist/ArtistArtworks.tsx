@@ -1,9 +1,20 @@
 import { useEffect, useState } from 'react';
 import { Plus, X, Upload, Loader2 } from 'lucide-react';
-import { mockArtworks } from '../../data/mockData';
-import type { Artwork } from '../../data/mockData';
+type Artwork = {
+  id: string;
+  title: string;
+  description?: string;
+  price: number;
+  imageUrl?: string;
+  status: 'available' | 'pending' | 'active' | 'sold';
+  artistName?: string;
+  venueName?: string;
+};
 import type { User } from '../../App';
-import { apiGet, apiPost } from '../../lib/api';
+import { apiGet, apiPost, API_BASE } from '../../lib/api';
+import { entitlementsFor } from '../../lib/entitlements';
+import { supabase } from '../../lib/supabase';
+import { uploadArtworkImage } from '../../lib/storage';
 
 interface ArtistArtworksProps {
   user: User;
@@ -11,7 +22,7 @@ interface ArtistArtworksProps {
 
 export function ArtistArtworks({ user }: ArtistArtworksProps) {
   const [showAddForm, setShowAddForm] = useState(false);
-  const [artworks, setArtworks] = useState<Artwork[]>(mockArtworks);
+  const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [newArtwork, setNewArtwork] = useState({
     title: '',
     description: '',
@@ -21,13 +32,17 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [artistPlan, setArtistPlan] = useState<{ tier: 'free' | 'starter' | 'growth' | 'pro'; status: string } | null>(null);
 
   const refresh = async () => {
     try {
       setLoading(true);
       setError(null);
-      const items = await apiGet<any[]>(`/api/artworks?artistId=${encodeURIComponent(user.id)}`);
-      if (Array.isArray(items) && items.length) {
+      const res = await apiGet<any>(`/api/artworks?artistId=${encodeURIComponent(user.id)}`);
+      const items = Array.isArray(res) ? res : res?.artworks;
+      if (Array.isArray(items)) {
         setArtworks(items as Artwork[]);
       }
     } catch {
@@ -39,8 +54,35 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
 
   useEffect(() => {
     refresh();
+    // Fetch artist plan info for gating
+    (async () => {
+      try {
+        const me = await apiGet<any>(`/api/profile/me`);
+        const tier = String(me?.profile?.subscription_tier || 'free').toLowerCase() as any;
+        const status = String(me?.profile?.subscription_status || 'inactive');
+        setArtistPlan({ tier, status });
+      } catch {}
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user.id]);
+
+  const handleFileSelected = async (file?: File) => {
+    if (!file) return;
+    try {
+      setUploading(true);
+      setUploadError(null);
+      // Ensure session exists
+      const { data } = await supabase.auth.getUser();
+      const authedId = data.user?.id;
+      const artistId = authedId || user.id;
+      const url = await uploadArtworkImage(artistId, file);
+      setNewArtwork({ ...newArtwork, imageUrl: url });
+    } catch (err: any) {
+      setUploadError(err?.message || 'Upload failed');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,10 +119,10 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
 
   const getStatusBadge = (status: string) => {
     const styles = {
-      available: 'bg-neutral-100 text-neutral-700',
-      pending: 'bg-yellow-100 text-yellow-700',
-      active: 'bg-green-100 text-green-700',
-      sold: 'bg-blue-100 text-blue-700',
+      available: 'bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text)]',
+      pending: 'bg-[var(--surface-2)] border border-[var(--border)] text-[var(--warning)]',
+      active: 'bg-[var(--green-muted)] text-[var(--green)]',
+      sold: 'bg-[var(--surface-2)] border border-[var(--border)] text-[var(--blue)]',
     };
     return (
       <span className={`px-3 py-1 rounded-full text-xs ${styles[status as keyof typeof styles]}`}>
@@ -90,37 +132,63 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
   };
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-8">
+    <div className="bg-[var(--bg)] text-[var(--text)]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-3xl mb-2">My Artworks</h1>
-          <p className="text-neutral-600">
+          <h1 className="text-3xl mb-1 sm:mb-2">My Artworks</h1>
+          <p className="text-[var(--text-muted)] text-sm">
             {loading ? 'Loading…' : `${artworks.length} pieces in your collection`}
           </p>
         </div>
-        <button
-          onClick={() => setShowAddForm(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          <Plus className="w-5 h-5" />
-          Add New Artwork
-        </button>
+        <div className="flex items-center gap-3">
+          {(() => {
+            const planId = (artistPlan?.tier || 'free') as 'free' | 'starter' | 'growth' | 'pro';
+            const isActive = String(artistPlan?.status || '').toLowerCase() === 'active';
+            const ent = entitlementsFor(planId, isActive);
+            const activeCount = artworks.filter(a => a.status !== 'sold').length;
+            const atLimit = Number.isFinite(ent.artworksLimit) && activeCount >= ent.artworksLimit;
+            return (
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                <button
+                  onClick={() => setShowAddForm(true)}
+                  disabled={atLimit}
+                  className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-colors text-sm sm:text-base ${
+                    atLimit
+                      ? 'bg-[var(--surface-3)] text-[var(--text-muted)] cursor-not-allowed border border-[var(--border)]'
+                      : 'bg-[var(--blue)] text-[var(--on-blue)] hover:bg-[var(--blue-hover)] shadow-sm'
+                  }`}
+                >
+                  <Plus className="w-5 h-5" />
+                  <span>Add Artwork</span>
+                </button>
+              {atLimit && (
+                <a
+                  href="#/plans-pricing"
+                  className="px-3 py-2 text-sm bg-[var(--accent)] text-[var(--accent-contrast)] rounded-lg"
+                >
+                  Upgrade to add more
+                </a>
+              )}
+            </div>
+          );
+        })()}
+        </div>
       </div>
 
       {error && (
-        <div className="bg-red-50 rounded-xl p-4 border border-red-200 mb-6">
-          <p className="text-sm text-red-800">{error}</p>
+        <div className="bg-[var(--surface-2)] rounded-xl p-4 border border-[var(--border)] mb-6">
+          <p className="text-sm text-[var(--danger)]">{error}</p>
         </div>
       )}
 
       {showAddForm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
-          <div className="bg-white rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 sm:p-6">
+          <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-2xl p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl">Add New Artwork</h2>
+              <h2 className="text-xl sm:text-2xl">Add New Artwork</h2>
               <button
                 onClick={() => setShowAddForm(false)}
-                className="p-2 hover:bg-neutral-100 rounded-lg transition-colors text-neutral-900"
+                className="p-2 hover:bg-[var(--surface-3)] rounded-lg transition-colors text-[var(--text)]"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -128,76 +196,87 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label className="block text-sm text-neutral-700 mb-2">Artwork Image URL</label>
-                <div className="flex gap-3">
-                  <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-neutral-100 border border-neutral-200">
-                    <Upload className="w-5 h-5 text-neutral-500" />
-                  </div>
+                <label className="block text-sm text-[var(--text)] mb-2">Artwork Image</label>
+                <div className="flex gap-3 items-center">
+                  <label className="flex items-center justify-center w-12 h-12 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] cursor-pointer">
+                    <Upload className="w-5 h-5 text-[var(--text-muted)]" />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => handleFileSelected(e.target.files?.[0])}
+                    />
+                  </label>
                   <input
                     type="url"
                     value={newArtwork.imageUrl}
                     onChange={(e) => setNewArtwork({ ...newArtwork, imageUrl: e.target.value })}
-                    className="flex-1 px-4 py-2 rounded-lg border border-neutral-300 bg-white text-neutral-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="https://... (optional)"
+                    className="flex-1 px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
+                    placeholder="Paste an image URL or upload a file"
                   />
                 </div>
-                <p className="text-xs text-neutral-500 mt-2">
-                  For production, replace this with real uploads (S3/Supabase Storage/Cloudinary).
-                </p>
+                {uploading && (
+                  <p className="text-xs text-[var(--text-muted)] mt-2 inline-flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" /> Uploading image…
+                  </p>
+                )}
+                {uploadError && (
+                  <p className="text-xs text-[var(--danger)] mt-2">{uploadError}</p>
+                )}
               </div>
 
               <div>
-                <label className="block text-sm text-neutral-700 mb-2">Artwork Title</label>
+                <label className="block text-sm text-[var(--text)] mb-2">Artwork Title</label>
                 <input
                   type="text"
                   required
                   value={newArtwork.title}
                   onChange={(e) => setNewArtwork({ ...newArtwork, title: e.target.value })}
-                  className="w-full px-4 py-2 rounded-lg border border-neutral-300 bg-white text-neutral-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
                   placeholder="Enter artwork title"
                 />
               </div>
 
               <div>
-                <label className="block text-sm text-neutral-700 mb-2">Description</label>
+                <label className="block text-sm text-[var(--text)] mb-2">Description</label>
                 <textarea
                   required
                   value={newArtwork.description}
                   onChange={(e) => setNewArtwork({ ...newArtwork, description: e.target.value })}
                   rows={4}
-                  className="w-full px-4 py-2 rounded-lg border border-neutral-300 bg-white text-neutral-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
                   placeholder="Describe your artwork, medium, inspiration..."
                 />
               </div>
 
               <div>
-                <label className="block text-sm text-neutral-700 mb-2">Price (USD)</label>
+                <label className="block text-sm text-[var(--text)] mb-2">Price (USD)</label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500">$</span>
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">$</span>
                   <input
                     type="number"
                     required
                     value={newArtwork.price}
                     onChange={(e) => setNewArtwork({ ...newArtwork, price: e.target.value })}
-                    className="w-full pl-8 pr-4 py-2 rounded-lg border border-neutral-300 bg-white text-neutral-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full pl-8 pr-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
                     placeholder="0.00"
                   />
                 </div>
-                <p className="text-xs text-neutral-500 mt-1">You'll receive ~80% (before Stripe fees)</p>
+                <p className="text-xs text-[var(--text-muted)] mt-1">You'll receive ~80% (before Stripe fees)</p>
               </div>
 
               <div className="flex gap-3 pt-4">
                 <button
                   type="button"
                   onClick={() => setShowAddForm(false)}
-                  className="flex-1 px-4 py-2 bg-neutral-100 text-neutral-700 rounded-lg hover:bg-neutral-200 transition-colors"
+                  className="flex-1 px-4 py-2 bg-[var(--surface-2)] text-[var(--text)] rounded-lg hover:bg-[var(--surface-3)] transition-colors border border-[var(--border)]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={saving}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-60 inline-flex items-center justify-center gap-2"
+                  disabled={saving || uploading}
+                  className="flex-1 px-4 py-2 bg-[var(--blue)] text-[var(--on-blue)] rounded-lg hover:bg-[var(--blue-hover)] transition-colors disabled:opacity-60 inline-flex items-center justify-center gap-2"
                 >
                   {saving && <Loader2 className="w-4 h-4 animate-spin" />}
                   Create Listing
@@ -212,9 +291,9 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
         {artworks.map((artwork) => (
           <div
             key={artwork.id}
-            className="bg-white rounded-xl overflow-hidden border border-neutral-200 hover:shadow-lg transition-shadow group"
+            className="bg-[var(--surface-1)] rounded-xl overflow-hidden border border-[var(--border)] hover:shadow-lg transition-shadow group"
           >
-            <div className="aspect-square bg-neutral-100 overflow-hidden">
+            <div className="aspect-square bg-[var(--surface-2)] overflow-hidden">
               <img
                 src={artwork.imageUrl}
                 alt={artwork.title}
@@ -223,15 +302,58 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
             </div>
             <div className="p-4">
               <div className="flex items-start justify-between mb-2">
-                <h3 className="font-medium text-neutral-900">{artwork.title}</h3>
+                <h3 className="font-medium text-[var(--text)]">{artwork.title}</h3>
                 {getStatusBadge(artwork.status)}
               </div>
-              <p className="text-sm text-neutral-600 mb-3 line-clamp-2">{artwork.description}</p>
+              <p className="text-sm text-[var(--text-muted)] mb-3 line-clamp-2">{artwork.description}</p>
               <div className="flex items-center justify-between">
-                <span className="text-lg text-neutral-900">${artwork.price}</span>
+                <span className="text-lg text-[var(--text)]">${artwork.price}</span>
                 {artwork.stripePriceId && (
-                  <span className="text-[10px] text-neutral-500">Stripe ready</span>
+                  <span className="text-[10px] text-[var(--text-muted)]">Stripe ready</span>
                 )}
+              </div>
+              {/* Mini QR Preview */}
+              <div className="mt-3 flex items-center gap-3">
+                <img
+                  src={`${API_BASE}/api/artworks/${encodeURIComponent(String(artwork.id))}/qrcode.svg?w=96`}
+                  alt="QR code"
+                  className="w-16 h-16 bg-[var(--surface-2)] border border-[var(--border)] rounded-md"
+                />
+                <div className="text-xs text-[var(--text-muted)]">
+                  Scan to open purchase page
+                </div>
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-2 sm:gap-3">
+                <a
+                  href={`#/purchase-${artwork.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center px-3 py-2 bg-[var(--blue)] text-[var(--on-blue)] rounded-lg hover:bg-[var(--blue-hover)] text-xs sm:text-sm text-center"
+                >
+                  View Page
+                </a>
+                <a
+                  href={`${API_BASE}/api/artworks/${encodeURIComponent(String(artwork.id))}/qrcode.svg`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center px-3 py-2 bg-[var(--surface-2)] text-[var(--text)] border border-[var(--border)] rounded-lg hover:bg-[var(--surface-3)] text-xs sm:text-sm text-center"
+                >
+                  QR (SVG)
+                </a>
+                <a
+                  href={`${API_BASE}/api/artworks/${encodeURIComponent(String(artwork.id))}/qrcode.png`}
+                  className="inline-flex items-center justify-center px-3 py-2 bg-[var(--surface-2)] text-[var(--text)] border border-[var(--border)] rounded-lg hover:bg-[var(--surface-3)] text-xs sm:text-sm text-center"
+                >
+                  QR (PNG)
+                </a>
+                <a
+                  href={`${API_BASE}/api/artworks/${encodeURIComponent(String(artwork.id))}/qr-poster`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center px-3 py-2 bg-[var(--green-muted)] text-[var(--green)] rounded-lg hover:opacity-90 text-xs sm:text-sm text-center"
+                >
+                  Poster
+                </a>
               </div>
             </div>
           </div>
@@ -240,14 +362,14 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
 
       {!loading && artworks.length === 0 && (
         <div className="text-center py-16">
-          <div className="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Plus className="w-8 h-8 text-neutral-400" />
+          <div className="w-16 h-16 bg-[var(--surface-2)] border border-[var(--border)] rounded-full flex items-center justify-center mx-auto mb-4">
+            <Plus className="w-8 h-8 text-[var(--text-muted)]" />
           </div>
           <h3 className="text-xl mb-2">No artworks yet</h3>
-          <p className="text-neutral-600 mb-6">Start by adding your first piece</p>
+          <p className="text-[var(--text-muted)] mb-6">Start by adding your first piece</p>
           <button
             onClick={() => setShowAddForm(true)}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="px-6 py-2 bg-[var(--blue)] text-[var(--on-blue)] rounded-lg hover:bg-[var(--blue-hover)] transition-colors"
           >
             Add Your First Artwork
           </button>

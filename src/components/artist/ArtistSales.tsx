@@ -1,9 +1,31 @@
+import { useEffect, useState } from 'react';
 import { DollarSign, TrendingUp, Package } from 'lucide-react';
-import { mockSales } from '../../data/mockData';
+import { apiGet } from '../../lib/api';
+import type { User } from '../../App';
 
-export function ArtistSales() {
-  const totalEarnings = mockSales.reduce((sum, sale) => sum + sale.artistEarnings, 0);
-  const totalSales = mockSales.length;
+interface ArtistSalesProps { user: User }
+
+export function ArtistSales({ user }: ArtistSalesProps) {
+  const [sales, setSales] = useState<Array<{ id: string; price: number; artistEarnings: number; artworkTitle: string; artworkImage?: string | null; venueName?: string | null; saleDate: string }>>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadSales() {
+      try {
+        const resp = await apiGet<{ sales: Array<{ id: string; price: number; artistEarnings: number; artworkTitle: string; artworkImage?: string | null; venueName?: string | null; saleDate: string }> }>(`/api/sales/artist?artistId=${user.id}`);
+        if (!isMounted) return;
+        setSales(resp.sales || []);
+      } catch {
+        if (!isMounted) return;
+        setSales([]);
+      }
+    }
+    loadSales();
+    return () => { isMounted = false; };
+  }, [user.id]);
+
+  const totalEarnings = sales.reduce((sum, sale) => sum + (sale.artistEarnings || 0), 0);
+  const totalSales = sales.length;
   const averageSale = totalSales > 0 ? totalEarnings / totalSales : 0;
 
   return (
@@ -71,13 +93,13 @@ export function ArtistSales() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border)]">
-              {mockSales.map((sale) => (
+              {sales.map((sale) => (
                 <tr key={sale.id} className="transition-colors hover:bg-[var(--surface-3)]">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 bg-[var(--surface-3)] border border-[var(--border)] rounded overflow-hidden">
                         <img
-                          src={sale.artworkImage}
+                          src={sale.artworkImage || 'https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=400'}
                           alt={sale.artworkTitle}
                           className="w-full h-full object-cover"
                         />
@@ -85,7 +107,7 @@ export function ArtistSales() {
                       <span className="text-sm text-[var(--text)]">{sale.artworkTitle}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-[var(--text-muted)]">{sale.venueName}</td>
+                  <td className="px-6 py-4 text-sm text-[var(--text-muted)]">{sale.venueName || '—'}</td>
                   <td className="px-6 py-4 text-sm text-[var(--text)]">${sale.price.toFixed(2)}</td>
                   <td className="px-6 py-4">
                     <div className="text-sm">
@@ -106,7 +128,7 @@ export function ArtistSales() {
           </table>
         </div>
 
-        {mockSales.length === 0 && (
+        {sales.length === 0 && (
           <div className="text-center py-16">
             <div className="w-16 h-16 bg-[var(--surface-2)] border border-[var(--border)] rounded-full flex items-center justify-center mx-auto mb-4">
               <DollarSign className="w-8 h-8 text-[var(--text-muted)]" />

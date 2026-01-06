@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { QrCode, MapPin, Calendar, X, Clock, CheckCircle } from 'lucide-react';
-import { mockInstalledArtworks, mockVenueSchedule } from '../../data/mockData';
+import { mockInstalledArtworks } from '../../data/mockData';
 import type { InstalledArtwork } from '../../data/mockData';
 import { TimeSlotPicker } from '../scheduling/TimeSlotPicker';
 import { DurationBadge } from '../scheduling/DisplayDurationSelector';
+import { createVenueBooking, API_BASE } from '../../lib/api';
+import { supabase } from '../../lib/supabase';
 
 export function VenueCurrentArtWithScheduling() {
   const [artworks, setArtworks] = useState<InstalledArtwork[]>(mockInstalledArtworks);
@@ -11,6 +13,14 @@ export function VenueCurrentArtWithScheduling() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showSchedulePicker, setShowSchedulePicker] = useState(false);
   const [selectedAction, setSelectedAction] = useState<{ id: string; action: string; artwork?: InstalledArtwork } | null>(null);
+  const [qrArtwork, setQrArtwork] = useState<InstalledArtwork | null>(null);
+  const [currentVenueId, setCurrentVenueId] = useState<string>('');
+
+  React.useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setCurrentVenueId(data.user?.id || '');
+    }).catch(() => setCurrentVenueId(''));
+  }, []);
 
   const filteredArtworks = artworks.filter(artwork => {
     if (filter === 'all') return true;
@@ -19,11 +29,11 @@ export function VenueCurrentArtWithScheduling() {
 
   const getStatusBadge = (status: string) => {
     const styles = {
-      'active': { bg: 'bg-green-100', text: 'text-green-700', label: 'Active' },
-      'sold': { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Sold' },
-      'ending-soon': { bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'Ending Soon' },
-      'needs-pickup': { bg: 'bg-orange-100', text: 'text-orange-700', label: 'Needs Pickup' },
-      'ended': { bg: 'bg-neutral-100', text: 'text-neutral-700', label: 'Ended' },
+      'active': { bg: 'bg-[var(--green-muted)]', text: 'text-[var(--green)]', label: 'Active' },
+      'sold': { bg: 'bg-[var(--surface-2)]', text: 'text-[var(--blue)]', label: 'Sold' },
+      'ending-soon': { bg: 'bg-[var(--surface-2)]', text: 'text-[var(--warning)]', label: 'Ending Soon' },
+      'needs-pickup': { bg: 'bg-[var(--surface-2)]', text: 'text-[var(--warning)]', label: 'Needs Pickup' },
+      'ended': { bg: 'bg-[var(--surface-2)]', text: 'text-[var(--text-muted)]', label: 'Ended' },
     };
     const style = styles[status as keyof typeof styles];
     return (
@@ -68,31 +78,36 @@ export function VenueCurrentArtWithScheduling() {
     setSelectedAction(null);
   };
 
-  const handleTimeConfirm = (time: string) => {
+  const handleTimeConfirm = async (timeIso: string) => {
     if (!selectedAction) return;
-
-    const formatTime = (timeString: string) => {
-      const [hour, minute] = timeString.split(':');
-      const h = parseInt(hour);
-      const ampm = h >= 12 ? 'PM' : 'AM';
-      const displayHour = h > 12 ? h - 12 : h === 0 ? 12 : h;
-      const day = mockVenueSchedule.dayOfWeek.substring(0, 3);
-      return `${day} ${displayHour}:${minute} ${ampm}`;
-    };
-
-    setArtworks(artworks.map(artwork => {
-      if (artwork.id === selectedAction.id) {
-        if (selectedAction.action === 'schedule-install' || selectedAction.action === 'reschedule') {
-          return { ...artwork, scheduledInstall: formatTime(time) };
-        } else if (selectedAction.action === 'schedule-pickup') {
-          return { ...artwork, scheduledPickup: formatTime(time) };
-        }
+    try {
+      let bookingId: string | null = null;
+      let bookingLinks: { ics: string; google: string } | undefined;
+      if (selectedAction.artwork && currentVenueId) {
+        const type = selectedAction.action === 'schedule-pickup' ? 'pickup' : 'install';
+        const { booking, links } = await createVenueBooking(currentVenueId, { artworkId: selectedAction.artwork.artworkId, type: type as 'install' | 'pickup', startAt: timeIso });
+        bookingId = booking?.id || null;
+        bookingLinks = links || undefined;
       }
-      return artwork;
-    }));
-
-    setShowSchedulePicker(false);
-    setSelectedAction(null);
+      const d = new Date(timeIso);
+      const day = d.toLocaleDateString('en-US', { weekday: 'short' });
+      const label = `${day} ${d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
+      setArtworks(artworks.map(artwork => {
+        if (artwork.id === selectedAction.id) {
+          if (selectedAction.action === 'schedule-install' || selectedAction.action === 'reschedule') {
+            return { ...artwork, scheduledInstall: label, scheduledInstallBookingId: bookingId, scheduledInstallLinks: bookingLinks } as any;
+          } else if (selectedAction.action === 'schedule-pickup') {
+            return { ...artwork, scheduledPickup: label, scheduledPickupBookingId: bookingId, scheduledPickupLinks: bookingLinks } as any;
+          }
+        }
+        return artwork;
+      }));
+    } catch (e) {
+      // noop: real app toast
+    } finally {
+      setShowSchedulePicker(false);
+      setSelectedAction(null);
+    }
   };
 
   const getActionLabel = (action: string) => {
@@ -110,10 +125,10 @@ export function VenueCurrentArtWithScheduling() {
   const endingSoonCount = artworks.filter(a => a.status === 'ending-soon').length;
 
   return (
-    <div>
+    <div className="bg-[var(--bg)] text-[var(--text)]">
       <div className="mb-8">
-        <h1 className="text-3xl mb-2 text-neutral-900">Current Artwork</h1>
-        <p className="text-neutral-600">
+        <h1 className="text-3xl mb-2 text-[var(--text)]">Current Artwork</h1>
+        <p className="text-[var(--text-muted)]">
           {activeCount} active • {soldCount} sold • {endingSoonCount} ending soon
         </p>
       </div>
@@ -124,8 +139,8 @@ export function VenueCurrentArtWithScheduling() {
           onClick={() => setFilter('all')}
           className={`px-4 py-2 rounded-lg transition-colors ${
             filter === 'all'
-              ? 'bg-green-600 text-white'
-              : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
+              ? 'bg-[var(--green)] text-[var(--accent-contrast)]'
+              : 'bg-[var(--surface-2)] text-[var(--text)] hover:bg-[var(--surface-3)]'
           }`}
         >
           All ({artworks.length})
@@ -134,8 +149,8 @@ export function VenueCurrentArtWithScheduling() {
           onClick={() => setFilter('active')}
           className={`px-4 py-2 rounded-lg transition-colors ${
             filter === 'active'
-              ? 'bg-green-600 text-white'
-              : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
+              ? 'bg-[var(--green)] text-[var(--accent-contrast)]'
+              : 'bg-[var(--surface-2)] text-[var(--text)] hover:bg-[var(--surface-3)]'
           }`}
         >
           Active ({activeCount})
@@ -144,8 +159,8 @@ export function VenueCurrentArtWithScheduling() {
           onClick={() => setFilter('sold')}
           className={`px-4 py-2 rounded-lg transition-colors ${
             filter === 'sold'
-              ? 'bg-green-600 text-white'
-              : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
+              ? 'bg-[var(--green)] text-[var(--accent-contrast)]'
+              : 'bg-[var(--surface-2)] text-[var(--text)] hover:bg-[var(--surface-3)]'
           }`}
         >
           Sold ({soldCount})
@@ -154,8 +169,8 @@ export function VenueCurrentArtWithScheduling() {
           onClick={() => setFilter('ending-soon')}
           className={`px-4 py-2 rounded-lg transition-colors ${
             filter === 'ending-soon'
-              ? 'bg-green-600 text-white'
-              : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
+              ? 'bg-[var(--green)] text-[var(--accent-contrast)]'
+              : 'bg-[var(--surface-2)] text-[var(--text)] hover:bg-[var(--surface-3)]'
           }`}
         >
           Ending Soon ({endingSoonCount})
@@ -167,11 +182,11 @@ export function VenueCurrentArtWithScheduling() {
         {filteredArtworks.map((artwork) => (
           <div
             key={artwork.id}
-            className="bg-white rounded-xl border border-neutral-200 hover:shadow-md transition-shadow overflow-hidden"
+            className="bg-[var(--surface-1)] rounded-xl border border-[var(--border)] hover:shadow-md transition-shadow overflow-hidden"
           >
             <div className="flex flex-col md:flex-row gap-6 p-4 sm:p-6">
               {/* Artwork Image */}
-              <div className="w-full md:w-48 h-48 md:h-auto bg-neutral-100 rounded-lg overflow-hidden flex-shrink-0">
+              <div className="w-full md:w-48 h-48 md:h-auto bg-[var(--surface-2)] rounded-lg overflow-hidden flex-shrink-0">
                 <img
                   src={artwork.artworkImage}
                   alt={artwork.artworkTitle}
@@ -183,8 +198,8 @@ export function VenueCurrentArtWithScheduling() {
               <div className="flex-1 min-w-0">
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
                   <div>
-                    <h3 className="text-xl mb-1 text-neutral-900">{artwork.artworkTitle}</h3>
-                    <p className="text-neutral-600">by {artwork.artistName}</p>
+                    <h3 className="text-xl mb-1 text-[var(--text)]">{artwork.artworkTitle}</h3>
+                    <p className="text-[var(--text-muted)]">by {artwork.artistName}</p>
                   </div>
                   <div className="flex items-center gap-3">
                     {getStatusBadge(artwork.status)}
@@ -193,15 +208,15 @@ export function VenueCurrentArtWithScheduling() {
                 </div>
 
                 {/* Display Term Info */}
-                <div className="mb-4 p-3 bg-neutral-50 rounded-lg border border-neutral-200">
+                <div className="mb-4 p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)]">
                   <div className="flex flex-wrap items-center gap-3 text-sm">
                     <div className="flex items-center gap-2">
-                      <span className="text-neutral-600">Display term:</span>
+                      <span className="text-[var(--text-muted)]">Display term:</span>
                       <DurationBadge duration={(artwork as any).displayDuration || 90} size="sm" />
                     </div>
-                    <div className="text-neutral-400">•</div>
-                    <div className="text-neutral-600">
-                      <span className="text-neutral-500">Ends:</span>{' '}
+                    <div className="text-[var(--text-muted)]">•</div>
+                    <div className="text-[var(--text-muted)]">
+                      <span className="text-[var(--text-muted)]">Ends:</span>{' '}
                       <strong>
                         {new Date(artwork.endDate).toLocaleDateString('en-US', {
                           month: 'short',
@@ -217,24 +232,36 @@ export function VenueCurrentArtWithScheduling() {
                 {(artwork.scheduledInstall || artwork.scheduledPickup) && (
                   <div className="mb-4 flex flex-wrap gap-2">
                     {artwork.scheduledInstall && (
-                      <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-lg text-sm">
-                        <Clock className="w-4 h-4 text-blue-600" />
-                        <span className="text-blue-900">
+                      <div className="flex items-center gap-2 px-3 py-2 bg-[var(--surface-2)] rounded-lg text-sm">
+                        <Clock className="w-4 h-4 text-[var(--blue)]" />
+                        <span className="text-[var(--text)]">
                           Install scheduled: <strong>{artwork.scheduledInstall}</strong>
                         </span>
+                        {((artwork as any).scheduledInstallLinks || (artwork as any).scheduledInstallBookingId) && (
+                          <>
+                            <a className="text-[var(--blue)] underline ml-2" href={(artwork as any).scheduledInstallLinks?.google || `${API_BASE}/api/bookings/${(artwork as any).scheduledInstallBookingId}/google`} target="_blank" rel="noreferrer">Google</a>
+                            <a className="text-[var(--blue)] underline" href={(artwork as any).scheduledInstallLinks?.ics || `${API_BASE}/api/bookings/${(artwork as any).scheduledInstallBookingId}/ics`} target="_blank" rel="noreferrer">.ics</a>
+                          </>
+                        )}
                         {artwork.installConfirmed && (
-                          <CheckCircle className="w-4 h-4 text-green-600" />
+                          <CheckCircle className="w-4 h-4 text-[var(--green)]" />
                         )}
                       </div>
                     )}
                     {artwork.scheduledPickup && (
-                      <div className="flex items-center gap-2 px-3 py-2 bg-orange-50 rounded-lg text-sm">
-                        <Clock className="w-4 h-4 text-orange-600" />
-                        <span className="text-orange-900">
+                      <div className="flex items-center gap-2 px-3 py-2 bg-[var(--surface-2)] rounded-lg text-sm">
+                        <Clock className="w-4 h-4 text-[var(--warning)]" />
+                        <span className="text-[var(--text)]">
                           Pickup scheduled: <strong>{artwork.scheduledPickup}</strong>
                         </span>
+                        {((artwork as any).scheduledPickupLinks || (artwork as any).scheduledPickupBookingId) && (
+                          <>
+                            <a className="text-[var(--blue)] underline ml-2" href={(artwork as any).scheduledPickupLinks?.google || `${API_BASE}/api/bookings/${(artwork as any).scheduledPickupBookingId}/google`} target="_blank" rel="noreferrer">Google</a>
+                            <a className="text-[var(--blue)] underline" href={(artwork as any).scheduledPickupLinks?.ics || `${API_BASE}/api/bookings/${(artwork as any).scheduledPickupBookingId}/ics`} target="_blank" rel="noreferrer">.ics</a>
+                          </>
+                        )}
                         {artwork.pickupConfirmed && (
-                          <CheckCircle className="w-4 h-4 text-green-600" />
+                          <CheckCircle className="w-4 h-4 text-[var(--green)]" />
                         )}
                       </div>
                     )}
@@ -244,17 +271,17 @@ export function VenueCurrentArtWithScheduling() {
                 {/* Metadata Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                   <div className="flex items-start gap-2 text-sm">
-                    <MapPin className="w-4 h-4 text-neutral-500 mt-0.5 flex-shrink-0" />
+                    <MapPin className="w-4 h-4 text-[var(--text-muted)] mt-0.5 flex-shrink-0" />
                     <div>
-                      <span className="text-neutral-500">Wall Location</span>
-                      <p className="text-neutral-900">{artwork.wallSpaceName}</p>
+                      <span className="text-[var(--text-muted)]">Wall Location</span>
+                      <p className="text-[var(--text)]">{artwork.wallSpaceName}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-2 text-sm">
-                    <Calendar className="w-4 h-4 text-neutral-500 mt-0.5 flex-shrink-0" />
+                    <Calendar className="w-4 h-4 text-[var(--text-muted)] mt-0.5 flex-shrink-0" />
                     <div>
-                      <span className="text-neutral-500">Install Date</span>
-                      <p className="text-neutral-900">
+                      <span className="text-[var(--text-muted)]">Install Date</span>
+                      <p className="text-[var(--text)]">
                         {new Date(artwork.installDate).toLocaleDateString('en-US', {
                           month: 'short',
                           day: 'numeric',
@@ -264,10 +291,10 @@ export function VenueCurrentArtWithScheduling() {
                     </div>
                   </div>
                   <div className="flex items-start gap-2 text-sm">
-                    <Calendar className="w-4 h-4 text-neutral-500 mt-0.5 flex-shrink-0" />
+                    <Calendar className="w-4 h-4 text-[var(--text-muted)] mt-0.5 flex-shrink-0" />
                     <div>
-                      <span className="text-neutral-500">End Date</span>
-                      <p className="text-neutral-900">
+                      <span className="text-[var(--text-muted)]">End Date</span>
+                      <p className="text-[var(--text)]">
                         {new Date(artwork.endDate).toLocaleDateString('en-US', {
                           month: 'short',
                           day: 'numeric',
@@ -277,10 +304,10 @@ export function VenueCurrentArtWithScheduling() {
                     </div>
                   </div>
                   <div className="flex items-start gap-2 text-sm">
-                    <QrCode className="w-4 h-4 text-neutral-500 mt-0.5 flex-shrink-0" />
+                    <QrCode className="w-4 h-4 text-[var(--text-muted)] mt-0.5 flex-shrink-0" />
                     <div>
-                      <span className="text-neutral-500">QR Code</span>
-                      <button className="text-green-600 hover:text-green-700 underline">
+                      <span className="text-[var(--text-muted)]">QR Code</span>
+                      <button className="text-[var(--green)] hover:opacity-80 underline" onClick={() => setQrArtwork(artwork)}>
                         View / Print
                       </button>
                     </div>
@@ -294,27 +321,27 @@ export function VenueCurrentArtWithScheduling() {
                       {!artwork.installConfirmed && artwork.scheduledInstall && (
                         <button
                           onClick={() => handleAction(artwork.id, 'confirm-installed')}
-                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                          className="px-4 py-2 bg-[var(--blue)] text-[var(--on-blue)] rounded-lg hover:bg-[var(--blue-hover)] transition-colors text-sm"
                         >
                           Confirm Installed
                         </button>
                       )}
                       <button
                         onClick={() => handleAction(artwork.id, 'mark-sold')}
-                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                        className="px-4 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-colors text-sm"
                       >
                         Mark as Sold
                       </button>
                       <button
                         onClick={() => handleAction(artwork.id, 'end-display')}
-                        className="px-4 py-2 bg-neutral-100 text-neutral-700 rounded-lg hover:bg-neutral-200 transition-colors text-sm"
+                        className="px-4 py-2 bg-[var(--surface-2)] text-[var(--text)] rounded-lg hover:bg-[var(--surface-3)] transition-colors text-sm"
                       >
                         End Display
                       </button>
                       {artwork.scheduledInstall && (
                         <button
                           onClick={() => handleAction(artwork.id, 'reschedule', artwork)}
-                          className="px-4 py-2 bg-neutral-100 text-neutral-700 rounded-lg hover:bg-neutral-200 transition-colors text-sm"
+                          className="px-4 py-2 bg-[var(--surface-2)] text-[var(--text)] rounded-lg hover:bg-[var(--surface-3)] transition-colors text-sm"
                         >
                           Reschedule
                         </button>
@@ -326,14 +353,14 @@ export function VenueCurrentArtWithScheduling() {
                       {!artwork.scheduledPickup ? (
                         <button
                           onClick={() => handleAction(artwork.id, 'schedule-pickup', artwork)}
-                          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                          className="px-4 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-colors text-sm"
                         >
                           Schedule Pickup
                         </button>
                       ) : !artwork.pickupConfirmed ? (
                         <button
                           onClick={() => handleAction(artwork.id, 'confirm-pickup')}
-                          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                          className="px-4 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-colors text-sm"
                         >
                           Confirm Pickup Completed
                         </button>
@@ -344,11 +371,11 @@ export function VenueCurrentArtWithScheduling() {
                     <>
                       <button
                         onClick={() => handleAction(artwork.id, 'mark-sold')}
-                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                        className="px-4 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-colors text-sm"
                       >
                         Mark as Sold
                       </button>
-                      <button className="px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors text-sm">
+                      <button className="px-4 py-2 bg-[var(--surface-2)] text-[var(--blue)] rounded-lg hover:bg-[var(--surface-3)] transition-colors text-sm">
                         Request Replacement
                       </button>
                     </>
@@ -363,24 +390,24 @@ export function VenueCurrentArtWithScheduling() {
       {/* Empty States */}
       {filteredArtworks.length === 0 && (
         <div className="text-center py-16">
-          <div className="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <MapPin className="w-8 h-8 text-neutral-400" />
+          <div className="w-16 h-16 bg-[var(--surface-2)] rounded-full flex items-center justify-center mx-auto mb-4">
+            <MapPin className="w-8 h-8 text-[var(--text-muted)]" />
           </div>
           {filter === 'all' && (
             <>
-              <h3 className="text-xl mb-2 text-neutral-900">No artwork on display</h3>
-              <p className="text-neutral-600 mb-6">
+              <h3 className="text-xl mb-2 text-[var(--text)]">No artwork on display</h3>
+              <p className="text-[var(--text-muted)] mb-6">
                 Review artist applications to start displaying artwork
               </p>
-              <button className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+              <button className="px-6 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-colors">
                 View Applications
               </button>
             </>
           )}
           {filter !== 'all' && (
             <>
-              <h3 className="text-xl mb-2 text-neutral-900">No {filter.replace('-', ' ')} artwork</h3>
-              <p className="text-neutral-600">Try selecting a different filter</p>
+              <h3 className="text-xl mb-2 text-[var(--text)]">No {filter.replace('-', ' ')} artwork</h3>
+              <p className="text-[var(--text-muted)]">Try selecting a different filter</p>
             </>
           )}
         </div>
@@ -394,9 +421,7 @@ export function VenueCurrentArtWithScheduling() {
             setShowSchedulePicker(false);
             setSelectedAction(null);
           }}
-          windowDay={mockVenueSchedule.dayOfWeek}
-          startTime={mockVenueSchedule.startTime}
-          endTime={mockVenueSchedule.endTime}
+          venueId={currentVenueId}
           type={selectedAction.action === 'schedule-pickup' ? 'pickup' : 'install'}
           artworkTitle={selectedAction.artwork.artworkTitle}
           onConfirm={handleTimeConfirm}
@@ -405,33 +430,65 @@ export function VenueCurrentArtWithScheduling() {
 
       {/* Confirmation Modal */}
       {showConfirmModal && selectedAction && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-2xl p-6 max-w-md w-full">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl text-neutral-900">Confirm Action</h3>
+              <h3 className="text-xl text-[var(--text)]">Confirm Action</h3>
               <button
                 onClick={() => setShowConfirmModal(false)}
-                className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <p className="text-neutral-600 mb-6">
+            <p className="text-[var(--text-muted)] mb-6">
               Are you sure you want to {getActionLabel(selectedAction.action).toLowerCase()}?
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowConfirmModal(false)}
-                className="flex-1 px-4 py-2 bg-neutral-100 text-neutral-700 rounded-lg hover:bg-neutral-200 transition-colors"
+                className="flex-1 px-4 py-2 bg-[var(--surface-2)] text-[var(--text)] rounded-lg hover:bg-[var(--surface-3)] transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmAction}
-                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                className="flex-1 px-4 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-colors"
               >
                 Confirm
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* QR Modal */}
+      {qrArtwork && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-2xl p-6 max-w-md w-full">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl text-[var(--text)]">Artwork QR Code</h3>
+              <button onClick={() => setQrArtwork(null)} className="p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <p className="text-[var(--text-muted)]">Use this QR for customer purchase and info.</p>
+              <div className="flex items-center justify-center">
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(`${window.location.origin}/purchase/${qrArtwork.id}`)}`}
+                  alt="QR Code"
+                  className="w-60 h-60 border border-[var(--border)] rounded-lg bg-[var(--surface-2)]"
+                />
+              </div>
+              <div className="flex gap-3">
+                <button onClick={() => setQrArtwork(null)} className="flex-1 px-4 py-2 bg-[var(--surface-2)] text-[var(--text)] rounded-lg hover:bg-[var(--surface-3)] transition-colors">
+                  Close
+                </button>
+                <button onClick={() => window.print()} className="flex-1 px-4 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-opacity">
+                  Print
+                </button>
+              </div>
             </div>
           </div>
         </div>

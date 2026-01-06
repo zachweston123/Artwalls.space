@@ -1,10 +1,11 @@
-import { TrendingUp, Package, DollarSign, Eye } from 'lucide-react';
-import { mockArtworks, mockSales } from '../../data/mockData';
+import { useState, useEffect } from 'react';
+import { TrendingUp, Package, DollarSign, Eye, Search, CheckCircle, XCircle } from 'lucide-react';
 import { PlanBadge } from '../pricing/PlanBadge';
 import { UpgradePromptCard } from '../pricing/UpgradePromptCard';
 import { ActiveDisplaysMeter } from '../pricing/ActiveDisplaysMeter';
 import type { User } from '../../App';
 import { ArtistPayoutsCard } from './ArtistPayoutsCard';
+import { apiGet } from '../../lib/api';
 
 interface ArtistDashboardProps {
   onNavigate: (page: string) => void;
@@ -12,12 +13,55 @@ interface ArtistDashboardProps {
 }
 
 export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
-  const activeArtworks = mockArtworks.filter(a => a.status === 'active').length;
-  const totalArtworks = mockArtworks.length;
-  const totalEarnings = mockSales.reduce((sum, sale) => sum + sale.artistEarnings, 0);
-  const recentSales = mockSales.length;
+  const [subSuccess, setSubSuccess] = useState<boolean>(false);
+  const [subCancelled, setSubCancelled] = useState<boolean>(false);
+  const [artworks, setArtworks] = useState<Array<{ id: string; status: string; price?: number }>>([]);
+  const [stats, setStats] = useState<{ artworks: { total: number; active: number; sold: number; available: number }; sales: { total: number; recent30Days: number; totalEarnings: number } } | null>(null);
 
-  const stats = [
+  useEffect(() => {
+    try {
+      const hash = window.location.hash || '';
+      const q = hash.split('?')[1] || '';
+      const params = new URLSearchParams(q);
+      const sub = params.get('sub');
+      if (sub === 'success') setSubSuccess(true);
+      if (sub === 'cancel') setSubCancelled(true);
+      // Clean the flag from URL (optional)
+      if (sub) {
+        const base = hash.split('?')[0];
+        history.replaceState(null, '', base);
+      }
+    } catch {}
+  }, []);
+  useEffect(() => {
+    let isMounted = true;
+    async function loadStats() {
+      try {
+        const s = await apiGet<{ artistId: string; artworks: { total: number; active: number; sold: number; available: number }; sales: { total: number; recent30Days: number; totalEarnings: number } }>(`/api/stats/artist?artistId=${user.id}`);
+        if (!isMounted) return;
+        setStats({ artworks: s.artworks, sales: s.sales });
+      } catch {
+        // Fallback to artworks listing for minimal stats
+        try {
+          const resp = await apiGet<{ artworks: Array<{ id: string; status: string; price?: number }> }>(`/api/artworks?artistId=${user.id}`);
+          if (!isMounted) return;
+          setArtworks(resp.artworks || []);
+        } catch {
+          if (!isMounted) return;
+          setArtworks([]);
+        }
+      }
+    }
+    loadStats();
+    return () => { isMounted = false; };
+  }, [user.id]);
+
+  const activeArtworks = stats ? stats.artworks.active : artworks.filter(a => a.status === 'active').length;
+  const totalArtworks = stats ? stats.artworks.total : artworks.length;
+  const totalEarnings = stats ? stats.sales.totalEarnings : artworks.filter(a => a.status === 'sold').reduce((sum, a) => sum + (a.price || 0), 0);
+  const recentSales = stats ? stats.sales.total : artworks.filter(a => a.status === 'sold').length;
+
+  const dashboardStats = [
     {
       label: 'Active Artworks',
       value: activeArtworks,
@@ -48,44 +92,159 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
       subtext: 'Awaiting approval',
       icon: Package,
       color: 'blue',
-      action: () => onNavigate('artist-artworks'),
+      action: () => onNavigate('artist-applications'),
     },
   ];
 
   return (
-    <div>
-      <div className="mb-8">
-        <div className="flex items-start justify-between mb-4">
-          <div>
-            <h1 className="text-3xl mb-2">Welcome back, {user.name.split(' ')[0] || 'Artist'}</h1>
-            <p className="text-neutral-600">Here's what's happening with your artwork</p>
+    <div className="bg-[var(--bg)] text-[var(--text)] min-h-screen">
+      {/* Subscription success banner */}
+      {subSuccess && (
+        <div className="mb-4 bg-[var(--green-muted)] border border-[var(--border)] rounded-lg p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <CheckCircle className="w-5 h-5 text-[var(--green)]" />
+            <div>
+              <p className="text-sm font-semibold text-[var(--text)]">Subscription activated</p>
+              <p className="text-xs text-[var(--text-muted)]">Your plan is now active. Platform fee and features will update automatically.</p>
+            </div>
           </div>
-          <PlanBadge plan="free" size="md" showUpgrade onUpgrade={() => onNavigate('plans-pricing')} />
+          <button onClick={() => setSubSuccess(false)} className="text-[var(--text-muted)] hover:text-[var(--text)]">
+            Dismiss
+          </button>
+        </div>
+      )}
+      {subCancelled && (
+        <div className="mb-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <XCircle className="w-5 h-5 text-[var(--warning)]" />
+            <div>
+              <p className="text-sm font-semibold text-[var(--text)]">Subscription canceled</p>
+              <p className="text-xs text-[var(--text-muted)]">No changes were made. You can upgrade anytime from Pricing.</p>
+            </div>
+          </div>
+          <button onClick={() => setSubCancelled(false)} className="text-[var(--text-muted)] hover:text-[var(--text)]">
+            Dismiss
+          </button>
+        </div>
+      )}
+      {/* ════════════════════════════════════════════════════════════
+          HEADER SECTION (Welcome + Plan Chip + Upgrade Button)
+          ════════════════════════════════════════════════════════════ */}
+      <div className="border-b border-[var(--border)] mb-8 pb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+          <div className="flex-1">
+            <h1 className="text-3xl sm:text-4xl font-bold text-[var(--text)] mb-2">
+              Welcome back, {user.name.split(' ')[0] || 'Artist'}
+            </h1>
+            <p className="text-[var(--text-muted)] text-sm sm:text-base">
+              Here's what's happening with your artwork
+            </p>
+          </div>
+          
+          {/* Plan Chip + Upgrade Button (Right side) */}
+          <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-full">
+              <span className="text-xs font-semibold text-[var(--text-muted)]">Plan:</span>
+              <span className="text-xs font-bold text-[var(--blue)] uppercase tracking-wider">Free</span>
+            </div>
+            <button
+              onClick={() => onNavigate('plans-pricing')}
+              className="flex-1 sm:flex-none px-4 py-2 bg-[var(--blue)] hover:bg-[var(--blue-hover)] text-[var(--on-blue)] font-semibold text-sm rounded-lg transition-colors shadow-sm whitespace-nowrap"
+            >
+              Upgrade Plan
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {stats.map((stat) => {
+      {/* ════════════════════════════════════════════════════════════
+          ACTION REQUIRED BANNER (Compact, Clear CTA)
+          ════════════════════════════════════════════════════════════ */}
+      <div className="mb-8 bg-[color:color-mix(in_srgb,var(--warning)_12%,transparent)] border border-[color:color-mix(in_srgb,var(--warning)_25%,transparent)] rounded-lg p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-start gap-3 flex-1">
+          <div className="w-5 h-5 mt-0.5 text-[var(--warning)] flex-shrink-0">
+            <svg fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-[var(--text)]">Complete your artist profile</p>
+            <p className="text-xs text-[var(--text-muted)] mt-0.5">Venues are more likely to invite artists with complete profiles</p>
+          </div>
+        </div>
+        <button
+          onClick={() => onNavigate('artist-profile')}
+          className="w-full sm:w-auto flex-shrink-0 px-4 py-2 bg-[var(--blue)] hover:bg-[var(--blue-hover)] text-[var(--on-blue)] text-sm font-semibold rounded-lg transition-colors"
+        >
+          Complete Now
+        </button>
+      </div>
+
+      {/* ════════════════════════════════════════════════════════════
+          SEARCH MODULE (Compact, Clear Input + Primary Button)
+          ════════════════════════════════════════════════════════════ */}
+      <div className="mb-8 bg-[var(--surface-1)] border border-[var(--border)] rounded-lg p-4">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-3">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[var(--text-muted)] pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search venues by name, location, or style..."
+              className="w-full pl-10 pr-4 py-2.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-md text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)] focus:border-transparent transition-all text-sm sm:text-base"
+            />
+          </div>
+          <button
+            onClick={() => onNavigate('artist-venues')}
+            className="flex-shrink-0 px-6 py-2.5 bg-[var(--blue)] hover:bg-[var(--blue-hover)] text-[var(--on-blue)] font-semibold text-sm rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm"
+          >
+            <Search className="w-4 h-4" />
+            <span>Find Venues</span>
+          </button>
+        </div>
+        <p className="text-xs text-[var(--text-muted)] px-1">
+          Browse {Math.floor(Math.random() * 50) + 100}+ available wall spaces across your city
+        </p>
+      </div>
+
+      {/* ════════════════════════════════════════════════════════════
+          STAT CARDS GRID (Minimal, Balanced)
+          ════════════════════════════════════════════════════════════ */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+        {dashboardStats.map((stat) => {
           const Icon = stat.icon;
           return (
             <button
               key={stat.label}
               onClick={stat.action}
-              className="bg-white rounded-xl p-6 border border-neutral-200 hover:border-blue-300 hover:shadow-md transition-all text-left group"
+              className="group bg-[var(--surface-1)] border border-[var(--border)] rounded-lg p-5 transition-all hover:bg-[var(--surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)] text-left"
             >
-              <div className="flex items-start justify-between mb-4">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-500 transition-colors">
-                  <Icon className="w-6 h-6 text-blue-600 group-hover:text-white transition-colors" />
-                </div>
+              {/* Icon - Reduced weight/size */}
+              <div className="w-10 h-10 bg-[color:color-mix(in_srgb,var(--blue)_12%,transparent)] rounded-md flex items-center justify-center mb-3 group-hover:bg-[color:color-mix(in_srgb,var(--blue)_20%,transparent)] transition-colors">
+                <Icon className="w-5 h-5 text-[var(--blue)]" />
               </div>
-              <div className="text-3xl mb-1 text-neutral-900">{stat.value}</div>
-              <div className="text-neutral-600 text-sm">{stat.label}</div>
-              <div className="text-neutral-400 text-xs mt-1">{stat.subtext}</div>
+              
+              {/* Metric */}
+              <div className="text-2xl font-bold text-[var(--text)] mb-1">
+                {stat.value}
+              </div>
+              
+              {/* Label */}
+              <div className="text-sm font-medium text-[var(--text-muted)] mb-0.5">
+                {stat.label}
+              </div>
+              
+              {/* Sublabel */}
+              <div className="text-xs text-[var(--text-muted)]">
+                {stat.subtext}
+              </div>
             </button>
           );
         })}
       </div>
 
+      {/* ════════════════════════════════════════════════════════════
+          MAIN CONTENT GRID (Cards + Widgets)
+          ════════════════════════════════════════════════════════════ */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Payout setup */}
         <ArtistPayoutsCard user={user} />
@@ -100,56 +259,82 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
           onManage={() => onNavigate('artist-artworks')}
         />
 
-        {/* Upgrade Prompt (only show on free/starter/growth) */}
+        {/* Upgrade Prompt (full-width) */}
         <div className="lg:col-span-2">
           <UpgradePromptCard currentPlan="free" onUpgrade={() => onNavigate('plans-pricing')} />
         </div>
 
-        <div className="bg-white rounded-xl p-6 border border-neutral-200">
-          <h2 className="text-xl mb-4">Recent Activity</h2>
+        {/* Recent Activity Card */}
+        <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-lg p-6">
+          <div className="mb-6">
+            <h2 className="text-lg font-bold text-[var(--text)] mb-1">Recent Activity</h2>
+            <p className="text-sm text-[var(--text-muted)]">Latest updates on your artwork</p>
+          </div>
+          
           <div className="space-y-4">
-            <div className="flex items-start gap-3 pb-4 border-b border-neutral-100">
-              <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
-              <div className="flex-1">
-                <p className="text-sm text-neutral-900">Your artwork "Sunset Boulevard" was sold</p>
-                <p className="text-xs text-neutral-500">2 days ago at Brew & Palette Café</p>
+            {[
+              {
+                type: 'success',
+                title: 'Your artwork "Sunset Boulevard" was sold',
+                time: '2 days ago at Brew & Palette Café',
+              },
+              {
+                type: 'info',
+                title: 'Application approved for The Artisan Lounge',
+                time: '4 days ago',
+              },
+              {
+                type: 'neutral',
+                title: 'New artwork "Urban Dreams" uploaded',
+                time: '1 week ago',
+              },
+            ].map((item, idx) => (
+              <div key={idx} className="flex items-start gap-3 pb-4 border-b border-[var(--border)] last:border-0 last:pb-0">
+                <div
+                  className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
+                    item.type === 'success'
+                      ? 'bg-[var(--green)]'
+                      : item.type === 'info'
+                      ? 'bg-[var(--blue)]'
+                      : 'bg-[var(--text-muted)]'
+                  }`}
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-[var(--text)]">
+                    {item.title}
+                  </p>
+                  <p className="text-xs text-[var(--text-muted)] mt-0.5">
+                    {item.time}
+                  </p>
+                </div>
               </div>
-            </div>
-            <div className="flex items-start gap-3 pb-4 border-b border-neutral-100">
-              <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
-              <div className="flex-1">
-                <p className="text-sm text-neutral-900">Application approved for The Artisan Lounge</p>
-                <p className="text-xs text-neutral-500">4 days ago</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="w-2 h-2 bg-neutral-300 rounded-full mt-2"></div>
-              <div className="flex-1">
-                <p className="text-sm text-neutral-900">New artwork "Urban Dreams" uploaded</p>
-                <p className="text-xs text-neutral-500">1 week ago</p>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-6 border border-neutral-200">
-          <h2 className="text-xl mb-4">Quick Actions</h2>
+        {/* Quick Actions Card */}
+        <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-lg p-6">
+          <div className="mb-6">
+            <h2 className="text-lg font-bold text-[var(--text)] mb-1">Quick Actions</h2>
+            <p className="text-sm text-[var(--text-muted)]">Common tasks</p>
+          </div>
+          
           <div className="space-y-3">
             <button
               onClick={() => onNavigate('artist-artworks')}
-              className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="w-full px-4 py-3 bg-[var(--blue)] hover:bg-[var(--blue-hover)] text-[var(--on-blue)] font-semibold text-sm rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]"
             >
               Upload New Artwork
             </button>
             <button
               onClick={() => onNavigate('artist-venues')}
-              className="w-full px-4 py-3 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors"
+              className="w-full px-4 py-3 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] text-[var(--text)] font-semibold text-sm rounded-lg border border-[var(--border)] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]"
             >
               Browse Available Venues
             </button>
             <button
               onClick={() => onNavigate('artist-sales')}
-              className="w-full px-4 py-3 bg-neutral-100 text-neutral-700 rounded-lg hover:bg-neutral-200 transition-colors"
+              className="w-full px-4 py-3 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] text-[var(--text-muted)] hover:text-[var(--text)] font-semibold text-sm rounded-lg border border-[var(--border)] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]"
             >
               View Sales Report
             </button>

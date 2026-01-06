@@ -1,7 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ShoppingCart, MapPin, User, ArrowLeft, Loader2 } from 'lucide-react';
-import { mockArtworks } from '../data/mockData';
-import type { Artwork } from '../data/mockData';
+type Artwork = {
+  id: string;
+  title: string;
+  description?: string;
+  price: number; // dollars
+  currency?: string;
+  imageUrl?: string;
+  status: 'available' | 'pending' | 'active' | 'sold';
+  artistName?: string;
+  venueName?: string;
+  checkoutUrl?: string;
+};
 import { apiGet, apiPost } from '../lib/api';
 
 interface PurchasePageProps {
@@ -10,11 +20,36 @@ interface PurchasePageProps {
 }
 
 export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
-  const fallback = useMemo(() => mockArtworks.find(a => a.id === artworkId) || mockArtworks[0], [artworkId]);
-  const [artwork, setArtwork] = useState<Artwork | any>(fallback);
+  const [artwork, setArtwork] = useState<Artwork | null>(null);
   const [loading, setLoading] = useState(true);
   const [buying, setBuying] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
+
+  // Read purchase status from hash query (?status=success|cancel)
+  const purchaseStatus = useMemo(() => {
+    const hash = window.location.hash || '';
+    const query = hash.includes('?') ? hash.split('?')[1] : '';
+    const params = new URLSearchParams(query);
+    return params.get('status');
+  }, [artworkId]);
+
+  // After success/cancel, refresh artwork and retrieve receipt
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (purchaseStatus === 'success') {
+        try {
+          const data = await apiGet<{ order: { receiptUrl: string | null } | null }>(`/api/orders/by-artwork?artworkId=${encodeURIComponent(artworkId)}`);
+          if (!cancelled) setReceiptUrl(data.order?.receiptUrl || null);
+          // Refresh artwork to reflect sold status
+          const art = await apiGet<Artwork>(`/api/artworks/${encodeURIComponent(artworkId)}`);
+          if (!cancelled) setArtwork(art);
+        } catch {}
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [purchaseStatus, artworkId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -22,11 +57,10 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
       try {
         setLoading(true);
         setError(null);
-        const data = await apiGet<any>(`/api/artworks/${encodeURIComponent(artworkId)}`);
+        const data = await apiGet<Artwork>(`/api/artworks/${encodeURIComponent(artworkId)}`);
         if (!cancelled) setArtwork(data);
       } catch (e: any) {
-        // If backend not running, still show mock data
-        if (!cancelled) setArtwork(fallback);
+        if (!cancelled) setArtwork(null);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -34,7 +68,7 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
     return () => {
       cancelled = true;
     };
-  }, [artworkId, fallback]);
+  }, [artworkId]);
 
   const handlePurchase = async () => {
     try {
@@ -61,21 +95,21 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50">
+    <div className="min-h-screen bg-[var(--bg)]">
       {/* Header */}
-      <div className="bg-white border-b border-neutral-200">
+      <div className="bg-[var(--surface-2)] border-b border-[var(--border)]">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between">
             {onBack && (
               <button
                 onClick={onBack}
-                className="flex items-center gap-2 text-neutral-600 hover:text-neutral-900 transition-colors"
+                className="flex items-center gap-2 text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
               >
                 <ArrowLeft className="w-5 h-5" />
                 <span className="text-sm">Back</span>
               </button>
             )}
-            <span className="text-xl tracking-tight text-neutral-900">Artwalls</span>
+            <span className="text-xl tracking-tight text-[var(--text)]">Artwalls</span>
             <div className="w-16" /> {/* Spacer for balance */}
           </div>
         </div>
@@ -85,106 +119,124 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
           {/* Image */}
-          <div className="bg-white rounded-2xl overflow-hidden border border-neutral-200 shadow-lg">
-            <div className="aspect-square bg-neutral-100">
-              <img
-                src={artwork.imageUrl}
-                alt={artwork.title}
-                className="w-full h-full object-cover"
-              />
+          <div className="bg-[var(--surface-2)] rounded-2xl overflow-hidden border border-[var(--border)] shadow-lg">
+            <div className="aspect-square bg-[var(--surface-3)]">
+              {artwork?.imageUrl ? (
+                <img src={artwork.imageUrl} alt={artwork.title} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-[var(--text-muted)]">No image</div>
+              )}
             </div>
           </div>
 
           {/* Details */}
           <div>
             <div className="mb-6">
-              <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm mb-4">
-                {artwork.status === 'sold' ? 'Sold' : 'Available for Purchase'}
+              <span className="inline-block px-3 py-1 bg-[var(--surface-3)] text-[var(--text)] border border-[var(--border)] rounded-full text-sm mb-4">
+                {artwork?.status === 'sold' ? 'Sold' : 'Available for Purchase'}
               </span>
-              <h1 className="text-3xl sm:text-4xl mb-3 text-neutral-900">{artwork.title}</h1>
-                <div className="flex items-center gap-2 text-neutral-600 mb-4">
+              <h1 className="text-3xl sm:text-4xl mb-3 text-[var(--text)]">{artwork?.title || 'Artwork'}</h1>
+                <div className="flex items-center gap-2 text-[var(--text-muted)] mb-4">
                 <User className="w-5 h-5" />
-                <span className="text-base sm:text-lg">by {artwork.artistName}</span>
+                <span className="text-base sm:text-lg">by {artwork?.artistName || 'Artist'}</span>
               </div>
-                <div className="flex items-start gap-2 text-neutral-600 mb-6">
+                <div className="flex items-start gap-2 text-[var(--text-muted)] mb-6">
                 <MapPin className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                <span className="text-sm sm:text-base">Currently on display at {artwork.venueName || 'Local Venue'}</span>
+                <span className="text-sm sm:text-base">Currently on display at {artwork?.venueName || 'Local Venue'}</span>
               </div>
             </div>
 
             <div className="mb-8">
-              <p className="text-neutral-700 leading-relaxed">{artwork.description}</p>
+              <p className="text-[var(--text)] leading-relaxed">{artwork?.description || 'No description provided.'}</p>
             </div>
 
-            <div className="bg-neutral-100 rounded-xl p-4 sm:p-6 mb-6 border border-neutral-200">
+            <div className="bg-[var(--surface-3)] rounded-xl p-4 sm:p-6 mb-6 border border-[var(--border)]">
               <div className="flex items-baseline justify-between mb-2">
-                <span className="text-neutral-600">Price</span>
-                <span className="text-3xl sm:text-4xl text-neutral-900">${artwork.price}</span>
+                <span className="text-[var(--text-muted)]">Price</span>
+                <span className="text-3xl sm:text-4xl text-[var(--text)]">${artwork?.price ?? 0}</span>
               </div>
-              <p className="text-sm text-neutral-500">
-                Supports local artist with ~80% of the sale going to the creator (before Stripe fees)
+              <p className="text-sm text-[var(--text-muted)]">
+                Supports the local artist with ~80% of the sale going to the creator (before Stripe fees)
               </p>
             </div>
 
+            {purchaseStatus === 'success' && (
+              <div className="bg-[var(--surface-3)] rounded-xl p-4 border border-[var(--border)] mb-4">
+                <p className="text-sm text-[var(--text)]">
+                  Payment successful! Show this to venue staff to collect the artwork.
+                </p>
+                {receiptUrl && (
+                  <p className="text-sm mt-2">
+                    <a href={receiptUrl} target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] underline">View Stripe Receipt</a>
+                  </p>
+                )}
+              </div>
+            )}
+            {purchaseStatus === 'cancel' && (
+              <div className="bg-[var(--surface-3)] rounded-xl p-4 border border-[var(--border)] mb-4">
+                <p className="text-sm text-[var(--text)]">Checkout canceled. You can try again below.</p>
+              </div>
+            )}
             {error && (
-              <div className="bg-red-50 rounded-xl p-4 border border-red-200 mb-4">
-                <p className="text-sm text-red-800">{error}</p>
+              <div className="bg-[var(--surface-3)] rounded-xl p-4 border border-[var(--border)] mb-4">
+                <p className="text-sm text-[var(--text)]">{error}</p>
               </div>
             )}
 
             <button
               onClick={handlePurchase}
-              disabled={buying || artwork.status === 'sold'}
-              className="w-full flex items-center justify-center gap-3 px-6 py-3 sm:py-4 bg-blue-600 disabled:bg-blue-400 text-white rounded-xl hover:bg-blue-700 transition-colors shadow-lg mb-4"
+              disabled={buying || artwork?.status === 'sold' || purchaseStatus === 'success' || !artwork}
+              className="w-full flex items-center justify-center gap-3 px-6 py-3 sm:py-4 bg-[var(--accent)] disabled:bg-[var(--surface-3)] text-[var(--accent-contrast)] disabled:text-[var(--text-muted)] rounded-xl hover:brightness-95 transition shadow-lg mb-4"
             >
               {buying ? <Loader2 className="w-5 h-5 animate-spin" /> : <ShoppingCart className="w-5 h-5" />}
-              <span className="text-base sm:text-lg">{artwork.status === 'sold' ? 'Already Sold' : 'Buy This Artwork'}</span>
+              <span className="text-base sm:text-lg">
+                {artwork?.status === 'sold' ? 'Already Sold' : purchaseStatus === 'success' ? 'Payment Complete' : 'Buy This Artwork'}
+              </span>
             </button>
 
             {loading && (
-              <p className="text-xs text-neutral-500">Loading latest availability…</p>
+              <p className="text-xs text-[var(--text-muted)]">Loading latest availability…</p>
             )}
 
             {/* All Sales Final Notice */}
-            <div className="bg-yellow-50 rounded-xl p-4 border border-yellow-200 mb-6">
-              <p className="text-sm text-yellow-900">
-                <strong>⚠️ All sales final:</strong> Please view artwork in person before purchasing.
-                No returns or refunds available.
+            <div className="bg-[var(--surface-3)] rounded-xl p-4 border border-[var(--border)] mb-6">
+              <p className="text-sm text-[var(--text)]">
+                <strong>All sales final:</strong> Please view artwork in person before purchasing. No returns or refunds available.
               </p>
             </div>
 
-            <div className="space-y-3 pt-6 border-t border-neutral-200">
+            <div className="space-y-3 pt-6 border-t border-[var(--border)]">
               <div className="flex items-start gap-3 text-sm">
-                <div className="w-5 h-5 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <svg className="w-3 h-3 text-green-600 dark:text-green-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="w-5 h-5 bg-[var(--surface-3)] border border-[var(--border)] rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg className="w-3 h-3 text-[var(--accent)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
                 <div>
-                  <p className="text-neutral-900">Original physical artwork</p>
-                  <p className="text-neutral-500">Take it home immediately after purchase</p>
+                  <p className="text-[var(--text)]">Original physical artwork</p>
+                  <p className="text-[var(--text-muted)]">Take it home immediately after purchase</p>
                 </div>
               </div>
               <div className="flex items-start gap-3 text-sm">
-                <div className="w-5 h-5 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <svg className="w-3 h-3 text-green-600 dark:text-green-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="w-5 h-5 bg-[var(--surface-3)] border border-[var(--border)] rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg className="w-3 h-3 text-[var(--accent)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
                 <div>
-                  <p className="text-neutral-900">Support local artists</p>
-                  <p className="text-neutral-500">Funds are routed to the artist automatically via Stripe Connect</p>
+                  <p className="text-[var(--text)]">Support local artists</p>
+                  <p className="text-[var(--text-muted)]">Funds are routed to the artist automatically via Stripe Connect</p>
                 </div>
               </div>
               <div className="flex items-start gap-3 text-sm">
-                <div className="w-5 h-5 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <svg className="w-3 h-3 text-green-600 dark:text-green-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="w-5 h-5 bg-[var(--surface-3)] border border-[var(--border)] rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg className="w-3 h-3 text-[var(--accent)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
                 <div>
-                  <p className="text-neutral-900">Secure payment</p>
-                  <p className="text-neutral-500">Checkout is handled by Stripe</p>
+                  <p className="text-[var(--text)]">Secure payment</p>
+                  <p className="text-[var(--text-muted)]">Checkout is handled by Stripe</p>
                 </div>
               </div>
             </div>

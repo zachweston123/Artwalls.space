@@ -30,25 +30,25 @@ export function UpgradePromptCard({ currentPlan, onUpgrade }: UpgradePromptCardP
   const prompt = prompts[currentPlan];
 
   return (
-    <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl p-6 text-white">
+    <div className="bg-[var(--blue)] rounded-xl p-6 text-[var(--on-blue)]">
       <div className="flex items-start gap-4">
-        <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center flex-shrink-0">
-          <Sparkles className="w-6 h-6" />
+        <div className="w-12 h-12 bg-[var(--on-blue)] rounded-lg flex items-center justify-center flex-shrink-0">
+          <Sparkles className="w-6 h-6 text-[var(--blue)]" />
         </div>
         <div className="flex-1">
-          <h3 className="text-lg mb-2 text-white">{prompt.title}</h3>
-          <p className="text-sm text-white/90 mb-4">{prompt.description}</p>
+          <h3 className="text-lg mb-2 text-[var(--on-blue)]">{prompt.title}</h3>
+          <p className="text-sm text-[var(--accent-contrast)] opacity-90 mb-4">{prompt.description}</p>
           <ul className="space-y-1 mb-4">
             {prompt.features.map((feature, index) => (
-              <li key={index} className="text-sm text-white/90 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
+              <li key={index} className="text-sm text-[var(--accent-contrast)] opacity-90 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-[var(--on-blue)] rounded-full"></span>
                 {feature}
               </li>
             ))}
           </ul>
           <button
             onClick={onUpgrade}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-white transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--on-blue)] text-[var(--blue)] rounded-lg hover:opacity-90 transition-opacity"
           >
             <span>{prompt.cta}</span>
             <ArrowRight className="w-4 h-4" />

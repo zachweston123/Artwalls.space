@@ -1,0 +1,5 @@
+# SPA routing: serve index.html for all routes that don't match actual files
+# This rule uses 301 permanent redirect which Cloudflare properly handles
+# SPA routing: rewrite unmatched routes to index.html
+# Use 200 rewrite to avoid redirect loops and preserve asset paths
+/* /index.html 200

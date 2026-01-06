@@ -1,11 +1,11 @@
-import { X, Palette, Store, LogOut } from 'lucide-react';
+import { X, Palette, Store, LogOut, LayoutDashboard, Image, Search, Send, FileText, Bell, User, CreditCard, Shield, Mail, ShoppingCart, Frame, Users } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
-import type { User } from '../App';
+import type { User as UserType } from '../App';
 
 interface MobileSidebarProps {
   isOpen: boolean;
   onClose: () => void;
-  user: User;
+  user: UserType;
   onNavigate: (page: string) => void;
   onLogout: () => void;
   currentPage: string;
@@ -15,27 +15,28 @@ export function MobileSidebar({ isOpen, onClose, user, onNavigate, onLogout, cur
   const isArtist = user.role === 'artist';
 
   const artistLinks = [
-    { id: 'artist-dashboard', label: 'Dashboard' },
-    { id: 'artist-artworks', label: 'My Artworks' },
-    { id: 'artist-venues', label: 'Available Venues' },
-    { id: 'artist-applications', label: 'Applications' },
-    { id: 'artist-sales', label: 'Sales & Earnings' },
-    { id: 'artist-notifications', label: 'Notifications' },
-    { id: 'artist-profile', label: 'Profile' },
-    { id: 'plans-pricing', label: 'Plans & Pricing' },
-    { id: 'policies', label: 'Policies & Agreements' },
+    { id: 'artist-dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'artist-artworks', label: 'My Artworks', icon: Image },
+    { id: 'artist-venues', label: 'Find Venues', icon: Search },
+    { id: 'artist-applications', label: 'Applications', icon: Send },
+    { id: 'artist-invites', label: 'Invitations', icon: Mail },
+    { id: 'artist-sales', label: 'Sales & Earnings', icon: ShoppingCart },
+    { id: 'artist-notifications', label: 'Notifications', icon: Bell },
+    { id: 'artist-profile', label: 'Profile', icon: User },
+    { id: 'plans-pricing', label: 'Plans & Pricing', icon: CreditCard },
+    { id: 'policies', label: 'Policies & Agreements', icon: Shield },
   ];
 
   const venueLinks = [
-    { id: 'venue-dashboard', label: 'Dashboard' },
-    { id: 'venue-walls', label: 'My Wall Spaces' },
-    { id: 'venue-applications', label: 'Artist Applications' },
-    { id: 'venue-current', label: 'Current Artwork' },
-    { id: 'venue-sales', label: 'Sales' },
-    { id: 'venue-settings', label: 'Settings' },
-    { id: 'venue-notifications', label: 'Notifications' },
-    { id: 'venue-profile', label: 'Profile' },
-    { id: 'policies', label: 'Policies & Agreements' },
+    { id: 'venue-dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'venue-profile', label: 'My Venue', icon: Store },
+    { id: 'venue-walls', label: 'My Walls', icon: Frame },
+    { id: 'venue-applications', label: 'Applications', icon: Send },
+    { id: 'venue-find-artists', label: 'Find Artists', icon: Users },
+    { id: 'venue-current', label: 'Current Art', icon: Image },
+    { id: 'venue-sales', label: 'Sales', icon: ShoppingCart },
+    { id: 'venue-notifications', label: 'Notifications', icon: Bell },
+    { id: 'policies', label: 'Policies & Agreements', icon: Shield },
   ];
 
   const links = isArtist ? artistLinks : venueLinks;
@@ -56,74 +57,71 @@ export function MobileSidebar({ isOpen, onClose, user, onNavigate, onLogout, cur
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+        className="fixed inset-0 bg-black/60 z-40 lg:hidden"
         onClick={onClose}
       />
 
       {/* Sidebar */}
-      <div className="fixed inset-y-0 left-0 w-72 bg-white shadow-xl z-50 lg:hidden overflow-y-auto">
+      <div className="fixed inset-y-0 left-0 w-72 bg-[var(--surface-2)] border-r border-[var(--border)] shadow-xl z-50 lg:hidden overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-neutral-200">
+        <div className="flex items-center justify-between p-6 border-b border-[var(--border)]">
           <div className="flex items-center gap-2">
             {isArtist ? (
-              <Palette className="w-6 h-6 text-blue-600" />
+              <Palette className="w-6 h-6 text-[var(--accent)]" />
             ) : (
-              <Store className="w-6 h-6 text-green-600 dark:text-green-400" />
+              <Store className="w-6 h-6 text-[var(--accent)]" />
             )}
-            <span className="text-xl tracking-tight text-neutral-900 dark:text-neutral-50">Artwalls</span>
+            <span className="text-xl tracking-tight text-[var(--text)]">Artwalls</span>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors text-neutral-900 dark:text-neutral-100"
+            className="p-2 hover:bg-[var(--surface-3)] rounded-lg transition-colors text-[var(--text)]"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* User Info */}
-        <div className="p-6 border-b border-neutral-200 dark:border-neutral-700">
-          <div className="text-lg mb-1 text-neutral-900 dark:text-neutral-50">{user.name}</div>
-          <div className={`inline-flex px-3 py-1 rounded-full text-sm ${
-            isArtist ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
-          }`}>
+        <div className="p-6 border-b border-[var(--border)]">
+          <div className="text-lg mb-1 text-[var(--text)]">{user.name}</div>
+          <div className="inline-flex px-3 py-1 rounded-full text-sm bg-[var(--surface-3)] text-[var(--text)] border border-[var(--border)]">
             {user.role === 'artist' ? 'Artist' : 'Venue'}
           </div>
         </div>
 
         {/* Theme */}
-        <div className="p-6 border-b border-neutral-200 dark:border-neutral-700">
+        <div className="p-6 border-b border-[var(--border)]">
           <ThemeToggle variant="button" />
         </div>
 
                 {/* Navigation Links */}
-        <nav className="p-4">
+        <nav className="p-4 pb-24">
           <div className="space-y-1">
             {links.map((link) => (
               <button
                 key={link.id}
                 onClick={() => handleNavigate(link.id)}
-                className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                   currentPage === link.id
-                    ? isArtist
-                      ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                      : 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300'
-                    : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                    ? 'bg-[var(--surface-3)] text-[var(--text)]'
+                    : 'text-[var(--text-muted)] hover:bg-[var(--surface-3)] hover:text-[var(--text)]'
                 }`}
               >
-                {link.label}
+                <link.icon className="w-5 h-5 flex-shrink-0" />
+                <span className="font-medium">{link.label}</span>
               </button>
             ))}
           </div>
         </nav>
 
         {/* Logout Button */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800">
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-[var(--border)] bg-[var(--surface-2)]">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 text-[var(--danger)] hover:bg-[var(--danger)]/10 rounded-lg transition-colors"
           >
             <LogOut className="w-5 h-5" />
-            <span>Logout</span>
+            <span className="font-medium">Sign Out</span>
           </button>
         </div>
       </div>

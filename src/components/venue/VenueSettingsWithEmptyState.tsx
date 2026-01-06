@@ -1,17 +1,50 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Clock, Save, CheckCircle, AlertCircle } from 'lucide-react';
+import { getVenueSchedule, saveVenueSchedule } from '../../lib/api';
+import { supabase } from '../../lib/supabase';
 
 export function VenueSettingsWithEmptyState() {
   const [hasSchedule, setHasSchedule] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const [venueId, setVenueId] = useState<string>('');
   const [scheduleConfig, setScheduleConfig] = useState({
     dayOfWeek: 'Thursday',
     startTime: '16:00',
     endTime: '18:00',
     timezone: 'PST',
+    slotMinutes: 30 as 30 | 60 | 90 | 120,
   });
 
   const [tempConfig, setTempConfig] = useState(scheduleConfig);
+    useEffect(() => {
+      supabase.auth.getUser().then(async ({ data }) => {
+        const id = data.user?.id || '';
+        setVenueId(id);
+        if (id) {
+          try {
+            const { schedule } = await getVenueSchedule(id);
+            if (schedule) {
+              setScheduleConfig({
+                dayOfWeek: schedule.dayOfWeek,
+                startTime: schedule.startTime,
+                endTime: schedule.endTime,
+                timezone: schedule.timezone || 'PST',
+                slotMinutes: (schedule.slotMinutes as 30 | 60 | 90 | 120) || 30,
+              });
+              setTempConfig({
+                dayOfWeek: schedule.dayOfWeek,
+                startTime: schedule.startTime,
+                endTime: schedule.endTime,
+                timezone: schedule.timezone || 'PST',
+                slotMinutes: (schedule.slotMinutes as 30 | 60 | 90 | 120) || 30,
+              });
+              setHasSchedule(true);
+            }
+          } catch {}
+        }
+      }).catch(() => {});
+    }, []);
+
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const daysOfWeek = [
@@ -51,12 +84,23 @@ export function VenueSettingsWithEmptyState() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSave = () => {
-    if (validateConfig()) {
+  const handleSave = async () => {
+    if (validateConfig() && venueId) {
       setScheduleConfig(tempConfig);
-      setHasSchedule(true);
-      setShowToast(true);
-      setTimeout(() => setShowToast(false), 3000);
+      try {
+        await saveVenueSchedule(venueId, {
+          dayOfWeek: tempConfig.dayOfWeek,
+          startTime: tempConfig.startTime,
+          endTime: tempConfig.endTime,
+          slotMinutes: tempConfig.slotMinutes,
+          timezone: tempConfig.timezone,
+        } as any);
+        setHasSchedule(true);
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
+      } catch (e) {
+        // noop: toast could show error
+      }
     }
   };
 
@@ -68,21 +112,21 @@ export function VenueSettingsWithEmptyState() {
   };
 
   return (
-    <div>
+    <div className="bg-[var(--bg)] text-[var(--text)]">
       <div className="mb-8">
-        <h1 className="text-3xl mb-2 text-neutral-900 dark:text-neutral-50">Venue Settings</h1>
-        <p className="text-neutral-600 dark:text-neutral-300">Manage your venue profile and scheduling preferences</p>
+        <h1 className="text-3xl mb-2">Venue Settings</h1>
+        <p className="text-[var(--text-muted)]">Manage your venue profile and scheduling preferences</p>
       </div>
 
       {/* Empty State - No Schedule Set */}
       {!hasSchedule && (
         <div className="max-w-3xl mb-6">
-          <div className="bg-yellow-50 dark:bg-yellow-900/30 rounded-xl p-6 border border-yellow-200 dark:border-yellow-800">
+          <div className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)]">
             <div className="flex items-start gap-3 mb-4">
-              <AlertCircle className="w-6 h-6 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
+              <AlertCircle className="w-6 h-6 text-[var(--warning)] flex-shrink-0" />
               <div>
-                <h3 className="text-base text-yellow-900 dark:text-yellow-200 mb-1 text-neutral-900 dark:text-neutral-50">Install Window Not Set</h3>
-                <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                <h3 className="text-base mb-1">Install Window Not Set</h3>
+                <p className="text-sm text-[var(--text-muted)]">
                   Set your weekly install/pickup window to enable artist scheduling. This simplifies coordination and reduces back-and-forth messaging.
                 </p>
               </div>
@@ -93,15 +137,15 @@ export function VenueSettingsWithEmptyState() {
 
       <div className="max-w-3xl">
         {/* Install & Pickup Window */}
-        <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-hidden mb-6">
-          <div className="p-6 border-b border-neutral-200 dark:border-neutral-700">
+        <div className="bg-[var(--surface-1)] rounded-xl border border-[var(--border)] overflow-hidden mb-6">
+          <div className="p-6 border-b border-[var(--border)]">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center">
-                <Clock className="w-5 h-5 text-green-600 dark:text-green-400" />
+              <div className="w-10 h-10 bg-[var(--green-muted)] rounded-lg flex items-center justify-center">
+                <Clock className="w-5 h-5 text-[var(--green)]" />
               </div>
-              <h2 className="text-xl text-neutral-900 dark:text-neutral-50">Install & Pickup Window</h2>
+              <h2 className="text-xl">Install & Pickup Window</h2>
             </div>
-            <p className="text-sm text-neutral-600 dark:text-neutral-300">
+            <p className="text-sm text-[var(--text-muted)]">
               Set one weekly time window when artists can install or pick up art. This keeps scheduling simple.
             </p>
           </div>
@@ -109,11 +153,11 @@ export function VenueSettingsWithEmptyState() {
           <div className="p-6 space-y-6">
             {/* Day of Week */}
             <div>
-              <label className="block text-sm text-neutral-700 dark:text-neutral-300 mb-2">Day of Week</label>
+              <label className="block text-sm text-[var(--text-muted)] mb-2">Day of Week</label>
               <select
                 value={tempConfig.dayOfWeek}
                 onChange={(e) => setTempConfig({ ...tempConfig, dayOfWeek: e.target.value })}
-                className="w-full px-4 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
               >
                 {daysOfWeek.map((day) => (
                   <option key={day} value={day}>
@@ -126,38 +170,53 @@ export function VenueSettingsWithEmptyState() {
             {/* Time Range */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm text-neutral-700 dark:text-neutral-300 mb-2">Start Time</label>
+                <label className="block text-sm text-[var(--text-muted)] mb-2">Start Time</label>
                 <input
                   type="time"
                   value={tempConfig.startTime}
                   onChange={(e) => setTempConfig({ ...tempConfig, startTime: e.target.value })}
-                  className="w-full px-4 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
                 />
               </div>
               <div>
-                <label className="block text-sm text-neutral-700 dark:text-neutral-300 mb-2">End Time</label>
+                <label className="block text-sm text-[var(--text-muted)] mb-2">End Time</label>
                 <input
                   type="time"
                   value={tempConfig.endTime}
                   onChange={(e) => setTempConfig({ ...tempConfig, endTime: e.target.value })}
-                  className={`w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 ${
+                  className={`w-full px-4 py-2 rounded-lg border bg-[var(--surface-2)] focus:outline-none focus:ring-2 ${
                     errors.endTime
-                      ? 'border-red-300 focus:ring-red-500'
-                      : 'border-neutral-300 dark:border-neutral-600 focus:ring-green-500'
+                      ? 'border-[var(--danger)] focus:ring-[var(--danger)]'
+                      : 'border-[var(--border)] focus:ring-[var(--focus)]'
                   }`}
                 />
                 {errors.endTime && (
-                  <p className="text-xs text-red-600 dark:text-red-400 mt-1">{errors.endTime}</p>
+                  <p className="text-xs text-[var(--danger)] mt-1">{errors.endTime}</p>
                 )}
               </div>
             </div>
 
+            {/* Slot Length */}
+            <div>
+              <label className="block text-sm text-[var(--text-muted)] mb-2">Slot Length</label>
+              <select
+                value={tempConfig.slotMinutes}
+                onChange={(e) => setTempConfig({ ...tempConfig, slotMinutes: Number(e.target.value) as 30 | 60 | 90 | 120 })}
+                className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
+              >
+                <option value={30}>30 minutes</option>
+                <option value={60}>60 minutes</option>
+                <option value={90}>90 minutes</option>
+                <option value={120}>120 minutes</option>
+              </select>
+            </div>
+
             {/* Duration Info */}
             {!errors.endTime && getDuration() > 0 && (
-              <div className={`p-3 rounded-lg ${
+              <div className={`p-3 rounded-lg border border-[var(--border)] ${
                 getDuration() >= 1 && getDuration() <= 3
-                  ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300'
-                  : 'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300'
+                  ? 'bg-[var(--green-muted)] text-[var(--green)]'
+                  : 'bg-[var(--surface-2)] text-[var(--warning)]'
               }`}>
                 <p className="text-sm">
                   Duration: {getDuration()} hour{getDuration() !== 1 ? 's' : ''}
@@ -169,15 +228,15 @@ export function VenueSettingsWithEmptyState() {
 
             {/* Timezone Display */}
             <div>
-              <label className="block text-sm text-neutral-700 dark:text-neutral-300 mb-2">Timezone</label>
-              <div className="px-4 py-2 bg-neutral-100 dark:bg-neutral-800 rounded-lg text-neutral-600 dark:text-neutral-300">
+              <label className="block text-sm text-[var(--text-muted)] mb-2">Timezone</label>
+              <div className="px-4 py-2 bg-[var(--surface-2)] rounded-lg text-[var(--text-muted)] border border-[var(--border)]">
                 {tempConfig.timezone} (Auto-detected)
               </div>
             </div>
 
             {/* Preview */}
-            <div className="bg-green-50 dark:bg-green-900/30 rounded-xl p-4 border border-green-100 dark:border-green-900">
-              <p className="text-sm text-green-900 dark:text-green-200">
+            <div className="bg-[var(--green-muted)] rounded-xl p-4 border border-[var(--border)]">
+              <p className="text-sm text-[var(--text)]">
                 <strong>Preview:</strong> Artists can schedule installs/pickups every{' '}
                 {tempConfig.dayOfWeek}, {formatTime(tempConfig.startTime)} – {formatTime(tempConfig.endTime)}.
               </p>
@@ -186,7 +245,7 @@ export function VenueSettingsWithEmptyState() {
             {/* Save Button */}
             <button
               onClick={handleSave}
-              className="flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors w-full sm:w-auto"
+              className="flex items-center justify-center gap-2 px-6 py-3 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-opacity w-full sm:w-auto"
             >
               <Save className="w-5 h-5" />
               <span>Save Schedule</span>
@@ -195,23 +254,23 @@ export function VenueSettingsWithEmptyState() {
         </div>
 
         {/* Venue Info (Additional Settings Placeholder) */}
-        <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 p-6">
-          <h2 className="text-xl mb-4 text-neutral-900 dark:text-neutral-50">Venue Information</h2>
+        <div className="bg-[var(--surface-1)] rounded-xl border border-[var(--border)] p-6">
+          <h2 className="text-xl mb-4">Venue Information</h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm text-neutral-700 dark:text-neutral-300 mb-2">Venue Name</label>
+              <label className="block text-sm text-[var(--text-muted)] mb-2">Venue Name</label>
               <input
                 type="text"
                 defaultValue="The Corner Café"
-                className="w-full px-4 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
               />
             </div>
             <div>
-              <label className="block text-sm text-neutral-700 dark:text-neutral-300 mb-2">Contact Email</label>
+              <label className="block text-sm text-[var(--text-muted)] mb-2">Contact Email</label>
               <input
                 type="email"
                 defaultValue="venue@example.com"
-                className="w-full px-4 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
               />
             </div>
           </div>
@@ -220,7 +279,7 @@ export function VenueSettingsWithEmptyState() {
 
       {/* Success Toast */}
       {showToast && (
-        <div className="fixed bottom-6 right-6 bg-green-600 text-white px-6 py-4 rounded-xl shadow-lg flex items-center gap-3 animate-slide-up z-50">
+        <div className="fixed bottom-6 right-6 bg-[var(--green)] text-[var(--accent-contrast)] px-6 py-4 rounded-xl shadow-lg flex items-center gap-3 animate-slide-up z-50">
           <CheckCircle className="w-5 h-5" />
           <span>Schedule updated successfully!</span>
         </div>

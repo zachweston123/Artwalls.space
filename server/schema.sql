@@ -10,6 +10,9 @@ create table if not exists public.artists (
   email text,
   name text,
   role text not null default 'artist',
+  phone_number text,
+  city_primary text,
+  city_secondary text,
   stripe_account_id text,
   stripe_customer_id text,
   subscription_tier text not null default 'free',
@@ -20,16 +23,29 @@ create table if not exists public.artists (
   updated_at timestamptz not null default now()
 );
 
+-- Helpful indexes for artists
+create index if not exists artists_city_primary_idx on public.artists(city_primary);
+create index if not exists artists_city_secondary_idx on public.artists(city_secondary);
+
 -- Venues
 create table if not exists public.venues (
   id uuid primary key,
   email text,
   name text,
+  type text,
+  city text,
+  phone_number text,
   stripe_account_id text,
   default_venue_fee_bps int not null default 1000,
+  labels jsonb not null default '[]'::jsonb,
+  suspended boolean default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- Helpful index for labels lookups and city
+create index if not exists venues_labels_gin_idx on public.venues using gin (labels);
+create index if not exists venues_city_idx on public.venues(city);
 
 -- Artworks / listings
 create table if not exists public.artworks (
@@ -88,9 +104,71 @@ create table if not exists public.webhook_events (
   processed_at timestamptz not null default now()
 );
 
+-- Settings (admin-configurable via UI)
+create table if not exists public.settings (
+  id text primary key default 'default',
+  app_url text,
+  sub_success_url text,
+  sub_cancel_url text,
+  sub_price_starter text,
+  sub_price_growth text,
+  sub_price_pro text,
+  sub_price_elite text,
+  fee_bps_free int,
+  fee_bps_starter int,
+  fee_bps_pro int,
+  fee_bps_elite int,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 -- Optional: enable Row Level Security (RLS) for future browser access.
 -- Server uses service-role key so RLS is bypassed. Enable when you're ready.
 -- alter table public.artists enable row level security;
 -- alter table public.venues enable row level security;
 -- alter table public.artworks enable row level security;
 -- alter table public.orders enable row level security;
+
+-- Scheduling: weekly venue schedules
+create table if not exists public.venue_schedules (
+  id uuid primary key default uuid_generate_v4(),
+  venue_id uuid not null references public.venues(id) on delete cascade,
+  day_of_week text not null, -- e.g., 'Thursday'
+  start_time time not null,  -- e.g., '16:00'
+  end_time time not null,    -- e.g., '18:00'
+  slot_minutes int not null default 30, -- 30, 60, 90, 120
+  timezone text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (venue_id)
+);
+
+-- Scheduling: bookings (installs / pickups)
+create table if not exists public.bookings (
+  id uuid primary key default uuid_generate_v4(),
+  venue_id uuid not null references public.venues(id) on delete cascade,
+  artist_id uuid not null references public.artists(id) on delete cascade,
+  artwork_id uuid references public.artworks(id) on delete set null,
+  type text not null check (type in ('install','pickup')),
+  start_at timestamptz not null,
+  end_at timestamptz not null,
+  status text not null default 'booked',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists bookings_venue_time_idx on public.bookings(venue_id, start_at, end_at);
+create index if not exists bookings_artwork_idx on public.bookings(artwork_id);
+
+-- Notifications
+create table if not exists public.notifications (
+  id uuid primary key default uuid_generate_v4(),
+  user_id uuid not null,
+  type text not null,
+  title text not null,
+  message text,
+  is_read boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists notifications_user_idx on public.notifications(user_id, created_at desc);

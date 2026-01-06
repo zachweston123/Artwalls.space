@@ -36,7 +36,7 @@ export function DisplayDurationSelector({
     <div className="space-y-4">
       <div>
         <label className="block text-sm mb-2">
-          Display Duration <span className="text-red-600 dark:text-red-400">*</span>
+          Display Duration <span className="text-[var(--danger)]">*</span>
         </label>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {durations.map((duration) => (
@@ -47,34 +47,34 @@ export function DisplayDurationSelector({
               onClick={() => onChange(duration.value)}
               className={`relative p-4 rounded-lg border-2 transition-all text-left ${
                 value === duration.value
-                  ? 'border-green-600 bg-green-50 dark:bg-green-900/30'
-                  : 'border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 hover:border-green-300'
+                  ? 'border-[var(--green)] bg-[var(--green-muted)]'
+                  : 'border-[var(--border)] bg-[var(--surface-1)] hover:border-[var(--green)]'
               } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
             >
               {duration.recommended && (
                 <div className="absolute -top-2 right-3">
-                  <span className="px-2 py-0.5 bg-green-600 text-white text-xs rounded-full">
+                  <span className="px-2 py-0.5 bg-[var(--green)] text-[var(--accent-contrast)] text-xs rounded-full">
                     Recommended
                   </span>
                 </div>
               )}
               <div className="flex items-center justify-between mb-1">
-                <span className={`text-base ${value === duration.value ? 'text-green-900 dark:text-green-200' : 'text-neutral-900 dark:text-neutral-50'}`}>
+                <span className={`text-base ${value === duration.value ? 'text-[var(--green)]' : 'text-[var(--text)]'}`}>
                   {duration.label}
                 </span>
                 <div
                   className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
                     value === duration.value
-                      ? 'border-green-600 bg-green-600'
-                      : 'border-neutral-300 dark:border-neutral-600'
+                      ? 'border-[var(--green)] bg-[var(--green)]'
+                      : 'border-[var(--border)]'
                   }`}
                 >
                   {value === duration.value && (
-                    <div className="w-2 h-2 bg-white dark:bg-neutral-800 rounded-full" />
+                    <div className="w-2 h-2 bg-[var(--on-blue)] rounded-full" />
                   )}
                 </div>
               </div>
-              <p className={`text-xs ${value === duration.value ? 'text-green-700 dark:text-green-300' : 'text-neutral-600 dark:text-neutral-300'}`}>
+              <p className={`text-xs ${value === duration.value ? 'text-[var(--green)]' : 'text-[var(--text-muted)]'}`}>
                 {duration.days}
               </p>
             </button>
@@ -83,11 +83,11 @@ export function DisplayDurationSelector({
       </div>
 
       {showEndDate && endDate && (
-        <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 rounded-lg p-4">
+        <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-lg p-4">
           <div className="flex items-start gap-2">
-            <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+            <Calendar className="w-5 h-5 text-[var(--blue)] flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm text-blue-900 dark:text-blue-200 mb-1">
+              <p className="text-sm text-[var(--text)] mb-1">
                 <strong>Estimated End Date:</strong>{' '}
                 {endDate.toLocaleDateString('en-US', {
                   month: 'long',
@@ -95,7 +95,7 @@ export function DisplayDurationSelector({
                   year: 'numeric',
                 })}
               </p>
-              <p className="text-xs text-blue-700 dark:text-blue-300">
+              <p className="text-xs text-[var(--text-muted)]">
                 Based on start date of{' '}
                 {startDate?.toLocaleDateString('en-US', {
                   month: 'short',
@@ -109,10 +109,10 @@ export function DisplayDurationSelector({
       )}
 
       {helpText && (
-        <div className="bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-lg p-3">
+        <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-lg p-3">
           <div className="flex items-start gap-2">
-            <Info className="w-4 h-4 text-neutral-500 dark:text-neutral-400 flex-shrink-0 mt-0.5" />
-            <p className="text-xs text-neutral-600 dark:text-neutral-300">{helpText}</p>
+            <Info className="w-4 h-4 text-[var(--text-muted)] flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-[var(--text-muted)]">{helpText}</p>
           </div>
         </div>
       )}
@@ -133,9 +133,9 @@ export function DurationBadge({ duration, size = 'md' }: DurationBadgeProps) {
   };
 
   const getBadgeStyle = (days: number) => {
-    if (days === 30) return 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300';
-    if (days === 90) return 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300';
-    return 'bg-purple-100 dark:bg-purple-900 text-purple-700';
+    if (days === 30) return 'bg-[var(--surface-2)] text-[var(--blue)]';
+    if (days === 90) return 'bg-[var(--green-muted)] text-[var(--green)]';
+    return 'bg-[var(--surface-2)] text-[var(--text-muted)]';
   };
 
   return (

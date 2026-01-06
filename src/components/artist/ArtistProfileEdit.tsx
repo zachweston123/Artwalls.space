@@ -13,6 +13,7 @@ export interface ArtistProfileData {
   artTypes: string[];
   openToNew: boolean;
   avatar?: string;
+  instagram?: string;
 }
 
 export function ArtistProfileEdit({ onSave, onCancel }: ArtistProfileEditProps) {
@@ -22,6 +23,7 @@ export function ArtistProfileEdit({ onSave, onCancel }: ArtistProfileEditProps) 
     artTypes: ['Painter', 'Mixed Media', 'Digital', 'Collage'],
     openToNew: true,
     avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400',
+    instagram: '@sarahchenart',
   });
 
   const allArtTypes = [
@@ -45,27 +47,27 @@ export function ArtistProfileEdit({ onSave, onCancel }: ArtistProfileEditProps) 
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
-      <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 sm:p-6">
+      <div className="bg-[var(--surface-2)] text-[var(--text)] rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto border border-[var(--border)] shadow-2xl">
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-neutral-200 p-6 flex items-center justify-between">
-          <h2 className="text-2xl">Edit Profile</h2>
+        <div className="sticky top-0 bg-[var(--surface-2)] border-b border-[var(--border)] p-5 sm:p-6 flex items-center justify-between z-10">
+          <h2 className="text-xl sm:text-2xl font-bold">Edit Profile</h2>
           <button
             onClick={onCancel}
-            className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-[var(--surface-3)] rounded-lg transition-colors text-[var(--text-muted)] hover:text-[var(--text)]"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="p-5 sm:p-8 space-y-6 sm:space-y-8">
           {/* Profile Photo */}
           <div>
-            <label className="block text-sm text-neutral-700 dark:text-neutral-300 mb-3">
+            <label className="block text-sm text-[var(--text-muted)] mb-3">
               Profile Photo
             </label>
             <div className="flex items-center gap-6">
-              <div className="w-24 h-24 rounded-full overflow-hidden bg-neutral-100 border-4 border-neutral-200">
+              <div className="w-24 h-24 rounded-full overflow-hidden bg-[var(--surface-3)] border-4 border-[var(--border)]">
                 {formData.avatar ? (
                   <img
                     src={formData.avatar}
@@ -74,33 +76,33 @@ export function ArtistProfileEdit({ onSave, onCancel }: ArtistProfileEditProps) 
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
-                    <Camera className="w-8 h-8 text-neutral-400" />
+                    <Camera className="w-8 h-8 text-[var(--text-muted)]" />
                   </div>
                 )}
               </div>
               <button
                 type="button"
-                className="flex items-center gap-2 px-4 py-2 bg-neutral-100 text-neutral-700 rounded-lg hover:bg-neutral-200 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-[var(--surface-3)] text-[var(--text)] border border-[var(--border)] rounded-lg hover:bg-[var(--surface-2)] transition-colors"
               >
                 <Upload className="w-4 h-4" />
                 Upload Photo
               </button>
             </div>
-            <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-2">
+            <p className="text-xs text-[var(--text-muted)] mt-2">
               JPG or PNG, max 5MB. Square images work best.
             </p>
           </div>
 
           {/* Artist Name */}
           <div>
-            <label className="block text-sm text-neutral-700 dark:text-neutral-300 mb-2">
+            <label className="block text-sm text-[var(--text-muted)] mb-2">
               Display Name
             </label>
             <input
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-4 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+              className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
               placeholder="Your name or artist name"
               required
             />
@@ -108,7 +110,7 @@ export function ArtistProfileEdit({ onSave, onCancel }: ArtistProfileEditProps) 
 
           {/* Bio */}
           <div>
-            <label className="block text-sm text-neutral-700 dark:text-neutral-300 mb-2">
+            <label className="block text-sm text-[var(--text-muted)] mb-2">
               Bio
             </label>
             <textarea
@@ -116,19 +118,19 @@ export function ArtistProfileEdit({ onSave, onCancel }: ArtistProfileEditProps) 
               onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
               rows={6}
               maxLength={500}
-              className="w-full px-4 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+              className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
               placeholder="Tell venues about your artistic practice, style, and what makes your work unique..."
               required
             />
-            <p className="text-xs text-neutral-500 mt-1">
+            <p className="text-xs text-[var(--text-muted)] mt-1">
               {formData.bio.length}/500 characters
             </p>
           </div>
 
           {/* Art Types */}
           <div>
-            <label className="block text-sm text-neutral-700 dark:text-neutral-300 mb-3">
-              Art Types <span className="text-neutral-500">(Select all that apply)</span>
+            <label className="block text-sm text-[var(--text-muted)] mb-3">
+              Art Types <span className="text-[var(--text-muted)]">(Select all that apply)</span>
             </label>
             <div className="flex flex-wrap gap-2">
               {allArtTypes.map((type) => (
@@ -141,17 +143,37 @@ export function ArtistProfileEdit({ onSave, onCancel }: ArtistProfileEditProps) 
                 />
               ))}
             </div>
-            <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-2">
+            <p className="text-xs text-[var(--text-muted)] mt-2">
               {formData.artTypes.length} selected
             </p>
           </div>
 
+          {/* Instagram Handle */}
+          <div>
+            <label className="block text-sm text-[var(--text-muted)] mb-2">
+              Instagram Handle <span className="text-[var(--text-muted)]">(Optional)</span>
+            </label>
+            <div className="flex items-center">
+              <span className="text-[var(--text-muted)] px-4 py-2 bg-[var(--surface-3)] rounded-l-lg border border-r-0 border-[var(--border)]">@</span>
+              <input
+                type="text"
+                value={formData.instagram?.replace('@', '') || ''}
+                onChange={(e) => setFormData({ ...formData, instagram: e.target.value ? `@${e.target.value}` : '' })}
+                className="flex-1 px-4 py-2 rounded-r-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
+                placeholder="yourinstagramhandle"
+              />
+            </div>
+            <p className="text-xs text-[var(--text-muted)] mt-2">
+              Link your Instagram profile so venues can see your work
+            </p>
+          </div>
+
           {/* Open to Placements Toggle */}
-          <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
+          <div className="p-4 bg-[var(--surface-2)] rounded-lg border border-[var(--blue)]">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
                 <label className="block text-sm mb-1">Open to new placements</label>
-                <p className="text-xs text-neutral-600">
+                <p className="text-xs text-[var(--text-muted)]">
                   Let venues know you're actively seeking display opportunities. You'll appear in discovery searches.
                 </p>
               </div>
@@ -160,12 +182,12 @@ export function ArtistProfileEdit({ onSave, onCancel }: ArtistProfileEditProps) 
                 onClick={() => setFormData({ ...formData, openToNew: !formData.openToNew })}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                   formData.openToNew
-                    ? 'bg-blue-600'
-                    : 'bg-neutral-300'
+                    ? 'bg-[var(--blue)]'
+                    : 'bg-[var(--border)]'
                 }`}
               >
                 <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  className={`inline-block h-4 w-4 transform rounded-full bg-[var(--surface-1)] transition-transform ${
                     formData.openToNew ? 'translate-x-6' : 'translate-x-1'
                   }`}
                 />
@@ -174,17 +196,17 @@ export function ArtistProfileEdit({ onSave, onCancel }: ArtistProfileEditProps) 
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3 pt-4 border-t border-neutral-200">
+          <div className="flex gap-3 pt-4 border-t border-[var(--border)]">
             <button
               type="button"
               onClick={onCancel}
-              className="flex-1 px-4 py-2 bg-neutral-100 text-neutral-700 rounded-lg hover:bg-neutral-200 transition-colors"
+              className="flex-1 px-4 py-2 bg-[var(--surface-3)] text-[var(--text)] border border-[var(--border)] rounded-lg hover:bg-[var(--surface-2)] transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="flex-1 px-4 py-2 bg-[var(--blue)] text-[var(--on-blue)] rounded-lg hover:bg-[var(--blue-hover)] transition-colors"
             >
               Save Changes
             </button>

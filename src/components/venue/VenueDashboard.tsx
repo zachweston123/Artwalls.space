@@ -1,17 +1,20 @@
 import { Frame, Users, DollarSign, Clock } from 'lucide-react';
 import { mockWallSpaces, mockApplications, mockSales } from '../../data/mockData';
+import type { User } from '../../App';
+import { VenuePayoutsCard } from './VenuePayoutsCard';
 
 interface VenueDashboardProps {
   onNavigate: (page: string) => void;
+  user?: User;
 }
 
-export function VenueDashboard({ onNavigate }: VenueDashboardProps) {
+export function VenueDashboard({ onNavigate, user }: VenueDashboardProps) {
   const totalWalls = mockWallSpaces.length;
   const availableWalls = mockWallSpaces.filter(w => w.available).length;
   const pendingApplications = mockApplications.filter(a => a.status === 'pending').length;
   const venueEarnings = mockSales.reduce((sum, sale) => sum + sale.venueEarnings, 0);
 
-  const stats = [
+  const venueStats = [
     {
       label: 'Wall Spaces',
       value: `${totalWalls - availableWalls}/${totalWalls}`,
@@ -47,91 +50,97 @@ export function VenueDashboard({ onNavigate }: VenueDashboardProps) {
   ];
 
   return (
-    <div>
+    <div className="bg-[var(--bg)] text-[var(--text)]">
       <div className="mb-8">
-        <h1 className="text-3xl mb-2">Welcome back, Brew & Palette Café</h1>
-        <p className="text-neutral-600">Manage your wall spaces and artist applications</p>
+        <h1 className="text-3xl mb-2 text-[var(--text)]">Welcome back, Brew & Palette Café</h1>
+        <p className="text-[var(--text-muted)]">Manage your wall spaces and artist applications</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-        {stats.map((stat) => {
+        {venueStats.map((stat) => {
           const Icon = stat.icon;
           return (
             <button
               key={stat.label}
               onClick={stat.action}
-              className="bg-white rounded-xl p-6 border border-neutral-200 hover:border-green-300 hover:shadow-md transition-all text-left group"
+              className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)] hover:border-[var(--green)] hover:shadow-md transition-all text-left group"
             >
               <div className="flex items-start justify-between mb-4">
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-500 transition-colors">
-                  <Icon className="w-6 h-6 text-green-600 group-hover:text-white transition-colors" />
+                <div className="w-12 h-12 bg-[var(--green-muted)] rounded-lg flex items-center justify-center group-hover:bg-[var(--green)] transition-colors">
+                  <Icon className="w-6 h-6 text-[var(--green)] group-hover:text-[var(--accent-contrast)] transition-colors" />
                 </div>
               </div>
-              <div className="text-3xl mb-1 text-neutral-900">{stat.value}</div>
-              <div className="text-neutral-600 text-sm">{stat.label}</div>
-              <div className="text-neutral-400 text-xs mt-1">{stat.subtext}</div>
+              <div className="text-3xl mb-1 text-[var(--text)]">{stat.value}</div>
+              <div className="text-[var(--text-muted)] text-sm">{stat.label}</div>
+              <div className="text-[var(--text-muted)] text-xs mt-1">{stat.subtext}</div>
             </button>
           );
         })}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl p-6 border border-neutral-200">
-          <h2 className="text-xl mb-4">Recent Activity</h2>
+        <div className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)]">
+          <h2 className="text-xl mb-4 text-[var(--text)]">Recent Activity</h2>
           <div className="space-y-4">
-            <div className="flex items-start gap-3 pb-4 border-b border-neutral-100 dark:border-neutral-700">
-              <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+            <div className="flex items-start gap-3 pb-4 border-b border-[var(--border)]">
+              <div className="w-2 h-2 bg-[var(--green)] rounded-full mt-2"></div>
               <div className="flex-1">
-                <p className="text-sm text-neutral-900">Artwork "Sunset Boulevard" was sold</p>
-                <p className="text-xs text-neutral-500">You earned $29.50 • 2 days ago</p>
+                <p className="text-sm text-[var(--text)]">Artwork "Sunset Boulevard" was sold</p>
+                <p className="text-xs text-[var(--text-muted)]">You earned $29.50 • 2 days ago</p>
               </div>
             </div>
-            <div className="flex items-start gap-3 pb-4 border-b border-neutral-100">
-              <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+            <div className="flex items-start gap-3 pb-4 border-b border-[var(--border)]">
+              <div className="w-2 h-2 bg-[var(--blue)] rounded-full mt-2"></div>
               <div className="flex-1">
-                <p className="text-sm text-neutral-900">New application from Marcus Rodriguez</p>
-                <p className="text-xs text-neutral-500">3 days ago</p>
+                <p className="text-sm text-[var(--text)]">New application from Marcus Rodriguez</p>
+                <p className="text-xs text-[var(--text-muted)]">3 days ago</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <div className="w-2 h-2 bg-neutral-300 rounded-full mt-2"></div>
+              <div className="w-2 h-2 bg-[var(--border)] rounded-full mt-2"></div>
               <div className="flex-1">
-                <p className="text-sm text-neutral-900">New wall space "Corner Space" added</p>
-                <p className="text-xs text-neutral-500">1 week ago</p>
+                <p className="text-sm text-[var(--text)]">New wall space "Corner Space" added</p>
+                <p className="text-xs text-[var(--text-muted)]">1 week ago</p>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-6 border border-neutral-200">
-          <h2 className="text-xl mb-4">Quick Actions</h2>
+        <div className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)]">
+          <h2 className="text-xl mb-4 text-[var(--text)]">Quick Actions</h2>
           <div className="space-y-3">
             <button
               onClick={() => onNavigate('venue-applications')}
-              className="w-full px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-between"
+              className="w-full px-4 py-3 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-colors flex items-center justify-between"
             >
               <span>Review Applications</span>
               {pendingApplications > 0 && (
-                  <span className="px-2 py-1 bg-white text-green-700 rounded-full text-xs">
+                <span className="px-2 py-1 bg-[var(--surface-1)] text-[var(--green)] rounded-full text-xs">
                   {pendingApplications} new
                 </span>
               )}
             </button>
             <button
               onClick={() => onNavigate('venue-walls')}
-              className="w-full px-4 py-3 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors"
+              className="w-full px-4 py-3 bg-[var(--green-muted)] text-[var(--green)] rounded-lg hover:opacity-90 transition-colors"
             >
               Manage Wall Spaces
             </button>
             <button
               onClick={() => onNavigate('venue-sales')}
-              className="w-full px-4 py-3 bg-neutral-100 text-neutral-700 rounded-lg hover:bg-neutral-200 transition-colors"
+              className="w-full px-4 py-3 bg-[var(--surface-2)] text-[var(--text)] rounded-lg hover:bg-[var(--surface-3)] transition-colors"
             >
               View Sales Report
             </button>
           </div>
         </div>
       </div>
+
+      {user && (
+        <div className="mt-12">
+          <VenuePayoutsCard user={user} />
+        </div>
+      )}
     </div>
   );
 }

@@ -11,46 +11,147 @@ export function Login({ onLogin }: LoginProps) {
   const [isSignup, setIsSignup] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [phone, setPhone] = useState('');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [infoMessage, setInfoMessage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedRole) return;
 
-    // Mock login - create user
-    const user: User = {
-      id: Math.random().toString(36).substr(2, 9),
-      name: name || (selectedRole === 'artist' ? 'Demo Artist' : 'Demo Venue'),
-      email: email || `demo@${selectedRole}.com`,
-      role: selectedRole,
-    };
+    setErrorMessage(null);
+    setInfoMessage(null);
 
-    onLogin(user);
+    if (!email.trim() || !password) {
+      setErrorMessage('Email and password are required.');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const { supabase } = await import('../lib/supabase');
+      const safeName = name.trim();
+
+      if (isSignup) {
+        const phoneTrim = phone.trim();
+        if (!phoneTrim) {
+          setErrorMessage('Phone number is required.');
+          setIsLoading(false);
+          return;
+        }
+        const { data, error } = await supabase.auth.signUp({
+          email: email.trim(),
+          password,
+          options: {
+            data: {
+              role: selectedRole,
+              name: safeName || null,
+              phone: phoneTrim,
+            },
+          },
+        });
+
+        if (error) throw error;
+
+        // If email confirmations are enabled, there may be no session.
+        if (!data.session) {
+          setInfoMessage('Account created. Check your email to confirm, then sign in.');
+          setIsSignup(false);
+          return;
+        }
+
+        const supaUser = data.user;
+        if (!supaUser) throw new Error('Sign up succeeded but no user returned.');
+
+        // Provision a profile in Supabase (artist/venue)
+        try {
+          const { apiPost } = await import('../lib/api');
+          await apiPost('/api/profile/provision', { phoneNumber: phoneTrim });
+        } catch (e) {
+          // non-blocking: log and continue
+          console.warn('Profile provision failed', e);
+        }
+
+        onLogin({
+          id: supaUser.id,
+          name: (supaUser.user_metadata?.name as string | undefined) || safeName || 'User',
+          email: supaUser.email || email.trim(),
+          role: (supaUser.user_metadata?.role as UserRole) || selectedRole,
+        });
+        return;
+      }
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+
+      if (error) throw error;
+      if (!data.user) throw new Error('Sign in succeeded but no user returned.');
+
+      const currentRole = (data.user.user_metadata?.role as UserRole) || null;
+
+      // If the user selected a role and it differs/missing, backfill metadata.
+      if (selectedRole && selectedRole !== currentRole) {
+        await supabase.auth.updateUser({
+          data: {
+            role: selectedRole,
+            name: safeName || (data.user.user_metadata?.name as string | undefined) || null,
+          },
+        });
+      }
+
+      // Provision a profile in Supabase (artist/venue)
+      try {
+        const { apiPost } = await import('../lib/api');
+        await apiPost('/api/profile/provision', {});
+      } catch (e) {
+        console.warn('Profile provision failed', e);
+      }
+
+      onLogin({
+        id: data.user.id,
+        name:
+          safeName ||
+          (data.user.user_metadata?.name as string | undefined) ||
+          (selectedRole === 'artist' ? 'Artist' : 'Venue'),
+        email: data.user.email || email.trim(),
+        role: selectedRole || currentRole,
+      });
+    } catch (err: any) {
+      setErrorMessage(err?.message || 'Authentication failed.');
+    } finally {
+      setIsLoading(false);
+    }
+
   };
 
   if (!selectedRole) {
     return (
-      <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900 flex items-center justify-center px-6">
+      <div className="min-h-svh bg-[var(--bg)] flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-4xl">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl mb-3 text-neutral-900 dark:text-neutral-50">Welcome to Artwalls</h1>
-            <p className="text-neutral-600 dark:text-neutral-400">
-              Connecting local artists with venues to display and sell physical artwork
+          <div className="text-center mb-8 sm:mb-12">
+            <h1 className="text-3xl sm:text-4xl mb-3 text-[var(--text)] font-bold">Welcome to Artwalls</h1>
+            <p className="text-[var(--text-muted)] text-sm sm:text-base max-w-md mx-auto">
+              Connecting local artists with venues to display and sell physical artworks
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 max-w-3xl mx-auto">
             <button
               onClick={() => setSelectedRole('artist')}
-              className="group bg-white dark:bg-neutral-800 rounded-2xl p-8 border-2 border-neutral-200 dark:border-neutral-700 hover:border-blue-500 dark:hover:border-blue-400 hover:shadow-lg dark:hover:shadow-lg transition-all"
+              className="group bg-[var(--blue-muted)] rounded-2xl p-6 sm:p-8 border-2 border-[var(--blue)] hover:brightness-95 transition-all active:scale-[0.98]"
             >
               <div className="flex flex-col items-center text-center gap-4">
-                <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center group-hover:bg-blue-500 dark:group-hover:bg-blue-500 transition-colors">
-                  <Palette className="w-8 h-8 text-blue-600 dark:text-blue-300 group-hover:text-white transition-colors" />
+                <div className="w-14 h-14 sm:w-16 sm:h-16 bg-[var(--surface-2)] rounded-full flex items-center justify-center group-hover:bg-[var(--blue)] transition-colors">
+                  <Palette className="w-7 h-7 sm:w-8 sm:h-8 text-[var(--blue)] group-hover:text-[var(--on-blue)] transition-colors" />
                 </div>
                 <div>
-                  <h2 className="text-xl mb-2 text-neutral-900 dark:text-neutral-50">I'm an Artist</h2>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                    Share your artwork with local venues and earn 80% from every sale
+                  <h2 className="text-xl mb-1 sm:mb-2 text-[var(--blue)] font-bold">I'm an Artist</h2>
+                  <p className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
+                    Share and sell your artwork at local venues and manage your portfolio
                   </p>
                 </div>
               </div>
@@ -58,16 +159,16 @@ export function Login({ onLogin }: LoginProps) {
 
             <button
               onClick={() => setSelectedRole('venue')}
-              className="group bg-white dark:bg-neutral-800 rounded-2xl p-8 border-2 border-neutral-200 dark:border-neutral-700 hover:border-green-500 dark:hover:border-green-400 hover:shadow-lg dark:hover:shadow-lg transition-all"
+              className="group bg-[var(--green-muted)] rounded-2xl p-6 sm:p-8 border-2 border-[var(--green)] hover:brightness-95 transition-all active:scale-[0.98]"
             >
               <div className="flex flex-col items-center text-center gap-4">
-                <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center group-hover:bg-green-500 dark:group-hover:bg-green-500 transition-colors">
-                  <Store className="w-8 h-8 text-green-600 dark:text-green-300 group-hover:text-white transition-colors" />
+                <div className="w-14 h-14 sm:w-16 sm:h-16 bg-[var(--surface-2)] rounded-full flex items-center justify-center group-hover:bg-[var(--green)] transition-colors">
+                  <Store className="w-7 h-7 sm:w-8 sm:h-8 text-[var(--green)] group-hover:text-[var(--accent-contrast)] transition-colors" />
                 </div>
                 <div>
-                  <h2 className="text-xl mb-2 text-neutral-900 dark:text-neutral-50">I'm a Venue</h2>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                    Display rotating artwork and earn 10% commission on sales
+                  <h2 className="text-xl mb-1 sm:mb-2 text-[var(--green)] font-bold">I'm a Venue</h2>
+                  <p className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
+                    Support local artists by displaying rotating artworks and earn 10% commission
                   </p>
                 </div>
               </div>
@@ -79,83 +180,130 @@ export function Login({ onLogin }: LoginProps) {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900 flex items-center justify-center px-6">
+    <div className="min-h-svh bg-[var(--bg)] flex items-center justify-center px-6 py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-4">
             {selectedRole === 'artist' ? (
-              <Palette className="w-8 h-8 text-blue-600" />
+              <Palette className="w-8 h-8 text-[var(--blue)]" />
             ) : (
-              <Store className="w-8 h-8 text-green-600" />
+              <Store className="w-8 h-8 text-[var(--green)]" />
             )}
-            <h1 className="text-3xl text-neutral-900">Artwalls</h1>
+            <h1 className="text-3xl text-[var(--text)]">Artwalls</h1>
           </div>
-          <p className="text-neutral-600 dark:text-neutral-300">
+          <p className="text-[var(--text-muted)]">
             {isSignup ? 'Create your account' : 'Sign in to continue'}
           </p>
         </div>
 
-        <div className="bg-white dark:bg-neutral-800 rounded-2xl p-8 border border-neutral-200 dark:border-neutral-700">
-          <div className={`inline-flex px-3 py-1 rounded-full text-sm mb-6 ${
-            selectedRole === 'artist' 
-              ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' 
-              : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
-          }`}>
+        <div className="bg-[var(--surface-1)] rounded-2xl p-8 border border-[var(--border)]">
+          <div
+            className={
+              "inline-flex px-3 py-1 rounded-full text-sm mb-6 border " +
+              (selectedRole === 'artist'
+                ? 'bg-[var(--blue-muted)] border-[var(--blue)] text-[var(--blue)]'
+                : 'bg-[var(--green-muted)] border-[var(--green)] text-[var(--green)]')
+            }
+          >
             {selectedRole === 'artist' ? 'Artist Account' : 'Venue Account'}
           </div>
+
+          {(errorMessage || infoMessage) && (
+            <div
+              className={
+                'mb-4 rounded-lg border px-4 py-3 text-sm ' +
+                (errorMessage
+                  ? 'bg-[var(--surface-1)] border-[var(--border)] text-[var(--danger)]'
+                  : 'bg-[var(--surface-1)] border-[var(--border)] text-[var(--text)]')
+              }
+              role={errorMessage ? 'alert' : 'status'}
+            >
+              {errorMessage || infoMessage}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignup && (
               <div>
-                <label className="block text-sm text-neutral-700 mb-1">
+                <label className="block text-sm text-[var(--text-muted)] mb-1">
                   {selectedRole === 'artist' ? 'Artist Name' : 'Venue Name'}
                 </label>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-neutral-300 bg-white text-neutral-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={
+                    "w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 " +
+                    (selectedRole === 'artist' ? 'focus:ring-[var(--focus)]' : 'focus:ring-[var(--green)]')
+                  }
                   placeholder={selectedRole === 'artist' ? 'Your name' : 'Your venue name'}
                 />
               </div>
             )}
 
+            {isSignup && (
+              <div>
+                <label className="block text-sm text-[var(--text-muted)] mb-1">Phone Number</label>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className={
+                    "w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 " +
+                    (selectedRole === 'artist' ? 'focus:ring-[var(--focus)]' : 'focus:ring-[var(--green)]')
+                  }
+                  placeholder="e.g. +15551234567"
+                />
+                <p className="text-xs text-[var(--text-muted)] mt-1">We’ll send sale notifications to this number.</p>
+              </div>
+            )}
+
             <div>
-              <label className="block text-sm text-neutral-700 mb-1">Email</label>
+              <label className="block text-sm text-[var(--text-muted)] mb-1">Email</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-50 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                className={
+                  "w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 " +
+                  (selectedRole === 'artist' ? 'focus:ring-[var(--focus)]' : 'focus:ring-[var(--green)]')
+                }
                 placeholder="your@email.com"
               />
             </div>
 
             <div>
-              <label className="block text-sm text-neutral-700 mb-1">Password</label>
+              <label className="block text-sm text-[var(--text-muted)] mb-1">Password</label>
               <input
                 type="password"
-                className="w-full px-4 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-50 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className={
+                  "w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 " +
+                  (selectedRole === 'artist' ? 'focus:ring-[var(--focus)]' : 'focus:ring-[var(--green)]')
+                }
                 placeholder="••••••••"
               />
             </div>
 
             <button
               type="submit"
-              className={`w-full py-3 rounded-lg text-white transition-colors ${
-                selectedRole === 'artist'
-                  ? 'bg-blue-600 hover:bg-blue-700'
-                  : 'bg-green-600 hover:bg-green-700'
-              }`}
+              disabled={isLoading}
+              className={
+                "w-full py-3 rounded-lg hover:brightness-95 transition disabled:opacity-60 disabled:cursor-not-allowed " +
+                (selectedRole === 'artist'
+                  ? 'bg-[var(--blue)] text-[var(--on-blue)]'
+                  : 'bg-[var(--green)] text-[var(--accent-contrast)]')
+              }
             >
-              {isSignup ? 'Create Account' : 'Sign In'}
+              {isLoading ? 'Please wait…' : isSignup ? 'Create Account' : 'Sign In'}
             </button>
           </form>
 
           <div className="mt-6 text-center">
             <button
               onClick={() => setIsSignup(!isSignup)}
-              className="text-sm text-neutral-600 hover:text-neutral-900"
+              className="text-sm text-[var(--text-muted)] hover:text-[var(--text)]"
             >
               {isSignup ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
             </button>
@@ -164,7 +312,7 @@ export function Login({ onLogin }: LoginProps) {
           <div className="mt-4 text-center">
             <button
               onClick={() => setSelectedRole(null)}
-              className="text-sm text-neutral-500 hover:text-neutral-700"
+              className="text-sm text-[var(--text-muted)] hover:text-[var(--text)]"
             >
               ← Choose different role
             </button>

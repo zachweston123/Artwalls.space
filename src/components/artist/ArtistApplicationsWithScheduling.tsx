@@ -1,41 +1,37 @@
 import { useState } from 'react';
 import { CheckCircle, XCircle, Clock, Calendar } from 'lucide-react';
-import { mockApplications, mockVenueSchedule } from '../../data/mockData';
+import { mockApplications } from '../../data/mockData';
 import type { Application } from '../../data/mockData';
 import { TimeSlotPicker } from '../scheduling/TimeSlotPicker';
 import { InstallRules } from '../scheduling/InstallRules';
 import { DurationBadge } from '../scheduling/DisplayDurationSelector';
+import { createVenueBooking, API_BASE } from '../../lib/api';
 
 export function ArtistApplicationsWithScheduling() {
   const [applications, setApplications] = useState<Application[]>(mockApplications);
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [showSchedulePicker, setShowSchedulePicker] = useState(false);
-  const [scheduledInstalls, setScheduledInstalls] = useState<{ [key: string]: string }>({});
+  const [scheduledInstalls, setScheduledInstalls] = useState<{ [key: string]: { label: string; bookingId: string; links?: { ics: string; google: string } } }>({});
 
   const handleScheduleInstall = (app: Application) => {
     setSelectedApp(app);
     setShowSchedulePicker(true);
   };
 
-  const handleTimeConfirm = (time: string) => {
+  const handleTimeConfirm = async (timeIso: string) => {
     if (!selectedApp) return;
-
-    const formatTime = (timeString: string) => {
-      const [hour, minute] = timeString.split(':');
-      const h = parseInt(hour);
-      const ampm = h >= 12 ? 'PM' : 'AM';
-      const displayHour = h > 12 ? h - 12 : h === 0 ? 12 : h;
-      const day = mockVenueSchedule.dayOfWeek.substring(0, 3);
-      return `${day} ${displayHour}:${minute} ${ampm}`;
-    };
-
-    setScheduledInstalls({
-      ...scheduledInstalls,
-      [selectedApp.id]: formatTime(time),
-    });
-
-    setShowSchedulePicker(false);
-    setSelectedApp(null);
+    try {
+      const { booking, links } = await createVenueBooking(selectedApp.venueId, { artworkId: selectedApp.artworkId, type: 'install', startAt: timeIso });
+      const d = new Date(timeIso);
+      const day = d.toLocaleDateString('en-US', { weekday: 'short' });
+      const label = `${day} ${d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
+      setScheduledInstalls({ ...scheduledInstalls, [selectedApp.id]: { label, bookingId: booking.id, links } });
+    } catch (e) {
+      // noop: in real app show toast
+    } finally {
+      setShowSchedulePicker(false);
+      setSelectedApp(null);
+    }
   };
 
   const formatTime = (time: string) => {
@@ -48,9 +44,17 @@ export function ArtistApplicationsWithScheduling() {
 
   const getStatusBadge = (status: string) => {
     const styles = {
-      pending: { bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'Pending' },
-      approved: { bg: 'bg-green-100', text: 'text-green-700', label: 'Approved' },
-      rejected: { bg: 'bg-red-100', text: 'text-red-700', label: 'Rejected' },
+      pending: {
+        bg: 'bg-[var(--surface-2)] border border-[var(--border)]',
+        text: 'text-[var(--warning)]',
+        label: 'Pending',
+      },
+      approved: { bg: 'bg-[var(--green-muted)]', text: 'text-[var(--green)]', label: 'Approved' },
+      rejected: {
+        bg: 'bg-[var(--surface-2)] border border-[var(--border)]',
+        text: 'text-[var(--danger)]',
+        label: 'Rejected',
+      },
     };
     const style = styles[status as keyof typeof styles];
     return (
@@ -64,10 +68,10 @@ export function ArtistApplicationsWithScheduling() {
   const approvedCount = applications.filter(a => a.status === 'approved').length;
 
   return (
-    <div>
+    <div className="bg-[var(--bg)] text-[var(--text)]">
       <div className="mb-8">
-        <h1 className="text-3xl mb-2 text-neutral-900">My Applications</h1>
-        <p className="text-neutral-600">
+        <h1 className="text-3xl mb-2">My Applications</h1>
+        <p className="text-[var(--text-muted)]">
           {pendingCount} pending • {approvedCount} approved
         </p>
       </div>
@@ -76,9 +80,9 @@ export function ArtistApplicationsWithScheduling() {
         {applications.map((application) => (
           <div
             key={application.id}
-            className="bg-white rounded-xl border border-neutral-200 overflow-hidden hover:shadow-lg transition-shadow"
+            className="bg-[var(--surface-1)] rounded-xl border border-[var(--border)] overflow-hidden hover:shadow-lg transition-shadow"
           >
-            <div className="h-48 bg-neutral-100 overflow-hidden">
+            <div className="h-48 bg-[var(--surface-2)] overflow-hidden">
               <img
                 src={application.artworkImage}
                 alt={application.artworkTitle}
@@ -88,13 +92,13 @@ export function ArtistApplicationsWithScheduling() {
             <div className="p-6">
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <h3 className="text-lg mb-1 text-neutral-900">{application.artworkTitle}</h3>
-                  <p className="text-sm text-neutral-600">{application.venueName}</p>
+                  <h3 className="text-lg mb-1 text-[var(--text)]">{application.artworkTitle}</h3>
+                  <p className="text-sm text-[var(--text-muted)]">{application.venueName}</p>
                 </div>
                 {getStatusBadge(application.status)}
               </div>
 
-              <div className="flex items-center gap-2 text-sm text-neutral-600 mb-4">
+              <div className="flex items-center gap-2 text-sm text-[var(--text-muted)] mb-4">
                 <Calendar className="w-4 h-4" />
                 Applied {new Date(application.appliedDate).toLocaleDateString('en-US', {
                   month: 'short',
@@ -108,49 +112,59 @@ export function ArtistApplicationsWithScheduling() {
                 <div>
                   {/* Display Duration Info */}
                   {(application as any).approvedDuration && (
-                    <div className="mb-4 p-4 bg-green-50 rounded-lg border border-green-200">
+                    <div className="mb-4 p-4 bg-[var(--green-muted)] rounded-lg border border-[var(--border)]">
                       <div className="flex flex-wrap items-center gap-3 mb-2">
-                        <span className="text-sm text-green-900">Display term:</span>
+                        <span className="text-sm text-[var(--text)]">Display term:</span>
                         <DurationBadge duration={(application as any).approvedDuration} size="md" />
                       </div>
-                      <p className="text-xs text-green-700">
+                      <p className="text-xs text-[var(--text)]">
                         You'll rotate or pick up the artwork during the venue's weekly window after the end date.
                       </p>
                     </div>
                   )}
 
                   {!scheduledInstalls[application.id] ? (
-                    <div className="bg-green-50 rounded-lg p-4 mb-4">
+                    <div className="bg-[var(--green-muted)] rounded-lg p-4 mb-4 border border-[var(--border)]">
                       <div className="flex items-start gap-3 mb-3">
-                        <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                        <CheckCircle className="w-5 h-5 text-[var(--green)] flex-shrink-0 mt-0.5" />
                         <div>
-                          <h4 className="text-sm text-green-900 mb-1">Application Approved!</h4>
-                          <p className="text-xs text-green-700">
-                            Install window: {mockVenueSchedule.dayOfWeek}s, {formatTime(mockVenueSchedule.startTime)} – {formatTime(mockVenueSchedule.endTime)}
-                          </p>
+                          <h4 className="text-sm text-[var(--text)] mb-1">Application Approved!</h4>
+                          <p className="text-xs text-[var(--text)]">Use the picker to see available times.</p>
                         </div>
                       </div>
                       <button
                         onClick={() => handleScheduleInstall(application)}
-                        className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                        className="w-full px-4 py-2 bg-[var(--blue)] text-[var(--on-blue)] rounded-lg hover:bg-[var(--blue-hover)] transition-colors text-sm"
                       >
                         Choose an Install Time
                       </button>
                     </div>
                   ) : (
-                    <div className="bg-blue-50 rounded-lg p-4 mb-4">
+                    <div className="bg-[var(--surface-2)] rounded-lg p-4 mb-4 border border-[var(--border)]">
                       <div className="flex items-start gap-3 mb-3">
-                        <Clock className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                        <Clock className="w-5 h-5 text-[var(--blue)] flex-shrink-0 mt-0.5" />
                         <div>
-                          <h4 className="text-sm text-blue-900 mb-1">Install Scheduled</h4>
-                          <p className="text-blue-700">
-                            <strong>{scheduledInstalls[application.id]}</strong>
-                          </p>
+                          <h4 className="text-sm text-[var(--text)] mb-1">Install Scheduled</h4>
+                          <p className="text-[var(--text)]"><strong>{scheduledInstalls[application.id].label}</strong></p>
+                          <div className="mt-2 flex gap-3 text-sm">
+                            <a
+                              className="text-[var(--blue)] underline"
+                              href={scheduledInstalls[application.id].links?.google || `${API_BASE}/api/bookings/${scheduledInstalls[application.id].bookingId}/google`}
+                              target="_blank"
+                              rel="noreferrer"
+                            >Add to Google</a>
+                            <a
+                              className="text-[var(--blue)] underline"
+                              href={scheduledInstalls[application.id].links?.ics || `${API_BASE}/api/bookings/${scheduledInstalls[application.id].bookingId}/ics`}
+                              target="_blank"
+                              rel="noreferrer"
+                            >Download .ics</a>
+                          </div>
                         </div>
                       </div>
                       <button
                         onClick={() => handleScheduleInstall(application)}
-                        className="text-sm text-blue-600 hover:text-blue-700 underline"
+                        className="text-sm text-[var(--blue)] hover:text-[var(--blue-hover)] underline"
                       >
                         Reschedule
                       </button>
@@ -164,8 +178,8 @@ export function ArtistApplicationsWithScheduling() {
 
               {/* Pending */}
               {application.status === 'pending' && (
-                <div className="bg-yellow-50 rounded-lg p-4">
-                  <div className="flex items-center gap-2 text-sm text-yellow-800">
+                <div className="bg-[var(--surface-2)] rounded-lg p-4 border border-[var(--border)]">
+                  <div className="flex items-center gap-2 text-sm text-[var(--warning)]">
                     <Clock className="w-4 h-4" />
                     <span>Awaiting venue review</span>
                   </div>
@@ -174,8 +188,8 @@ export function ArtistApplicationsWithScheduling() {
 
               {/* Rejected */}
               {application.status === 'rejected' && (
-                <div className="bg-red-50 rounded-lg p-4">
-                  <div className="flex items-center gap-2 text-sm text-red-800">
+                <div className="bg-[var(--surface-2)] rounded-lg p-4 border border-[var(--border)]">
+                  <div className="flex items-center gap-2 text-sm text-[var(--danger)]">
                     <XCircle className="w-4 h-4" />
                     <span>Application not approved</span>
                   </div>
@@ -188,12 +202,12 @@ export function ArtistApplicationsWithScheduling() {
 
       {applications.length === 0 && (
         <div className="text-center py-16">
-          <div className="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Calendar className="w-8 h-8 text-neutral-400" />
+          <div className="w-16 h-16 bg-[var(--surface-2)] rounded-full flex items-center justify-center mx-auto mb-4 border border-[var(--border)]">
+            <Calendar className="w-8 h-8 text-[var(--text-muted)]" />
           </div>
-          <h3 className="text-xl mb-2 text-neutral-900">No applications yet</h3>
-          <p className="text-neutral-600 mb-6">Apply to display your artwork at local venues</p>
-          <button className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+          <h3 className="text-xl mb-2 text-[var(--text)]">No applications yet</h3>
+          <p className="text-[var(--text-muted)] mb-6">Apply to display your artwork at local venues</p>
+          <button className="px-6 py-2 bg-[var(--blue)] text-[var(--on-blue)] rounded-lg hover:bg-[var(--blue-hover)] transition-colors">
             Browse Venues
           </button>
         </div>
@@ -207,9 +221,7 @@ export function ArtistApplicationsWithScheduling() {
             setShowSchedulePicker(false);
             setSelectedApp(null);
           }}
-          windowDay={mockVenueSchedule.dayOfWeek}
-          startTime={mockVenueSchedule.startTime}
-          endTime={mockVenueSchedule.endTime}
+          venueId={selectedApp.venueId}
           type="install"
           artworkTitle={selectedApp.artworkTitle}
           onConfirm={handleTimeConfirm}

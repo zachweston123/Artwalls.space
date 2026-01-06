@@ -17,20 +17,20 @@ export function InstallRules({ variant = 'accordion' }: InstallRulesProps) {
 
   if (variant === 'card') {
     return (
-      <div className="bg-blue-50 dark:bg-blue-900/30 rounded-xl p-6 border border-blue-100 dark:border-blue-900">
+      <div className="bg-[var(--surface-2)] rounded-xl p-6 border border-[var(--border)]">
         <div className="flex items-start gap-3 mb-4">
-          <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center flex-shrink-0">
-            <Info className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+          <div className="w-8 h-8 bg-[var(--surface-1)] rounded-lg flex items-center justify-center flex-shrink-0">
+            <Info className="w-5 h-5 text-[var(--blue)]" />
           </div>
           <div>
-            <h3 className="text-base mb-1 text-blue-900 dark:text-blue-200 text-neutral-900 dark:text-neutral-50">Install Rules</h3>
-            <p className="text-sm text-blue-700 dark:text-blue-300">Please follow these guidelines for smooth installs and pickups</p>
+            <h3 className="text-base mb-1 text-[var(--text)]">Install Rules</h3>
+            <p className="text-sm text-[var(--text-muted)]">Please follow these guidelines for smooth installs and pickups</p>
           </div>
         </div>
         <ul className="space-y-2">
           {rules.map((rule, index) => (
-            <li key={index} className="flex items-start gap-2 text-sm text-blue-900 dark:text-blue-200">
-              <span className="text-blue-600 dark:text-blue-400 mt-0.5">•</span>
+            <li key={index} className="flex items-start gap-2 text-sm text-[var(--text)]">
+              <span className="text-[var(--blue)] mt-0.5">•</span>
               <span>{rule}</span>
             </li>
           ))}
@@ -40,28 +40,28 @@ export function InstallRules({ variant = 'accordion' }: InstallRulesProps) {
   }
 
   return (
-    <div className="border border-neutral-200 dark:border-neutral-700 rounded-lg overflow-hidden">
+    <div className="border border-[var(--border)] rounded-lg overflow-hidden">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between p-4 bg-white dark:bg-neutral-800 hover:bg-neutral-50 dark:bg-neutral-900 transition-colors"
+        className="w-full flex items-center justify-between p-4 bg-[var(--surface-1)] hover:bg-[var(--surface-2)] transition-colors"
       >
         <div className="flex items-center gap-2">
-          <Info className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-          <span className="text-sm">Install Rules</span>
+          <Info className="w-5 h-5 text-[var(--blue)]" />
+          <span className="text-sm text-[var(--text)]">Install Rules</span>
         </div>
         {isExpanded ? (
-          <ChevronUp className="w-5 h-5 text-neutral-500 dark:text-neutral-400" />
+          <ChevronUp className="w-5 h-5 text-[var(--text-muted)]" />
         ) : (
-          <ChevronDown className="w-5 h-5 text-neutral-500 dark:text-neutral-400" />
+          <ChevronDown className="w-5 h-5 text-[var(--text-muted)]" />
         )}
       </button>
       
       {isExpanded && (
-        <div className="p-4 bg-blue-50 dark:bg-blue-900/30 border-t border-blue-100 dark:border-blue-900">
+        <div className="p-4 bg-[var(--surface-2)] border-t border-[var(--border)]">
           <ul className="space-y-2">
             {rules.map((rule, index) => (
-              <li key={index} className="flex items-start gap-2 text-sm text-blue-900 dark:text-blue-200">
-                <span className="text-blue-600 dark:text-blue-400 mt-0.5">•</span>
+              <li key={index} className="flex items-start gap-2 text-sm text-[var(--text)]">
+                <span className="text-[var(--blue)] mt-0.5">•</span>
                 <span>{rule}</span>
               </li>
             ))}

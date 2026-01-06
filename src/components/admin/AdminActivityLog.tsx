@@ -62,7 +62,7 @@ export function AdminActivityLog() {
       id: '8',
       timestamp: '2024-01-21 14:22:09',
       admin: 'support@artwalls.com',
-      action: 'Unsuspended user',
+      action: 'Reinstated user',
       target: 'jordan.taylor@example.com',
       details: 'Cleared after verification',
     },
@@ -70,46 +70,46 @@ export function AdminActivityLog() {
 
   const getActionColor = (action: string) => {
     if (action.includes('Suspended')) {
-      return 'text-red-600';
+      return 'text-[var(--danger)]';
     }
     if (action.includes('Created') || action.includes('Published')) {
-      return 'text-green-600';
+      return 'text-[var(--green)]';
     }
     if (action.includes('Deactivated')) {
-      return 'text-orange-600';
+      return 'text-[var(--warning)]';
     }
-    return 'text-blue-600';
+    return 'text-[var(--blue)]';
   };
 
   return (
-    <div>
+    <div className="bg-[var(--bg)]">
       <div className="mb-8">
-        <h1 className="text-3xl mb-2">Activity Log</h1>
-        <p className="text-neutral-600">
+        <h1 className="text-3xl mb-2 text-[var(--text)]">Activity Log</h1>
+        <p className="text-[var(--text-muted)]">
           Audit trail of all admin actions
         </p>
       </div>
 
-      <div className="bg-white rounded-xl border border-neutral-200 overflow-hidden">
+      <div className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-neutral-50 border-b border-neutral-200">
+            <thead className="bg-[var(--surface-3)] border-b border-[var(--border)]">
               <tr>
-                <th className="text-left px-6 py-3 text-sm text-neutral-600">Timestamp</th>
-                <th className="text-left px-6 py-3 text-sm text-neutral-600">Admin User</th>
-                <th className="text-left px-6 py-3 text-sm text-neutral-600">Action</th>
-                <th className="text-left px-6 py-3 text-sm text-neutral-600">Target</th>
-                <th className="text-left px-6 py-3 text-sm text-neutral-600">Details</th>
-                <th className="text-left px-6 py-3 text-sm text-neutral-600">Actions</th>
+                <th className="text-left px-6 py-3 text-sm text-[var(--text-muted)]">Timestamp</th>
+                <th className="text-left px-6 py-3 text-sm text-[var(--text-muted)]">Admin User</th>
+                <th className="text-left px-6 py-3 text-sm text-[var(--text-muted)]">Action</th>
+                <th className="text-left px-6 py-3 text-sm text-[var(--text-muted)]">Target</th>
+                <th className="text-left px-6 py-3 text-sm text-[var(--text-muted)]">Details</th>
+                <th className="text-left px-6 py-3 text-sm text-[var(--text-muted)]">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-100">
+            <tbody className="divide-y divide-[var(--border)]">
               {mockActivity.map((log) => (
-                <tr key={log.id} className="hover:bg-neutral-50">
-                  <td className="px-6 py-4 text-sm text-neutral-600 font-mono">
+                <tr key={log.id} className="hover:bg-[var(--surface-3)]">
+                  <td className="px-6 py-4 text-sm text-[var(--text-muted)]">
                     {log.timestamp}
                   </td>
-                  <td className="px-6 py-4 text-sm text-neutral-900">
+                  <td className="px-6 py-4 text-sm text-[var(--text)]">
                     {log.admin}
                   </td>
                   <td className="px-6 py-4">
@@ -117,14 +117,14 @@ export function AdminActivityLog() {
                       {log.action}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-neutral-900 font-mono">
+                  <td className="px-6 py-4 text-sm text-[var(--text)]">
                     {log.target}
                   </td>
-                  <td className="px-6 py-4 text-sm text-neutral-600">
+                  <td className="px-6 py-4 text-sm text-[var(--text-muted)]">
                     {log.details}
                   </td>
                   <td className="px-6 py-4">
-                    <button className="px-3 py-1 text-neutral-600 hover:text-neutral-900 text-xs transition-colors">
+                    <button className="px-3 py-1 text-[var(--blue)] hover:text-[var(--blue-hover)] text-xs transition-colors">
                       View
                     </button>
                   </td>
@@ -135,15 +135,15 @@ export function AdminActivityLog() {
         </div>
 
         {/* Pagination */}
-        <div className="p-4 border-t border-neutral-200 flex items-center justify-between">
-          <p className="text-sm text-neutral-600">
+        <div className="p-4 border-t border-[var(--border)] flex items-center justify-between">
+          <p className="text-sm text-[var(--text-muted)]">
             Showing 1-{mockActivity.length} of 247 entries
           </p>
           <div className="flex gap-2">
-            <button className="px-3 py-1 bg-neutral-100 text-neutral-700 rounded hover:bg-neutral-200 transition-colors text-sm">
+            <button className="px-3 py-1 bg-[var(--surface-3)] border border-[var(--border)] text-[var(--text)] rounded hover:bg-[var(--surface-2)] transition-colors text-sm">
               Previous
             </button>
-            <button className="px-3 py-1 bg-neutral-900 text-white rounded hover:bg-neutral-800 transition-colors text-sm">
+            <button className="px-3 py-1 bg-[var(--blue)] text-[var(--on-blue)] rounded hover:bg-[var(--blue-hover)] transition-colors text-sm">
               Next
             </button>
           </div>
@@ -151,12 +151,12 @@ export function AdminActivityLog() {
       </div>
 
       {mockActivity.length === 0 && (
-        <div className="text-center py-16 bg-white rounded-xl border border-neutral-200">
-          <div className="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Activity className="w-8 h-8 text-neutral-400" />
+        <div className="text-center py-16 bg-[var(--surface-2)] rounded-xl border border-[var(--border)]">
+          <div className="w-16 h-16 bg-[var(--surface-3)] border border-[var(--border)] rounded-full flex items-center justify-center mx-auto mb-4">
+            <Activity className="w-8 h-8 text-[var(--text-muted)]" />
           </div>
-          <h3 className="text-xl mb-2">No activity yet</h3>
-          <p className="text-neutral-600">
+          <h3 className="text-xl mb-2 text-[var(--text)]">No activity yet</h3>
+          <p className="text-[var(--text-muted)]">
             Admin actions will appear here
           </p>
         </div>

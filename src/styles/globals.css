@@ -3,7 +3,32 @@
 @tailwind utilities;
 
 @layer base {
-  /* Root color tokens - Light mode only */
+  /* ═══════════════════════════════════════════════════════════
+     SYSTEM DARK MODE DETECTION + ROOT BACKGROUND
+     ═══════════════════════════════════════════════════════════ */
+  
+  /* Always ensure html/body has correct background color */
+  html {
+    background-color: rgb(var(--color-bg));
+    color-scheme: light;
+  }
+
+  body {
+    background-color: rgb(var(--color-bg));
+    color: rgb(var(--color-text-primary));
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Root app container (#root element) must match page background */
+  #root {
+    background-color: rgb(var(--color-bg));
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Root color tokens - Light mode (DEFAULT) */
   :root {
     /* Backgrounds */
     --color-bg: 250 250 250; /* neutral-50 */
@@ -13,6 +38,7 @@
     /* Borders */
     --color-border: 229 229 229; /* neutral-200 */
     --color-border-subtle: 245 245 245; /* neutral-100 */
+    --color-border-strong: 212 212 212; /* neutral-300 */
     
     /* Text */
     --color-text-primary: 23 23 23; /* neutral-900 */
@@ -49,6 +75,71 @@
     --color-info: 37 99 235; /* blue-600 */
     --color-info-bg: 239 246 255; /* blue-50 */
     --color-info-text: 29 78 216; /* blue-700 */
+  }
+
+  /* Dark mode color tokens */
+  @media (prefers-color-scheme: dark) {
+    html {
+      background-color: rgb(var(--color-bg));
+      color-scheme: dark;
+    }
+
+    body {
+      background-color: rgb(var(--color-bg));
+      color: rgb(var(--color-text-primary));
+    }
+
+    #root {
+      background-color: rgb(var(--color-bg));
+    }
+
+    :root {
+      /* Backgrounds */
+      --color-bg: 23 23 23; /* neutral-900 */
+      --color-surface: 38 38 38; /* neutral-800 */
+      --color-surface-alt: 64 64 64; /* neutral-700 */
+      
+      /* Borders */
+      --color-border: 64 64 64; /* neutral-700 */
+      --color-border-subtle: 82 82 82; /* neutral-600 */
+      --color-border-strong: 90 90 90; /* neutral-600 */
+      
+      /* Text */
+      --color-text-primary: 250 250 250; /* neutral-50 */
+      --color-text-secondary: 212 212 212; /* neutral-300 */
+      --color-text-muted: 163 163 163; /* neutral-400 */
+      
+      /* Artist Accent (Blue) - brighter for dark mode */
+      --color-accent-artist: 96 165 250; /* blue-400 */
+      --color-accent-artist-hover: 147 197 253; /* blue-300 */
+      --color-accent-artist-bg: 30 58 138; /* blue-900 */
+      --color-accent-artist-subtle: 30 64 175; /* blue-800 */
+      --color-accent-artist-text: 191 219 254; /* blue-200 */
+      
+      /* Venue Accent (Green) - brighter for dark mode */
+      --color-accent-venue: 74 222 128; /* green-400 */
+      --color-accent-venue-hover: 134 239 172; /* green-300 */
+      --color-accent-venue-bg: 20 83 45; /* green-900 */
+      --color-accent-venue-subtle: 22 101 52; /* green-800 */
+      --color-accent-venue-text: 187 247 208; /* green-200 */
+      
+      /* Status Colors - adjusted for dark backgrounds */
+      --color-success: 74 222 128; /* green-400 */
+      --color-success-bg: 20 83 45; /* green-900 */
+      --color-success-text: 187 247 208; /* green-200 */
+      
+      --color-warning: 250 204 21; /* yellow-400 */
+      --color-warning-bg: 113 63 18; /* yellow-900 */
+      --color-warning-text: 254 240 138; /* yellow-200 */
+      
+      --color-danger: 248 113 113; /* red-400 */
+      --color-danger-bg: 127 29 29; /* red-900 */
+      --color-danger-text: 254 202 202; /* red-200 */
+      
+      --color-info: 96 165 250; /* blue-400 */
+      --color-info-bg: 30 58 138; /* blue-900 */
+      --color-info-text: 191 219 254; /* blue-200 */
+    }
   }
 
   /* Typography defaults */
@@ -185,6 +276,96 @@
   }
   .text-info {
     color: rgb(var(--color-info-text));
+  }
+
+  /* Override core Tailwind utilities to follow token palette */
+  .text-neutral-900,
+  .text-neutral-800 {
+    color: rgb(var(--color-text-primary) / var(--tw-text-opacity, 1));
+  }
+  .text-neutral-700,
+  .text-neutral-600 {
+    color: rgb(var(--color-text-secondary) / var(--tw-text-opacity, 1));
+  }
+  .text-neutral-500,
+  .text-neutral-400 {
+    color: rgb(var(--color-text-muted) / var(--tw-text-opacity, 1));
+  }
+
+  .text-blue-600,
+  .text-blue-700 {
+    color: rgb(var(--color-accent-artist) / var(--tw-text-opacity, 1));
+  }
+  .text-green-600,
+  .text-green-700 {
+    color: rgb(var(--color-accent-venue) / var(--tw-text-opacity, 1));
+  }
+  .text-yellow-900 {
+    color: rgb(var(--color-warning-text) / var(--tw-text-opacity, 1));
+  }
+  .text-red-700,
+  .text-red-600 {
+    color: rgb(var(--color-danger-text) / var(--tw-text-opacity, 1));
+  }
+
+  .bg-white {
+    background-color: rgb(var(--color-surface) / var(--tw-bg-opacity, 1));
+  }
+  .bg-neutral-50 {
+    background-color: rgb(var(--color-bg) / var(--tw-bg-opacity, 1));
+  }
+  .bg-neutral-100 {
+    background-color: rgb(var(--color-surface-alt) / var(--tw-bg-opacity, 1));
+  }
+  .bg-neutral-200 {
+    background-color: rgb(var(--color-border-subtle) / var(--tw-bg-opacity, 1));
+  }
+
+  .bg-blue-50 {
+    background-color: rgb(var(--color-accent-artist-bg) / var(--tw-bg-opacity, 1));
+  }
+  .bg-blue-100 {
+    background-color: rgb(var(--color-accent-artist-subtle) / var(--tw-bg-opacity, 1));
+  }
+  .bg-blue-600 {
+    background-color: rgb(var(--color-accent-artist) / var(--tw-bg-opacity, 1));
+  }
+  .bg-blue-700 {
+    background-color: rgb(var(--color-accent-artist-hover) / var(--tw-bg-opacity, 1));
+  }
+
+  .bg-green-50 {
+    background-color: rgb(var(--color-accent-venue-bg) / var(--tw-bg-opacity, 1));
+  }
+  .bg-green-100 {
+    background-color: rgb(var(--color-accent-venue-subtle) / var(--tw-bg-opacity, 1));
+  }
+  .bg-green-600 {
+    background-color: rgb(var(--color-accent-venue) / var(--tw-bg-opacity, 1));
+  }
+  .bg-green-700 {
+    background-color: rgb(var(--color-accent-venue-hover) / var(--tw-bg-opacity, 1));
+  }
+
+  .bg-yellow-50 {
+    background-color: rgb(var(--color-warning-bg) / var(--tw-bg-opacity, 1));
+  }
+  .bg-red-50 {
+    background-color: rgb(var(--color-danger-bg) / var(--tw-bg-opacity, 1));
+  }
+
+  .border-neutral-200 {
+    border-color: rgb(var(--color-border) / var(--tw-border-opacity, 1));
+  }
+  .border-neutral-100 {
+    border-color: rgb(var(--color-border-subtle) / var(--tw-border-opacity, 1));
+  }
+  .border-neutral-300 {
+    border-color: rgb(var(--color-border-strong) / var(--tw-border-opacity, 1));
+  }
+
+  .divide-neutral-100 > :not([hidden]) ~ :not([hidden]) {
+    border-color: rgb(var(--color-border-subtle) / var(--tw-divide-opacity, 1));
   }
 }
 

@@ -1,6 +1,5 @@
-import { supabase } from "../../lib/supabase";
 import { useEffect, useState } from 'react';
-import { User, Mail, Link as LinkIcon, DollarSign, Edit, Save, X } from 'lucide-react';
+import { User, Mail, Phone, Link as LinkIcon, DollarSign, Edit, Save, X } from 'lucide-react';
 import { PlanBadge } from '../pricing/PlanBadge';
 
 interface ArtistProfileProps {
@@ -17,8 +16,12 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [portfolioUrl, setPortfolioUrl] = useState('');
+  const [phone, setPhone] = useState('');
+  const [cityPrimary, setCityPrimary] = useState('');
+  const [citySecondary, setCitySecondary] = useState('');
   const [currentPlan, setCurrentPlan] = useState<'free' | 'starter' | 'growth' | 'pro'>('free');
 
+  // Demo values for summary (would come from orders on real data)
   const [totalEarnings] = useState(0);
   const [pendingPayout] = useState(0);
 
@@ -26,12 +29,13 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
     let mounted = true;
     (async () => {
       try {
-        
+        const { supabase } = await import('../../lib/supabase');
         const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
         if (sessionErr) throw sessionErr;
         const user = sessionData.session?.user;
         if (!user) throw new Error('Not signed in');
 
+        // Load artist row; create if missing
         const { data: artistRows, error: selErr } = await supabase
           .from('artists')
           .select('*')
@@ -52,15 +56,22 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
           if (upErr) throw upErr;
           setName(defaults.name || 'Artist');
           setEmail(defaults.email || '');
+          setPhone(((user.user_metadata?.phone as string) || '').trim());
           setCurrentPlan('free');
+          setCityPrimary('');
+          setCitySecondary('');
         } else {
           const row = artistRows[0] as any;
           setName(row.name || (user.user_metadata?.name as string) || 'Artist');
           setEmail(row.email || user.email || '');
+          setPhone((row.phone_number as string) || ((user.user_metadata?.phone as string) || ''));
+          setCityPrimary((row.city_primary as string) || '');
+          setCitySecondary((row.city_secondary as string) || '');
           const tier = (row.subscription_tier as 'free' | 'starter' | 'growth' | 'pro') || 'free';
           setCurrentPlan(tier);
         }
 
+        // Portfolio URL from auth metadata
         setPortfolioUrl(((user.user_metadata?.portfolioUrl as string) || '').trim());
       } catch (e: any) {
         if (mounted) setError(e?.message || 'Failed to load profile');
@@ -78,17 +89,24 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
     setError(null);
     setInfo(null);
     try {
-      
+      const { supabase } = await import('../../lib/supabase');
       const { data: sessionData } = await supabase.auth.getSession();
       const user = sessionData.session?.user;
       if (!user) throw new Error('Not signed in');
 
-      const { error: upErr } = await supabase
-        .from('artists')
-        .upsert({ id: user.id, name, email, subscription_tier: currentPlan }, { onConflict: 'id' });
-      if (upErr) throw upErr;
+      // Update via API (server/worker) to avoid client-side schema/permission issues
+      const { apiPost } = await import('../../lib/api');
+      await apiPost('/api/artists', {
+        name,
+        email,
+        phoneNumber: phone,
+        cityPrimary: cityPrimary || null,
+        citySecondary: citySecondary || null,
+        subscriptionTier: currentPlan,
+      });
 
-      const { error: metaErr } = await supabase.auth.updateUser({ data: { portfolioUrl } });
+      // Update metadata and email in auth
+      const { error: metaErr } = await supabase.auth.updateUser({ data: { portfolioUrl, phone, cityPrimary, citySecondary }, email });
       if (metaErr) throw metaErr;
 
       setInfo('Profile updated successfully');
@@ -101,71 +119,78 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
   }
 
   return (
-    <div>
+    <div className="bg-[var(--bg)] text-[var(--text)]">
       <div className="mb-8">
-        <h1 className="text-3xl mb-2 text-neutral-900">Artist Profile</h1>
-        <p className="text-neutral-600">Manage your account information and settings</p>
+        <h1 className="text-3xl mb-2">Artist Profile</h1>
+        <p className="text-[var(--text-muted)]">Manage your account information and settings</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Profile Information Card */}
-        <div className="lg:col-span-2 bg-white rounded-xl border border-neutral-200 overflow-hidden">
+        <div className="lg:col-span-2 bg-[var(--surface-1)] rounded-xl border border-[var(--border)] overflow-hidden">
           <div className="p-6">
             <div className="flex items-start justify-between mb-6">
               <div className="flex items-center gap-4">
-                <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center">
-                  <User className="w-10 h-10 text-blue-600" />
+                <div className="w-20 h-20 bg-[var(--surface-2)] border border-[var(--border)] rounded-full flex items-center justify-center">
+                  <User className="w-10 h-10 text-[var(--blue)]" />
                 </div>
                 <div>
-                  <h2 className="text-2xl mb-1 text-neutral-900">{name || 'Artist'}</h2>
+                  <h2 className="text-2xl mb-1 text-[var(--text)]">{name || 'Artist'}</h2>
                   <PlanBadge plan={currentPlan} size="sm" showUpgrade onUpgrade={() => onNavigate('plans-pricing')} />
                 </div>
               </div>
               {!isEditing ? (
-                <button onClick={() => setIsEditing(true)} className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                <button onClick={() => setIsEditing(true)} className="flex items-center gap-2 px-4 py-2 bg-[var(--blue)] hover:bg-[var(--blue-hover)] text-[var(--on-blue)] rounded-lg transition-colors">
                   <Edit className="w-4 h-4" />
                   <span>Edit Profile</span>
                 </button>
               ) : (
                 <div className="flex items-center gap-2">
-                  <button disabled={saving} onClick={handleSave} className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-60">
+                  <button disabled={saving} onClick={handleSave} className="flex items-center gap-2 px-4 py-2 bg-[var(--green)] hover:brightness-95 text-[var(--accent-contrast)] rounded-lg transition-colors disabled:opacity-60">
                     <Save className="w-4 h-4" />
                     <span>{saving ? 'Saving…' : 'Save'}</span>
                   </button>
-                  <button disabled={saving} onClick={() => setIsEditing(false)} className="flex items-center gap-2 px-3 py-2 bg-neutral-50 border border-neutral-200 text-neutral-700 rounded-lg transition-colors">
+                  <button disabled={saving} onClick={() => setIsEditing(false)} className="flex items-center gap-2 px-3 py-2 bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text)] rounded-lg transition-colors">
                     <X className="w-4 h-4" />
                     <span>Cancel</span>
                   </button>
                 </div>
               )}
             </div>
-
             {(error || info) && (
-              <div className={`mb-4 rounded-lg border px-4 py-3 text-sm ${error ? 'bg-neutral-50 border-neutral-200 text-red-600' : 'bg-neutral-50 border-neutral-200 text-neutral-900'}`}>
+              <div className={'mb-4 rounded-lg border px-4 py-3 text-sm ' + (error ? 'bg-[var(--surface-1)] border-[var(--border)] text-[var(--danger)]' : 'bg-[var(--surface-1)] border-[var(--border)] text-[var(--text)]')}>
                 {error || info}
               </div>
             )}
 
             {!isEditing ? (
               <div className="space-y-4">
-                <div className="flex items-start gap-3 p-4 bg-neutral-50 rounded-lg">
-                  <Mail className="w-5 h-5 text-neutral-500 mt-0.5" />
+                <div className="flex items-start gap-3 p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg">
+                  <Mail className="w-5 h-5 text-[var(--text-muted)] mt-0.5" />
                   <div className="flex-1">
-                    <label className="block text-sm text-neutral-500 mb-1">Email Address</label>
-                    <p className="text-neutral-900">{email}</p>
+                    <label className="block text-sm text-[var(--text-muted)] mb-1">Email Address</label>
+                    <p className="text-[var(--text)]">{email}</p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3 p-4 bg-neutral-50 rounded-lg">
-                  <LinkIcon className="w-5 h-5 text-neutral-500 mt-0.5" />
+                <div className="flex items-start gap-3 p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg">
+                  <Phone className="w-5 h-5 text-[var(--text-muted)] mt-0.5" />
                   <div className="flex-1">
-                    <label className="block text-sm text-neutral-500 mb-1">Portfolio Website</label>
+                    <label className="block text-sm text-[var(--text-muted)] mb-1">Phone Number</label>
+                    <p className="text-[var(--text)]">{phone || 'Not set'}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3 p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg">
+                  <LinkIcon className="w-5 h-5 text-[var(--text-muted)] mt-0.5" />
+                  <div className="flex-1">
+                    <label className="block text-sm text-[var(--text-muted)] mb-1">Portfolio Website</label>
                     {portfolioUrl ? (
-                      <a href={portfolioUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                      <a href={portfolioUrl} target="_blank" rel="noopener noreferrer" className="text-[var(--blue)] hover:text-[var(--blue-hover)] underline">
                         {portfolioUrl}
                       </a>
                     ) : (
-                      <p className="text-neutral-500">Not set</p>
+                      <p className="text-[var(--text-muted)]">Not set</p>
                     )}
                   </div>
                 </div>
@@ -173,27 +198,47 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
             ) : (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm text-neutral-600 mb-1">Display Name</label>
-                  <input value={name} onChange={(e) => setName(e.target.value)} className="w-full px-4 py-2 rounded-lg border border-neutral-300 bg-white text-neutral-900 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Your name" />
+                  <label className="block text-sm text-[var(--text-muted)] mb-1">Display Name</label>
+                  <input value={name} onChange={(e) => setName(e.target.value)} className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]" placeholder="Your name" />
                 </div>
                 <div>
-                  <label className="block text-sm text-neutral-600 mb-1">Portfolio Website</label>
-                  <input value={portfolioUrl} onChange={(e) => setPortfolioUrl(e.target.value)} className="w-full px-4 py-2 rounded-lg border border-neutral-300 bg-white text-neutral-900 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="https://your-portfolio.example" />
+                  <label className="block text-sm text-[var(--text-muted)] mb-1">Email Address</label>
+                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]" placeholder="your@email.com" />
+                </div>
+                <div>
+                  <label className="block text-sm text-[var(--text-muted)] mb-1">Phone Number</label>
+                  <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]" placeholder="e.g. +15551234567" />
+                  <p className="text-xs text-[var(--text-muted)] mt-1">Sale notifications will be sent to this number.</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm text-[var(--text-muted)] mb-1">City</label>
+                    <input value={cityPrimary} onChange={(e) => setCityPrimary(e.target.value)} className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]" placeholder="e.g. Portland" />
+                    <p className="text-xs text-[var(--text-muted)] mt-1">Used to recommend venues in your area.</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-[var(--text-muted)] mb-1">Secondary City (optional)</label>
+                    <input value={citySecondary} onChange={(e) => setCitySecondary(e.target.value)} className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]" placeholder="e.g. Seattle" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm text-[var(--text-muted)] mb-1">Portfolio Website</label>
+                  <input value={portfolioUrl} onChange={(e) => setPortfolioUrl(e.target.value)} className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]" placeholder="https://your-portfolio.example" />
                 </div>
               </div>
             )}
           </div>
 
-          <div className="border-t border-neutral-200 p-6">
-            <h3 className="text-lg mb-4 text-neutral-900">Account Settings</h3>
+          <div className="border-t border-[var(--border)] p-6">
+            <h3 className="text-lg mb-4 text-[var(--text)]">Account Settings</h3>
             <div className="space-y-3">
-              <button className="w-full text-left px-4 py-3 bg-neutral-50 hover:bg-neutral-100 rounded-lg transition-colors">
-                <p className="text-neutral-900 mb-1">Password & Security</p>
-                <p className="text-sm text-neutral-500">Change your password and security settings</p>
+              <button className="w-full text-left px-4 py-3 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] border border-[var(--border)] rounded-lg transition-colors">
+                <p className="text-[var(--text)] mb-1">Password & Security</p>
+                <p className="text-sm text-[var(--text-muted)]">Change your password and security settings</p>
               </button>
-              <button className="w-full text-left px-4 py-3 bg-neutral-50 hover:bg-neutral-100 rounded-lg transition-colors">
-                <p className="text-neutral-900 mb-1">Notification Preferences</p>
-                <p className="text-sm text-neutral-500">Manage email and push notifications</p>
+              <button className="w-full text-left px-4 py-3 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] border border-[var(--border)] rounded-lg transition-colors">
+                <p className="text-[var(--text)] mb-1">Notification Preferences</p>
+                <p className="text-sm text-[var(--text-muted)]">Manage email and push notifications</p>
               </button>
             </div>
           </div>
@@ -201,53 +246,53 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
 
         {/* Earnings Summary Card */}
         <div className="space-y-6">
-          <div className="bg-white rounded-xl border border-neutral-200 p-6">
+          <div className="bg-[var(--surface-1)] rounded-xl border border-[var(--border)] p-6">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <DollarSign className="w-6 h-6 text-blue-600" />
+              <div className="w-12 h-12 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg flex items-center justify-center">
+                <DollarSign className="w-6 h-6 text-[var(--green)]" />
               </div>
-              <h3 className="text-lg text-neutral-900">Earnings Summary</h3>
+              <h3 className="text-lg text-[var(--text)]">Earnings Summary</h3>
             </div>
 
             <div className="space-y-4">
               <div>
-                <p className="text-sm text-neutral-500 mb-1">Total Earnings</p>
-                <p className="text-2xl text-neutral-900">${totalEarnings.toFixed(2)}</p>
+                <p className="text-sm text-[var(--text-muted)] mb-1">Total Earnings</p>
+                <p className="text-2xl text-[var(--text)]">${totalEarnings.toFixed(2)}</p>
               </div>
               
-              <div className="pt-4 border-t border-neutral-200">
-                <p className="text-sm text-neutral-500 mb-1">Pending Payout</p>
-                <p className="text-xl text-blue-600">${pendingPayout.toFixed(2)}</p>
-                <p className="text-xs text-neutral-500 mt-1">Processed monthly on the 15th</p>
+              <div className="pt-4 border-t border-[var(--border)]">
+                <p className="text-sm text-[var(--text-muted)] mb-1">Pending Payout</p>
+                <p className="text-xl text-[var(--green)]">${pendingPayout.toFixed(2)}</p>
+                <p className="text-xs text-[var(--text-muted)] mt-1">Processed monthly on the 15th</p>
               </div>
             </div>
 
             <button 
               onClick={() => onNavigate('artist-sales')}
-              className="w-full mt-4 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors"
+              className="w-full mt-4 px-4 py-2 bg-[var(--surface-2)] text-[var(--blue)] rounded-lg hover:bg-[var(--surface-3)] transition-colors border border-[var(--border)]"
             >
               View Sales History
             </button>
           </div>
 
-          <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 p-6">
-            <h3 className="text-lg mb-3 text-neutral-900">Quick Actions</h3>
+          <div className="bg-[var(--surface-1)] rounded-xl border border-[var(--border)] p-6">
+            <h3 className="text-lg mb-3 text-[var(--text)]">Quick Actions</h3>
             <div className="space-y-2">
               <button 
                 onClick={() => onNavigate('artist-artworks')}
-                className="w-full text-left px-4 py-2 bg-neutral-50 text-neutral-700 rounded-lg hover:bg-neutral-100 transition-colors"
+                className="w-full text-left px-4 py-2 bg-[var(--surface-2)] text-[var(--text)] rounded-lg hover:bg-[var(--surface-3)] transition-colors border border-[var(--border)]"
               >
                 Manage Artworks
               </button>
               <button 
                 onClick={() => onNavigate('artist-venues')}
-                className="w-full text-left px-4 py-2 bg-neutral-50 dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+                className="w-full text-left px-4 py-2 bg-[var(--surface-2)] text-[var(--text)] rounded-lg hover:bg-[var(--surface-3)] transition-colors border border-[var(--border)]"
               >
                 Browse Venues
               </button>
               <button 
                 onClick={() => onNavigate('plans-pricing')}
-                className="w-full text-left px-4 py-2 bg-neutral-50 dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+                className="w-full text-left px-4 py-2 bg-[var(--surface-2)] text-[var(--text)] rounded-lg hover:bg-[var(--surface-3)] transition-colors border border-[var(--border)]"
               >
                 Upgrade Plan
               </button>

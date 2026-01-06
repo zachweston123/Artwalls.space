@@ -212,7 +212,7 @@ The Admin Console is an internal-use tooling system for Artwalls staff to manage
 **Tracked Actions**:
 - Created promo code
 - Published announcement
-- Suspended/Unsuspended user
+- Suspended/Reinstated user
 - Reset password
 - Added note
 - Deactivated promo code

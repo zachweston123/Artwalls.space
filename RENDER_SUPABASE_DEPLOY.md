@@ -1,80 +1,72 @@
-# Deploy Artwalls on Render + Supabase (GitHub)
+# Deploy Artwalls on Cloudflare Pages + Workers + Supabase
 
-This repo contains:
-- Frontend (Vite/React) at `/` (static build)
-- Backend (Node/Express + Stripe Connect) at `/server`
-- Supabase schema at `/supabase/migrations/001_init.sql`
-- A Render Blueprint at `render.yaml`
+This guide replaces Render-specific steps with Cloudflare:
+- Frontend: Cloudflare Pages (builds Vite app to `dist`)
+- Backend API: Cloudflare Workers (see [worker/wrangler.toml](worker/wrangler.toml) and [worker/index.ts](worker/index.ts))
+- Database: Supabase (schema under [supabase/migrations](supabase/migrations))
 
 ## 1) Create a Supabase project
 1. In Supabase, create a new project.
 2. Copy these values (Project Settings → API):
    - Project URL → `SUPABASE_URL`
-   - Service Role key → `SUPABASE_SERVICE_ROLE_KEY` (server-only)
-3. In Supabase SQL Editor, run `supabase/migrations/001_init.sql`.
+   - Service Role key → `SUPABASE_SERVICE_ROLE_KEY` (server/Worker only)
+3. In Supabase SQL Editor, run [supabase/migrations/001_init.sql](supabase/migrations/001_init.sql).
 
-Optional (storage): create a bucket `artworks` if you want to upload images to Supabase Storage.
+Optional (storage): create a bucket `artworks` for uploads if needed.
 
-## 2) Put the code on GitHub
-1. Create a new GitHub repo.
-2. Upload the code (or `git init` + push).
+## 2) Frontend on Cloudflare Pages
+Follow [CLOUDFLARE_PAGES.md](.github/workflows/CLOUDFLARE_PAGES.md):
+- Build command: `npm ci && npm run build`
+- Output directory: `dist`
+- Environment variables:
+  - `VITE_API_BASE_URL` = `https://api.artwalls.space`
+  - `VITE_SUPABASE_URL` = your Supabase URL
+  - `VITE_SUPABASE_ANON_KEY` = Supabase anon key
 
-## 3) Create services on Render (the easy way: Blueprint)
-1. In Render Dashboard → **New +** → **Blueprint**.
-2. Select your GitHub repo.
-3. Render will create:
-   - `artwalls-api` (web service)
-   - `artwalls-web` (static site)
+## 3) Backend API on Cloudflare Workers
+Wrangler config: [wrangler.toml](wrangler.toml)
+- Name: matches your Worker (e.g. `artwalls-spacess`)
+- Route: `api.artwalls.space/*` with `zone_name = "artwalls.space"`
 
-## 4) Set environment variables on Render
-In `artwalls-api` → Environment:
-- Required:
-  - `STRIPE_SECRET_KEY`
-  - `STRIPE_WEBHOOK_SECRET`
-  - `SUPABASE_URL`
-  - `SUPABASE_SERVICE_ROLE_KEY`
-  - `STRIPE_SUB_PRICE_STARTER`, `STRIPE_SUB_PRICE_PRO`, `STRIPE_SUB_PRICE_ELITE` (if you use subscriptions day one)
-- Already set by the blueprint (adjust if needed):
-  - `APP_URL`, `CORS_ORIGIN`, redirect URLs
+Set Worker variables and secrets:
+```sh
+# From anywhere, targeting the root config
+npx wrangler --config ~/Artwalls.space/wrangler.toml secret put STRIPE_SECRET_KEY
+npx wrangler --config ~/Artwalls.space/wrangler.toml secret put STRIPE_WEBHOOK_SECRET
+npx wrangler --config ~/Artwalls.space/wrangler.toml secret put SUPABASE_SERVICE_ROLE_KEY
 
-In `artwalls-web` → Environment:
-- `VITE_API_BASE_URL` = your API URL (e.g. `https://api.artwalls.space`)
+# Optional vars (configure in wrangler.toml [vars] or via Dashboard)
+# API_BASE_URL, SUPABASE_URL, PAGES_ORIGIN
+```
 
-## 5) Add custom domains
-In Render:
-- `artwalls-web` → Settings → Custom Domains
-  - Add: `artwalls.space` (Render will also offer `www.artwalls.space`)
-- `artwalls-api` → Settings → Custom Domains
-  - Add: `api.artwalls.space`
+Worker CORS: set `PAGES_ORIGIN` (e.g. `https://artwalls.space`) so responses include the correct `Access-Control-Allow-Origin`.
 
-## 6) Point your DNS to Render
-At your domain registrar / DNS provider:
-- Remove any existing **AAAA** records for these hostnames.
-- For the root domain `artwalls.space`:
-  - Preferred: ALIAS/ANAME to the Render hostname shown in the Render custom domain screen.
-  - If ALIAS/ANAME isn’t available: add an **A** record for `@` → `216.24.57.1`
-- For `www.artwalls.space`:
-  - Add a **CNAME** record `www` → the Render hostname for the *static site* (e.g. `xxxxx.onrender.com`)
-- For `api.artwalls.space`:
-  - Add a **CNAME** record `api` → the Render hostname for the *API service* (e.g. `yyyyy.onrender.com`)
+## 4) Domains
+- In Cloudflare, add `artwalls.space` to your account (if not already).
+- Pages custom domain: attach `artwalls.space` (and `www.artwalls.space`) to your Pages project.
+- Worker route: ensure `api.artwalls.space/*` is active under the zone and resolves to your Worker.
 
-Wait for DNS to propagate, then refresh the domain status in Render until it shows verified + TLS issued.
-
-## 7) Configure Stripe webhooks (production)
+## 5) Stripe webhooks (production)
 1. In Stripe Dashboard (live mode): Developers → Webhooks → **Add endpoint**.
-2. Endpoint URL: `https://api.artwalls.space/api/stripe/webhook`
+2. Endpoint URL: `https://api.artwalls.space/api/stripe/webhook`.
 3. Events to send (minimum):
    - `checkout.session.completed`
    - `customer.subscription.updated`
    - `customer.subscription.deleted`
-4. Copy the webhook signing secret into Render → `STRIPE_WEBHOOK_SECRET`.
+4. Copy the webhook Signing secret (`whsec_...`) to the Worker:
+   ```sh
+   npx wrangler --config ~/Artwalls.space/wrangler.toml secret put STRIPE_WEBHOOK_SECRET
+   ```
 
-## 8) Smoke test
+## 6) Smoke test
 - Open `https://artwalls.space`
 - Check API health: `https://api.artwalls.space/api/health`
-- Onboard a test artist + venue to Stripe Connect
-- Create a listing
-- Purchase (test mode first), confirm:
-  - order status becomes paid
-  - transfers created (artist + venue)
+- Verify `/api/debug/env` reports Stripe vars present
+- Test webhook with Stripe CLI:
+  ```sh
+  brew install stripe/stripe-cli/stripe
+  stripe login
+  stripe listen --forward-to https://api.artwalls.space/api/stripe/webhook
+  stripe trigger payment_intent.succeeded
+  ```
 
