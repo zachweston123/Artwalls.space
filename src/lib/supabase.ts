@@ -11,8 +11,4 @@ if (!supabaseAnonKey) {
   throw new Error('Missing VITE_SUPABASE_ANON_KEY');
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  db: {
-    schema: 'public',
-  },
-});
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);

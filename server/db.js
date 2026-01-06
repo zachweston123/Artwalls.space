@@ -98,9 +98,18 @@ function mapOrderRow(r) {
 
 function throwIfError(error, context) {
   if (!error) return;
-  const msg = `${context}: ${error.message || JSON.stringify(error)}`;
+  // Include error code and details for better debugging
+  const details = {
+    message: error.message,
+    code: error.code,
+    details: error.details,
+    hint: error.hint,
+  };
+  const msg = `${context}: ${error.message || JSON.stringify(details)}`;
+  console.error(`[Supabase Error] ${context}:`, details);
   const e = new Error(msg);
   e.cause = error;
+  e.code = error.code;
   throw e;
 }
 

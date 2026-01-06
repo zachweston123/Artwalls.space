@@ -201,6 +201,40 @@ app.get('/api/debug/env', (_req, res) => {
   }
 });
 
+// Supabase connection test endpoint
+app.get('/api/debug/supabase', async (_req, res) => {
+  try {
+    // Test basic connection by querying a simple table
+    const { data: artistsTest, error: artistsError } = await supabaseAdmin
+      .from('artists')
+      .select('id')
+      .limit(1);
+
+    const { data: venuesTest, error: venuesError } = await supabaseAdmin
+      .from('venues')
+      .select('id')
+      .limit(1);
+
+    return res.json({
+      ok: !artistsError && !venuesError,
+      supabaseUrl: process.env.SUPABASE_URL ? 'configured' : 'missing',
+      serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'configured' : 'missing',
+      artists: {
+        ok: !artistsError,
+        error: artistsError?.message || null,
+        code: artistsError?.code || null,
+      },
+      venues: {
+        ok: !venuesError,
+        error: venuesError?.message || null,
+        code: venuesError?.code || null,
+      },
+    });
+  } catch (e) {
+    return res.status(500).json({ ok: false, error: e?.message || 'Supabase test error' });
+  }
+});
+
 // Profile provisioning: ensure an artist/venue row exists based on Supabase auth role
 app.post('/api/profile/provision', async (req, res) => {
   try {
