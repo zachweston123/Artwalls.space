@@ -558,14 +558,14 @@ Replaced: bg-orange-100, text-orange-700, dot-prefix ●
 │  │ 70%  │ │ 75%  │ │ 80%  │ │ 85%  │              │
 │  │Venue │ │Venue │ │Venue │ │Venue │              │
 │  │ 15%  │ │ 12%  │ │ 10%  │ │  8%  │              │
-│  │Artwls│ │Artwls│ │Artwls│ │Artwls│              │
+│  │Artwalls│ │Artwalls│ │Artwalls│ │Artwalls│              │
 │  │ 15%  │ │ 13%  │ │ 10%  │ │  7%  │              │
 │  ├──────┤ ├──────┤ ├──────┤ ├──────┤              │
 │  │3 list│ │10lst │ │30lst │ │∞ lst │              │
-│  │Basic │ │Priorty│ │Featur│ │24/7  │              │
-│  │supprt│ │supprt│ │listng│ │supprt│              │
-│  │      │ │Analyt│ │Analyt│ │Custom│              │
-│  │      │ │      │ │Promot│ │ terms│              │
+│  │Basic │ │Priority│ │Featured│ │24/7  │              │
+│  │support│ │support│ │listings│ │support│              │
+│  │      │ │Analytics│ │Analytics│ │Custom│              │
+│  │      │ │      │ │Promote│ │ terms│              │
 │  └──────┘ └──────┘ └──────┘ └──────┘              │
 │  [Current] [Select] [Select] [Select]              │
 └─────────────────────────────────────────────────────┘
@@ -644,7 +644,7 @@ Downgrade: Gray CTA with confirmation
 │  │ Date     │Artwork│Venue│Customer│Your Cut   │  │
 │  ├──────────────────────────────────────────────┤  │
 │  │ Jan 20   │Urban  │Brew │$850    │$680 (80%) │  │
-│  │ Jan 15   │City   │Artis│$1,200  │$960 (80%) │  │
+│  │ Jan 15   │City   │Artist│$1,200  │$960 (80%) │  │
 │  │ Jan 10   │Abstract│Port│$400    │$320 (80%) │  │
 │  └──────────────────────────────────────────────┘  │
 │                                                      │

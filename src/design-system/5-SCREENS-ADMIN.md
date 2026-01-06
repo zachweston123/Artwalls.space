@@ -108,7 +108,7 @@ outline-offset: -2px
 │ └──────┘ └──────┘ │  542 │ │  23  │ └──────┘      │
 │                    └──────┘ └──────┘               │
 │ ┌──────┐ ┌──────┐                                  │
-│ │ Rev. │ │Suppor│                                  │
+│ │ Rev. │ │Support│                                  │
 │ │$4.8k │ │Queue7│                                  │
 │ └──────┘ └──────┘                                  │
 │                                                      │
@@ -541,7 +541,7 @@ Icon + label for each tab (20px icons)
 │ │ Title │ Audience │ Type │ Status │ Dates │ ...  ││ │
 │ ├─────────────────────────────────────────────────┤ │
 │ │ New Protection Plan │ Artists │ Banner │ Active││ │
-│ │ System Maintenance  │ All     │ Notif  │Schedu││ │
+│ │ System Maintenance  │ All     │ Notification  │Scheduled││ │
 │ └─────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────┘
 ```
@@ -684,8 +684,8 @@ Icon + label for each tab (20px icons)
 │ ├─────────────────────────────────────────────────┤ │
 │ │ 2024-01-22│ admin@│ Created│WELCOME │15% off... ││ │
 │ │  14:32:15 │ ...   │ promo  │   15   │           ││ │
-│ │ 2024-01-22│ admin@│Publishd│New Pro │Targeted..││ │
-│ │  13:15:42 │ ...   │announce│tection │           ││ │
+│ │ 2024-01-22│ admin@│Published│New Pro │Targeted..││ │
+│ │  13:15:42 │ ...   │announce│Protection │           ││ │
 │ └─────────────────────────────────────────────────┘ │
 │                                                      │
 │ Showing 1-25 of 247 [Previous] [Next]              │

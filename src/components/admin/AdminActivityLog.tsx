@@ -62,7 +62,7 @@ export function AdminActivityLog() {
       id: '8',
       timestamp: '2024-01-21 14:22:09',
       admin: 'support@artwalls.com',
-      action: 'Unsuspended user',
+      action: 'Reinstated user',
       target: 'jordan.taylor@example.com',
       details: 'Cleared after verification',
     },
