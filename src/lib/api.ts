@@ -32,17 +32,24 @@ export async function apiGet<T>(path: string): Promise<T> {
 
 export async function apiPost<T>(path: string, body: unknown, headers?: Record<string, string>): Promise<T> {
   const authHeader = await getAuthHeader();
-  const res = await fetch(`${API_BASE}${path}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...authHeader,
-      ...(headers || {}),
-    },
-    body: JSON.stringify(body),
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}${path}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeader,
+        ...(headers || {}),
+      },
+      body: JSON.stringify(body),
+    });
+  } catch (fetchErr: any) {
+    console.error('[apiPost] Network error:', fetchErr);
+    throw new Error(`Network error: ${fetchErr?.message || 'Failed to fetch'}`);
+  }
   if (!res.ok) {
-    const text = await res.text();
+    const text = await res.text().catch(() => '');
+    console.error('[apiPost] Server error:', res.status, text);
     throw new Error(text || `Request failed: ${res.status}`);
   }
   return (await res.json()) as T;

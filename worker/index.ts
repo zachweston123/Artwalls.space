@@ -709,28 +709,47 @@ export default {
 
     // Upsert artist profile (used by app bootstrap and profile edit)
     if (url.pathname === '/api/artists' && method === 'POST') {
-      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
-      const payload = await request.json().catch(() => ({}));
-      // Allow artistId from body OR extract from auth token
-      let id = String(payload?.artistId || '').trim();
-      if (!id) {
-        const user = await getSupabaseUserFromRequest(request);
-        if (user && (user.user_metadata?.role === 'artist' || !user.user_metadata?.role)) {
-          id = user.id;
+      try {
+        if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+        
+        let payload: any = {};
+        try {
+          payload = await request.json();
+        } catch (parseErr) {
+          console.error('[POST /api/artists] JSON parse error:', parseErr);
+          return json({ error: 'Invalid JSON body' }, { status: 400 });
         }
+        
+        // Allow artistId from body OR extract from auth token
+        let id = String(payload?.artistId || '').trim();
+        if (!id) {
+          const user = await getSupabaseUserFromRequest(request);
+          console.log('[POST /api/artists] Auth user:', user?.id, 'role:', user?.user_metadata?.role);
+          if (user && (user.user_metadata?.role === 'artist' || !user.user_metadata?.role)) {
+            id = user.id;
+          }
+        }
+        if (!id) {
+          console.error('[POST /api/artists] No artistId and no valid auth token');
+          return json({ error: 'Missing artistId or Authorization token' }, { status: 400 });
+        }
+        
+        console.log('[POST /api/artists] Upserting artist:', id, 'payload:', JSON.stringify(payload));
+        const resp = await upsertArtist({
+          id,
+          email: payload?.email || null,
+          name: payload?.name || null,
+          role: 'artist',
+          phoneNumber: payload?.phoneNumber || null,
+          cityPrimary: payload?.cityPrimary || null,
+          citySecondary: payload?.citySecondary || null,
+          subscriptionTier: payload?.subscriptionTier || null,
+        });
+        return resp;
+      } catch (err: any) {
+        console.error('[POST /api/artists] Unhandled error:', err?.message, err?.stack);
+        return json({ error: err?.message || 'Internal server error' }, { status: 500 });
       }
-      if (!id) return json({ error: 'Missing artistId or Authorization token' }, { status: 400 });
-      const resp = await upsertArtist({
-        id,
-        email: payload?.email || null,
-        name: payload?.name || null,
-        role: 'artist',
-        phoneNumber: payload?.phoneNumber || null,
-        cityPrimary: payload?.cityPrimary || null,
-        citySecondary: payload?.citySecondary || null,
-        subscriptionTier: payload?.subscriptionTier || null,
-      });
-      return resp;
     }
 
     // Upsert venue profile (used by app bootstrap)
