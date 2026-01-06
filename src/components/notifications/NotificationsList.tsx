@@ -1,8 +1,26 @@
+import { useEffect, useState } from 'react';
 import { Bell, Calendar, CheckCircle, TrendingUp } from 'lucide-react';
 import { mockNotifications } from '../../data/mockData';
 import type { Notification } from '../../data/mockData';
+import { getMyNotifications } from '../../lib/api';
 
 export function NotificationsList() {
+  const [items, setItems] = useState<typeof mockNotifications>(mockNotifications);
+  useEffect(() => {
+    getMyNotifications().then(({ notifications }) => {
+      if (notifications && notifications.length) {
+        const mapped = notifications.map(n => ({
+          id: n.id,
+          type: (n.type as Notification['type']) || 'install-scheduled',
+          title: n.title,
+          message: n.message || '',
+          timestamp: n.createdAt,
+          isRead: n.isRead || false,
+        }));
+        setItems(mapped as any);
+      }
+    }).catch(() => {});
+  }, []);
   const getIcon = (type: Notification['type']) => {
     switch (type) {
       case 'application-approved':
@@ -40,11 +58,11 @@ export function NotificationsList() {
   };
 
   const groupedNotifications = {
-    today: mockNotifications.filter(n => {
+    today: items.filter(n => {
       const diffDays = Math.floor((new Date().getTime() - new Date(n.timestamp).getTime()) / 86400000);
       return diffDays === 0;
     }),
-    earlier: mockNotifications.filter(n => {
+    earlier: items.filter(n => {
       const diffDays = Math.floor((new Date().getTime() - new Date(n.timestamp).getTime()) / 86400000);
       return diffDays > 0;
     }),
@@ -55,7 +73,7 @@ export function NotificationsList() {
       <div className="mb-8">
         <h1 className="text-3xl mb-2 text-[var(--text)]">Notifications</h1>
         <p className="text-[var(--text-muted)]">
-          {mockNotifications.filter(n => !n.isRead).length} unread notifications
+          {items.filter(n => !n.isRead).length} unread notifications
         </p>
       </div>
 
@@ -145,7 +163,7 @@ export function NotificationsList() {
         )}
 
         {/* Empty State */}
-        {mockNotifications.length === 0 && (
+        {items.length === 0 && (
           <div className="text-center py-16">
             <div className="w-16 h-16 bg-[var(--surface-2)] rounded-full flex items-center justify-center mx-auto mb-4">
               <Bell className="w-8 h-8 text-[var(--text-muted)]" />

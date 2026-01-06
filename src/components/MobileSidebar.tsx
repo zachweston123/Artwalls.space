@@ -35,7 +35,7 @@ export function MobileSidebar({ isOpen, onClose, user, onNavigate, onLogout, cur
     { id: 'venue-sales', label: 'Sales' },
     { id: 'venue-settings', label: 'Settings' },
     { id: 'venue-notifications', label: 'Notifications' },
-    { id: 'venue-profile', label: 'Profile' },
+    { id: 'venue-profile', label: 'My Venue' },
     { id: 'policies', label: 'Policies & Agreements' },
   ];
 

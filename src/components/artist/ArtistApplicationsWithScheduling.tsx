@@ -1,41 +1,37 @@
 import { useState } from 'react';
 import { CheckCircle, XCircle, Clock, Calendar } from 'lucide-react';
-import { mockApplications, mockVenueSchedule } from '../../data/mockData';
+import { mockApplications } from '../../data/mockData';
 import type { Application } from '../../data/mockData';
 import { TimeSlotPicker } from '../scheduling/TimeSlotPicker';
 import { InstallRules } from '../scheduling/InstallRules';
 import { DurationBadge } from '../scheduling/DisplayDurationSelector';
+import { createVenueBooking, API_BASE } from '../../lib/api';
 
 export function ArtistApplicationsWithScheduling() {
   const [applications, setApplications] = useState<Application[]>(mockApplications);
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [showSchedulePicker, setShowSchedulePicker] = useState(false);
-  const [scheduledInstalls, setScheduledInstalls] = useState<{ [key: string]: string }>({});
+  const [scheduledInstalls, setScheduledInstalls] = useState<{ [key: string]: { label: string; bookingId: string; links?: { ics: string; google: string } } }>({});
 
   const handleScheduleInstall = (app: Application) => {
     setSelectedApp(app);
     setShowSchedulePicker(true);
   };
 
-  const handleTimeConfirm = (time: string) => {
+  const handleTimeConfirm = async (timeIso: string) => {
     if (!selectedApp) return;
-
-    const formatTime = (timeString: string) => {
-      const [hour, minute] = timeString.split(':');
-      const h = parseInt(hour);
-      const ampm = h >= 12 ? 'PM' : 'AM';
-      const displayHour = h > 12 ? h - 12 : h === 0 ? 12 : h;
-      const day = mockVenueSchedule.dayOfWeek.substring(0, 3);
-      return `${day} ${displayHour}:${minute} ${ampm}`;
-    };
-
-    setScheduledInstalls({
-      ...scheduledInstalls,
-      [selectedApp.id]: formatTime(time),
-    });
-
-    setShowSchedulePicker(false);
-    setSelectedApp(null);
+    try {
+      const { booking, links } = await createVenueBooking(selectedApp.venueId, { artworkId: selectedApp.artworkId, type: 'install', startAt: timeIso });
+      const d = new Date(timeIso);
+      const day = d.toLocaleDateString('en-US', { weekday: 'short' });
+      const label = `${day} ${d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
+      setScheduledInstalls({ ...scheduledInstalls, [selectedApp.id]: { label, bookingId: booking.id, links } });
+    } catch (e) {
+      // noop: in real app show toast
+    } finally {
+      setShowSchedulePicker(false);
+      setSelectedApp(null);
+    }
   };
 
   const formatTime = (time: string) => {
@@ -133,9 +129,7 @@ export function ArtistApplicationsWithScheduling() {
                         <CheckCircle className="w-5 h-5 text-[var(--green)] flex-shrink-0 mt-0.5" />
                         <div>
                           <h4 className="text-sm text-[var(--text)] mb-1">Application Approved!</h4>
-                          <p className="text-xs text-[var(--text)]">
-                            Install window: {mockVenueSchedule.dayOfWeek}s, {formatTime(mockVenueSchedule.startTime)} – {formatTime(mockVenueSchedule.endTime)}
-                          </p>
+                          <p className="text-xs text-[var(--text)]">Use the picker to see available times.</p>
                         </div>
                       </div>
                       <button
@@ -151,9 +145,21 @@ export function ArtistApplicationsWithScheduling() {
                         <Clock className="w-5 h-5 text-[var(--blue)] flex-shrink-0 mt-0.5" />
                         <div>
                           <h4 className="text-sm text-[var(--text)] mb-1">Install Scheduled</h4>
-                          <p className="text-[var(--text)]">
-                            <strong>{scheduledInstalls[application.id]}</strong>
-                          </p>
+                          <p className="text-[var(--text)]"><strong>{scheduledInstalls[application.id].label}</strong></p>
+                          <div className="mt-2 flex gap-3 text-sm">
+                            <a
+                              className="text-[var(--blue)] underline"
+                              href={scheduledInstalls[application.id].links?.google || `${API_BASE}/api/bookings/${scheduledInstalls[application.id].bookingId}/google`}
+                              target="_blank"
+                              rel="noreferrer"
+                            >Add to Google</a>
+                            <a
+                              className="text-[var(--blue)] underline"
+                              href={scheduledInstalls[application.id].links?.ics || `${API_BASE}/api/bookings/${scheduledInstalls[application.id].bookingId}/ics`}
+                              target="_blank"
+                              rel="noreferrer"
+                            >Download .ics</a>
+                          </div>
                         </div>
                       </div>
                       <button
@@ -215,9 +221,7 @@ export function ArtistApplicationsWithScheduling() {
             setShowSchedulePicker(false);
             setSelectedApp(null);
           }}
-          windowDay={mockVenueSchedule.dayOfWeek}
-          startTime={mockVenueSchedule.startTime}
-          endTime={mockVenueSchedule.endTime}
+          venueId={selectedApp.venueId}
           type="install"
           artworkTitle={selectedApp.artworkTitle}
           onConfirm={handleTimeConfirm}

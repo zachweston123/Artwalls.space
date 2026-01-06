@@ -1,17 +1,50 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Clock, Save, CheckCircle, AlertCircle } from 'lucide-react';
+import { getVenueSchedule, saveVenueSchedule } from '../../lib/api';
+import { supabase } from '../../lib/supabase';
 
 export function VenueSettingsWithEmptyState() {
   const [hasSchedule, setHasSchedule] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const [venueId, setVenueId] = useState<string>('');
   const [scheduleConfig, setScheduleConfig] = useState({
     dayOfWeek: 'Thursday',
     startTime: '16:00',
     endTime: '18:00',
     timezone: 'PST',
+    slotMinutes: 30 as 30 | 60 | 90 | 120,
   });
 
   const [tempConfig, setTempConfig] = useState(scheduleConfig);
+    useEffect(() => {
+      supabase.auth.getUser().then(async ({ data }) => {
+        const id = data.user?.id || '';
+        setVenueId(id);
+        if (id) {
+          try {
+            const { schedule } = await getVenueSchedule(id);
+            if (schedule) {
+              setScheduleConfig({
+                dayOfWeek: schedule.dayOfWeek,
+                startTime: schedule.startTime,
+                endTime: schedule.endTime,
+                timezone: schedule.timezone || 'PST',
+                slotMinutes: (schedule.slotMinutes as 30 | 60 | 90 | 120) || 30,
+              });
+              setTempConfig({
+                dayOfWeek: schedule.dayOfWeek,
+                startTime: schedule.startTime,
+                endTime: schedule.endTime,
+                timezone: schedule.timezone || 'PST',
+                slotMinutes: (schedule.slotMinutes as 30 | 60 | 90 | 120) || 30,
+              });
+              setHasSchedule(true);
+            }
+          } catch {}
+        }
+      }).catch(() => {});
+    }, []);
+
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const daysOfWeek = [
@@ -52,11 +85,22 @@ export function VenueSettingsWithEmptyState() {
   };
 
   const handleSave = () => {
-    if (validateConfig()) {
+    if (validateConfig() && venueId) {
       setScheduleConfig(tempConfig);
-      setHasSchedule(true);
-      setShowToast(true);
-      setTimeout(() => setShowToast(false), 3000);
+      try {
+        await saveVenueSchedule(venueId, {
+          dayOfWeek: tempConfig.dayOfWeek,
+          startTime: tempConfig.startTime,
+          endTime: tempConfig.endTime,
+          slotMinutes: tempConfig.slotMinutes,
+          timezone: tempConfig.timezone,
+        } as any);
+        setHasSchedule(true);
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
+      } catch (e) {
+        // noop: toast could show error
+      }
     }
   };
 
@@ -150,6 +194,21 @@ export function VenueSettingsWithEmptyState() {
                   <p className="text-xs text-[var(--danger)] mt-1">{errors.endTime}</p>
                 )}
               </div>
+            </div>
+
+            {/* Slot Length */}
+            <div>
+              <label className="block text-sm text-[var(--text-muted)] mb-2">Slot Length</label>
+              <select
+                value={tempConfig.slotMinutes}
+                onChange={(e) => setTempConfig({ ...tempConfig, slotMinutes: Number(e.target.value) as 30 | 60 | 90 | 120 })}
+                className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
+              >
+                <option value={30}>30 minutes</option>
+                <option value={60}>60 minutes</option>
+                <option value={90}>90 minutes</option>
+                <option value={120}>120 minutes</option>
+              </select>
             </div>
 
             {/* Duration Info */}

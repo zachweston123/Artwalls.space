@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { QrCode, MapPin, Calendar, X, Clock, CheckCircle } from 'lucide-react';
-import { mockInstalledArtworks, mockVenueSchedule } from '../../data/mockData';
+import { mockInstalledArtworks } from '../../data/mockData';
 import type { InstalledArtwork } from '../../data/mockData';
 import { TimeSlotPicker } from '../scheduling/TimeSlotPicker';
 import { DurationBadge } from '../scheduling/DisplayDurationSelector';
+import { createVenueBooking, API_BASE } from '../../lib/api';
+import { supabase } from '../../lib/supabase';
 
 export function VenueCurrentArtWithScheduling() {
   const [artworks, setArtworks] = useState<InstalledArtwork[]>(mockInstalledArtworks);
@@ -12,6 +14,13 @@ export function VenueCurrentArtWithScheduling() {
   const [showSchedulePicker, setShowSchedulePicker] = useState(false);
   const [selectedAction, setSelectedAction] = useState<{ id: string; action: string; artwork?: InstalledArtwork } | null>(null);
   const [qrArtwork, setQrArtwork] = useState<InstalledArtwork | null>(null);
+  const [currentVenueId, setCurrentVenueId] = useState<string>('');
+
+  React.useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setCurrentVenueId(data.user?.id || '');
+    }).catch(() => setCurrentVenueId(''));
+  }, []);
 
   const filteredArtworks = artworks.filter(artwork => {
     if (filter === 'all') return true;
@@ -69,31 +78,36 @@ export function VenueCurrentArtWithScheduling() {
     setSelectedAction(null);
   };
 
-  const handleTimeConfirm = (time: string) => {
+  const handleTimeConfirm = async (timeIso: string) => {
     if (!selectedAction) return;
-
-    const formatTime = (timeString: string) => {
-      const [hour, minute] = timeString.split(':');
-      const h = parseInt(hour);
-      const ampm = h >= 12 ? 'PM' : 'AM';
-      const displayHour = h > 12 ? h - 12 : h === 0 ? 12 : h;
-      const day = mockVenueSchedule.dayOfWeek.substring(0, 3);
-      return `${day} ${displayHour}:${minute} ${ampm}`;
-    };
-
-    setArtworks(artworks.map(artwork => {
-      if (artwork.id === selectedAction.id) {
-        if (selectedAction.action === 'schedule-install' || selectedAction.action === 'reschedule') {
-          return { ...artwork, scheduledInstall: formatTime(time) };
-        } else if (selectedAction.action === 'schedule-pickup') {
-          return { ...artwork, scheduledPickup: formatTime(time) };
-        }
+    try {
+      let bookingId: string | null = null;
+      let bookingLinks: { ics: string; google: string } | undefined;
+      if (selectedAction.artwork && currentVenueId) {
+        const type = selectedAction.action === 'schedule-pickup' ? 'pickup' : 'install';
+        const { booking, links } = await createVenueBooking(currentVenueId, { artworkId: selectedAction.artwork.artworkId, type: type as 'install' | 'pickup', startAt: timeIso });
+        bookingId = booking?.id || null;
+        bookingLinks = links || undefined;
       }
-      return artwork;
-    }));
-
-    setShowSchedulePicker(false);
-    setSelectedAction(null);
+      const d = new Date(timeIso);
+      const day = d.toLocaleDateString('en-US', { weekday: 'short' });
+      const label = `${day} ${d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
+      setArtworks(artworks.map(artwork => {
+        if (artwork.id === selectedAction.id) {
+          if (selectedAction.action === 'schedule-install' || selectedAction.action === 'reschedule') {
+            return { ...artwork, scheduledInstall: label, scheduledInstallBookingId: bookingId, scheduledInstallLinks: bookingLinks } as any;
+          } else if (selectedAction.action === 'schedule-pickup') {
+            return { ...artwork, scheduledPickup: label, scheduledPickupBookingId: bookingId, scheduledPickupLinks: bookingLinks } as any;
+          }
+        }
+        return artwork;
+      }));
+    } catch (e) {
+      // noop: real app toast
+    } finally {
+      setShowSchedulePicker(false);
+      setSelectedAction(null);
+    }
   };
 
   const getActionLabel = (action: string) => {
@@ -223,6 +237,12 @@ export function VenueCurrentArtWithScheduling() {
                         <span className="text-[var(--text)]">
                           Install scheduled: <strong>{artwork.scheduledInstall}</strong>
                         </span>
+                        {((artwork as any).scheduledInstallLinks || (artwork as any).scheduledInstallBookingId) && (
+                          <>
+                            <a className="text-[var(--blue)] underline ml-2" href={(artwork as any).scheduledInstallLinks?.google || `${API_BASE}/api/bookings/${(artwork as any).scheduledInstallBookingId}/google`} target="_blank" rel="noreferrer">Google</a>
+                            <a className="text-[var(--blue)] underline" href={(artwork as any).scheduledInstallLinks?.ics || `${API_BASE}/api/bookings/${(artwork as any).scheduledInstallBookingId}/ics`} target="_blank" rel="noreferrer">.ics</a>
+                          </>
+                        )}
                         {artwork.installConfirmed && (
                           <CheckCircle className="w-4 h-4 text-[var(--green)]" />
                         )}
@@ -234,6 +254,12 @@ export function VenueCurrentArtWithScheduling() {
                         <span className="text-[var(--text)]">
                           Pickup scheduled: <strong>{artwork.scheduledPickup}</strong>
                         </span>
+                        {((artwork as any).scheduledPickupLinks || (artwork as any).scheduledPickupBookingId) && (
+                          <>
+                            <a className="text-[var(--blue)] underline ml-2" href={(artwork as any).scheduledPickupLinks?.google || `${API_BASE}/api/bookings/${(artwork as any).scheduledPickupBookingId}/google`} target="_blank" rel="noreferrer">Google</a>
+                            <a className="text-[var(--blue)] underline" href={(artwork as any).scheduledPickupLinks?.ics || `${API_BASE}/api/bookings/${(artwork as any).scheduledPickupBookingId}/ics`} target="_blank" rel="noreferrer">.ics</a>
+                          </>
+                        )}
                         {artwork.pickupConfirmed && (
                           <CheckCircle className="w-4 h-4 text-[var(--green)]" />
                         )}
@@ -395,9 +421,7 @@ export function VenueCurrentArtWithScheduling() {
             setShowSchedulePicker(false);
             setSelectedAction(null);
           }}
-          windowDay={mockVenueSchedule.dayOfWeek}
-          startTime={mockVenueSchedule.startTime}
-          endTime={mockVenueSchedule.endTime}
+          venueId={currentVenueId}
           type={selectedAction.action === 'schedule-pickup' ? 'pickup' : 'install'}
           artworkTitle={selectedAction.artwork.artworkTitle}
           onConfirm={handleTimeConfirm}

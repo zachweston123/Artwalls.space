@@ -15,6 +15,7 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
 
   const artistLinks = [
     { id: 'artist-dashboard', label: 'Dashboard' },
+    { id: 'artist-profile', label: 'Profile' },
     { id: 'artist-artworks', label: 'My Artworks' },
     { id: 'artist-venues', label: 'Find Venues' },
     { id: 'artist-sales', label: 'Sales & Earnings' },
@@ -22,6 +23,7 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
 
   const venueLinks = [
     { id: 'venue-dashboard', label: 'Dashboard' },
+    { id: 'venue-profile', label: 'My Venue' },
     { id: 'venue-walls', label: 'My Walls' },
     { id: 'venue-applications', label: 'Applications' },
     { id: 'venue-find-artists', label: 'Find Artists' },

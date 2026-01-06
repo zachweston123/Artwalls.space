@@ -15,6 +15,7 @@ import {
   getVenue,
   listVenues,
   createArtwork,
+  updateArtwork,
   listArtworksByArtist,
   getArtwork,
   createOrder,
@@ -30,7 +31,16 @@ import {
   updateArtistStatus,
   updateVenueSuspended,
   getSettings,
+  getVenueSchedule,
+  upsertVenueSchedule,
+  listBookingsByVenueBetween,
+  createBooking,
+  getBookingById,
+  createNotification,
+  listNotificationsForUser,
+  markNotificationRead,
 } from './db.js';
+import { sendIcsEmail } from './mail.js';
 
 dotenv.config();
 
@@ -217,6 +227,285 @@ app.get('/', (_req, res) => {
     name: 'Artwalls API',
     docs: '/api/health',
   }));
+});
+
+// -----------------------------
+// Scheduling APIs
+// -----------------------------
+
+function dayNameToIndex(name) {
+  const names = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+  const n = String(name || '').toLowerCase();
+  return Math.max(0, names.indexOf(n));
+}
+
+function getWeekStart(date) {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = d.getDate() - day; // start on Sunday
+  const start = new Date(d);
+  start.setDate(diff);
+  start.setHours(0,0,0,0);
+  return start;
+}
+
+function buildDateForWeekday(weekStart, weekdayIndex, timeHHmm) {
+  const d = new Date(weekStart);
+  d.setDate(d.getDate() + weekdayIndex);
+  const [hh, mm] = String(timeHHmm).split(':').map((v) => parseInt(v, 10));
+  d.setHours(hh, mm || 0, 0, 0);
+  return d;
+}
+
+app.get('/api/venues/:venueId/schedule', async (req, res) => {
+  try {
+    const venueId = req.params.venueId;
+    const schedule = await getVenueSchedule(venueId);
+    return res.json({ schedule });
+  } catch (e) {
+    return res.status(500).json({ error: e?.message || 'Failed to get schedule' });
+  }
+});
+
+app.post('/api/venues/:venueId/schedule', async (req, res) => {
+  try {
+    const venue = await requireVenue(req, res);
+    if (!venue) return;
+    const venueId = req.params.venueId;
+    if (venue.id !== venueId) return res.status(403).json({ error: 'Can only update your own schedule' });
+
+    const { dayOfWeek, startTime, endTime, slotMinutes, timezone } = req.body || {};
+    if (!dayOfWeek || !startTime || !endTime) return res.status(400).json({ error: 'Missing dayOfWeek/startTime/endTime' });
+    const updated = await upsertVenueSchedule({ venueId, dayOfWeek, startTime, endTime, slotMinutes, timezone });
+    return res.json({ schedule: updated });
+  } catch (e) {
+    return res.status(500).json({ error: e?.message || 'Failed to save schedule' });
+  }
+});
+
+app.get('/api/venues/:venueId/availability', async (req, res) => {
+  try {
+    const venueId = req.params.venueId;
+    const schedule = await getVenueSchedule(venueId);
+    if (!schedule) return res.json({ slots: [], slotMinutes: 30, dayOfWeek: null, startTime: null, endTime: null });
+
+    const weekStartParam = req.query.weekStart;
+    const baseDate = weekStartParam ? new Date(String(weekStartParam)) : new Date();
+    const weekStart = getWeekStart(baseDate);
+    const weekdayIndex = dayNameToIndex(schedule.dayOfWeek);
+    const dayStart = buildDateForWeekday(weekStart, weekdayIndex, schedule.startTime);
+    const dayEnd = buildDateForWeekday(weekStart, weekdayIndex, schedule.endTime);
+
+    // Fetch existing bookings overlapping this window
+    const existing = await listBookingsByVenueBetween(venueId, dayStart.toISOString(), dayEnd.toISOString());
+
+    // Generate slots by slotMinutes and filter out overlaps
+    const slots = [];
+    const slotMins = Number(schedule.slotMinutes || 30);
+    let cursor = new Date(dayStart);
+    while (cursor < dayEnd) {
+      const slotStart = new Date(cursor);
+      const slotEnd = new Date(cursor);
+      slotEnd.setMinutes(slotEnd.getMinutes() + slotMins);
+      if (slotEnd <= dayEnd) {
+        const overlaps = existing.some(b => new Date(b.startAt) < slotEnd && new Date(b.endAt) > slotStart);
+        if (!overlaps) slots.push(slotStart.toISOString());
+      }
+      cursor.setMinutes(cursor.getMinutes() + slotMins);
+    }
+
+    return res.json({
+      slots,
+      slotMinutes: slotMins,
+      dayOfWeek: schedule.dayOfWeek,
+      startTime: schedule.startTime,
+      endTime: schedule.endTime,
+      windowStart: dayStart.toISOString(),
+      windowEnd: dayEnd.toISOString(),
+    });
+  } catch (e) {
+    return res.status(500).json({ error: e?.message || 'Failed to get availability' });
+  }
+});
+
+app.post('/api/venues/:venueId/bookings', async (req, res) => {
+  try {
+    const artist = await requireArtist(req, res);
+    if (!artist) return;
+    const venueId = req.params.venueId;
+    const { artworkId, type, startAt } = req.body || {};
+    if (!type || !startAt) return res.status(400).json({ error: 'Missing type/startAt' });
+
+    const schedule = await getVenueSchedule(venueId);
+    if (!schedule) return res.status(400).json({ error: 'Venue has no schedule configured' });
+    const slotMins = Number(schedule.slotMinutes || 30);
+    const start = new Date(startAt);
+    const end = new Date(startAt);
+    end.setMinutes(end.getMinutes() + slotMins);
+
+    // Verify within today's window
+    const weekdayIndex = dayNameToIndex(schedule.dayOfWeek);
+    const weekStart = getWeekStart(start);
+    const dayStart = buildDateForWeekday(weekStart, weekdayIndex, schedule.startTime);
+    const dayEnd = buildDateForWeekday(weekStart, weekdayIndex, schedule.endTime);
+    if (!(start >= dayStart && end <= dayEnd)) return res.status(400).json({ error: 'Time outside venue window' });
+
+    // Check overlap
+    const overlaps = await listBookingsByVenueBetween(venueId, start.toISOString(), end.toISOString());
+    if (overlaps.length > 0) return res.status(409).json({ error: 'Time slot already booked' });
+
+    const booking = await createBooking({ venueId, artistId: artist.id, artworkId: artworkId ?? null, type, startAt: start.toISOString(), endAt: end.toISOString() });
+
+    // Notifications for both parties
+    try {
+      const icsUrl = `${APP_URL}/api/bookings/${booking.id}/ics`;
+      const gcalUrl = `${APP_URL}/api/bookings/${booking.id}/google`;
+      await createNotification({ userId: artist.id, type: `${type}-scheduled`, title: `${type === 'install' ? 'Install' : 'Pickup'} scheduled`, message: `${new Date(start).toLocaleString()}\nICS: ${icsUrl}\nGoogle: ${gcalUrl}` });
+      const venue = await getVenue(venueId);
+      if (venue?.id) {
+        await createNotification({ userId: venue.id, type: `${type}-scheduled`, title: `${type === 'install' ? 'Install' : 'Pickup'} scheduled`, message: `${new Date(start).toLocaleString()}\nICS: ${icsUrl}\nGoogle: ${gcalUrl}` });
+      }
+
+      // Email delivery with ICS (if SMTP configured)
+      const summary = type === 'install' ? 'Artwork Install' : 'Artwork Pickup';
+      const desc = `Artwalls ${summary.toLowerCase()} at venue ${venueId}`;
+      const pad = (n) => String(n).padStart(2, '0');
+      const toIcs = (d) => (
+        d.getUTCFullYear().toString() +
+        pad(d.getUTCMonth() + 1) +
+        pad(d.getUTCDate()) + 'T' +
+        pad(d.getUTCHours()) +
+        pad(d.getUTCMinutes()) +
+        pad(d.getUTCSeconds()) + 'Z'
+      );
+      const ics = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//Artwalls//Scheduling//EN',
+        'CALSCALE:GREGORIAN',
+        'METHOD:PUBLISH',
+        'BEGIN:VEVENT',
+        `UID:${booking.id}@artwalls`,
+        `DTSTAMP:${toIcs(new Date())}`,
+        `DTSTART:${toIcs(start)}`,
+        `DTEND:${toIcs(end)}`,
+        `SUMMARY:${summary}`,
+        `DESCRIPTION:${desc}`,
+        'END:VEVENT',
+        'END:VCALENDAR',
+      ].join('\r\n');
+      const whenText = new Date(start).toLocaleString();
+      const baseText = `${summary} scheduled for ${whenText}.\nAdd to Google: ${gcalUrl}\nDownload ICS: ${icsUrl}`;
+      if (artist?.email) {
+        await sendIcsEmail({ to: artist.email, subject: `Artwalls: ${summary} scheduled`, text: baseText, ics, icsFilename: `artwalls-${booking.id}.ics` });
+      }
+      if (venue?.email) {
+        await sendIcsEmail({ to: venue.email, subject: `Artwalls: ${summary} scheduled`, text: baseText, ics, icsFilename: `artwalls-${booking.id}.ics` });
+      }
+    } catch {}
+
+    return res.json({ booking, links: { ics: `/api/bookings/${booking.id}/ics`, google: `/api/bookings/${booking.id}/google` } });
+  } catch (e) {
+    return res.status(500).json({ error: e?.message || 'Failed to create booking' });
+  }
+});
+
+function toIcsDate(d) {
+  const pad = (n) => String(n).padStart(2, '0');
+  return (
+    d.getUTCFullYear().toString() +
+    pad(d.getUTCMonth() + 1) +
+    pad(d.getUTCDate()) + 'T' +
+    pad(d.getUTCHours()) +
+    pad(d.getUTCMinutes()) +
+    pad(d.getUTCSeconds()) + 'Z'
+  );
+}
+
+app.get('/api/bookings/:id/ics', async (req, res) => {
+  try {
+    const id = req.params.id;
+    const b = await getBookingById(id);
+    if (!b) return res.status(404).send('Not found');
+    const start = new Date(b.startAt);
+    const end = new Date(b.endAt);
+    const summary = b.type === 'install' ? 'Artwork Install' : 'Artwork Pickup';
+    const desc = `Artwalls ${summary.toLowerCase()} at venue ${b.venueId}`;
+    const uid = `${id}@artwalls`; 
+    const ics = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Artwalls//Scheduling//EN',
+      'CALSCALE:GREGORIAN',
+      'METHOD:PUBLISH',
+      'BEGIN:VEVENT',
+      `UID:${uid}`,
+      `DTSTAMP:${toIcsDate(new Date())}`,
+      `DTSTART:${toIcsDate(start)}`,
+      `DTEND:${toIcsDate(end)}`,
+      `SUMMARY:${summary}`,
+      `DESCRIPTION:${desc}`,
+      'END:VEVENT',
+      'END:VCALENDAR',
+    ].join('\r\n');
+    res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="artwalls-${id}.ics"`);
+    return res.send(ics);
+  } catch (e) {
+    return res.status(500).send('Failed to generate ICS');
+  }
+});
+
+app.get('/api/bookings/:id/google', async (req, res) => {
+  try {
+    const id = req.params.id;
+    const b = await getBookingById(id);
+    if (!b) return res.status(404).send('Not found');
+    const start = new Date(b.startAt);
+    const end = new Date(b.endAt);
+    const fmt = (d) => {
+      const pad = (n) => String(n).padStart(2, '0');
+      return (
+        d.getUTCFullYear().toString() +
+        pad(d.getUTCMonth() + 1) +
+        pad(d.getUTCDate()) + 'T' +
+        pad(d.getUTCHours()) +
+        pad(d.getUTCMinutes()) +
+        pad(d.getUTCSeconds()) + 'Z'
+      );
+    };
+    const text = encodeURIComponent(b.type === 'install' ? 'Artwork Install' : 'Artwork Pickup');
+    const details = encodeURIComponent('Artwalls booking');
+    const dates = `${fmt(start)}/${fmt(end)}`;
+    const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${dates}&details=${details}`;
+    return res.redirect(url);
+  } catch (e) {
+    return res.status(500).send('Failed to build Google Calendar URL');
+  }
+});
+
+// Notifications APIs
+app.get('/api/notifications', async (req, res) => {
+  try {
+    const user = await getSupabaseUserFromRequest(req);
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+    const list = await listNotificationsForUser(user.id, 100);
+    return res.json({ notifications: list });
+  } catch (e) {
+    return res.status(500).json({ error: e?.message || 'Failed to list notifications' });
+  }
+});
+
+app.post('/api/notifications/:id/read', async (req, res) => {
+  try {
+    const user = await getSupabaseUserFromRequest(req);
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+    const id = req.params.id;
+    const updated = await markNotificationRead(id, user.id);
+    return res.json({ notification: updated });
+  } catch (e) {
+    return res.status(500).json({ error: e?.message || 'Failed to mark read' });
+  }
 });
 // -----------------------------
 // QR Codes + Purchase URLs
@@ -926,8 +1215,6 @@ app.post('/api/venues', async (req, res) => {
 // Artists (simple listing)
 // -----------------------------
 app.get('/api/artists', async (_req, res) => {
-app.get('/api/admin/users', async (req, res) => {
-	const admin = await requireAdmin(req, res); if (!admin) return;
   // Ensure Auth users are reflected in local table before listing
   await syncUsersFromSupabaseAuth();
   return res.json(await listArtists());
@@ -1010,6 +1297,48 @@ app.post('/api/admin/sync-users', async (req, res) => {
   } catch (err) {
     console.error('admin sync users error', err);
     return res.status(500).json({ error: err?.message || 'Admin sync users failed' });
+  }
+});
+
+// Admin: send a test email with ICS attachment (uses SMTP_* env)
+app.post('/api/admin/test-email', async (req, res) => {
+  const admin = await requireAdmin(req, res); if (!admin) return;
+  try {
+    const to = (req.body?.to && typeof req.body.to === 'string') ? req.body.to : (admin.email || null);
+    if (!to) return res.status(400).json({ error: 'No recipient email provided' });
+    const summary = req.body?.summary || 'Artwalls Test Event';
+    const start = req.body?.startAt ? new Date(req.body.startAt) : new Date(Date.now() + 5 * 60 * 1000);
+    const end = req.body?.endAt ? new Date(req.body.endAt) : new Date(start.getTime() + 60 * 60 * 1000);
+    const pad = (n) => String(n).padStart(2, '0');
+    const toIcs = (d) => (
+      d.getUTCFullYear().toString() +
+      pad(d.getUTCMonth() + 1) +
+      pad(d.getUTCDate()) + 'T' +
+      pad(d.getUTCHours()) +
+      pad(d.getUTCMinutes()) +
+      pad(d.getUTCSeconds()) + 'Z'
+    );
+    const ics = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Artwalls//Scheduling//EN',
+      'CALSCALE:GREGORIAN',
+      'METHOD:PUBLISH',
+      'BEGIN:VEVENT',
+      `UID:test-${crypto.randomUUID()}@artwalls`,
+      `DTSTAMP:${toIcs(new Date())}`,
+      `DTSTART:${toIcs(start)}`,
+      `DTEND:${toIcs(end)}`,
+      `SUMMARY:${summary}`,
+      'DESCRIPTION:Test invite from Artwalls',
+      'END:VEVENT',
+      'END:VCALENDAR',
+    ].join('\r\n');
+    const { ok, error, skipped, reason } = await sendIcsEmail({ to, subject: 'Artwalls: Test Email', text: 'This is a test email with an ICS attachment.', ics, icsFilename: 'artwalls-test.ics' });
+    return res.json({ ok, error: error || null, skipped: !!skipped, reason: reason || null, to });
+  } catch (err) {
+    console.error('admin test email error', err);
+    return res.status(500).json({ error: err?.message || 'Admin test email failed' });
   }
 });
 
@@ -1443,9 +1772,6 @@ app.post('/api/stripe/create-checkout-session', async (req, res) => {
     return res.status(500).json({ error: err?.message || 'Stripe error' });
   }
 });
-
-// --- Health check ---
-app.get('/api/health', (_req, res) => res.json({ ok: true }));
 
 app.listen(PORT, () => {
   console.log(`Artwalls server running on http://localhost:${PORT}`);

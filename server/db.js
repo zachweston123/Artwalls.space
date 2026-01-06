@@ -498,3 +498,157 @@ export async function upsertSettings(patch) {
   throwIfError(error, 'upsertSettings');
   return mapSettingsRow(data);
 }
+
+// --- Scheduling: Venue Schedules ---
+function mapVenueScheduleRow(r) {
+  if (!r) return null;
+  return {
+    id: r.id,
+    venueId: r.venue_id,
+    dayOfWeek: r.day_of_week,
+    startTime: r.start_time,
+    endTime: r.end_time,
+    slotMinutes: r.slot_minutes,
+    timezone: r.timezone,
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+  };
+}
+
+export async function getVenueSchedule(venueId) {
+  const { data, error } = await supabaseAdmin
+    .from('venue_schedules')
+    .select('*')
+    .eq('venue_id', venueId)
+    .maybeSingle();
+  throwIfError(error, 'getVenueSchedule');
+  return mapVenueScheduleRow(data);
+}
+
+export async function upsertVenueSchedule({ venueId, dayOfWeek, startTime, endTime, slotMinutes, timezone }) {
+  const payload = {
+    venue_id: venueId,
+    day_of_week: dayOfWeek,
+    start_time: startTime,
+    end_time: endTime,
+    slot_minutes: slotMinutes ?? 30,
+    timezone: timezone ?? null,
+    updated_at: nowIso(),
+  };
+
+  const { data, error } = await supabaseAdmin
+    .from('venue_schedules')
+    .upsert(payload, { onConflict: 'venue_id' })
+    .select('*')
+    .single();
+  throwIfError(error, 'upsertVenueSchedule');
+  return mapVenueScheduleRow(data);
+}
+
+// --- Scheduling: Bookings ---
+function mapBookingRow(r) {
+  if (!r) return null;
+  return {
+    id: r.id,
+    venueId: r.venue_id,
+    artistId: r.artist_id,
+    artworkId: r.artwork_id,
+    type: r.type,
+    startAt: r.start_at,
+    endAt: r.end_at,
+    status: r.status,
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+  };
+}
+
+export async function listBookingsByVenueBetween(venueId, startIso, endIso) {
+  const { data, error } = await supabaseAdmin
+    .from('bookings')
+    .select('*')
+    .eq('venue_id', venueId)
+    .eq('status', 'booked')
+    .lt('start_at', endIso)
+    .gt('end_at', startIso)
+    .order('start_at', { ascending: true });
+  throwIfError(error, 'listBookingsByVenueBetween');
+  return (data || []).map(mapBookingRow);
+}
+
+export async function createBooking({ venueId, artistId, artworkId, type, startAt, endAt }) {
+  const payload = {
+    venue_id: venueId,
+    artist_id: artistId,
+    artwork_id: artworkId ?? null,
+    type,
+    start_at: startAt,
+    end_at: endAt,
+    status: 'booked',
+    created_at: nowIso(),
+    updated_at: nowIso(),
+  };
+  const { data, error } = await supabaseAdmin
+    .from('bookings')
+    .insert(payload)
+    .select('*')
+    .single();
+  throwIfError(error, 'createBooking');
+  return mapBookingRow(data);
+}
+
+export async function getBookingById(id) {
+  const { data, error } = await supabaseAdmin
+    .from('bookings')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle();
+  throwIfError(error, 'getBookingById');
+  return mapBookingRow(data);
+}
+
+// --- Notifications ---
+function mapNotificationRow(r) {
+  if (!r) return null;
+  return {
+    id: r.id,
+    userId: r.user_id,
+    type: r.type,
+    title: r.title,
+    message: r.message,
+    isRead: r.is_read,
+    createdAt: r.created_at,
+  };
+}
+
+export async function createNotification({ userId, type, title, message }) {
+  const { data, error } = await supabaseAdmin
+    .from('notifications')
+    .insert({ user_id: userId, type, title, message })
+    .select('*')
+    .single();
+  throwIfError(error, 'createNotification');
+  return mapNotificationRow(data);
+}
+
+export async function listNotificationsForUser(userId, limit = 50) {
+  const { data, error } = await supabaseAdmin
+    .from('notifications')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  throwIfError(error, 'listNotificationsForUser');
+  return (data || []).map(mapNotificationRow);
+}
+
+export async function markNotificationRead(id, userId) {
+  const { data, error } = await supabaseAdmin
+    .from('notifications')
+    .update({ is_read: true })
+    .eq('id', id)
+    .eq('user_id', userId)
+    .select('*')
+    .maybeSingle();
+  throwIfError(error, 'markNotificationRead');
+  return mapNotificationRow(data);
+}
