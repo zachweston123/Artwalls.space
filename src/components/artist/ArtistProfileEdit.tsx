@@ -47,20 +47,20 @@ export function ArtistProfileEdit({ onSave, onCancel }: ArtistProfileEditProps) 
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-6">
-      <div className="bg-[var(--surface-2)] text-[var(--text)] rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto border border-[var(--border)]">
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 sm:p-6">
+      <div className="bg-[var(--surface-2)] text-[var(--text)] rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto border border-[var(--border)] shadow-2xl">
         {/* Header */}
-        <div className="sticky top-0 bg-[var(--surface-2)] border-b border-[var(--border)] p-6 flex items-center justify-between">
-          <h2 className="text-2xl">Edit Profile</h2>
+        <div className="sticky top-0 bg-[var(--surface-2)] border-b border-[var(--border)] p-5 sm:p-6 flex items-center justify-between z-10">
+          <h2 className="text-xl sm:text-2xl font-bold">Edit Profile</h2>
           <button
             onClick={onCancel}
-            className="p-2 hover:bg-[var(--surface-3)] rounded-lg transition-colors"
+            className="p-2 hover:bg-[var(--surface-3)] rounded-lg transition-colors text-[var(--text-muted)] hover:text-[var(--text)]"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="p-5 sm:p-8 space-y-6 sm:space-y-8">
           {/* Profile Photo */}
           <div>
             <label className="block text-sm text-[var(--text-muted)] mb-3">

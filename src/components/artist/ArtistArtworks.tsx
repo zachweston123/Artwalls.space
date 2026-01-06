@@ -133,33 +133,34 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
 
   return (
     <div className="bg-[var(--bg)] text-[var(--text)]">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-3xl mb-2">My Artworks</h1>
-          <p className="text-[var(--text-muted)]">
+          <h1 className="text-3xl mb-1 sm:mb-2">My Artworks</h1>
+          <p className="text-[var(--text-muted)] text-sm">
             {loading ? 'Loading…' : `${artworks.length} pieces in your collection`}
           </p>
         </div>
-        {(() => {
-          const planId = (artistPlan?.tier || 'free') as 'free' | 'starter' | 'growth' | 'pro';
-          const isActive = String(artistPlan?.status || '').toLowerCase() === 'active';
-          const ent = entitlementsFor(planId, isActive);
-          const activeCount = artworks.filter(a => a.status !== 'sold').length;
-          const atLimit = Number.isFinite(ent.artworksLimit) && activeCount >= ent.artworksLimit;
-          return (
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setShowAddForm(true)}
-                disabled={atLimit}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                  atLimit
-                    ? 'bg-[var(--surface-3)] text-[var(--text-muted)] cursor-not-allowed border border-[var(--border)]'
-                    : 'bg-[var(--blue)] text-[var(--on-blue)] hover:bg-[var(--blue-hover)]'
-                }`}
-              >
-                <Plus className="w-5 h-5" />
-                Add New Artwork
-              </button>
+        <div className="flex items-center gap-3">
+          {(() => {
+            const planId = (artistPlan?.tier || 'free') as 'free' | 'starter' | 'growth' | 'pro';
+            const isActive = String(artistPlan?.status || '').toLowerCase() === 'active';
+            const ent = entitlementsFor(planId, isActive);
+            const activeCount = artworks.filter(a => a.status !== 'sold').length;
+            const atLimit = Number.isFinite(ent.artworksLimit) && activeCount >= ent.artworksLimit;
+            return (
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                <button
+                  onClick={() => setShowAddForm(true)}
+                  disabled={atLimit}
+                  className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-colors text-sm sm:text-base ${
+                    atLimit
+                      ? 'bg-[var(--surface-3)] text-[var(--text-muted)] cursor-not-allowed border border-[var(--border)]'
+                      : 'bg-[var(--blue)] text-[var(--on-blue)] hover:bg-[var(--blue-hover)] shadow-sm'
+                  }`}
+                >
+                  <Plus className="w-5 h-5" />
+                  <span>Add Artwork</span>
+                </button>
               {atLimit && (
                 <a
                   href="#/plans-pricing"
@@ -180,10 +181,10 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
       )}
 
       {showAddForm && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-6">
-          <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 sm:p-6">
+          <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-2xl p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl">Add New Artwork</h2>
+              <h2 className="text-xl sm:text-2xl">Add New Artwork</h2>
               <button
                 onClick={() => setShowAddForm(false)}
                 className="p-2 hover:bg-[var(--surface-3)] rounded-lg transition-colors text-[var(--text)]"
@@ -321,36 +322,36 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
                   Scan to open purchase page
                 </div>
               </div>
-              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="mt-4 grid grid-cols-2 gap-2 sm:gap-3">
                 <a
                   href={`#/purchase-${artwork.id}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center px-3 py-2 bg-[var(--blue)] text-[var(--on-blue)] rounded-lg hover:bg-[var(--blue-hover)] text-sm"
+                  className="inline-flex items-center justify-center px-3 py-2 bg-[var(--blue)] text-[var(--on-blue)] rounded-lg hover:bg-[var(--blue-hover)] text-xs sm:text-sm text-center"
                 >
-                  Open Purchase Page
+                  View Page
                 </a>
                 <a
                   href={`${API_BASE}/api/artworks/${encodeURIComponent(String(artwork.id))}/qrcode.svg`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center px-3 py-2 bg-[var(--surface-2)] text-[var(--text)] border border-[var(--border)] rounded-lg hover:bg-[var(--surface-3)] text-sm"
+                  className="inline-flex items-center justify-center px-3 py-2 bg-[var(--surface-2)] text-[var(--text)] border border-[var(--border)] rounded-lg hover:bg-[var(--surface-3)] text-xs sm:text-sm text-center"
                 >
-                  View QR Code
+                  QR (SVG)
                 </a>
                 <a
                   href={`${API_BASE}/api/artworks/${encodeURIComponent(String(artwork.id))}/qrcode.png`}
-                  className="inline-flex items-center justify-center px-3 py-2 bg-[var(--surface-2)] text-[var(--text)] border border-[var(--border)] rounded-lg hover:bg-[var(--surface-3)] text-sm"
+                  className="inline-flex items-center justify-center px-3 py-2 bg-[var(--surface-2)] text-[var(--text)] border border-[var(--border)] rounded-lg hover:bg-[var(--surface-3)] text-xs sm:text-sm text-center"
                 >
-                  Download QR (PNG)
+                  QR (PNG)
                 </a>
                 <a
                   href={`${API_BASE}/api/artworks/${encodeURIComponent(String(artwork.id))}/qr-poster`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center px-3 py-2 bg-[var(--green-muted)] text-[var(--green)] rounded-lg hover:opacity-90 text-sm"
+                  className="inline-flex items-center justify-center px-3 py-2 bg-[var(--green-muted)] text-[var(--green)] rounded-lg hover:opacity-90 text-xs sm:text-sm text-center"
                 >
-                  Print Poster
+                  Poster
                 </a>
               </div>
             </div>

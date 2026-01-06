@@ -1,11 +1,11 @@
-import { X, Palette, Store, LogOut } from 'lucide-react';
+import { X, Palette, Store, LogOut, LayoutDashboard, Image, Search, Send, FileText, Bell, User, CreditCard, Shield, Mail, ShoppingCart, Frame, Users } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
-import type { User } from '../App';
+import type { User as UserType } from '../App';
 
 interface MobileSidebarProps {
   isOpen: boolean;
   onClose: () => void;
-  user: User;
+  user: UserType;
   onNavigate: (page: string) => void;
   onLogout: () => void;
   currentPage: string;
@@ -15,28 +15,28 @@ export function MobileSidebar({ isOpen, onClose, user, onNavigate, onLogout, cur
   const isArtist = user.role === 'artist';
 
   const artistLinks = [
-    { id: 'artist-dashboard', label: 'Dashboard' },
-    { id: 'artist-artworks', label: 'My Artworks' },
-    { id: 'artist-venues', label: 'Find Venues' },
-    { id: 'artist-applications', label: 'Applications' },
-    { id: 'artist-sales', label: 'Sales & Earnings' },
-    { id: 'artist-notifications', label: 'Notifications' },
-    { id: 'artist-profile', label: 'Profile' },
-    { id: 'plans-pricing', label: 'Plans & Pricing' },
-    { id: 'policies', label: 'Policies & Agreements' },
+    { id: 'artist-dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'artist-artworks', label: 'My Artworks', icon: Image },
+    { id: 'artist-venues', label: 'Find Venues', icon: Search },
+    { id: 'artist-applications', label: 'Applications', icon: Send },
+    { id: 'artist-invites', label: 'Invitations', icon: Mail },
+    { id: 'artist-sales', label: 'Sales & Earnings', icon: ShoppingCart },
+    { id: 'artist-notifications', label: 'Notifications', icon: Bell },
+    { id: 'artist-profile', label: 'Profile', icon: User },
+    { id: 'plans-pricing', label: 'Plans & Pricing', icon: CreditCard },
+    { id: 'policies', label: 'Policies & Agreements', icon: Shield },
   ];
 
   const venueLinks = [
-    { id: 'venue-dashboard', label: 'Dashboard' },
-    { id: 'venue-walls', label: 'My Walls' },
-    { id: 'venue-applications', label: 'Applications' },
-    { id: 'venue-find-artists', label: 'Find Artists' },
-    { id: 'venue-current', label: 'Current Art' },
-    { id: 'venue-sales', label: 'Sales' },
-    { id: 'venue-settings', label: 'Settings' },
-    { id: 'venue-notifications', label: 'Notifications' },
-    { id: 'venue-profile', label: 'My Venue' },
-    { id: 'policies', label: 'Policies & Agreements' },
+    { id: 'venue-dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'venue-profile', label: 'My Venue', icon: Store },
+    { id: 'venue-walls', label: 'My Walls', icon: Frame },
+    { id: 'venue-applications', label: 'Applications', icon: Send },
+    { id: 'venue-find-artists', label: 'Find Artists', icon: Users },
+    { id: 'venue-current', label: 'Current Art', icon: Image },
+    { id: 'venue-sales', label: 'Sales', icon: ShoppingCart },
+    { id: 'venue-notifications', label: 'Notifications', icon: Bell },
+    { id: 'policies', label: 'Policies & Agreements', icon: Shield },
   ];
 
   const links = isArtist ? artistLinks : venueLinks;
@@ -95,19 +95,20 @@ export function MobileSidebar({ isOpen, onClose, user, onNavigate, onLogout, cur
         </div>
 
                 {/* Navigation Links */}
-        <nav className="p-4">
+        <nav className="p-4 pb-24">
           <div className="space-y-1">
             {links.map((link) => (
               <button
                 key={link.id}
                 onClick={() => handleNavigate(link.id)}
-                className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                   currentPage === link.id
                     ? 'bg-[var(--surface-3)] text-[var(--text)]'
                     : 'text-[var(--text-muted)] hover:bg-[var(--surface-3)] hover:text-[var(--text)]'
                 }`}
               >
-                {link.label}
+                <link.icon className="w-5 h-5 flex-shrink-0" />
+                <span className="font-medium">{link.label}</span>
               </button>
             ))}
           </div>
@@ -117,10 +118,10 @@ export function MobileSidebar({ isOpen, onClose, user, onNavigate, onLogout, cur
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-[var(--border)] bg-[var(--surface-2)]">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 text-[var(--text-muted)] hover:bg-[var(--surface-3)] hover:text-[var(--text)] rounded-lg transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 text-[var(--danger)] hover:bg-[var(--danger)]/10 rounded-lg transition-colors"
           >
             <LogOut className="w-5 h-5" />
-            <span>Logout</span>
+            <span className="font-medium">Sign Out</span>
           </button>
         </div>
       </div>

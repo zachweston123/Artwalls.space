@@ -130,28 +130,28 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
       {/* ════════════════════════════════════════════════════════════
           HEADER SECTION (Welcome + Plan Chip + Upgrade Button)
           ════════════════════════════════════════════════════════════ */}
-      <div className="border-b border-[var(--border)] mb-8">
-        <div className="flex items-center justify-between gap-4">
+      <div className="border-b border-[var(--border)] mb-8 pb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div className="flex-1">
-            <h1 className="text-4xl font-bold text-[var(--text)] mb-1">
+            <h1 className="text-3xl sm:text-4xl font-bold text-[var(--text)] mb-2">
               Welcome back, {user.name.split(' ')[0] || 'Artist'}
             </h1>
-            <p className="text-[var(--text-muted)]">
+            <p className="text-[var(--text-muted)] text-sm sm:text-base">
               Here's what's happening with your artwork
             </p>
           </div>
           
           {/* Plan Chip + Upgrade Button (Right side) */}
-          <div className="flex items-center gap-3 flex-shrink-0">
+          <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-full">
               <span className="text-xs font-semibold text-[var(--text-muted)]">Plan:</span>
-              <span className="text-xs font-bold text-[var(--blue)]">Free</span>
+              <span className="text-xs font-bold text-[var(--blue)] uppercase tracking-wider">Free</span>
             </div>
             <button
               onClick={() => onNavigate('plans-pricing')}
-              className="px-4 py-2 bg-[var(--blue)] hover:bg-[var(--blue-hover)] text-[var(--on-blue)] font-semibold text-sm rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]"
+              className="flex-1 sm:flex-none px-4 py-2 bg-[var(--blue)] hover:bg-[var(--blue-hover)] text-[var(--on-blue)] font-semibold text-sm rounded-lg transition-colors shadow-sm whitespace-nowrap"
             >
-              Upgrade
+              Upgrade Plan
             </button>
           </div>
         </div>
@@ -160,9 +160,9 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
       {/* ════════════════════════════════════════════════════════════
           ACTION REQUIRED BANNER (Compact, Clear CTA)
           ════════════════════════════════════════════════════════════ */}
-      <div className="mb-8 bg-[color:color-mix(in_srgb,var(--warning)_12%,transparent)] border border-[color:color-mix(in_srgb,var(--warning)_25%,transparent)] rounded-lg p-4 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3 flex-1">
-          <div className="w-5 h-5 text-[var(--warning)] flex-shrink-0">
+      <div className="mb-8 bg-[color:color-mix(in_srgb,var(--warning)_12%,transparent)] border border-[color:color-mix(in_srgb,var(--warning)_25%,transparent)] rounded-lg p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-start gap-3 flex-1">
+          <div className="w-5 h-5 mt-0.5 text-[var(--warning)] flex-shrink-0">
             <svg fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
             </svg>
@@ -174,9 +174,9 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
         </div>
         <button
           onClick={() => onNavigate('artist-profile')}
-          className="flex-shrink-0 px-4 py-2 bg-[var(--blue)] hover:bg-[var(--blue-hover)] text-[var(--on-blue)] text-sm font-semibold rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]"
+          className="w-full sm:w-auto flex-shrink-0 px-4 py-2 bg-[var(--blue)] hover:bg-[var(--blue-hover)] text-[var(--on-blue)] text-sm font-semibold rounded-lg transition-colors"
         >
-          Complete
+          Complete Now
         </button>
       </div>
 
@@ -184,20 +184,23 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
           SEARCH MODULE (Compact, Clear Input + Primary Button)
           ════════════════════════════════════════════════════════════ */}
       <div className="mb-8 bg-[var(--surface-1)] border border-[var(--border)] rounded-lg p-4">
-        <div className="flex items-center gap-3 mb-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-3">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[var(--text-muted)] pointer-events-none" />
             <input
               type="text"
               placeholder="Search venues by name, location, or style..."
-              className="w-full pl-10 pr-4 py-2.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-md text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)] focus:border-transparent transition-all"
+              className="w-full pl-10 pr-4 py-2.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-md text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)] focus:border-transparent transition-all text-sm sm:text-base"
             />
           </div>
           <button
             onClick={() => onNavigate('artist-venues')}
-            className="flex-shrink-0 px-4 py-2.5 bg-[var(--blue)] hover:bg-[var(--blue-hover)] text-[var(--on-blue)] font-semibold text-sm rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)] flex items-center gap-2"
+            className="flex-shrink-0 px-6 py-2.5 bg-[var(--blue)] hover:bg-[var(--blue-hover)] text-[var(--on-blue)] font-semibold text-sm rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm"
           >
             <Search className="w-4 h-4" />
+            <span>Find Venues</span>
+          </button>
+        </div>
             <span>Find Venues</span>
           </button>
         </div>

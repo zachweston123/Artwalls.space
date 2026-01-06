@@ -132,26 +132,26 @@ export function Login({ onLogin }: LoginProps) {
     return (
       <div className="min-h-svh bg-[var(--bg)] flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-4xl">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl mb-3 text-[var(--text)]">Welcome to Artwalls</h1>
-            <p className="text-[var(--text-muted)]">
+          <div className="text-center mb-8 sm:mb-12">
+            <h1 className="text-3xl sm:text-4xl mb-3 text-[var(--text)] font-bold">Welcome to Artwalls</h1>
+            <p className="text-[var(--text-muted)] text-sm sm:text-base max-w-md mx-auto">
               Connecting local artists with venues to display and sell physical artworks
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 max-w-3xl mx-auto">
             <button
               onClick={() => setSelectedRole('artist')}
-              className="group bg-[var(--blue-muted)] rounded-2xl p-8 border-2 border-[var(--blue)] hover:brightness-95 transition"
+              className="group bg-[var(--blue-muted)] rounded-2xl p-6 sm:p-8 border-2 border-[var(--blue)] hover:brightness-95 transition-all active:scale-[0.98]"
             >
               <div className="flex flex-col items-center text-center gap-4">
-                <div className="w-16 h-16 bg-[var(--surface-2)] rounded-full flex items-center justify-center group-hover:bg-[var(--blue)] transition-colors">
-                  <Palette className="w-8 h-8 text-[var(--blue)] group-hover:text-[var(--on-blue)] transition-colors" />
+                <div className="w-14 h-14 sm:w-16 sm:h-16 bg-[var(--surface-2)] rounded-full flex items-center justify-center group-hover:bg-[var(--blue)] transition-colors">
+                  <Palette className="w-7 h-7 sm:w-8 sm:h-8 text-[var(--blue)] group-hover:text-[var(--on-blue)] transition-colors" />
                 </div>
                 <div>
-                  <h2 className="text-xl mb-2 text-[var(--blue)]">I'm an Artist</h2>
-                  <p className="text-sm text-[var(--text-muted)]">
-                    Share and sell your artwork at local venues
+                  <h2 className="text-xl mb-1 sm:mb-2 text-[var(--blue)] font-bold">I'm an Artist</h2>
+                  <p className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
+                    Share and sell your artwork at local venues and manage your portfolio
                   </p>
                 </div>
               </div>
@@ -159,16 +159,16 @@ export function Login({ onLogin }: LoginProps) {
 
             <button
               onClick={() => setSelectedRole('venue')}
-              className="group bg-[var(--green-muted)] rounded-2xl p-8 border-2 border-[var(--green)] hover:brightness-95 transition"
+              className="group bg-[var(--green-muted)] rounded-2xl p-6 sm:p-8 border-2 border-[var(--green)] hover:brightness-95 transition-all active:scale-[0.98]"
             >
               <div className="flex flex-col items-center text-center gap-4">
-                <div className="w-16 h-16 bg-[var(--surface-2)] rounded-full flex items-center justify-center group-hover:bg-[var(--green)] transition-colors">
-                  <Store className="w-8 h-8 text-[var(--green)] group-hover:text-[var(--accent-contrast)] transition-colors" />
+                <div className="w-14 h-14 sm:w-16 sm:h-16 bg-[var(--surface-2)] rounded-full flex items-center justify-center group-hover:bg-[var(--green)] transition-colors">
+                  <Store className="w-7 h-7 sm:w-8 sm:h-8 text-[var(--green)] group-hover:text-[var(--accent-contrast)] transition-colors" />
                 </div>
                 <div>
-                  <h2 className="text-xl mb-2 text-[var(--green)]">I'm a Venue</h2>
-                  <p className="text-sm text-[var(--text-muted)]">
-                    Support local artists by displaying rotating artworks and earn 10% commission on sales
+                  <h2 className="text-xl mb-1 sm:mb-2 text-[var(--green)] font-bold">I'm a Venue</h2>
+                  <p className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
+                    Support local artists by displaying rotating artworks and earn 10% commission
                   </p>
                 </div>
               </div>

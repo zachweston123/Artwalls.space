@@ -118,9 +118,9 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
       </div>
 
       {/* Search & Filters */}
-      <div className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)] mb-6">
+      <div className="bg-[var(--surface-1)] rounded-xl p-4 sm:p-6 border border-[var(--border)] mb-6">
         {/* Search Bar */}
-        <div className="flex gap-3 mb-4">
+        <div className="flex flex-col sm:flex-row gap-3 mb-4">
           <div className="flex-1 relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-muted)]" />
             <input
@@ -133,16 +133,16 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
           </div>
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`px-6 py-3 rounded-lg border-2 transition-all flex items-center gap-2 ${
+            className={`px-4 sm:px-6 py-3 rounded-lg border-2 transition-all flex items-center justify-center gap-2 ${
               showFilters || hasActiveFilters
                 ? 'border-[var(--green)] bg-[var(--green-muted)] text-[var(--green)]'
                 : 'border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] hover:border-[var(--green)]'
             }`}
           >
             <Filter className="w-5 h-5" />
-            Filters
+            <span className={hasActiveFilters ? 'inline' : 'hidden sm:inline'}>Filters</span>
             {hasActiveFilters && (
-              <span className="ml-1 px-2 py-0.5 bg-[var(--green)] text-[var(--accent-contrast)] text-xs rounded-full">
+              <span className="ml-1 px-2 py-0.5 bg-[var(--green)] text-[var(--accent-contrast)] text-xs rounded-full min-w-[20px] text-center">
                 {(filters.artTypes.length + (filters.openToNew ? 1 : 0) + (filters.neighborhood ? 1 : 0))}
               </span>
             )}
