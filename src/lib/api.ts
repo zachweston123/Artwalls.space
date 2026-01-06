@@ -1,4 +1,4 @@
-const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:4242';
+const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || 'https://api.artwalls.space';
 
 async function getAuthHeader(): Promise<Record<string, string>> {
   try {

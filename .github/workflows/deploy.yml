@@ -1,0 +1,61 @@
+name: Deploy Artwalls (Pages + Worker)
+
+on:
+  push:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-artwalls
+  cancel-in-progress: false
+
+jobs:
+  pages:
+    name: Build and deploy Pages
+    # Run only if you opt in via repo secret DEPLOY_PAGES_VIA_GHA = 'true'
+    if: ${{ secrets.DEPLOY_PAGES_VIA_GHA == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Build site
+        run: npm run build
+        env:
+          VITE_API_BASE_URL: https://api.artwalls.space
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+      - name: Deploy Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name artwalls-space
+
+  worker:
+    name: Deploy Worker (api.artwalls.space)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy Worker
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: worker
+          command: deploy
+
+    # Note: Set Worker secrets once in Cloudflare Dashboard (Workers & Pages → Workers → artwalls-api → Settings → Variables & Secrets)
