@@ -165,7 +165,14 @@ app.post('/api/stripe/billing/create-portal-session', async (req, res) => {
   }
 });
 // Middleware
-app.use(cors({ origin: CORS_ORIGIN }));
+const CORS_OPTIONS = {
+  origin: CORS_ORIGIN,
+  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-password', 'x-admin-secret', 'x-admin'],
+};
+app.use(cors(CORS_OPTIONS));
+// Ensure preflight across all routes
+app.options('*', cors(CORS_OPTIONS));
 app.use(express.json({ limit: '2mb' }));
 
 // -----------------------------
