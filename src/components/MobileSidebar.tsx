@@ -17,6 +17,7 @@ export function MobileSidebar({ isOpen, onClose, user, onNavigate, onLogout, cur
   const artistLinks = [
     { id: 'artist-dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'artist-artworks', label: 'My Artworks', icon: Image },
+    { id: 'artist-approved', label: 'Approved & QR', icon: Image },
     { id: 'artist-venues', label: 'Find Venues', icon: Search },
     { id: 'artist-applications', label: 'Applications', icon: Send },
     { id: 'artist-invites', label: 'Invitations', icon: Mail },
