@@ -22,15 +22,29 @@ interface AdminDashboardProps {
 export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [metrics, setMetrics] = useState<{ totals: { artists: number; venues: number; activeDisplays: number }; month: { gmv: number; platformRevenue: number }; recentActivity: Array<{ type: string; timestamp: string; amount_cents: number }> } | null>(null);
+  const [metrics, setMetrics] = useState<{
+    totals: { artists: number; venues: number; activeDisplays: number };
+    month: { gmv: number; platformRevenue: number; gvmDelta: number };
+    monthlyArtistsDelta: number;
+    monthlyVenuesDelta: number;
+    pendingInvites: number;
+    supportQueue: number;
+    recentActivity: Array<{ type: string; timestamp: string; amount_cents: number }>;
+  } | null>(null);
 
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
-        const resp = await apiGet<{ totals: { artists: number; venues: number; activeDisplays: number }; month: { gmv: number; platformRevenue: number }; recentActivity: Array<{ type: string; timestamp: string; amount_cents: number }> }>(
-          '/api/admin/metrics'
-        );
+        const resp = await apiGet<{
+          totals: { artists: number; venues: number; activeDisplays: number };
+          month: { gmv: number; platformRevenue: number; gvmDelta: number };
+          monthlyArtistsDelta: number;
+          monthlyVenuesDelta: number;
+          pendingInvites: number;
+          supportQueue: number;
+          recentActivity: Array<{ type: string; timestamp: string; amount_cents: number }>;
+        }>('/api/admin/metrics');
         if (mounted) setMetrics(resp);
       } catch (e: any) {
         if (mounted) setError(e?.message || 'Failed to load metrics');
@@ -45,7 +59,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
     {
       label: 'Total Artists',
       value: metrics ? String(metrics.totals.artists) : '-',
-      delta: '+32 this month',
+      delta: metrics ? `+${metrics.monthlyArtistsDelta} this month` : 'Loading...',
       deltaType: 'positive' as const,
       icon: Users,
       iconBg: 'bg-[var(--surface-3)] border border-[var(--border)]',
@@ -55,7 +69,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
     {
       label: 'Total Venues',
       value: metrics ? String(metrics.totals.venues) : '-',
-      delta: '+12 this month',
+      delta: metrics ? `+${metrics.monthlyVenuesDelta} this month` : 'Loading...',
       deltaType: 'positive' as const,
       icon: Building,
       iconBg: 'bg-[var(--surface-3)] border border-[var(--border)]',
@@ -74,9 +88,9 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
     },
     {
       label: 'Pending Invites',
-      value: '23',
-      delta: 'Needs review',
-      deltaType: 'neutral' as const,
+      value: metrics ? String(metrics.pendingInvites) : '-',
+      delta: metrics && metrics.pendingInvites > 0 ? 'Needs review' : 'None pending',
+      deltaType: metrics && metrics.pendingInvites > 0 ? 'warning' as const : 'positive' as const,
       icon: Mail,
       iconBg: 'bg-[var(--surface-3)] border border-[var(--border)]',
       iconColor: 'text-[var(--warning)]',
@@ -84,8 +98,8 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
     },
     {
       label: 'Total GMV (Month)',
-      value: metrics ? `$${metrics.month.gmv}` : '-',
-      delta: '+18% vs last month',
+      value: metrics ? `$${(metrics.month.gmv / 100).toFixed(2)}` : '-',
+      delta: metrics ? `+${metrics.month.gvmDelta}% vs last month` : 'Loading...',
       deltaType: 'positive' as const,
       icon: DollarSign,
       iconBg: 'bg-[var(--surface-3)] border border-[var(--border)]',
@@ -94,19 +108,19 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
     },
     {
       label: 'Platform Revenue',
-      value: metrics ? `$${metrics.month.platformRevenue}` : '-',
+      value: metrics ? `$${(metrics.month.platformRevenue / 100).toFixed(2)}` : '-',
       delta: '10% platform fee',
       deltaType: 'neutral' as const,
       icon: TrendingUp,
       iconBg: 'bg-[var(--surface-3)] border border-[var(--border)]',
       iconColor: 'text-[var(--blue)]',
-      onClick: () => onNavigate('admin-revenue'),
+      onClick: () => onNavigate('admin-sales'),
     },
     {
       label: 'Support Queue',
-      value: '7',
-      delta: '2 urgent',
-      deltaType: 'warning' as const,
+      value: metrics ? String(metrics.supportQueue) : '-',
+      delta: metrics && metrics.supportQueue > 0 ? `${Math.max(1, Math.floor(metrics.supportQueue * 0.3))} urgent` : 'No issues',
+      deltaType: metrics && metrics.supportQueue > 0 ? 'warning' as const : 'positive' as const,
       icon: AlertCircle,
       iconBg: 'bg-[var(--surface-3)] border border-[var(--border)]',
       iconColor: 'text-[var(--danger)]',

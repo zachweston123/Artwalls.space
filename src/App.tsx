@@ -45,6 +45,7 @@ import { AdminActivityLog } from './components/admin/AdminActivityLog';
 import { AdminInvites } from './components/admin/AdminInvites';
 import { AdminSales as AdminSalesPage } from './components/admin/AdminSales';
 import { AdminCurrentDisplays } from './components/admin/AdminCurrentDisplays';
+import { AdminSupport } from './components/admin/AdminSupport';
 import { AdminPasswordPrompt } from './components/admin/AdminPasswordPrompt';
 import { StripePaymentSetup } from './components/admin/StripePaymentSetup';
 
@@ -413,6 +414,7 @@ export default function App() {
             {currentPage === 'admin-invites' && <AdminInvites />}
             {currentPage === 'admin-sales' && <AdminSalesPage />}
             {currentPage === 'admin-current-displays' && <AdminCurrentDisplays />}
+            {currentPage === 'admin-support' && <AdminSupport />}
           </>
         )}
       </main>

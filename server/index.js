@@ -1331,6 +1331,155 @@ app.post('/api/artists', async (req, res) => {
 });
 
 // -----------------------------
+// Admin: dashboard metrics
+// -----------------------------
+app.get('/api/admin/metrics', async (req, res) => {
+  const admin = await requireAdmin(req, res); if (!admin) return;
+  try {
+    // Count total artists and venues
+    const artistsResp = await supabaseAdmin.from('artists').select('id');
+    const venuesResp = await supabaseAdmin.from('venues').select('id');
+    const totalArtists = artistsResp.data?.length || 0;
+    const totalVenues = venuesResp.data?.length || 0;
+
+    // Count active displays (artworks assigned to venues and not sold)
+    const displayResp = await supabaseAdmin
+      .from('artworks')
+      .select('id')
+      .not('venue_id', 'is', null)
+      .neq('status', 'sold');
+    const activeDisplays = displayResp.data?.length || 0;
+
+    // Count pending invites (notifications with type 'invite' and not read)
+    const invitesResp = await supabaseAdmin
+      .from('notifications')
+      .select('id')
+      .eq('type', 'invite')
+      .eq('read', false);
+    const pendingInvites = invitesResp.data?.length || 0;
+
+    // Get current month GMV from orders
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString();
+
+    const ordersResp = await supabaseAdmin
+      .from('orders')
+      .select('amount_cents')
+      .gte('created_at', monthStart)
+      .lte('created_at', monthEnd)
+      .eq('status', 'completed');
+
+    const monthGmv = (ordersResp.data || []).reduce((sum, o) => sum + (o.amount_cents || 0), 0);
+    const platformRevenue = Math.floor(monthGmv * 0.1); // 10% platform fee
+
+    // Get previous month GMV for delta calculation
+    const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
+    const prevMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0).toISOString();
+
+    const prevOrdersResp = await supabaseAdmin
+      .from('orders')
+      .select('amount_cents')
+      .gte('created_at', prevMonthStart)
+      .lte('created_at', prevMonthEnd)
+      .eq('status', 'completed');
+
+    const prevMonthGmv = (prevOrdersResp.data || []).reduce((sum, o) => sum + (o.amount_cents || 0), 0);
+    const gmvDelta = prevMonthGmv > 0 ? Math.round(((monthGmv - prevMonthGmv) / prevMonthGmv) * 100) : 0;
+
+    // Count artists added this month
+    const artistsThisMonthResp = await supabaseAdmin
+      .from('artists')
+      .select('id')
+      .gte('created_at', monthStart)
+      .lte('created_at', monthEnd);
+    const artistsThisMonth = artistsThisMonthResp.data?.length || 0;
+
+    // Count venues added this month
+    const venuesThisMonthResp = await supabaseAdmin
+      .from('venues')
+      .select('id')
+      .gte('created_at', monthStart)
+      .lte('created_at', monthEnd);
+    const venuesThisMonth = venuesThisMonthResp.data?.length || 0;
+
+    // Support queue (unresolved support tickets/issues - use notifications with type 'support' or 'issue')
+    const supportResp = await supabaseAdmin
+      .from('notifications')
+      .select('id')
+      .in('type', ['support', 'issue', 'urgent'])
+      .eq('read', false);
+    const supportQueue = supportResp.data?.length || 0;
+
+    // Recent activity (last 10 completed orders)
+    const recentResp = await supabaseAdmin
+      .from('orders')
+      .select('created_at, amount_cents')
+      .eq('status', 'completed')
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    const recentActivity = (recentResp.data || []).map(o => ({
+      type: 'sale',
+      timestamp: o.created_at,
+      amount_cents: o.amount_cents,
+    }));
+
+    return res.json({
+      totals: {
+        artists: totalArtists,
+        venues: totalVenues,
+        activeDisplays,
+      },
+      month: {
+        gmv: monthGmv,
+        platformRevenue,
+        gvmDelta: gmvDelta,
+      },
+      monthlyArtistsDelta: artistsThisMonth,
+      monthlyVenuesDelta: venuesThisMonth,
+      pendingInvites,
+      supportQueue,
+      recentActivity,
+    });
+  } catch (err) {
+    console.error('admin metrics error', err);
+    return res.status(500).json({ error: err?.message || 'Failed to load metrics' });
+  }
+});
+
+// Admin: get support tickets
+app.get('/api/admin/support-tickets', async (req, res) => {
+  const admin = await requireAdmin(req, res); if (!admin) return;
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('notifications')
+      .select('*')
+      .in('type', ['support', 'issue', 'urgent'])
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    const tickets = (data || []).map((n: any) => ({
+      id: n.id,
+      type: n.type,
+      subject: n.title || 'Support Ticket',
+      description: n.message || '',
+      userId: n.user_id,
+      severity: n.type === 'urgent' ? 'urgent' : (n.type === 'issue' ? 'high' : 'medium'),
+      status: n.read ? 'resolved' : (n.type === 'urgent' ? 'open' : 'open'),
+      createdAt: n.created_at,
+      updatedAt: n.updated_at,
+    }));
+
+    return res.json(tickets);
+  } catch (err) {
+    console.error('admin support-tickets error', err);
+    return res.status(500).json({ error: err?.message || 'Failed to load support tickets' });
+  }
+});
+
+// -----------------------------
 // Admin: list/sync users from Supabase Auth
 // -----------------------------
 app.get('/api/admin/users', async (req, res) => {
