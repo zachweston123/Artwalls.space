@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
-import { User, Mail, Phone, Link as LinkIcon, DollarSign, Edit, Save, X } from 'lucide-react';
+import { User, Mail, Phone, Link as LinkIcon, DollarSign, Edit, Save, X, Upload, Loader2, Camera } from 'lucide-react';
 import { PlanBadge } from '../pricing/PlanBadge';
+import { supabase } from '../../lib/supabase';
+import { uploadProfilePhoto } from '../../lib/storage';
 
 interface ArtistProfileProps {
   onNavigate: (page: string) => void;
@@ -20,6 +22,9 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
   const [cityPrimary, setCityPrimary] = useState('');
   const [citySecondary, setCitySecondary] = useState('');
   const [currentPlan, setCurrentPlan] = useState<'free' | 'starter' | 'growth' | 'pro'>('free');
+  const [avatar, setAvatar] = useState<string>('');
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   // Demo values for summary (would come from orders on real data)
   const [totalEarnings] = useState(0);
@@ -60,6 +65,7 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
           setCurrentPlan('free');
           setCityPrimary('');
           setCitySecondary('');
+          setAvatar((user.user_metadata?.avatar as string) || '');
         } else {
           const row = artistRows[0] as any;
           setName(row.name || (user.user_metadata?.name as string) || 'Artist');
@@ -69,6 +75,7 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
           setCitySecondary((row.city_secondary as string) || '');
           const tier = (row.subscription_tier as 'free' | 'starter' | 'growth' | 'pro') || 'free';
           setCurrentPlan(tier);
+          setAvatar((user.user_metadata?.avatar as string) || '');
         }
 
         // Portfolio URL from auth metadata
@@ -83,6 +90,35 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
       mounted = false;
     };
   }, []);
+
+  async function handlePhotoUpload(file?: File) {
+    if (!file) return;
+    try {
+      setUploading(true);
+      setUploadError(null);
+      
+      // Validate file size (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        throw new Error('File size must be less than 5MB');
+      }
+      
+      // Validate file type
+      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+        throw new Error('Only JPG, PNG, and WebP images are allowed');
+      }
+      
+      const { data } = await supabase.auth.getUser();
+      const userId = data.user?.id;
+      if (!userId) throw new Error('Not signed in');
+      
+      const url = await uploadProfilePhoto(userId, file, 'artist');
+      setAvatar(url);
+    } catch (err: any) {
+      setUploadError(err?.message || 'Upload failed');
+    } finally {
+      setUploading(false);
+    }
+  }
 
   async function handleSave() {
     setSaving(true);
@@ -197,6 +233,65 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
               </div>
             ) : (
               <div className="space-y-4">
+                <div>
+                  <label className="block text-sm text-[var(--text-muted)] mb-3">Profile Photo</label>
+                  <div className="flex items-center gap-6">
+                    <div className="w-24 h-24 rounded-full overflow-hidden bg-[var(--surface-3)] border-4 border-[var(--border)]">
+                      {avatar ? (
+                        <img
+                          src={avatar}
+                          alt="Profile"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Camera className="w-8 h-8 text-[var(--text-muted)]" />
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => document.getElementById('artist-photo-input')?.click()}
+                      disabled={uploading}
+                      className="flex items-center gap-2 px-4 py-2 bg-[var(--surface-3)] text-[var(--text)] border border-[var(--border)] rounded-lg hover:bg-[var(--surface-2)] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                      {uploading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Uploading…
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-4 h-4" />
+                          Upload Photo
+                        </>
+                      )}
+                    </button>
+                    <input
+                      id="artist-photo-input"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      onChange={(e) => handlePhotoUpload(e.target.files?.[0])}
+                      disabled={uploading}
+                    />
+                  </div>
+                  {uploadError && (
+                    <p className="text-xs text-red-500 mt-2">{uploadError}</p>
+                  )}
+                  {avatar && (
+                    <button
+                      type="button"
+                      onClick={() => setAvatar('')}
+                      className="text-xs text-[var(--text-muted)] hover:text-[var(--text)] mt-2 underline"
+                    >
+                      Remove photo
+                    </button>
+                  )}
+                  <p className="text-xs text-[var(--text-muted)] mt-2">
+                    JPG, PNG, or WebP. Max 5MB. Square images work best.
+                  </p>
+                </div>
                 <div>
                   <label className="block text-sm text-[var(--text-muted)] mb-1">Display Name</label>
                   <input value={name} onChange={(e) => setName(e.target.value)} className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]" placeholder="Your name" />
