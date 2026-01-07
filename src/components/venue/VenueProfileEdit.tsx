@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { X, Upload, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { X, Upload, Image as ImageIcon, Loader2, AlertCircle } from 'lucide-react';
 import { LabelChip } from '../LabelChip';
 import { VENUE_HIGHLIGHTS_GROUPS } from '../../data/highlights';
 import { supabase } from '../../lib/supabase';
 import { uploadProfilePhoto } from '../../lib/storage';
+import { compressImage } from '../../lib/imageCompression';
 
 interface VenueProfileEditProps {
   initialData?: Partial<VenueProfileData>;
@@ -68,24 +69,41 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
       setUploading(true);
       setUploadError(null);
       
+      // Validate file type first
+      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+        throw new Error('Only JPG, PNG, and WebP images are allowed');
+      }
+      
       // Validate file size (10MB for cover)
       if (file.size > 10 * 1024 * 1024) {
         throw new Error('File size must be less than 10MB');
       }
       
-      // Validate file type
-      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-        throw new Error('Only JPG, PNG, and WebP images are allowed');
+      // Compress image for venue cover
+      let fileToUpload = file;
+      try {
+        fileToUpload = await compressImage(file, 1200, 800, 0.85);
+      } catch (compressErr) {
+        console.warn('Image compression failed, uploading original:', compressErr);
       }
       
       const { data } = await supabase.auth.getUser();
       const userId = data.user?.id;
       if (!userId) throw new Error('Not signed in');
       
-      const url = await uploadProfilePhoto(userId, file, 'venue');
+      const url = await uploadProfilePhoto(userId, fileToUpload, 'venue');
       setFormData(prev => ({ ...prev, coverPhoto: url }));
     } catch (err: any) {
-      setUploadError(err?.message || 'Upload failed');
+      // Provide helpful error messages
+      let errorMsg = err?.message || 'Upload failed';
+      
+      if (errorMsg.includes('Bucket not found') || errorMsg.includes('bucket')) {
+        errorMsg = 'Storage buckets not configured. Please create "venue-profiles" bucket in Supabase Storage and set it to Public.';
+      } else if (errorMsg.includes('Permission denied') || errorMsg.includes('403')) {
+        errorMsg = 'Permission denied. Make sure the storage bucket is set to Public in Supabase.';
+      }
+      
+      setUploadError(errorMsg);
     } finally {
       setUploading(false);
     }
@@ -181,7 +199,18 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
               </div>
             )}
             {uploadError && (
-              <p className="text-xs text-red-500 mt-2">{uploadError}</p>
+              <div className="mt-3 p-3 bg-red-500/10 border border-red-500/30 rounded-lg flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                <div className="text-sm text-red-600">
+                  <p className="font-medium">Upload Failed</p>
+                  <p className="mt-1">{uploadError}</p>
+                  {uploadError.includes('Bucket not found') || uploadError.includes('not configured') ? (
+                    <p className="mt-2 text-xs text-red-500">
+                      💡 Create &quot;venue-profiles&quot; bucket in Supabase Storage and set it to Public. See setup guide for details.
+                    </p>
+                  ) : null}
+                </div>
+              </div>
             )}
           </div>
 
