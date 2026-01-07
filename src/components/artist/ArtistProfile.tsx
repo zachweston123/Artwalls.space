@@ -66,7 +66,7 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
           setCurrentPlan('free');
           setCityPrimary('');
           setCitySecondary('');
-          setAvatar((user.user_metadata?.avatar as string) || '');
+          setAvatar((user.user_metadata?.avatar as string) || (row?.profile_photo_url as string) || '');
         } else {
           const row = artistRows[0] as any;
           setName(row.name || (user.user_metadata?.name as string) || 'Artist');
@@ -76,7 +76,7 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
           setCitySecondary((row.city_secondary as string) || '');
           const tier = (row.subscription_tier as 'free' | 'starter' | 'growth' | 'pro') || 'free';
           setCurrentPlan(tier);
-          setAvatar((user.user_metadata?.avatar as string) || '');
+          setAvatar((row?.profile_photo_url as string) || (user.user_metadata?.avatar as string) || '');
         }
 
         // Portfolio URL from auth metadata
@@ -122,6 +122,15 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
       if (!userId) throw new Error('Not signed in');
       
       const url = await uploadProfilePhoto(userId, fileToUpload, 'artist');
+      
+      // Save the photo URL to the database
+      const { error: updateErr } = await supabase
+        .from('artists')
+        .update({ profile_photo_url: url })
+        .eq('id', userId);
+      
+      if (updateErr) throw updateErr;
+      
       setAvatar(url);
     } catch (err: any) {
       // Provide helpful error messages
@@ -186,8 +195,16 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
           <div className="p-6">
             <div className="flex items-start justify-between mb-6">
               <div className="flex items-center gap-4">
-                <div className="w-20 h-20 bg-[var(--surface-2)] border border-[var(--border)] rounded-full flex items-center justify-center">
-                  <User className="w-10 h-10 text-[var(--blue)]" />
+                <div className="w-20 h-20 bg-[var(--surface-2)] border border-[var(--border)] rounded-full flex items-center justify-center overflow-hidden">
+                  {avatar ? (
+                    <img
+                      src={avatar}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <User className="w-10 h-10 text-[var(--blue)]" />
+                  )}
                 </div>
                 <div>
                   <h2 className="text-2xl mb-1 text-[var(--text)]">{name || 'Artist'}</h2>
@@ -312,7 +329,23 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
                   {avatar && (
                     <button
                       type="button"
-                      onClick={() => setAvatar('')}
+                      onClick={async () => {
+                        try {
+                          const { data } = await supabase.auth.getUser();
+                          const userId = data.user?.id;
+                          if (!userId) return;
+                          
+                          // Update database to remove photo URL
+                          await supabase
+                            .from('artists')
+                            .update({ profile_photo_url: null })
+                            .eq('id', userId);
+                          
+                          setAvatar('');
+                        } catch (err) {
+                          console.error('Failed to remove photo:', err);
+                        }
+                      }}
                       className="text-xs text-[var(--text-muted)] hover:text-[var(--text)] mt-2 underline"
                     >
                       Remove photo

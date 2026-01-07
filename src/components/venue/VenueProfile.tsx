@@ -20,6 +20,7 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
     phoneNumber: '',
     address: '',
     instagram: '',
+    coverPhoto: '',
     totalEarnings: 0,
     wallSpaces: 0,
     activeDisplays: 0,
@@ -30,11 +31,12 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
   });
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(async ({ data }) => {
       const user = data.user;
       if (!user) return;
       const role = user.user_metadata?.role;
       if (role !== 'venue') return;
+      
       setProfile((prev) => ({
         ...prev,
         email: user.email || prev.email,
@@ -42,12 +44,34 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
         type: user.user_metadata?.type || prev.type,
         phoneNumber: (user.user_metadata?.phone as string | undefined) || prev.phoneNumber,
       }));
+
+      // Load cover photo from database
+      try {
+        const { data: venueData } = await supabase
+          .from('venues')
+          .select('cover_photo_url')
+          .eq('id', user.id)
+          .single();
+        
+        if (venueData?.cover_photo_url) {
+          setProfile((prev) => ({
+            ...prev,
+            coverPhoto: venueData.cover_photo_url,
+          }));
+        }
+      } catch (err) {
+        console.warn('Failed to load cover photo:', err);
+      }
     });
   }, []);
 
   const handleSave = async (data: VenueProfileData) => {
     setSaveError(null);
     try {
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+      if (!userId) throw new Error('Not signed in');
+
       await apiPost('/api/venues', {
         name: data.name,
         type: data.type,
@@ -56,6 +80,14 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
         email: data.email,
         city: data.city,
       });
+
+      // Save cover photo URL to database
+      if (data.coverPhoto) {
+        await supabase
+          .from('venues')
+          .update({ cover_photo_url: data.coverPhoto })
+          .eq('id', userId);
+      }
 
       // Optional: also backfill auth metadata so refreshes keep the same display values.
       await supabase.auth.updateUser({
@@ -95,8 +127,16 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
           <div className="p-6">
             <div className="flex items-start justify-between mb-6">
               <div className="flex items-center gap-4">
-                <div className="w-20 h-20 bg-[var(--green-muted)] rounded-full flex items-center justify-center">
-                  <Store className="w-10 h-10 text-[var(--green)]" />
+                <div className="w-20 h-20 bg-[var(--green-muted)] rounded-full flex items-center justify-center overflow-hidden">
+                  {profile.coverPhoto ? (
+                    <img
+                      src={profile.coverPhoto}
+                      alt="Cover"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <Store className="w-10 h-10 text-[var(--green)]" />
+                  )}
                 </div>
                 <div>
                   <h2 className="text-2xl mb-1">{profile.name}</h2>
@@ -290,7 +330,7 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
 
       {isEditing && (
         <VenueProfileEdit
-          initialData={{ name: profile.name, type: profile.type, email: profile.email, phoneNumber: profile.phoneNumber, city: undefined }}
+          initialData={{ name: profile.name, type: profile.type, email: profile.email, phoneNumber: profile.phoneNumber, city: undefined, coverPhoto: profile.coverPhoto }}
           onSave={handleSave}
           onCancel={() => setIsEditing(false)}
         />
