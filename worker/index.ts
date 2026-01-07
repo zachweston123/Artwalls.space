@@ -502,35 +502,6 @@ export default {
       return json({ venues });
     }
 
-    // Admin password verification endpoint
-    if (url.pathname === '/api/admin/verify' && method === 'POST') {
-      try {
-        const body = await request.json().catch(() => ({}));
-        const password = String(body?.password || '');
-        
-        // SHA-256 hash of "StormBL26"
-        const EXPECTED_HASH = '7a16eeff525951de7abcf4100e169aa70631b3f3fd22b05649f951f8e8d692c7';
-        
-        if (!password) {
-          return json({ ok: false }, { status: 400 });
-        }
-        
-        // Hash the provided password
-        const encoder = new TextEncoder();
-        const data = encoder.encode(password);
-        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const providedHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        
-        // Constant-time comparison
-        const isValid = providedHash === EXPECTED_HASH;
-        
-        return json({ ok: isValid });
-      } catch (e) {
-        return json({ error: 'Verification failed' }, { status: 500 });
-      }
-    }
-
     // Public listings: artists (only show live artists)
     if (url.pathname === '/api/artists' && method === 'GET') {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
