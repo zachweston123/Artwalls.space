@@ -42,7 +42,7 @@ export default {
         headers: {
           'Access-Control-Allow-Origin': allowOrigin,
           'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-          'Access-Control-Allow-Headers': 'authorization, content-type',
+          'Access-Control-Allow-Headers': 'authorization, content-type, x-admin-password',
           'Access-Control-Max-Age': '86400',
           Vary: 'Origin',
         },
