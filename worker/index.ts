@@ -23,10 +23,16 @@ export default {
     const requestOrigin = request.headers.get('origin') || '';
     const pagesOrigin = env.PAGES_ORIGIN || 'https://artwalls.space';
     
-    // Allow CORS for the configured pages origin or localhost in development
+    // Allow CORS for: production domain, any .pages.dev subdomain, or localhost in development
     let allowOrigin = pagesOrigin;
-    if (requestOrigin && (requestOrigin === pagesOrigin || requestOrigin.startsWith('http://localhost') || requestOrigin.startsWith('http://127.0.0.1'))) {
-      allowOrigin = requestOrigin;
+    if (requestOrigin) {
+      if (requestOrigin === pagesOrigin || 
+          requestOrigin.endsWith('.pages.dev') ||
+          requestOrigin === 'https://artwalls.space' ||
+          requestOrigin.startsWith('http://localhost') || 
+          requestOrigin.startsWith('http://127.0.0.1')) {
+        allowOrigin = requestOrigin;
+      }
     }
 
     // Preflight CORS
