@@ -41,12 +41,6 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
 
   // Mock venue details (used as a UI fallback / enrichment layer)
   const mockVenues: any[] = [];
-      foundedYear: 2019,
-      wallSpaces: 2,
-      availableSpaces: 0,
-      verified: true,
-    },
-  ];
 
   useEffect(() => {
     let isMounted = true;

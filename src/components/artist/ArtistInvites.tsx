@@ -25,13 +25,6 @@ export function ArtistInvites({ onApply, onDecline, onNavigate }: ArtistInvitesP
 
   // Mock invites data
   const mockInvites: Invite[] = [];
-      wallspaceSize: '48" × 60"',
-      duration: 30,
-      message: 'Hi! We have a spot opening up next month and think your work would be perfect.',
-      timestamp: '2024-01-10T09:15:00',
-      status: 'accepted',
-    },
-  ];
 
   const [invites, setInvites] = useState(mockInvites);
 
