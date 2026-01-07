@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { X, Upload, Image as ImageIcon } from 'lucide-react';
+import { X, Upload, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { LabelChip } from '../LabelChip';
 import { VENUE_HIGHLIGHTS_GROUPS } from '../../data/highlights';
+import { supabase } from '../../lib/supabase';
+import { uploadProfilePhoto } from '../../lib/storage';
 
 interface VenueProfileEditProps {
   initialData?: Partial<VenueProfileData>;
@@ -33,6 +35,8 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
     phoneNumber: initialData?.phoneNumber ?? '',
     city: (initialData as any)?.city ?? '',
   });
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const venueTypes = [
     'Coffee Shop',
@@ -56,6 +60,35 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
         ? prev.labels.filter(l => l !== label)
         : [...prev.labels, label]
     }));
+  };
+
+  const handlePhotoUpload = async (file?: File) => {
+    if (!file) return;
+    try {
+      setUploading(true);
+      setUploadError(null);
+      
+      // Validate file size (10MB for cover)
+      if (file.size > 10 * 1024 * 1024) {
+        throw new Error('File size must be less than 10MB');
+      }
+      
+      // Validate file type
+      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+        throw new Error('Only JPG, PNG, and WebP images are allowed');
+      }
+      
+      const { data } = await supabase.auth.getUser();
+      const userId = data.user?.id;
+      if (!userId) throw new Error('Not signed in');
+      
+      const url = await uploadProfilePhoto(userId, file, 'venue');
+      setFormData(prev => ({ ...prev, coverPhoto: url }));
+    } catch (err: any) {
+      setUploadError(err?.message || 'Upload failed');
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -97,18 +130,58 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
                 </div>
                 <button
                   type="button"
-                  className="absolute top-4 right-4 flex items-center gap-2 px-4 py-2 bg-[var(--surface-1)] border border-[var(--border)] rounded-lg hover:bg-[var(--surface-3)] transition-colors shadow-lg"
+                  onClick={() => document.getElementById('venue-photo-input')?.click()}
+                  disabled={uploading}
+                  className="absolute top-4 right-4 flex items-center gap-2 px-4 py-2 bg-[var(--surface-1)] border border-[var(--border)] rounded-lg hover:bg-[var(--surface-3)] transition-colors shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  <Upload className="w-4 h-4" />
-                  Change Photo
+                  {uploading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Uploading…
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-4 h-4" />
+                      Change Photo
+                    </>
+                  )}
+                </button>
+                <input
+                  id="venue-photo-input"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={(e) => handlePhotoUpload(e.target.files?.[0])}
+                  disabled={uploading}
+                />
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, coverPhoto: '' }))}
+                  className="mt-2 text-xs text-[var(--text-muted)] hover:text-[var(--text)] underline"
+                >
+                  Remove photo
                 </button>
               </div>
             ) : (
-              <div className="border-2 border-dashed border-[var(--border)] rounded-xl p-12 text-center hover:border-[var(--green)] transition-colors cursor-pointer">
+              <div 
+                onClick={() => document.getElementById('venue-photo-input')?.click()}
+                className="border-2 border-dashed border-[var(--border)] rounded-xl p-12 text-center hover:border-[var(--green)] transition-colors cursor-pointer"
+              >
                 <ImageIcon className="w-12 h-12 text-[var(--text-muted)] mx-auto mb-3" />
                 <p className="text-[var(--text-muted)] mb-1">Click to upload cover photo</p>
-                <p className="text-xs text-[var(--text-muted)]">JPG or PNG, 1200x400px recommended, max 10MB</p>
+                <p className="text-xs text-[var(--text-muted)]">JPG, PNG, or WebP. 1200x400px recommended, max 10MB</p>
+                <input
+                  id="venue-photo-input"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={(e) => handlePhotoUpload(e.target.files?.[0])}
+                  disabled={uploading}
+                />
               </div>
+            )}
+            {uploadError && (
+              <p className="text-xs text-red-500 mt-2">{uploadError}</p>
             )}
           </div>
 

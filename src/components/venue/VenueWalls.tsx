@@ -26,6 +26,8 @@ export function VenueWalls() {
   });
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -47,26 +49,49 @@ export function VenueWalls() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const widthNum = newWall.width ? parseFloat(newWall.width) : undefined;
-    const heightNum = newWall.height ? parseFloat(newWall.height) : undefined;
+    setSubmitError(null);
+    
+    // Validate required fields
+    if (!newWall.name.trim()) {
+      setSubmitError('Wall name is required');
+      return;
+    }
+    if (!newWall.width || parseFloat(newWall.width) <= 0) {
+      setSubmitError('Width must be a positive number');
+      return;
+    }
+    if (!newWall.height || parseFloat(newWall.height) <= 0) {
+      setSubmitError('Height must be a positive number');
+      return;
+    }
+
     try {
+      setSubmitting(true);
+      const widthNum = parseFloat(newWall.width);
+      const heightNum = parseFloat(newWall.height);
+      
       const { data } = await supabase.auth.getUser();
       const user = data.user;
       const venueId = user?.id;
       if (!venueId) throw new Error('Missing venue session');
+      
       const created = await apiPost<WallSpace>(`/api/venues/${venueId}/wallspaces`, {
-        name: newWall.name,
+        name: newWall.name.trim(),
         width: widthNum,
         height: heightNum,
-        description: newWall.description,
+        description: newWall.description.trim(),
         photos: newWall.photos,
       });
+      
       setWallSpaces([created, ...wallSpaces]);
       setNewWall({ name: '', width: '', height: '', description: '', photos: [] });
       setShowAddForm(false);
-    } catch (err) {
-      // TODO: show error UI
-      console.error(err);
+      setSubmitError(null);
+    } catch (err: any) {
+      console.error('Add wall space error:', err);
+      setSubmitError(err?.message || 'Failed to add wall space. Please try again.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -139,6 +164,12 @@ export function VenueWalls() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
+              {submitError && (
+                <div className="px-4 py-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-600 text-sm">
+                  {submitError}
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm text-[var(--text-muted)] mb-2">Wall Name</label>
                 <input
@@ -156,7 +187,8 @@ export function VenueWalls() {
                   <label className="block text-sm text-[var(--text-muted)] mb-2">Width (inches)</label>
                   <input
                     type="number"
-                    required
+                    step="0.1"
+                    min="0"
                     value={newWall.width}
                     onChange={(e) => setNewWall({ ...newWall, width: e.target.value })}
                     className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
@@ -167,7 +199,8 @@ export function VenueWalls() {
                   <label className="block text-sm text-[var(--text-muted)] mb-2">Height (inches)</label>
                   <input
                     type="number"
-                    required
+                    step="0.1"
+                    min="0"
                     value={newWall.height}
                     onChange={(e) => setNewWall({ ...newWall, height: e.target.value })}
                     className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
@@ -237,16 +270,21 @@ export function VenueWalls() {
               <div className="flex gap-3 pt-4">
                 <button
                   type="button"
-                  onClick={() => setShowAddForm(false)}
-                  className="flex-1 px-4 py-2 bg-[var(--surface-2)] text-[var(--text)] rounded-lg hover:bg-[var(--surface-3)] transition-colors"
+                  onClick={() => {
+                    setShowAddForm(false);
+                    setSubmitError(null);
+                  }}
+                  disabled={submitting}
+                  className="flex-1 px-4 py-2 bg-[var(--surface-2)] text-[var(--text)] rounded-lg hover:bg-[var(--surface-3)] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-opacity"
+                  disabled={submitting}
+                  className="flex-1 px-4 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  Add Wall Space
+                  {submitting ? 'Adding...' : 'Add Wall Space'}
                 </button>
               </div>
             </form>

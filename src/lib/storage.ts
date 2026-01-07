@@ -30,3 +30,17 @@ export async function uploadWallspacePhoto(venueId: string, file: File): Promise
   const { data } = supabase.storage.from('wallspaces').getPublicUrl(path);
   return data.publicUrl;
 }
+
+export async function uploadProfilePhoto(userId: string, file: File, userType: 'artist' | 'venue'): Promise<string> {
+  const filename = `profile_${Date.now()}_${sanitizeFilename(file.name)}`;
+  const path = `${userId}/${filename}`;
+  const bucket = userType === 'artist' ? 'artist-profiles' : 'venue-profiles';
+  const { error } = await supabase.storage.from(bucket).upload(path, file, {
+    cacheControl: '3600',
+    upsert: false,
+    contentType: file.type || `application/octet-stream`,
+  });
+  if (error) throw error;
+  const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+  return data.publicUrl;
+}

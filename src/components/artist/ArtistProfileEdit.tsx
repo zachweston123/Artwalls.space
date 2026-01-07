@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { X, Upload, Camera } from 'lucide-react';
+import { X, Upload, Camera, Loader2 } from 'lucide-react';
 import { LabelChip } from '../LabelChip';
+import { supabase } from '../../lib/supabase';
+import { uploadProfilePhoto } from '../../lib/storage';
 
 interface ArtistProfileEditProps {
   onSave: (data: ArtistProfileData) => void;
@@ -25,6 +27,8 @@ export function ArtistProfileEdit({ onSave, onCancel }: ArtistProfileEditProps) 
     avatar: '',
     instagram: '',
   });
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const allArtTypes = [
     'Painter', 'Photographer', 'Illustrator', 'Digital', 
@@ -39,6 +43,35 @@ export function ArtistProfileEdit({ onSave, onCancel }: ArtistProfileEditProps) 
         ? prev.artTypes.filter(t => t !== type)
         : [...prev.artTypes, type]
     }));
+  };
+
+  const handlePhotoUpload = async (file?: File) => {
+    if (!file) return;
+    try {
+      setUploading(true);
+      setUploadError(null);
+      
+      // Validate file size (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        throw new Error('File size must be less than 5MB');
+      }
+      
+      // Validate file type
+      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+        throw new Error('Only JPG, PNG, and WebP images are allowed');
+      }
+      
+      const { data } = await supabase.auth.getUser();
+      const userId = data.user?.id;
+      if (!userId) throw new Error('Not signed in');
+      
+      const url = await uploadProfilePhoto(userId, file, 'artist');
+      setFormData(prev => ({ ...prev, avatar: url }));
+    } catch (err: any) {
+      setUploadError(err?.message || 'Upload failed');
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -82,14 +115,45 @@ export function ArtistProfileEdit({ onSave, onCancel }: ArtistProfileEditProps) 
               </div>
               <button
                 type="button"
-                className="flex items-center gap-2 px-4 py-2 bg-[var(--surface-3)] text-[var(--text)] border border-[var(--border)] rounded-lg hover:bg-[var(--surface-2)] transition-colors"
+                onClick={() => document.getElementById('artist-photo-input')?.click()}
+                disabled={uploading}
+                className="flex items-center gap-2 px-4 py-2 bg-[var(--surface-3)] text-[var(--text)] border border-[var(--border)] rounded-lg hover:bg-[var(--surface-2)] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                <Upload className="w-4 h-4" />
-                Upload Photo
+                {uploading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Uploading…
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-4 h-4" />
+                    Upload Photo
+                  </>
+                )}
               </button>
+              <input
+                id="artist-photo-input"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={(e) => handlePhotoUpload(e.target.files?.[0])}
+                disabled={uploading}
+              />
             </div>
+            {uploadError && (
+              <p className="text-xs text-red-500 mt-2">{uploadError}</p>
+            )}
+            {formData.avatar && (
+              <button
+                type="button"
+                onClick={() => setFormData(prev => ({ ...prev, avatar: '' }))}
+                className="text-xs text-[var(--text-muted)] hover:text-[var(--text)] mt-2 underline"
+              >
+                Remove photo
+              </button>
+            )}
             <p className="text-xs text-[var(--text-muted)] mt-2">
-              JPG or PNG, max 5MB. Square images work best.
+              JPG, PNG, or WebP. Max 5MB. Square images work best.
             </p>
           </div>
 
