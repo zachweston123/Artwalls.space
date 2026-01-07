@@ -32,63 +32,7 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
   });
 
   // Mock users data (fallback)
-  const mockUsers = [
-    {
-      id: '1',
-      name: 'Sarah Chen',
-      email: 'sarah.chen@example.com',
-      role: 'artist' as const,
-      plan: 'Growth',
-      status: 'Active',
-      lastActive: '—',
-      city: '—',
-      agreementAccepted: true,
-    },
-    {
-      id: '2',
-      name: 'Brew & Palette Café',
-      email: 'owner@brewpalette.com',
-      role: 'venue' as const,
-      plan: 'Pro',
-      status: 'Active',
-      lastActive: '2 hours ago',
-      city: 'Portland',
-      agreementAccepted: true,
-    },
-    {
-      id: '3',
-      name: 'Marcus Rodriguez',
-      email: 'marcus.r@example.com',
-      role: 'artist' as const,
-      plan: 'Starter',
-      status: 'Active',
-      lastActive: '1 day ago',
-      city: 'Seattle',
-      agreementAccepted: true,
-    },
-    {
-      id: '4',
-      name: 'The Artisan Lounge',
-      email: 'info@artisanlounge.com',
-      role: 'venue' as const,
-      plan: 'Growth',
-      status: 'Active',
-      lastActive: '3 hours ago',
-      city: 'Portland',
-      agreementAccepted: true,
-    },
-    {
-      id: '5',
-      name: 'Emma Liu',
-      email: 'emma.liu@example.com',
-      role: 'artist' as const,
-      plan: 'Free',
-      status: 'Suspended',
-      lastActive: '2 weeks ago',
-      city: 'Portland',
-      agreementAccepted: false,
-    },
-  ];
+  const mockUsers: any[] = [];
 
   const plans = ['Free', 'Starter', 'Growth', 'Pro'];
   const statuses = ['Active', 'Suspended'];

@@ -23,14 +23,12 @@ export interface VenueProfileData {
 
 export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfileEditProps) {
   const [formData, setFormData] = useState<VenueProfileData>({
-    name: initialData?.name ?? 'Brew & Palette Café',
-    type: initialData?.type ?? 'Coffee Shop',
-    bio:
-      initialData?.bio ??
-      "A cozy neighborhood café and art space in the heart of Portland's Pearl District. We've been supporting local artists for over 8 years, providing rotating wall displays that complement our warm, inviting atmosphere. Our mission is to make art accessible while serving exceptional coffee.",
-    labels: initialData?.labels ?? ['Locally owned', 'LGBTQ+ friendly', 'Dog-friendly', 'Student-friendly'],
-    foundedYear: initialData?.foundedYear ?? 2016,
-    coverPhoto: initialData?.coverPhoto ?? 'https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=1200',
+    name: initialData?.name ?? '',
+    type: initialData?.type ?? '',
+    bio: initialData?.bio ?? '',
+    labels: initialData?.labels ?? [],
+    foundedYear: initialData?.foundedYear ?? new Date().getFullYear(),
+    coverPhoto: initialData?.coverPhoto ?? '',
     email: initialData?.email ?? '',
     phoneNumber: initialData?.phoneNumber ?? '',
     city: (initialData as any)?.city ?? '',

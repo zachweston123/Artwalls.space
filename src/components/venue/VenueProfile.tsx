@@ -14,15 +14,15 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
 
   // Mock data - in production this would come from user state
   const [profile, setProfile] = useState({
-    name: 'Brew & Palette Café',
-    type: 'Coffee Shop',
-    email: 'contact@brewpalette.com',
+    name: '',
+    type: '',
+    email: '',
     phoneNumber: '',
-    address: '123 Arts District, Portland, OR 97209',
-    instagram: '@brewpalettecafe',
-    totalEarnings: 487.5,
-    wallSpaces: 3,
-    activeDisplays: 2,
+    address: '',
+    instagram: '',
+    totalEarnings: 0,
+    wallSpaces: 0,
+    activeDisplays: 0,
     installWindow: {
       day: 'Monday',
       time: '9:00 AM - 11:00 AM',

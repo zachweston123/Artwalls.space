@@ -18,12 +18,12 @@ export interface ArtistProfileData {
 
 export function ArtistProfileEdit({ onSave, onCancel }: ArtistProfileEditProps) {
   const [formData, setFormData] = useState<ArtistProfileData>({
-    name: 'Sarah Chen',
-    bio: 'Contemporary mixed media artist exploring themes of urban life and human connection. My work combines traditional painting techniques with digital elements to create layered, textured pieces that invite viewers to look closer and discover hidden narratives.',
-    artTypes: ['Painter', 'Mixed Media', 'Digital', 'Collage'],
+    name: '',
+    bio: '',
+    artTypes: [],
     openToNew: true,
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400',
-    instagram: '@sarahchenart',
+    avatar: '',
+    instagram: '',
   });
 
   const allArtTypes = [

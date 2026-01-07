@@ -42,19 +42,19 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
   // Mock user data
   const user = {
     id: userId,
-    name: 'Sarah Chen',
-    email: 'sarah.chen@example.com',
+    name: 'User',
+    email: 'user@example.com',
     role: 'artist' as const,
-    plan: 'Growth',
+    plan: '—',
     status: 'Active',
-    city: 'Portland, OR',
-    createdAt: '2023-06-15',
-    lastActive: '5 minutes ago',
-    agreementAccepted: true,
-    agreementDate: '2023-06-15',
-    artworksCount: 24,
-    activeDisplays: 3,
-    protectionPlanActive: 2,
+    city: '—',
+    createdAt: '—',
+    lastActive: '—',
+    agreementAccepted: false,
+    agreementDate: '—',
+    artworksCount: 0,
+    activeDisplays: 0,
+    protectionPlanActive: 0,
   };
 
   const tabs = [
@@ -65,49 +65,11 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
     { id: 'notes' as const, label: 'Notes', icon: StickyNote },
   ];
 
-  const mockPlacements = [
-    {
-      id: '1',
-      artwork: 'Urban Sunset',
-      venue: 'Brew & Palette Café',
-      status: 'On display',
-      installDate: '2024-01-15',
-      endDate: '2024-04-15',
-      duration: 90,
-      protection: true,
-    },
-    {
-      id: '2',
-      artwork: 'City Lights',
-      venue: 'The Artisan Lounge',
-      status: 'Sold',
-      installDate: '2023-12-01',
-      endDate: '2024-03-01',
-      duration: 90,
-      protection: true,
-    },
-  ];
+  const mockPlacements: any[] = [];
 
-  const mockOrders = [
-    {
-      id: 'ord_123456',
-      artwork: 'City Lights',
-      amount: 1200,
-      status: 'Paid',
-      stripeSessionId: 'cs_test_a1b2c3...',
-      date: '2024-01-20',
-    },
-  ];
+  const mockOrders: any[] = [];
 
-  const mockNotes = [
-    {
-      id: '1',
-      author: 'Admin User',
-      tag: 'Support',
-      content: 'User reported issue with artwork upload. Resolved by clearing cache.',
-      timestamp: '2024-01-15 14:30',
-    },
-  ];
+  const mockNotes: any[] = [];
 
   const getPlanBadgeColor = (plan: string) => {
     switch (plan) {

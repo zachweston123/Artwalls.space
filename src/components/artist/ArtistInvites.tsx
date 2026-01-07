@@ -24,35 +24,7 @@ export function ArtistInvites({ onApply, onDecline, onNavigate }: ArtistInvitesP
   const [selectedInvite, setSelectedInvite] = useState<string | null>(null);
 
   // Mock invites data
-  const mockInvites: Invite[] = [
-    {
-      id: '1',
-      venueName: 'Brew & Palette Café',
-      venuePhoto: 'https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=400',
-      venueLocation: 'Pearl District, Portland',
-      wallspaceName: 'Main Gallery Wall',
-      wallspaceSize: '96" × 72"',
-      duration: 90,
-      message: 'Hi Sarah,\n\nWe\'d love to feature your work at Brew & Palette Café. Your artistic style would be a great fit for our space and community.\n\nWe\'re inviting you to apply for a 90-day display. Please let us know if you\'re interested!\n\nLooking forward to potentially working together.',
-      timestamp: '2024-01-15T10:30:00',
-      status: 'pending',
-    },
-    {
-      id: '2',
-      venueName: 'The Artisan Lounge',
-      venuePhoto: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400',
-      venueLocation: 'Downtown, Portland',
-      duration: 180,
-      message: 'We\'re impressed by your mixed media work and would love to discuss a 6-month display at The Artisan Lounge.',
-      timestamp: '2024-01-14T14:20:00',
-      status: 'pending',
-    },
-    {
-      id: '3',
-      venueName: 'Revolution Coffee House',
-      venuePhoto: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=400',
-      venueLocation: 'Alberta Arts, Portland',
-      wallspaceName: 'Corner Display',
+  const mockInvites: Invite[] = [];
       wallspaceSize: '48" × 60"',
       duration: 30,
       message: 'Hi! We have a spot opening up next month and think your work would be perfect.',

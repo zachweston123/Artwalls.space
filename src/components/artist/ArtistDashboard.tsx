@@ -272,23 +272,7 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
           </div>
           
           <div className="space-y-4">
-            {[
-              {
-                type: 'success',
-                title: 'Your artwork "Sunset Boulevard" was sold',
-                time: '2 days ago at Brew & Palette Café',
-              },
-              {
-                type: 'info',
-                title: 'Application approved for The Artisan Lounge',
-                time: '4 days ago',
-              },
-              {
-                type: 'neutral',
-                title: 'New artwork "Urban Dreams" uploaded',
-                time: '1 week ago',
-              },
-            ].map((item, idx) => (
+            {[].map((item, idx) => (
               <div key={idx} className="flex items-start gap-3 pb-4 border-b border-[var(--border)] last:border-0 last:pb-0">
                 <div
                   className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${

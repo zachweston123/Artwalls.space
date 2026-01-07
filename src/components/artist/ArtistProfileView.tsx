@@ -21,15 +21,15 @@ export function ArtistProfileView({
   // Mock artist data - in real app would come from props or API
   const artist = {
     id: '1',
-    name: 'Sarah Chen',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400',
-    location: 'Downtown, Portland',
-    bio: 'Contemporary mixed media artist exploring themes of urban life and human connection. My work combines traditional painting techniques with digital elements to create layered, textured pieces that invite viewers to look closer and discover hidden narratives.',
-    instagram: '@sarahchenart',
-    artTypes: ['Painter', 'Mixed Media', 'Digital', 'Collage'],
+    name: 'Artist',
+    avatar: '',
+    location: '',
+    bio: '',
+    instagram: '',
+    artTypes: [],
     openToNew: true,
-    activeDisplays: 3,
-    totalSales: 12,
+    activeDisplays: 0,
+    totalSales: 0,
   };
 
   const allArtTypes = [

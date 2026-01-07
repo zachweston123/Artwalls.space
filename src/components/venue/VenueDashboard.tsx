@@ -52,7 +52,7 @@ export function VenueDashboard({ onNavigate, user }: VenueDashboardProps) {
   return (
     <div className="bg-[var(--bg)] text-[var(--text)]">
       <div className="mb-8">
-        <h1 className="text-3xl mb-2 text-[var(--text)]">Welcome back, Brew & Palette Café</h1>
+        <h1 className="text-3xl mb-2 text-[var(--text)]">Welcome back</h1>
         <p className="text-[var(--text-muted)]">Manage your wall spaces and artist applications</p>
       </div>
 
@@ -85,22 +85,7 @@ export function VenueDashboard({ onNavigate, user }: VenueDashboardProps) {
             <div className="flex items-start gap-3 pb-4 border-b border-[var(--border)]">
               <div className="w-2 h-2 bg-[var(--green)] rounded-full mt-2"></div>
               <div className="flex-1">
-                <p className="text-sm text-[var(--text)]">Artwork "Sunset Boulevard" was sold</p>
-                <p className="text-xs text-[var(--text-muted)]">You earned $29.50 • 2 days ago</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 pb-4 border-b border-[var(--border)]">
-              <div className="w-2 h-2 bg-[var(--blue)] rounded-full mt-2"></div>
-              <div className="flex-1">
-                <p className="text-sm text-[var(--text)]">New application from Marcus Rodriguez</p>
-                <p className="text-xs text-[var(--text-muted)]">3 days ago</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="w-2 h-2 bg-[var(--border)] rounded-full mt-2"></div>
-              <div className="flex-1">
-                <p className="text-sm text-[var(--text)]">New wall space "Corner Space" added</p>
-                <p className="text-xs text-[var(--text-muted)]">1 week ago</p>
+                <p className="text-sm text-[var(--text)]">No recent activity</p>
               </div>
             </div>
           </div>

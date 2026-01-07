@@ -28,16 +28,16 @@ export function VenueProfileView({
   // Mock venue data - in real app would come from props or API
   const venue = {
     id: '1',
-    name: 'Brew & Palette Café',
-    coverPhoto: 'https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=1200',
-    location: 'Pearl District, Portland',
-    bio: 'A cozy neighborhood café and art space in the heart of Portland\'s Pearl District. We\'ve been supporting local artists for over 8 years, providing rotating wall displays that complement our warm, inviting atmosphere. Our mission is to make art accessible while serving exceptional coffee.',
-    labels: ['Locally owned', 'LGBTQ+ friendly', 'Dog-friendly', 'Student-friendly'],
-    foundedYear: 2016,
-    wallSpaces: 4,
-    currentArtists: 3,
-    installWindow: 'Mondays 10am-2pm',
-    verified: true,
+    name: '',
+    coverPhoto: '',
+    location: '',
+    bio: '',
+    labels: [],
+    foundedYear: new Date().getFullYear(),
+    wallSpaces: 0,
+    currentArtists: 0,
+    installWindow: '',
+    verified: false,
   };
 
   // Show only highlights the venue has selected (filtered to known highlights)
