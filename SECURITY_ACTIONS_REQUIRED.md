@@ -1,4 +1,166 @@
-# 🔴 CRITICAL SECURITY ACTIONS REQUIRED
+# ✅ SECURITY FIXES IMPLEMENTED
+
+## Status: In Progress
+All code changes completed. Requires 3 manual Cloudflare setup steps.
+
+---
+
+## ✅ COMPLETED (No action needed)
+
+### 1. ✅ Backend Admin Authentication
+- Endpoint: `POST /api/admin/verify`
+- Password: `StormBL26`
+- SHA-256 hash: `7a16eeff525951de7abcf4100e169aa70631b3f3fd22b05649f951f8e8d692c7`
+- Frontend updated to call backend for auth verification
+- Status: **Code ready to deploy**
+
+### 2. ✅ Row Level Security Migration
+- File: [supabase/migrations/20260106_enable_rls.sql](supabase/migrations/20260106_enable_rls.sql)
+- All tables protected with policies
+- Status: **Ready to run in Supabase**
+
+### 3. ✅ Build Cleanup
+- Removed `dist/` and `node_modules/` from git
+- Added comprehensive `.gitignore`
+- Removed duplicate `worker/wrangler.toml`
+- Status: **Committed to GitHub**
+
+### 4. ✅ Code Changes
+- Updated `worker/index.ts` with admin verification endpoint
+- Updated `src/components/admin/AdminPasswordPrompt.tsx` to use backend auth
+- Removed hardcoded password from frontend
+- Status: **Committed and ready to deploy**
+
+---
+
+## 🔴 MANUAL STEPS REQUIRED (3 steps)
+
+### Step 1: Run RLS Migration in Supabase
+
+**Time: 2 minutes**
+
+1. Open Supabase Dashboard: https://supabase.com/dashboard/project/twclqgysvpefufpnmjcl/editor
+2. Click "New Query"
+3. Copy & paste the entire migration SQL:
+   ```sql
+   -- Enable Row Level Security on all tables
+   ALTER TABLE public.artists ENABLE ROW LEVEL SECURITY;
+   ALTER TABLE public.venues ENABLE ROW LEVEL SECURITY;
+   ALTER TABLE public.artworks ENABLE ROW LEVEL SECURITY;
+   ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
+   ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+   ALTER TABLE public.bookings ENABLE ROW LEVEL SECURITY;
+   ALTER TABLE public.wallspaces ENABLE ROW LEVEL SECURITY;
+   ALTER TABLE public.venue_schedules ENABLE ROW LEVEL SECURITY;
+
+   -- [Full policy definitions - see file for complete SQL]
+   ```
+   Or use file: [supabase/migrations/20260106_enable_rls.sql](supabase/migrations/20260106_enable_rls.sql)
+
+4. Click "Run"
+5. Verify: Should see "12 statements executed"
+
+### Step 2: Deploy Cloudflare Worker
+
+**Time: 1 minute**
+
+```bash
+cd ~/Artwalls.space
+wrangler deploy
+
+# Verify:
+curl https://api.artwalls.space/api/health
+# Should return: {"ok":true}
+
+# Test admin auth (should fail with wrong password):
+curl -X POST https://api.artwalls.space/api/admin/verify \
+  -H "Content-Type: application/json" \
+  -d '{"password":"wrong"}' 
+# Should return: {"ok":false}
+
+# Test with correct password:
+curl -X POST https://api.artwalls.space/api/admin/verify \
+  -H "Content-Type: application/json" \
+  -d '{"password":"StormBL26"}'
+# Should return: {"ok":true}
+```
+
+### Step 3: Rebuild & Deploy Frontend
+
+**Time: 2 minutes**
+
+```bash
+cd ~/Artwalls.space
+
+# Verify VITE_ADMIN_PASSWORD is removed:
+grep -i "VITE_ADMIN_PASSWORD" .env || echo "✓ Correctly removed"
+
+# Rebuild
+npm run build
+
+# Verify no hardcoded password in bundle:
+grep -i "StormBL26" dist/assets/*.js || echo "✓ No hardcoded password"
+
+# Deploy to Cloudflare Pages
+# Option A: Push to GitHub (auto-deploys)
+git push origin main
+
+# Option B: Manual deploy (if available)
+# npx wrangler pages deploy dist/
+```
+
+---
+
+## Verification Checklist
+
+After completing all 3 steps:
+
+- [ ] RLS migration ran successfully in Supabase
+- [ ] `wrangler deploy` completed without errors  
+- [ ] `/api/health` returns `{"ok":true}`
+- [ ] `/api/admin/verify` with "StormBL26" returns `{"ok":true}`
+- [ ] `/api/admin/verify` with wrong password returns `{"ok":false}`
+- [ ] Frontend rebuilt and deployed
+- [ ] Admin console accessible at https://artwalls.space
+- [ ] Admin login works with password "StormBL26"
+- [ ] No hardcoded password in browser bundle (DevTools → Network → check assets)
+
+---
+
+## Security Test
+
+After deployment, test RLS is working:
+
+```javascript
+// In browser console on https://artwalls.space:
+const { data, error } = await window.supabase
+  .from('artists')
+  .select('*');
+
+// Should either:
+// - Return empty array
+// - Return error "new row violates row level security policy"
+// Should NOT return all artists
+```
+
+---
+
+## Passwords
+
+| Component | Password | Hash |
+|-----------|----------|------|
+| Admin Console | `StormBL26` | `7a16eeff525951de7abcf4100e169aa70631b3f3fd22b05649f951f8e8d692c7` |
+
+---
+
+## Timeline
+
+- ✅ Day 1: Code changes completed
+- 🔄 Today: Manual steps (5 minutes total)
+- ✅ Production ready
+
+**Next:** Follow the 3 manual steps above.
+
 
 ## IMMEDIATE ACTIONS (Before Production Deployment)
 

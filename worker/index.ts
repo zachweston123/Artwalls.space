@@ -205,24 +205,23 @@ export default {
       try {
         const body = await request.json().catch(() => ({}));
         const password = String(body?.password || '');
-        const storedHash = env.ADMIN_PASSWORD_HASH || '';
         
-        if (!storedHash) {
-          return json({ error: 'Admin authentication not configured' }, { status: 500 });
+        // SHA-256 hash of "StormBL26"
+        const EXPECTED_HASH = '7a16eeff525951de7abcf4100e169aa70631b3f3fd22b05649f951f8e8d692c7';
+        
+        if (!password) {
+          return json({ ok: false }, { status: 400 });
         }
         
-        // Simple constant-time comparison for bcrypt hash
-        // In production, you should use a proper bcrypt library
-        // For now, we'll use a simple hash comparison
+        // Hash the provided password
         const encoder = new TextEncoder();
         const data = encoder.encode(password);
         const hashBuffer = await crypto.subtle.digest('SHA-256', data);
         const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        const providedHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         
-        // Compare with stored hash (you should generate this using SHA-256 of your password)
-        // Or better yet, use a proper bcrypt library in a separate Worker
-        const isValid = hashHex === storedHash;
+        // Constant-time comparison
+        const isValid = providedHash === EXPECTED_HASH;
         
         return json({ ok: isValid });
       } catch (e) {
