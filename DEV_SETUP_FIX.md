@@ -1,50 +1,59 @@
 # Development Setup - Quick Fix Guide
 
-## ✅ Fixed: "Failed to fetch" errors
+## ✅ Issue: "Network error: Failed to fetch"
 
 ### Problem
-When creating artwork listings or editing your artist profile, you were seeing "failed to fetch" errors.
+The backend API server is not running, so the frontend can't create artwork or edit profiles.
 
 ### Root Cause
-The frontend was missing a `.env` file, so it defaulted to trying to reach `https://api.artwalls.space` (production API) instead of your local backend server at `http://localhost:4242`.
+1. ❌ Backend server not started
+2. ❌ Backend missing `.env` file with Supabase credentials
 
-### Solution Applied
-Created `.env` file with correct local configuration:
-- ✅ `VITE_API_BASE_URL=http://localhost:4242` - Points to local backend
-- ✅ `VITE_SUPABASE_URL` - Set to your Supabase project
-- ✅ `VITE_ADMIN_PASSWORD=StormBL26` - Admin access password
+### Solution: Start the Backend Server
 
-## 🚀 Next Steps to Test
+## 🚀 QUICK START (Do This Now!)
 
-### 1. Get Your Supabase Anon Key
-The `.env` file needs your actual Supabase anon key:
+### Step 1: Add Your Supabase Service Role Key
 
 1. Go to: https://supabase.com/dashboard/project/twclqgysvpefufpnmjcl/settings/api
-2. Copy the **anon/public** key (starts with `eyJ...`)
-3. Update `.env` file:
-   ```env
-   VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-   ```
+2. Copy the **service_role** key (NOT the anon key - this is the secret one)
+3. Open `~/Artwalls.space/server/.env`
+4. Replace `YOUR_SERVICE_ROLE_KEY_HERE` with your actual key
 
-### 2. Start the Backend Server
-The backend API server needs to be running:
-
-```bash
-cd server
-npm install
-npm start
-# Should show: Server listening on port 4242
+The line should look like:
+```env
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3Y2xxZ3lzdnBlZnVmcG5tamNsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NzAzODY2MiwiZXhwIjoyMDgyNjE0NjYyfQ...
 ```
 
-### 3. Restart the Frontend Dev Server
-After adding the `.env` file, restart Vite to pick up the changes:
+### Step 2: Start the Backend Server
+
+Open a **new terminal** and run:
 
 ```bash
-# Stop the current dev server (Ctrl+C)
-npm run dev
+cd ~/Artwalls.space/server
+node index.js
 ```
 
-### 4. Test the Fixes
+You should see:
+```
+Server ready on port 4242
+```
+
+⚠️ **Keep this terminal open!** The server must stay running.
+
+### Step 3: Test It Works
+
+In another terminal:
+```bash
+curl http://localhost:4242/api/health
+```
+
+Expected response:
+```json
+{"ok":true}
+```
+
+### Step 4: Test Your Artist Features
 
 **Artist Profile Edit:**
 1. Log in as an artist
@@ -52,34 +61,46 @@ npm run dev
 3. Click "Edit Profile"
 4. Make changes and click "Save"
 5. Should now work without "failed to fetch" error
+"Network error: Failed to fetch"
 
-**Create Artwork Listing:**
-1. Go to "My Artworks"
-2. Click "Add Artwork"
-3. Fill in title, description, price
-4. Click "Create Artwork"
-5. Should now work without "failed to fetch" error
-
-## 🔍 Troubleshooting
-
-### Still getting "failed to fetch"?
-
-**Check 1: Is the backend running?**
+**1. Backend not running?**
 ```bash
+# Check if backend is running
 curl http://localhost:4242/api/health
-# Expected: {"ok":true}
+# If this fails, start the backend:
+cd ~/Artwalls.space/server && node index.js
 ```
 
-**Check 2: Is .env loaded?**
-- Restart your dev server after creating .env
-- Check browser console for the API URL being called
+**2. Missing Supabase Service Role Key?**
+Check `~/Artwalls.space/server/.env`:
+- Line should NOT say `YOUR_SERVICE_ROLE_KEY_HERE`
+- Should be a long JWT token starting with `eyJ...`
+- Get it from: https://supabase.com/dashboard/project/twclqgysvpefufpnmjcl/settings/api
 
-**Check 3: CORS issues?**
-The backend server should show:
+**3. Wrong port?**
+Frontend .env should have:
+```env
+VITE_API_BASE_URL=http://localhost:4242
 ```
-CORS_ORIGIN=http://localhost:3000
-# or
-CORS_ORIGIN=true
+
+**4. Check backend logs**
+When you try to create artwork, the backend terminal should show:
+```
+POST /api/artworks
+```
+
+### "Error: Missing SUPABASE_URL"
+
+This means the backend `.env` file is not loaded or incomplete.
+
+**Fix:**
+```bash
+# Check the file exists
+ls -la ~/Artwalls.space/server/.env
+
+# Verify it has both these lines:
+grep SUPABASE ~/Artwalls.space/server/.env
+```
 ```
 
 ### Check Backend Logs
