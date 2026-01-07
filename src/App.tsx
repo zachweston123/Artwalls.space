@@ -98,7 +98,15 @@ export default function App() {
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       const nextUser = userFromSupabase(session?.user);
       setCurrentUser(nextUser);
-      setCurrentPage(nextUser ? (nextUser.role === 'artist' ? 'artist-dashboard' : 'venue-dashboard') : 'login');
+      // Only reset page for logout or if on login page; preserve profile/settings pages during auth updates
+      setCurrentPage((prevPage) => {
+        if (!nextUser) return 'login';
+        if (prevPage === 'artist-profile' || prevPage === 'venue-profile' || prevPage === 'artist-artworks' || prevPage === 'artist-applications' || prevPage === 'artist-sales' || prevPage === 'artist-venues' || prevPage === 'artist-invites' || prevPage === 'venue-applications' || prevPage === 'venue-current' || prevPage === 'venue-walls' || prevPage === 'venue-sales' || prevPage === 'venue-settings' || prevPage === 'find-artists' || prevPage === 'find-venues' || prevPage.startsWith('artist-') || prevPage.startsWith('venue-')) {
+          // Keep current page if it's a user-specific page
+          return prevPage;
+        }
+        return nextUser.role === 'artist' ? 'artist-dashboard' : 'venue-dashboard';
+      });
     });
 
     return () => {
