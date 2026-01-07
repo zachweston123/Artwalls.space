@@ -13,10 +13,12 @@ export function VenueApplications() {
     wallspace: string;
     duration: 30 | 90 | 180;
     startDate: Date;
+    installTimeOption: 'quick' | 'standard' | 'flexible';
   }>({
     wallspace: 'Main Wall',
     duration: 90,
     startDate: new Date(),
+    installTimeOption: 'standard',
   });
 
   const filteredApplications = applications.filter(
@@ -33,6 +35,7 @@ export function VenueApplications() {
         wallspace: 'Main Wall',
         duration: 90,
         startDate: new Date(),
+        installTimeOption: 'standard',
       });
     }
   };
@@ -279,6 +282,101 @@ export function VenueApplications() {
                   <option value="Hallway Wall">Hallway Wall</option>
                   <option value="Private Dining">Private Dining</option>
                 </select>
+              </div>
+
+              {/* Install Time Options */}
+              <div>
+                <label className="block text-sm mb-3 font-semibold">
+                  <Clock className="w-4 h-4 inline mr-1" />
+                  Installation Window <span className="text-[var(--danger)]">*</span>
+                </label>
+                <div className="space-y-3">
+                  {/* Quick Install Option */}
+                  <div
+                    onClick={() => setApprovalData({ ...approvalData, installTimeOption: 'quick' })}
+                    className={`p-4 rounded-lg border-2 cursor-pointer transition-colors ${
+                      approvalData.installTimeOption === 'quick'
+                        ? 'border-[var(--green)] bg-[var(--green-muted)]'
+                        : 'border-[var(--border)] bg-[var(--surface-1)] hover:border-[var(--green)]'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h4 className="font-semibold text-[var(--text)] mb-1">Option A: Quick Install</h4>
+                        <p className="text-sm text-[var(--text-muted)] mb-2">Next business day (24-48 hours)</p>
+                        <p className="text-xs text-[var(--text-muted)]">
+                          Fastest turnaround • Artwork goes live immediately
+                        </p>
+                      </div>
+                      <div
+                        className={`w-5 h-5 rounded-full border-2 flex-shrink-0 ${
+                          approvalData.installTimeOption === 'quick'
+                            ? 'border-[var(--green)] bg-[var(--green)]'
+                            : 'border-[var(--border)]'
+                        }`}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Standard Install Option */}
+                  <div
+                    onClick={() => setApprovalData({ ...approvalData, installTimeOption: 'standard' })}
+                    className={`p-4 rounded-lg border-2 cursor-pointer transition-colors ${
+                      approvalData.installTimeOption === 'standard'
+                        ? 'border-[var(--green)] bg-[var(--green-muted)]'
+                        : 'border-[var(--border)] bg-[var(--surface-1)] hover:border-[var(--green)]'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h4 className="font-semibold text-[var(--text)] mb-1">
+                          Option B: Standard Install
+                          <span className="ml-2 px-2 py-0.5 bg-[var(--green)] text-[var(--accent-contrast)] text-xs rounded-full">
+                            Recommended
+                          </span>
+                        </h4>
+                        <p className="text-sm text-[var(--text-muted)] mb-2">Within 1 week</p>
+                        <p className="text-xs text-[var(--text-muted)]">
+                          Most popular • Time to prepare everything
+                        </p>
+                      </div>
+                      <div
+                        className={`w-5 h-5 rounded-full border-2 flex-shrink-0 ${
+                          approvalData.installTimeOption === 'standard'
+                            ? 'border-[var(--green)] bg-[var(--green)]'
+                            : 'border-[var(--border)]'
+                        }`}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Flexible Install Option */}
+                  <div
+                    onClick={() => setApprovalData({ ...approvalData, installTimeOption: 'flexible' })}
+                    className={`p-4 rounded-lg border-2 cursor-pointer transition-colors ${
+                      approvalData.installTimeOption === 'flexible'
+                        ? 'border-[var(--green)] bg-[var(--green-muted)]'
+                        : 'border-[var(--border)] bg-[var(--surface-1)] hover:border-[var(--green)]'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h4 className="font-semibold text-[var(--text)] mb-1">Option C: Flexible Install</h4>
+                        <p className="text-sm text-[var(--text-muted)] mb-2">Within 2 weeks</p>
+                        <p className="text-xs text-[var(--text-muted)]">
+                          Maximum flexibility • Ensure perfect placement
+                        </p>
+                      </div>
+                      <div
+                        className={`w-5 h-5 rounded-full border-2 flex-shrink-0 ${
+                          approvalData.installTimeOption === 'flexible'
+                            ? 'border-[var(--green)] bg-[var(--green)]'
+                            : 'border-[var(--border)]'
+                        }`}
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Start Date */}

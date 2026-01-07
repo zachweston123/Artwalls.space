@@ -586,6 +586,15 @@ app.get('/api/artworks/:id/qrcode.svg', async (req, res) => {
   try {
     const art = await getArtwork(id);
     if (!art) return res.status(404).send('Artwork not found');
+    
+    // QR code can only be generated for approved artworks
+    if (art.approval_status !== 'approved') {
+      return res.status(403).json({ 
+        error: 'QR code can only be generated for approved artworks',
+        status: art.approval_status 
+      });
+    }
+    
     const url = purchaseUrlForArtwork(id);
     const width = Number(req.query.w) && Number(req.query.w) > 0 ? Number(req.query.w) : 512;
     const margin = Number(req.query.margin) && Number(req.query.margin) >= 0 ? Number(req.query.margin) : 1;
@@ -603,6 +612,15 @@ app.get('/api/artworks/:id/qrcode.png', async (req, res) => {
   try {
     const art = await getArtwork(id);
     if (!art) return res.status(404).send('Artwork not found');
+    
+    // QR code can only be generated for approved artworks
+    if (art.approval_status !== 'approved') {
+      return res.status(403).json({ 
+        error: 'QR code can only be generated for approved artworks',
+        status: art.approval_status 
+      });
+    }
+    
     const url = purchaseUrlForArtwork(id);
     const width = Number(req.query.w) && Number(req.query.w) > 0 ? Number(req.query.w) : 1024;
     const margin = Number(req.query.margin) && Number(req.query.margin) >= 0 ? Number(req.query.margin) : 1;
@@ -621,6 +639,15 @@ app.get('/api/artworks/:id/qr-poster', async (req, res) => {
   try {
     const art = await getArtwork(id);
     if (!art) return res.status(404).send('Artwork not found');
+    
+    // QR code can only be generated for approved artworks
+    if (art.approval_status !== 'approved') {
+      return res.status(403).json({ 
+        error: 'QR code can only be generated for approved artworks',
+        status: art.approval_status 
+      });
+    }
+    
     const url = purchaseUrlForArtwork(id);
     const dataUrl = await QRCode.toDataURL(url, { type: 'image/png', margin: 1, width: 1024 });
     const html = `<!doctype html>
