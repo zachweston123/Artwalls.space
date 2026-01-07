@@ -12,6 +12,8 @@ import { ApprovedListings } from './components/artist/ApprovedListings';
 import { ArtistSales } from './components/artist/ArtistSales';
 import { ArtistProfile } from './components/artist/ArtistProfile';
 import { ArtistProfileView } from './components/artist/ArtistProfileView';
+import { PasswordSecurity } from './components/artist/PasswordSecurity';
+import { NotificationPreferences } from './components/artist/NotificationPreferences';
 import { ArtistInvites } from './components/artist/ArtistInvites';
 import { VenueDashboard } from './components/venue/VenueDashboard';
 import { VenueWalls } from './components/venue/VenueWalls';
@@ -22,6 +24,8 @@ import { VenueSettings } from './components/venue/VenueSettings';
 import { VenueSettingsWithEmptyState } from './components/venue/VenueSettingsWithEmptyState';
 import { VenueProfile } from './components/venue/VenueProfile';
 import { VenueProfileView } from './components/venue/VenueProfileView';
+import { VenuePasswordSecurity } from './components/venue/VenuePasswordSecurity';
+import { VenueNotificationPreferences } from './components/venue/VenueNotificationPreferences';
 import { VenueWallsPublic } from './components/venue/VenueWallsPublic';
 import { FindArtists } from './components/venue/FindArtists';
 import { FindVenues } from './components/artist/FindVenues';
@@ -369,7 +373,9 @@ export default function App() {
             )}
             {currentPage === 'artist-sales' && <ArtistSales user={currentUser} />}
             {currentPage === 'artist-profile' && <ArtistProfile onNavigate={handleNavigate} />}
-            {currentPage === 'artist-notifications' && <NotificationsList />}
+            {currentPage === 'artist-password-security' && <PasswordSecurity onBack={() => handleNavigate('artist-profile')} />}
+            {currentPage === 'artist-notifications' && <NotificationPreferences onBack={() => handleNavigate('artist-profile')} />}
+            {currentPage === 'artist-notifications-legacy' && <NotificationsList />}
           </>
         )}
         
@@ -382,6 +388,8 @@ export default function App() {
             {currentPage === 'venue-sales' && <VenueSales />}
             {currentPage === 'venue-settings' && <VenueSettingsWithEmptyState />}
             {currentPage === 'venue-profile' && <VenueProfile onNavigate={handleNavigate} />}
+            {currentPage === 'venue-password-security' && <VenuePasswordSecurity onBack={() => handleNavigate('venue-profile')} />}
+            {currentPage === 'venue-notifications' && <VenueNotificationPreferences onBack={() => handleNavigate('venue-profile')} />}
             {currentPage === 'venue-find-artists' && (
               <FindArtists
                 onViewProfile={(artistId) => {
@@ -398,7 +406,6 @@ export default function App() {
                 onInviteToApply={() => {/* TODO */}}
               />
             )}
-            {currentPage === 'venue-notifications' && <NotificationsList />}
           </>
         )}
         

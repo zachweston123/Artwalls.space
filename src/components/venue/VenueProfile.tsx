@@ -252,11 +252,11 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
           <div className="border-t border-[var(--border)] p-6">
             <h3 className="text-lg mb-4">Account Settings</h3>
             <div className="space-y-3">
-              <button className="w-full text-left px-4 py-3 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] rounded-lg transition-colors border border-[var(--border)]">
+              <button onClick={() => onNavigate('venue-password-security')} className="w-full text-left px-4 py-3 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] rounded-lg transition-colors border border-[var(--border)]">
                 <p className="text-[var(--text)] mb-1">Password & Security</p>
                 <p className="text-sm text-[var(--text-muted)]">Change your password and security settings</p>
               </button>
-              <button className="w-full text-left px-4 py-3 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] rounded-lg transition-colors border border-[var(--border)]">
+              <button onClick={() => onNavigate('venue-notifications')} className="w-full text-left px-4 py-3 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] rounded-lg transition-colors border border-[var(--border)]">
                 <p className="text-[var(--text)] mb-1">Notification Preferences</p>
                 <p className="text-sm text-[var(--text-muted)]">Manage email and push notifications</p>
               </button>

@@ -390,11 +390,11 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
           <div className="border-t border-[var(--border)] p-6">
             <h3 className="text-lg mb-4 text-[var(--text)]">Account Settings</h3>
             <div className="space-y-3">
-              <button className="w-full text-left px-4 py-3 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] border border-[var(--border)] rounded-lg transition-colors">
+              <button onClick={() => onNavigate('artist-password-security')} className="w-full text-left px-4 py-3 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] border border-[var(--border)] rounded-lg transition-colors">
                 <p className="text-[var(--text)] mb-1">Password & Security</p>
                 <p className="text-sm text-[var(--text-muted)]">Change your password and security settings</p>
               </button>
-              <button className="w-full text-left px-4 py-3 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] border border-[var(--border)] rounded-lg transition-colors">
+              <button onClick={() => onNavigate('artist-notifications')} className="w-full text-left px-4 py-3 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] border border-[var(--border)] rounded-lg transition-colors">
                 <p className="text-[var(--text)] mb-1">Notification Preferences</p>
                 <p className="text-sm text-[var(--text-muted)]">Manage email and push notifications</p>
               </button>
