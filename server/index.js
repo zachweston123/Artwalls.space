@@ -1,6 +1,5 @@
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import Stripe from 'stripe';
 import crypto from 'node:crypto';
 import QRCode from 'qrcode';
@@ -41,8 +40,6 @@ import {
   markNotificationRead,
 } from './db.js';
 import { sendIcsEmail } from './mail.js';
-
-dotenv.config();
 
 const app = express();
 

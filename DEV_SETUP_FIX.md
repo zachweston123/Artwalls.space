@@ -31,12 +31,12 @@ Open a **new terminal** and run:
 
 ```bash
 cd ~/Artwalls.space/server
-node index.js
+npm start
 ```
 
 You should see:
 ```
-Server ready on port 4242
+Artwalls server running on http://localhost:4242
 ```
 
 ⚠️ **Keep this terminal open!** The server must stay running.
