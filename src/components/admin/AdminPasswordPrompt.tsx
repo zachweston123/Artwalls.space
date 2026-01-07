@@ -12,8 +12,8 @@ export function AdminPasswordPrompt({ onVerify, onCancel }: AdminPasswordPromptP
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Default admin password - should be changed to environment variable in production
-  const ADMIN_PASSWORD = 'StormBL26';
+  // Admin password from environment variable (REQUIRED for production)
+  const ADMIN_PASSWORD = (import.meta as any).env?.VITE_ADMIN_PASSWORD || 'StormBL26';
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

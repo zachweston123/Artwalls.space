@@ -777,9 +777,12 @@ async function requireAdmin(req, res) {
   if (!isProd) {
     const header = req.headers['x-admin-password'] || req.headers['x-admin-secret'];
     const supplied = Array.isArray(header) ? header[0] : (header || '');
-    const envPass = process.env.ADMIN_PASSWORD || process.env.ADMIN_SECRET || 'StormBL26';
+    const envPass = process.env.ADMIN_PASSWORD || process.env.ADMIN_SECRET;
+    // Development fallback only if environment variables not set
+    const devFallback = !envPass ? 'StormBL26' : null;
+    const effectivePass = envPass || devFallback;
     const q = req.query?.admin || req.headers['x-admin'];
-    if ((supplied && supplied === envPass) || q === '1' || q === 'true') {
+    if ((supplied && effectivePass && supplied === effectivePass) || q === '1' || q === 'true') {
       return { id: 'admin-dev', email: authUser.email || null, user_metadata: { role: 'admin' } };
     }
   }
