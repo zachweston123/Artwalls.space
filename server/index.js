@@ -724,11 +724,20 @@ app.post('/api/stripe/webhook/forwarded', async (req, res) => {
 // -----------------------------
 async function getSupabaseUserFromRequest(req) {
   const authHeader = req.headers?.authorization;
-  if (!authHeader || typeof authHeader !== 'string') return null;
+  if (!authHeader || typeof authHeader !== 'string') {
+    console.log('[getSupabaseUserFromRequest] No authorization header');
+    return null;
+  }
   const [scheme, token] = authHeader.split(' ');
-  if (!scheme || scheme.toLowerCase() !== 'bearer' || !token) return null;
+  if (!scheme || scheme.toLowerCase() !== 'bearer' || !token) {
+    console.log('[getSupabaseUserFromRequest] Invalid bearer scheme or token');
+    return null;
+  }
   const { data, error } = await supabaseAdmin.auth.getUser(token);
-  if (error) return null;
+  if (error) {
+    console.error('[getSupabaseUserFromRequest] Token verification failed:', error.message);
+    return null;
+  }
   return data.user || null;
 }
 
@@ -860,8 +869,14 @@ async function requireVenue(req, res) {
 
   // Preferred path: Supabase JWT
   if (authUser) {
+    console.log('[requireVenue] Auth user found:', {
+      id: authUser.id,
+      email: authUser.email,
+      role: authRole,
+    });
     if (authRole !== 'venue') {
-      res.status(403).json({ error: 'Forbidden: venue role required' });
+      console.error('[requireVenue] User is not a venue. Role:', authRole);
+      res.status(403).json({ error: `Forbidden: venue role required (got "${authRole}")` });
       return null;
     }
     const venueId = authUser.id;
@@ -871,6 +886,7 @@ async function requireVenue(req, res) {
       const name = authUser.user_metadata?.name || 'Venue';
       const type = authUser.user_metadata?.type || null;
       const defaultVenueFeeBps = 1000;
+      console.log('[requireVenue] Creating new venue for:', venueId);
       return await upsertVenue({ id: venueId, email, name, type, defaultVenueFeeBps });
     }
     return venue;
@@ -879,6 +895,7 @@ async function requireVenue(req, res) {
   // Dev-only fallback: x-venue-id / venueId
   const venueId = req.body?.venueId || req.query?.venueId || req.headers['x-venue-id'];
   if (!venueId || typeof venueId !== 'string') {
+    console.error('[requireVenue] Missing Authorization bearer token or venue fallback');
     res.status(401).json({ error: 'Missing Authorization bearer token' });
     return null;
   }
@@ -1692,20 +1709,30 @@ app.post('/api/venues/:id/wallspaces', async (req, res) => {
 
     const { name, width, height, description, photos } = req.body || {};
     if (!name || typeof name !== 'string') return res.status(400).json({ error: 'Missing wallspace name' });
+    
+    // Validate width and height are numbers and positive
+    const widthNum = Number(width);
+    const heightNum = Number(height);
+    if (!Number.isFinite(widthNum) || widthNum <= 0) {
+      return res.status(400).json({ error: 'Width must be a positive number' });
+    }
+    if (!Number.isFinite(heightNum) || heightNum <= 0) {
+      return res.status(400).json({ error: 'Height must be a positive number' });
+    }
 
     const item = await createWallspace({
       id: crypto.randomUUID(),
       venueId: venue.id,
       name,
-      width,
-      height,
+      width: widthNum,
+      height: heightNum,
       description,
       available: true,
       photos,
     });
     return res.json(item);
   } catch (err) {
-    console.error(err);
+    console.error('[wallspaces POST error]', err);
     return res.status(500).json({ error: err?.message || 'Create wallspace error' });
   }
 });

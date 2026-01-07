@@ -594,6 +594,13 @@ export default {
         updated_at: new Date().toISOString(),
       } as any;
       if (!insert.name) return json({ error: 'Name is required' }, { status: 400 });
+      // Validate width and height are positive if provided
+      if (insert.width_inches !== undefined && (!Number.isFinite(insert.width_inches) || insert.width_inches <= 0)) {
+        return json({ error: 'Width must be a positive number' }, { status: 400 });
+      }
+      if (insert.height_inches !== undefined && (!Number.isFinite(insert.height_inches) || insert.height_inches <= 0)) {
+        return json({ error: 'Height must be a positive number' }, { status: 400 });
+      }
       const { data, error } = await supabaseAdmin.from('wallspaces').insert(insert).select('*').single();
       if (error) return json({ error: error.message }, { status: 500 });
       const created = {

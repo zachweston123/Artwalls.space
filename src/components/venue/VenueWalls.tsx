@@ -75,6 +75,15 @@ export function VenueWalls() {
       const venueId = user?.id;
       if (!venueId) throw new Error('Missing venue session');
       
+      console.log('Creating wallspace with:', {
+        name: newWall.name.trim(),
+        width: widthNum,
+        height: heightNum,
+        description: newWall.description.trim(),
+        photos: newWall.photos,
+        venueId
+      });
+      
       const created = await apiPost<WallSpace>(`/api/venues/${venueId}/wallspaces`, {
         name: newWall.name.trim(),
         width: widthNum,
@@ -83,13 +92,16 @@ export function VenueWalls() {
         photos: newWall.photos,
       });
       
+      console.log('Wall space created:', created);
+      
       setWallSpaces([created, ...wallSpaces]);
       setNewWall({ name: '', width: '', height: '', description: '', photos: [] });
       setShowAddForm(false);
       setSubmitError(null);
     } catch (err: any) {
       console.error('Add wall space error:', err);
-      setSubmitError(err?.message || 'Failed to add wall space. Please try again.');
+      const errorMsg = err?.message || 'Failed to add wall space. Please try again.';
+      setSubmitError(errorMsg);
     } finally {
       setSubmitting(false);
     }

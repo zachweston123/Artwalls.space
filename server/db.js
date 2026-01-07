@@ -411,7 +411,7 @@ export async function createWallspace({ id, venueId, name, width, height, descri
     height_inches: height === undefined ? null : toIntOrNull(height),
     description: description ?? null,
     available: available === undefined ? true : Boolean(available),
-    photos: photos ?? null,
+    photos: Array.isArray(photos) ? photos : (photos ? [photos] : null),
     created_at: nowIso(),
     updated_at: nowIso(),
   };
