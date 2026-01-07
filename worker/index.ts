@@ -18,7 +18,16 @@ export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     const method = request.method.toUpperCase();
-    const allowOrigin = env.PAGES_ORIGIN || 'https://artwalls.space';
+    
+    // Determine allowed origin - accept requests from the frontend origin
+    const requestOrigin = request.headers.get('origin') || '';
+    const pagesOrigin = env.PAGES_ORIGIN || 'https://artwalls.space';
+    
+    // Allow CORS for the configured pages origin or localhost in development
+    let allowOrigin = pagesOrigin;
+    if (requestOrigin && (requestOrigin === pagesOrigin || requestOrigin.startsWith('http://localhost') || requestOrigin.startsWith('http://127.0.0.1'))) {
+      allowOrigin = requestOrigin;
+    }
 
     // Preflight CORS
     if (method === 'OPTIONS') {
