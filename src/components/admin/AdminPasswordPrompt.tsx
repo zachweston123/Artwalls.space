@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
-import { apiPost } from '../../lib/api';
 
 interface AdminPasswordPromptProps {
   onVerify: () => void;
@@ -19,7 +18,19 @@ export function AdminPasswordPrompt({ onVerify, onCancel }: AdminPasswordPromptP
     setIsLoading(true);
 
     try {
-      const response = await apiPost<{ ok: boolean }>('/api/admin/verify', { password });
+      // Direct fetch without extra headers to avoid CORS issues
+      const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || 'https://api.artwalls.space';
+      const res = await fetch(`${API_BASE}/api/admin/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+      
+      if (!res.ok) {
+        throw new Error(`Request failed: ${res.status}`);
+      }
+      
+      const response = (await res.json()) as { ok: boolean };
       
       if (response.ok) {
         try {
@@ -48,83 +59,62 @@ export function AdminPasswordPrompt({ onVerify, onCancel }: AdminPasswordPromptP
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-6 z-50">
-      <div className="bg-[var(--surface-2)] rounded-xl shadow-2xl max-w-md w-full border border-[var(--border)]">
-        {/* Header */}
-        <div className="p-8 border-b border-[var(--border)]">
-          <div className="w-12 h-12 bg-[var(--surface-3)] border border-[var(--border)] rounded-full flex items-center justify-center mb-4">
-            <Lock className="w-6 h-6 text-[var(--text)]" />
-          </div>
-          <h1 className="text-2xl font-bold text-[var(--text)]">Admin Access</h1>
-          <p className="text-[var(--text-muted)] mt-2">
-            Enter your admin password to proceed
-          </p>
+      <div className="bg-white rounded-lg shadow-xl max-w-sm w-full p-8">
+        <div className="flex items-center gap-3 mb-6">
+          <Lock className="w-6 h-6 text-blue-600" />
+          <h2 className="text-2xl font-bold text-gray-900">Admin Access</h2>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-8">
-          {/* Error Message */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="relative">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Enter admin password"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+              disabled={isLoading}
+              autoComplete="off"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              disabled={isLoading}
+            >
+              {showPassword ? (
+                <EyeOff className="w-4 h-4" />
+              ) : (
+                <Eye className="w-4 h-4" />
+              )}
+            </button>
+          </div>
+
           {error && (
-            <div className="mb-6 p-4 bg-[var(--surface-3)] border border-[var(--border)] rounded-lg flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-[var(--danger)] flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-[var(--danger)]">{error}</p>
+            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+              <p className="text-sm text-red-700">{error}</p>
             </div>
           )}
 
-          {/* Password Input */}
-          <div className="mb-6">
-            <label htmlFor="password" className="block text-sm font-medium text-[var(--text-muted)] mb-2">
-              Admin Password
-            </label>
-            <div className="relative">
-              <input
-                id="password"
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Enter admin password"
-                autoFocus
-                disabled={isLoading}
-                className="w-full px-4 py-3 pr-12 border border-[var(--border)] rounded-lg bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)] disabled:opacity-50"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                disabled={isLoading}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text)] transition-colors disabled:opacity-50"
-              >
-                {showPassword ? (
-                  <EyeOff className="w-5 h-5" />
-                ) : (
-                  <Eye className="w-5 h-5" />
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Buttons */}
-          <div className="flex gap-3">
+          <div className="flex gap-3 pt-4">
             <button
               type="button"
               onClick={onCancel}
+              className="flex-1 px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium disabled:opacity-50"
               disabled={isLoading}
-              className="flex-1 px-4 py-3 border border-[var(--border)] rounded-lg text-[var(--text)] bg-transparent hover:bg-[var(--surface-3)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={isLoading || !password}
-              className="flex-1 px-4 py-3 bg-[var(--blue)] text-[var(--on-blue)] rounded-lg hover:bg-[var(--blue-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50"
+              disabled={isLoading}
             >
               {isLoading ? 'Verifying...' : 'Verify'}
             </button>
           </div>
-
-          {/* Helper text */}
-          <p className="text-xs text-[var(--text-muted)] mt-4 text-center">
-            Press ESC to cancel
-          </p>
         </form>
       </div>
     </div>
