@@ -10,6 +10,8 @@ build/
 .env
 .env.local
 .env.*.local
+server/.env
+server/.env.local
 
 # IDE
 .vscode/
@@ -31,3 +33,10 @@ yarn-error.log*
 # Testing
 coverage/
 .nyc_output/
+
+# Local data files
+server/store.json
+
+# Wrangler cache
+.wrangler/
+node_modules/.cache/

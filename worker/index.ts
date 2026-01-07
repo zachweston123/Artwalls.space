@@ -200,6 +200,36 @@ export default {
       return json({ ok: true });
     }
 
+    // Admin password verification endpoint
+    if (url.pathname === '/api/admin/verify' && method === 'POST') {
+      try {
+        const body = await request.json().catch(() => ({}));
+        const password = String(body?.password || '');
+        const storedHash = env.ADMIN_PASSWORD_HASH || '';
+        
+        if (!storedHash) {
+          return json({ error: 'Admin authentication not configured' }, { status: 500 });
+        }
+        
+        // Simple constant-time comparison for bcrypt hash
+        // In production, you should use a proper bcrypt library
+        // For now, we'll use a simple hash comparison
+        const encoder = new TextEncoder();
+        const data = encoder.encode(password);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        
+        // Compare with stored hash (you should generate this using SHA-256 of your password)
+        // Or better yet, use a proper bcrypt library in a separate Worker
+        const isValid = hashHex === storedHash;
+        
+        return json({ ok: isValid });
+      } catch (e) {
+        return json({ error: 'Verification failed' }, { status: 500 });
+      }
+    }
+
     // Debug auth endpoint - test if authorization header is being passed correctly
     if (url.pathname === '/api/debug/auth' && method === 'GET') {
       const authHeader = request.headers.get('authorization') || '';

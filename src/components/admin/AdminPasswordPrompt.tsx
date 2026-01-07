@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { apiPost } from '../../lib/api';
 
 interface AdminPasswordPromptProps {
   onVerify: () => void;
@@ -12,17 +13,15 @@ export function AdminPasswordPrompt({ onVerify, onCancel }: AdminPasswordPromptP
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Admin password from environment variable (REQUIRED for production)
-  const ADMIN_PASSWORD = (import.meta as any).env?.VITE_ADMIN_PASSWORD || 'StormBL26';
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
 
-    // Simulate brief verification delay
-    setTimeout(() => {
-      if (password === ADMIN_PASSWORD) {
+    try {
+      const response = await apiPost<{ ok: boolean }>('/api/admin/verify', { password });
+      
+      if (response.ok) {
         try {
           localStorage.setItem('adminPassword', password);
         } catch {}
@@ -34,7 +33,11 @@ export function AdminPasswordPrompt({ onVerify, onCancel }: AdminPasswordPromptP
         setPassword('');
         setIsLoading(false);
       }
-    }, 500);
+    } catch (err) {
+      setError('Verification failed. Please try again.');
+      setPassword('');
+      setIsLoading(false);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
