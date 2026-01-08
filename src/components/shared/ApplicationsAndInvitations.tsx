@@ -12,6 +12,7 @@ import { supabase } from '../../lib/supabase';
 interface ApplicationsAndInvitationsProps {
   userRole: 'artist' | 'venue';
   onBack: () => void;
+  defaultTab?: 'applications' | 'approved';
 }
 
 interface Artwork {
@@ -25,11 +26,11 @@ interface Artwork {
   created_at: string;
 }
 
-export function ApplicationsAndInvitations({ userRole, onBack }: ApplicationsAndInvitationsProps) {
+export function ApplicationsAndInvitations({ userRole, onBack, defaultTab = 'applications' }: ApplicationsAndInvitationsProps) {
   const [applications, setApplications] = useState<Application[]>(mockApplications);
   const [approvedArtworks, setApprovedArtworks] = useState<Artwork[]>([]);
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
-  const [activeTab, setActiveTab] = useState<'applications' | 'approved'>('applications');
+  const [activeTab, setActiveTab] = useState<'applications' | 'approved'>(defaultTab);
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [showSchedulePicker, setShowSchedulePicker] = useState(false);
   const [showApprovalModal, setShowApprovalModal] = useState(false);

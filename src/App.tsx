@@ -337,7 +337,7 @@ export default function App() {
           <>
             {currentPage === 'artist-dashboard' && <ArtistDashboard onNavigate={handleNavigate} user={currentUser} />}
             {currentPage === 'artist-artworks' && <ArtistArtworks user={currentUser} />}
-            {currentPage === 'artist-approved' && <ApplicationsAndInvitations userRole="artist" onBack={() => handleNavigate('artist-dashboard')} />}
+            {currentPage === 'artist-approved' && <ApplicationsAndInvitations userRole="artist" defaultTab="approved" onBack={() => handleNavigate('artist-dashboard')} />}
             {currentPage === 'artist-venues' && (
               <FindVenues 
                 onViewVenue={(venueId) => {
