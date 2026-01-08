@@ -75,17 +75,36 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
         throw new Error('Only JPG, PNG, and WebP images are allowed');
       }
       
-      // Validate file size (10MB for cover)
-      if (file.size > 10 * 1024 * 1024) {
-        throw new Error('File size must be less than 10MB');
-      }
-      
-      // Compress image for venue cover
+      // Compress image for venue cover (with 10MB limit)
+      const MAX_SIZE = 10 * 1024 * 1024;
       let fileToUpload = file;
+      
       try {
-        fileToUpload = await compressImage(file, 1200, 800, 0.85);
+        const { file: compressedFile, sizeReduction } = await compressImage(
+          file, 
+          1200, 
+          800, 
+          0.85,
+          MAX_SIZE
+        );
+        fileToUpload = compressedFile;
+        
+        // Check if compressed file is still too large
+        if (fileToUpload.size > MAX_SIZE) {
+          throw new Error(
+            `File size must be less than 10MB (compressed: ${(fileToUpload.size / (1024 * 1024)).toFixed(1)}MB)`
+          );
+        }
       } catch (compressErr) {
-        console.warn('Image compression failed, uploading original:', compressErr);
+        const err = compressErr as any;
+        if (err?.message?.includes('must be less than')) {
+          throw compressErr;
+        }
+        console.warn('Image compression failed, will try original:', compressErr);
+        // Still try with original if compression fails
+        if (file.size > MAX_SIZE) {
+          throw new Error('File size must be less than 10MB even after compression');
+        }
       }
       
       const { data } = await supabase.auth.getUser();

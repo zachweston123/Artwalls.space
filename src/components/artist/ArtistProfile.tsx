@@ -104,18 +104,36 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
         throw new Error('Only JPG, PNG, and WebP images are allowed');
       }
       
-      // Validate file size (5MB before compression)
-      if (file.size > 5 * 1024 * 1024) {
-        throw new Error('File size must be less than 5MB');
-      }
-      
-      // Compress image
+      // Compress image for artist profile (with 5MB limit)
+      const MAX_SIZE = 5 * 1024 * 1024;
       let fileToUpload = file;
+      
       try {
-        fileToUpload = await compressImage(file, 500, 500, 0.8);
+        const { file: compressedFile, sizeReduction } = await compressImage(
+          file, 
+          500, 
+          500, 
+          0.8,
+          MAX_SIZE
+        );
+        fileToUpload = compressedFile;
+        
+        // Check if compressed file is still too large
+        if (fileToUpload.size > MAX_SIZE) {
+          throw new Error(
+            `File size must be less than 5MB (compressed: ${(fileToUpload.size / (1024 * 1024)).toFixed(1)}MB)`
+          );
+        }
       } catch (compressErr) {
-        // If compression fails, still try to upload original
-        console.warn('Image compression failed, uploading original:', compressErr);
+        const err = compressErr as any;
+        if (err?.message?.includes('must be less than')) {
+          throw compressErr;
+        }
+        console.warn('Image compression failed, will try original:', compressErr);
+        // Still try with original if compression fails
+        if (file.size > MAX_SIZE) {
+          throw new Error('File size must be less than 5MB even after compression');
+        }
       }
       
       const { data } = await supabase.auth.getUser();
