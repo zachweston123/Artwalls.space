@@ -7,7 +7,7 @@ import { Login } from './components/Login';
 import { ArtistDashboard } from './components/artist/ArtistDashboard';
 import { ArtistArtworks } from './components/artist/ArtistArtworks';
 import { ArtistVenues } from './components/artist/ArtistVenues';
-import { ApprovedListings } from './components/artist/ApprovedListings';
+
 import { ArtistSales } from './components/artist/ArtistSales';
 import { ArtistProfile } from './components/artist/ArtistProfile';
 import { ArtistProfileView } from './components/artist/ArtistProfileView';
@@ -337,7 +337,7 @@ export default function App() {
           <>
             {currentPage === 'artist-dashboard' && <ArtistDashboard onNavigate={handleNavigate} user={currentUser} />}
             {currentPage === 'artist-artworks' && <ArtistArtworks user={currentUser} />}
-            {currentPage === 'artist-approved' && <ApprovedListings />}
+            {currentPage === 'artist-approved' && <ApplicationsAndInvitations userRole="artist" onBack={() => handleNavigate('artist-dashboard')} />}
             {currentPage === 'artist-venues' && (
               <FindVenues 
                 onViewVenue={(venueId) => {

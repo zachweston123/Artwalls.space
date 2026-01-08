@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { CheckCircle, XCircle, Clock, Calendar, MapPin, Check, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { CheckCircle, XCircle, Clock, Calendar, MapPin, Check, X, QrCode, Download, Eye, EyeOff, Copy } from 'lucide-react';
 import { mockApplications } from '../../data/mockData';
 import type { Application } from '../../data/mockData';
 import { TimeSlotPicker } from '../scheduling/TimeSlotPicker';
@@ -7,20 +7,35 @@ import { InstallRules } from '../scheduling/InstallRules';
 import { DurationBadge } from '../scheduling/DisplayDurationSelector';
 import { DisplayDurationSelector } from '../scheduling/DisplayDurationSelector';
 import { createVenueBooking } from '../../lib/api';
+import { supabase } from '../../lib/supabase';
 
 interface ApplicationsAndInvitationsProps {
   userRole: 'artist' | 'venue';
   onBack: () => void;
 }
 
+interface Artwork {
+  id: string;
+  title: string;
+  image_url: string;
+  approval_status: 'approved';
+  venue_id: string;
+  venue_name: string;
+  install_time_option?: 'quick' | 'standard' | 'flexible';
+  created_at: string;
+}
+
 export function ApplicationsAndInvitations({ userRole, onBack }: ApplicationsAndInvitationsProps) {
   const [applications, setApplications] = useState<Application[]>(mockApplications);
+  const [approvedArtworks, setApprovedArtworks] = useState<Artwork[]>([]);
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
-  const [view, setView] = useState<'list' | 'schedule'>('list');
+  const [activeTab, setActiveTab] = useState<'applications' | 'approved'>('applications');
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [showSchedulePicker, setShowSchedulePicker] = useState(false);
   const [showApprovalModal, setShowApprovalModal] = useState(false);
   const [scheduledInstalls, setScheduledInstalls] = useState<{ [key: string]: { label: string; bookingId: string; links?: { ics: string; google: string } } }>({});
+  const [qrStates, setQrStates] = useState<{ [key: string]: boolean }>({});
+  const [copyStates, setCopyStates] = useState<{ [key: string]: boolean }>({});
   const [approvalData, setApprovalData] = useState<{
     wallspace: string;
     duration: 30 | 90 | 180;
@@ -32,6 +47,86 @@ export function ApplicationsAndInvitations({ userRole, onBack }: ApplicationsAnd
     startDate: new Date(),
     installTimeOption: 'standard',
   });
+
+  // Load approved artworks for artist
+  useEffect(() => {
+    if (userRole === 'artist') {
+      fetchApprovedArtworks();
+    }
+  }, [userRole]);
+
+  const fetchApprovedArtworks = async () => {
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user?.id) return;
+
+      const { data, error } = await supabase
+        .from('artworks')
+        .select(`
+          id,
+          title,
+          image_url,
+          approval_status,
+          venue_id,
+          install_time_option,
+          created_at,
+          venues(name)
+        `)
+        .eq('artist_id', user.user.id)
+        .eq('approval_status', 'approved')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const formatted = (data || []).map((item: any) => ({
+        ...item,
+        venue_name: item.venues?.name || 'Unknown Venue',
+      }));
+
+      setApprovedArtworks(formatted);
+    } catch (error) {
+      console.error('Failed to fetch approved artworks:', error);
+    }
+  };
+
+  const toggleQrVisibility = (id: string) => {
+    setQrStates(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  };
+
+  const copyQrUrl = (id: string) => {
+    const qrUrl = `${window.location.origin}/api/artworks/${id}/qrcode.svg`;
+    navigator.clipboard.writeText(qrUrl);
+    setCopyStates(prev => ({ ...prev, [id]: true }));
+    setTimeout(() => {
+      setCopyStates(prev => ({ ...prev, [id]: false }));
+    }, 2000);
+  };
+
+  const downloadQrCode = async (id: string) => {
+    try {
+      const response = await fetch(`/api/artworks/${id}/qrcode.png`);
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(error.error || `HTTP ${response.status}`);
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `qr-code-${id}.png`;
+      document.body.appendChild(link);
+      link.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Failed to download QR code:', error);
+      alert(`Failed to download QR code: ${error instanceof Error ? error.message : 'Please try again.'}`);
+    }
+  };
 
   const filteredApplications = applications.filter(
     app => filter === 'all' || app.status === filter
@@ -158,122 +253,250 @@ export function ApplicationsAndInvitations({ userRole, onBack }: ApplicationsAnd
         // ========== ARTIST VIEW: My Applications ==========
         <>
           <div className="mb-8">
-            <h1 className="text-3xl mb-2">My Applications & Invitations</h1>
-            <p className="text-[var(--text-muted)]">
-              {pendingCount} pending • {approvedCount} approved
-            </p>
+            <h1 className="text-3xl mb-4">My Applications</h1>
+            
+            {/* Tab Navigation */}
+            <div className="flex gap-2 border-b border-[var(--border)]">
+              <button
+                onClick={() => setActiveTab('applications')}
+                className={`px-4 py-3 font-medium transition-colors ${
+                  activeTab === 'applications'
+                    ? 'text-[var(--green)] border-b-2 border-[var(--green)]'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+                }`}
+              >
+                Applications ({pendingCount + approvedCount})
+              </button>
+              <button
+                onClick={() => setActiveTab('approved')}
+                className={`px-4 py-3 font-medium transition-colors ${
+                  activeTab === 'approved'
+                    ? 'text-[var(--green)] border-b-2 border-[var(--green)]'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+                }`}
+              >
+                Approved & QR ({approvedArtworks.length})
+              </button>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {applications.map((application) => (
-              <div
-                key={application.id}
-                className="bg-[var(--surface-1)] rounded-xl border border-[var(--border)] overflow-hidden hover:shadow-lg transition-shadow"
-              >
-                <div className="h-48 bg-[var(--surface-2)] overflow-hidden">
-                  <img
-                    src={application.artworkImage}
-                    alt={application.artworkTitle}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <h3 className="text-lg mb-1 text-[var(--text)]">{application.artworkTitle}</h3>
-                      <p className="text-sm text-[var(--text-muted)]">{application.venueName}</p>
+          {activeTab === 'applications' && (
+            <>
+              <p className="text-[var(--text-muted)] mb-6">
+                {pendingCount} pending • {approvedCount} approved
+              </p>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {filteredApplications.map((application) => (
+                  <div
+                    key={application.id}
+                    className="bg-[var(--surface-1)] rounded-xl border border-[var(--border)] overflow-hidden hover:shadow-lg transition-shadow"
+                  >
+                    <div className="h-48 bg-[var(--surface-2)] overflow-hidden">
+                      <img
+                        src={application.artworkImage}
+                        alt={application.artworkTitle}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
-                    {getStatusBadge(application.status)}
-                  </div>
-
-                  <div className="flex items-center gap-2 text-sm text-[var(--text-muted)] mb-4">
-                    <Calendar className="w-4 h-4" />
-                    Applied {new Date(application.appliedDate).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                    })}
-                  </div>
-
-                  {/* Approved - Schedule Install Flow */}
-                  {application.status === 'approved' && (
-                    <div>
-                      {(application as any).approvedDuration && (
-                        <div className="mb-4 p-4 bg-[var(--green-muted)] rounded-lg border border-[var(--border)]">
-                          <div className="flex flex-wrap items-center gap-3 mb-2">
-                            <span className="text-sm text-[var(--text)]">Display term:</span>
-                            <DurationBadge duration={(application as any).approvedDuration} size="md" />
-                          </div>
-                          <p className="text-xs text-[var(--text)]">
-                            You'll rotate or pick up the artwork during the venue's weekly window after the end date.
-                          </p>
-                        </div>
-                      )}
-
-                      {!scheduledInstalls[application.id] ? (
-                        <div className="bg-[var(--green-muted)] rounded-lg p-4 mb-4 border border-[var(--border)]">
-                          <div className="flex items-start gap-3 mb-3">
-                            <CheckCircle className="w-5 h-5 text-[var(--green)] flex-shrink-0 mt-0.5" />
-                            <div>
-                              <h4 className="text-sm text-[var(--text)] mb-1">Application Approved!</h4>
-                              <p className="text-xs text-[var(--text)]">Use the picker to see available times.</p>
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => handleScheduleInstall(application)}
-                            className="w-full px-4 py-2 bg-[var(--blue)] text-[var(--on-blue)] rounded-lg hover:bg-[var(--blue-hover)] transition-colors text-sm"
-                          >
-                            Choose an Install Time
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="bg-[var(--surface-2)] rounded-lg p-4 mb-4 border border-[var(--border)]">
-                          <div className="flex items-start gap-3 mb-3">
-                            <Clock className="w-5 h-5 text-[var(--blue)] flex-shrink-0 mt-0.5" />
-                            <div>
-                              <h4 className="text-sm text-[var(--text)] mb-1">Install Scheduled</h4>
-                              <p className="text-[var(--text)]"><strong>{scheduledInstalls[application.id].label}</strong></p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Pending - Awaiting Approval */}
-                  {application.status === 'pending' && (
-                    <div className="bg-[var(--surface-2)] rounded-lg p-4">
-                      <p className="text-sm text-[var(--text-muted)]">
-                        The venue is reviewing your application. You'll be notified when they make a decision.
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Rejected */}
-                  {application.status === 'rejected' && (
-                    <div className="bg-[var(--surface-2)] rounded-lg p-4 border border-[var(--border)]">
-                      <div className="flex items-start gap-3">
-                        <XCircle className="w-5 h-5 text-[var(--danger)] flex-shrink-0 mt-0.5" />
+                    <div className="p-6">
+                      <div className="flex items-start justify-between mb-4">
                         <div>
-                          <h4 className="text-sm text-[var(--text)] mb-1">Application Not Selected</h4>
-                          <p className="text-xs text-[var(--text-muted)]">
-                            The venue chose other artworks for this wall space. You can apply again!
+                          <h3 className="text-lg mb-1 text-[var(--text)]">{application.artworkTitle}</h3>
+                          <p className="text-sm text-[var(--text-muted)]">{application.venueName}</p>
+                        </div>
+                        {getStatusBadge(application.status)}
+                      </div>
+
+                      <div className="flex items-center gap-2 text-sm text-[var(--text-muted)] mb-4">
+                        <Calendar className="w-4 h-4" />
+                        Applied {new Date(application.appliedDate).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })}
+                      </div>
+
+                      {/* Approved - Schedule Install Flow */}
+                      {application.status === 'approved' && (
+                        <div>
+                          {(application as any).approvedDuration && (
+                            <div className="mb-4 p-4 bg-[var(--green-muted)] rounded-lg border border-[var(--border)]">
+                              <div className="flex flex-wrap items-center gap-3 mb-2">
+                                <span className="text-sm text-[var(--text)]">Display term:</span>
+                                <DurationBadge duration={(application as any).approvedDuration} size="md" />
+                              </div>
+                              <p className="text-xs text-[var(--text)]">
+                                You'll rotate or pick up the artwork during the venue's weekly window after the end date.
+                              </p>
+                            </div>
+                          )}
+
+                          {!scheduledInstalls[application.id] ? (
+                            <div className="bg-[var(--green-muted)] rounded-lg p-4 mb-4 border border-[var(--border)]">
+                              <div className="flex items-start gap-3 mb-3">
+                                <CheckCircle className="w-5 h-5 text-[var(--green)] flex-shrink-0 mt-0.5" />
+                                <div>
+                                  <h4 className="text-sm text-[var(--text)] mb-1">Application Approved!</h4>
+                                  <p className="text-xs text-[var(--text)]">Use the picker to see available times.</p>
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => handleScheduleInstall(application)}
+                                className="w-full px-4 py-2 bg-[var(--blue)] text-[var(--on-blue)] rounded-lg hover:bg-[var(--blue-hover)] transition-colors text-sm"
+                              >
+                                Choose an Install Time
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="bg-[var(--surface-2)] rounded-lg p-4 mb-4 border border-[var(--border)]">
+                              <div className="flex items-start gap-3 mb-3">
+                                <Clock className="w-5 h-5 text-[var(--blue)] flex-shrink-0 mt-0.5" />
+                                <div>
+                                  <h4 className="text-sm text-[var(--text)] mb-1">Install Scheduled</h4>
+                                  <p className="text-[var(--text)]"><strong>{scheduledInstalls[application.id].label}</strong></p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Pending - Awaiting Approval */}
+                      {application.status === 'pending' && (
+                        <div className="bg-[var(--surface-2)] rounded-lg p-4">
+                          <p className="text-sm text-[var(--text-muted)]">
+                            The venue is reviewing your application. You'll be notified when they make a decision.
                           </p>
+                        </div>
+                      )}
+
+                      {/* Rejected */}
+                      {application.status === 'rejected' && (
+                        <div className="bg-[var(--surface-2)] rounded-lg p-4 border border-[var(--border)]">
+                          <div className="flex items-start gap-3">
+                            <XCircle className="w-5 h-5 text-[var(--danger)] flex-shrink-0 mt-0.5" />
+                            <div>
+                              <h4 className="text-sm text-[var(--text)] mb-1">Application Not Selected</h4>
+                              <p className="text-xs text-[var(--text-muted)]">
+                                The venue chose other artworks for this wall space. You can apply again!
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {filteredApplications.length === 0 && (
+                <div className="text-center py-12">
+                  <p className="text-[var(--text-muted)]">No applications yet</p>
+                </div>
+              )}
+
+              {/* Time Picker Modal */}
+              {showSchedulePicker && selectedApp && (
+                <TimeSlotPicker
+                  onConfirm={handleTimeConfirm}
+                  onCancel={() => setShowSchedulePicker(false)}
+                />
+              )}
+            </>
+          )}
+
+          {activeTab === 'approved' && (
+            <>
+              {approvedArtworks.length === 0 ? (
+                <div className="text-center py-12">
+                  <QrCode className="w-12 h-12 mx-auto text-[var(--text-muted)] mb-4" />
+                  <p className="text-[var(--text-muted)]">No approved artworks yet</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {approvedArtworks.map((artwork) => (
+                    <div
+                      key={artwork.id}
+                      className="bg-[var(--surface-1)] rounded-xl border border-[var(--border)] overflow-hidden hover:shadow-lg transition-shadow"
+                    >
+                      <div className="h-48 bg-[var(--surface-2)] overflow-hidden">
+                        <img
+                          src={artwork.image_url}
+                          alt={artwork.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="p-6">
+                        <div className="mb-4">
+                          <h3 className="text-lg mb-1 text-[var(--text)]">{artwork.title}</h3>
+                          <p className="text-sm text-[var(--text-muted)]">{artwork.venue_name}</p>
+                        </div>
+
+                        {artwork.install_time_option && (
+                          <div className="mb-4 text-sm">
+                            <span className="text-[var(--text-muted)]">Install option:</span>
+                            <span className="ml-2 px-2 py-1 bg-[var(--surface-2)] rounded text-[var(--text)]">
+                              {artwork.install_time_option === 'quick' ? 'Quick (1-2 hours)' :
+                               artwork.install_time_option === 'standard' ? 'Standard (half day)' :
+                               'Flexible (full day)'}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* QR Code Section */}
+                        <div className="bg-[var(--surface-2)] rounded-lg p-4 border border-[var(--border)]">
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                              <QrCode className="w-5 h-5 text-[var(--text)]" />
+                              <span className="font-medium text-[var(--text)]">QR Code</span>
+                            </div>
+                            <button
+                              onClick={() => toggleQrVisibility(artwork.id)}
+                              className="p-2 hover:bg-[var(--surface-3)] rounded transition-colors"
+                              title={qrStates[artwork.id] ? 'Hide QR' : 'Show QR'}
+                            >
+                              {qrStates[artwork.id] ? (
+                                <EyeOff className="w-4 h-4 text-[var(--text-muted)]" />
+                              ) : (
+                                <Eye className="w-4 h-4 text-[var(--text-muted)]" />
+                              )}
+                            </button>
+                          </div>
+
+                          {qrStates[artwork.id] && (
+                            <div className="mb-4 p-4 bg-white rounded-lg text-center">
+                              <img
+                                src={`/api/artworks/${artwork.id}/qrcode.svg`}
+                                alt="QR Code"
+                                className="w-40 h-40 mx-auto"
+                              />
+                            </div>
+                          )}
+
+                          <div className="flex flex-col gap-2">
+                            <button
+                              onClick={() => copyQrUrl(artwork.id)}
+                              className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-[var(--blue)] text-[var(--on-blue)] rounded hover:bg-[var(--blue-hover)] transition-colors text-sm"
+                            >
+                              <Copy className="w-4 h-4" />
+                              {copyStates[artwork.id] ? 'Copied!' : 'Copy QR URL'}
+                            </button>
+                            <button
+                              onClick={() => downloadQrCode(artwork.id)}
+                              className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-[var(--surface-3)] hover:bg-[var(--surface-2)] rounded transition-colors text-sm text-[var(--text)]"
+                            >
+                              <Download className="w-4 h-4" />
+                              Download QR Code
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  )}
+                  ))}
                 </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Time Picker Modal */}
-          {showSchedulePicker && selectedApp && (
-            <TimeSlotPicker
-              onConfirm={handleTimeConfirm}
-              onCancel={() => setShowSchedulePicker(false)}
-            />
+              )}
+            </>
           )}
         </>
       ) : (
