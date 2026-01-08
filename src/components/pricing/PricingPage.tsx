@@ -23,17 +23,16 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       price: 0,
       period: '/mo',
       icon: Sparkles,
+      takeHome: 65,
+      tagline: 'Perfect for trying Artwalls',
       features: [
         '1 active display included',
         '1 artwork listing',
-        'Up to 1 venue application / month',
-        '15% platform fee on sales',
+        'Basic QR generation',
         'Weekly payouts',
-        'Basic QR label generation',
       ],
       activeDisplays: 1,
       overagePricing: null,
-      platformFee: 15,
       payoutSpeed: 'Weekly',
       protection: 'Optional at $3/artwork/mo',
       protectionCap: '$100 per incident',
@@ -48,17 +47,16 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       price: 9,
       period: '/mo',
       icon: TrendingUp,
+      takeHome: 80,
+      tagline: 'Great for growing artists',
       features: [
         '4 active displays included',
         'Up to 10 artworks',
-        'Up to 3 venue applications / month',
-        '10% platform fee on sales',
-        'Standard payouts',
         'Priority support',
+        'Standard payouts',
       ],
       activeDisplays: 4,
       overagePricing: '$5/mo per additional display',
-      platformFee: 10,
       payoutSpeed: 'Standard',
       protection: 'Optional at $3/artwork/mo',
       protectionCap: '$100 per incident',
@@ -73,17 +71,16 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       price: 19,
       period: '/mo',
       icon: Zap,
+      takeHome: 83,
+      tagline: 'Most popular for active artists',
       features: [
         '10 active displays included',
         'Up to 30 artworks',
-        'Unlimited venue applications',
-        '8% platform fee on sales',
-        'Standard payouts',
+        'Unlimited applications',
         'Priority visibility boost',
       ],
       activeDisplays: 10,
       overagePricing: '$4/mo per additional display',
-      platformFee: 8,
       payoutSpeed: 'Standard',
       protection: 'Optional at $3/artwork/mo',
       protectionCap: '$150 per incident',
@@ -98,17 +95,17 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       price: 39,
       period: '/mo',
       icon: Shield,
+      takeHome: 85,
+      tagline: 'Best for high-volume artists',
       features: [
         'Unlimited active displays',
         'Unlimited artworks',
         'Unlimited applications',
-        '6% platform fee on sales',
-        'Fast payouts (coming soon)',
+        'Free protection plan',
         'Featured artist eligibility',
       ],
       activeDisplays: 'Unlimited',
       overagePricing: null,
-      platformFee: 6,
       payoutSpeed: 'Fast',
       protection: 'Included FREE',
       protectionCap: '$200 per incident',
@@ -146,26 +143,37 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
     });
   }, [maxArtworksForCalculatorUI]);
 
-  // Calculate per-sale earnings for a given plan
-  // Earnings = Sale Value - Platform Fee (subscription/protection handled separately)
-  const calculateEarnings = (saleAmount: number, platformFee: number, subscriptionPrice: number, protectionPlanCost: number = 0) => {
-    const platformFeeAmount = saleAmount * (platformFee / 100);
-    const earnings = saleAmount - platformFeeAmount; // Earnings from service fee only
+  // NEW MODEL: Calculate artist take-home per sale
+  // Artist takes home a percentage of LIST PRICE
+  // Venue always gets 10% of list price
+  // Buyer pays 3% fee on top of list price at checkout
+  // Platform & Processing gets the remainder after Stripe fees
+  const calculateArtistTakeHome = (listPrice: number, takeHomePct: number) => {
+    const artistAmount = listPrice * (takeHomePct / 100);
+    const venueAmount = listPrice * 0.10; // Venue always 10%
+    const buyerFee = listPrice * 0.03; // Buyer fee always 3%
+    const buyerTotal = listPrice + buyerFee; // What buyer pays
+    const platformGross = listPrice - artistAmount - venueAmount; // Platform's gross before Stripe
+    
     return {
-      platformFeeAmount: Math.max(0, platformFeeAmount),
-      subscriptionPrice: subscriptionPrice,
-      protectionPlanCost: protectionPlanCost,
-      earnings: Math.max(0, earnings),
-      earningsPercent: saleAmount > 0 ? ((earnings / saleAmount) * 100) : 0
+      listPrice,
+      artistAmount,
+      artistPct: takeHomePct,
+      venueAmount,
+      venuePct: 10,
+      buyerFee,
+      buyerTotal,
+      buyerFeePct: 3,
+      platformGross,
     };
   };
 
-  const calculateMonthlyNet = (planId: PlanId, perSaleEarnings: number, subscriptionPrice: number, protectionIncluded: boolean) => {
+  const calculateMonthlyNet = (planId: PlanId, takeHomePct: number, subscriptionPrice: number, protectionIncluded: boolean) => {
     const artworkLimit = planArtworkLimits[planId];
     const allowedArtworks = Math.max(0, Math.min(artworksPerMonth, artworkLimit));
     const protectionCostPerArtwork = protectionIncluded ? 0 : 3;
     const monthlyProtectionCost = allowedArtworks * protectionCostPerArtwork;
-    const monthlyGross = allowedArtworks * perSaleEarnings;
+    const monthlyGross = allowedArtworks * (saleValue * (takeHomePct / 100));
     const monthlyNet = Math.max(0, monthlyGross - subscriptionPrice - monthlyProtectionCost);
     return {
       allowedArtworks,
@@ -176,15 +184,15 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
     };
   };
 
-  const freeEarnings = calculateEarnings(saleValue, 15, 0, 3); // Free plan: $3/artwork for protection
-  const starterEarnings = calculateEarnings(saleValue, 10, 9, 3); // Starter plan: $3/artwork for protection
-  const growthEarnings = calculateEarnings(saleValue, 8, 19, 3); // Growth plan: $3/artwork for protection
-  const proEarnings = calculateEarnings(saleValue, 6, 39, 0); // Pro plan: protection included
+  const freeEarnings = calculateArtistTakeHome(saleValue, 65);
+  const starterEarnings = calculateArtistTakeHome(saleValue, 80);
+  const growthEarnings = calculateArtistTakeHome(saleValue, 83);
+  const proEarnings = calculateArtistTakeHome(saleValue, 85);
 
-  const freeMonthly = calculateMonthlyNet('free', freeEarnings.earnings, 0, false);
-  const starterMonthly = calculateMonthlyNet('starter', starterEarnings.earnings, 9, false);
-  const growthMonthly = calculateMonthlyNet('growth', growthEarnings.earnings, 19, false);
-  const proMonthly = calculateMonthlyNet('pro', proEarnings.earnings, 39, true);
+  const freeMonthly = calculateMonthlyNet('free', 65, 0, false);
+  const starterMonthly = calculateMonthlyNet('starter', 80, 9, false);
+  const growthMonthly = calculateMonthlyNet('growth', 83, 19, false);
+  const proMonthly = calculateMonthlyNet('pro', 85, 39, true);
 
   async function startSubscription(tier: PlanId) {
     if (tier === 'free') return;

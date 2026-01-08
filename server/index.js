@@ -914,27 +914,33 @@ function bpsToAmount(amountCents, bps) {
 }
 
 function getPlatformFeeBpsForArtist(artist) {
-  // Fee varies by artist subscription tier. Defaults are sensible but override via env.
+  // NEW MODEL: Convert artist take-home % to basis points representation for legacy code
+  // Takes home: Free=65%, Starter=80%, Growth=83%, Pro=85%
+  // Venue: Always 10%
+  // Platform = 1 - artist% - venue%
+  // 
+  // This function returns basis points for compatibility, but should be deprecated.
+  // Prefer `getArtistTakeHomePct` from plans.js for new code.
+  
   const tier = (artist?.subscriptionTier || 'free').toLowerCase();
-
-  // If subscription isn't active, treat as free.
   const isActive = artist?.subscriptionStatus === 'active';
-  if (!isActive) return Number(process.env.FEE_BPS_FREE || 2000);
-
-  // If we persisted a fee override (e.g., from Stripe price metadata), prefer that.
-  // This lets you match whatever is published on artwalls.space without redeploying.
-  if (Number.isFinite(Number(artist?.platformFeeBps)) && Number(artist.platformFeeBps) >= 0) {
-    return Number(artist.platformFeeBps);
+  
+  // NEW: If subscription is inactive, treat as free tier
+  if (!isActive) {
+    // Free: 65% artist + 10% venue = 75%, so platform gets 25% = 2500 bps
+    return 2500;
   }
 
-  const defaults = {
-    free: Number(process.env.FEE_BPS_FREE || 2000),
-    starter: Number(process.env.FEE_BPS_STARTER || 1500),
-    pro: Number(process.env.FEE_BPS_PRO || 1000),
-    elite: Number(process.env.FEE_BPS_ELITE || 500),
+  // NEW: Mapping of take-home % to basis points
+  // Formula: (1 - takeHome% - 10% venue) * 10000
+  const takehomeToFeeBps = {
+    free: 2500,      // 1 - 0.65 - 0.10 = 0.25 = 2500 bps
+    starter: 1000,   // 1 - 0.80 - 0.10 = 0.10 = 1000 bps
+    growth: 700,     // 1 - 0.83 - 0.10 = 0.07 = 700 bps
+    pro: 500,        // 1 - 0.85 - 0.10 = 0.05 = 500 bps
   };
 
-  return defaults[tier] ?? defaults.free;
+  return takehomeToFeeBps[tier] ?? 2500;
 }
 
 async function syncArtistSubscriptionFromStripe({ artistId, subscriptionId, fallbackTier }) {
