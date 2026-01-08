@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { User, Mail, Phone, Link as LinkIcon, DollarSign, Edit, Save, X, Upload, Loader2, Camera, AlertCircle } from 'lucide-react';
 import { PlanBadge } from '../pricing/PlanBadge';
+import { CitySelect } from '../shared/CitySelect';
 import { supabase } from '../../lib/supabase';
 import { uploadProfilePhoto } from '../../lib/storage';
 import { compressImage, formatFileSize } from '../../lib/imageCompression';
@@ -266,6 +267,21 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
                     )}
                   </div>
                 </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-start gap-3 p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg">
+                    <div className="flex-1">
+                      <label className="block text-sm text-[var(--text-muted)] mb-1">Primary City</label>
+                      <p className="text-[var(--text)]">{cityPrimary || 'Not set'}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg">
+                    <div className="flex-1">
+                      <label className="block text-sm text-[var(--text-muted)] mb-1">Secondary City</label>
+                      <p className="text-[var(--text)]">{citySecondary || 'Not set'}</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             ) : (
               <div className="space-y-4">
@@ -370,13 +386,22 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm text-[var(--text-muted)] mb-1">City</label>
-                    <input value={cityPrimary} onChange={(e) => setCityPrimary(e.target.value)} className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]" placeholder="e.g. Portland" />
-                    <p className="text-xs text-[var(--text-muted)] mt-1">Used to recommend venues in your area.</p>
+                    <CitySelect
+                      label="Primary City"
+                      value={cityPrimary}
+                      onChange={setCityPrimary}
+                      placeholder="Select or search city..."
+                    />
+                    <p className="text-xs text-[var(--text-muted)] mt-1">Used to recommend venues within 50 miles of your city.</p>
                   </div>
                   <div>
-                    <label className="block text-sm text-[var(--text-muted)] mb-1">Secondary City (optional)</label>
-                    <input value={citySecondary} onChange={(e) => setCitySecondary(e.target.value)} className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]" placeholder="e.g. Seattle" />
+                    <CitySelect
+                      label="Secondary City (Optional)"
+                      value={citySecondary}
+                      onChange={setCitySecondary}
+                      placeholder="Select or search city..."
+                    />
+                    <p className="text-xs text-[var(--text-muted)] mt-1">Optional. You can work in a second city too.</p>
                   </div>
                 </div>
                 <div>

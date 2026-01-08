@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { X, Upload, Image as ImageIcon, Loader2, AlertCircle } from 'lucide-react';
 import { LabelChip } from '../LabelChip';
+import { CitySelect } from '../shared/CitySelect';
 import { VENUE_HIGHLIGHTS_GROUPS } from '../../data/highlights';
 import { supabase } from '../../lib/supabase';
 import { uploadProfilePhoto } from '../../lib/storage';
@@ -256,15 +257,13 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
 
           {/* City */}
           <div>
-            <label className="block text-sm text-[var(--text-muted)] mb-2">City</label>
-            <input
-              type="text"
+            <CitySelect
+              label="City"
               value={formData.city || ''}
-              onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-              className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
-              placeholder="e.g. Portland"
+              onChange={(city) => setFormData({ ...formData, city })}
+              placeholder="Select or search city..."
             />
-            <p className="text-xs text-[var(--text-muted)] mt-1">Helps artists find you by location.</p>
+            <p className="text-xs text-[var(--text-muted)] mt-1">Helps artists find you by location. Artists within 50 miles will see your venue.</p>
           </div>
 
           {/* Venue Type */}

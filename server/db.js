@@ -172,12 +172,13 @@ export async function listArtists() {
 }
 
 // --- Venues ---
-export async function upsertVenue({ id, email, name, type, stripeAccountId, defaultVenueFeeBps, suspended, labels }) {
+export async function upsertVenue({ id, email, name, type, stripeAccountId, defaultVenueFeeBps, suspended, labels, city }) {
   const payload = {
     id,
     email: email ?? null,
     name: name ?? null,
     type: type ?? null,
+    city: city ?? null,
     stripe_account_id: stripeAccountId ?? null,
     default_venue_fee_bps: defaultVenueFeeBps === undefined ? null : toIntOrNull(defaultVenueFeeBps),
     labels: labels === undefined ? undefined : (Array.isArray(labels) ? labels : null),

@@ -41,14 +41,30 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
 
   // Mock venue details (used as a UI fallback / enrichment layer)
   const mockVenues: any[] = [];
+  const [artistCities, setArtistCities] = useState<{ primary: string; secondary: string }>({ primary: '', secondary: '' });
 
   useEffect(() => {
     let isMounted = true;
 
     async function loadVenues() {
       try {
+        // Load artist profile to get their cities
+        const me = await apiGet<{ role: string; profile: { city_primary?: string | null; city_secondary?: string | null } }>(
+          '/api/profile/me'
+        );
+        const primary = (me?.profile?.city_primary || '').trim();
+        const secondary = (me?.profile?.city_secondary || '').trim();
+        if (isMounted) setArtistCities({ primary, secondary });
+
+        // Build query params for city-based filtering
+        const params = new URLSearchParams();
+        if (primary) params.append('artistPrimaryCity', primary);
+        if (secondary) params.append('artistSecondaryCity', secondary);
+
+        const path = params.toString() ? `/api/venues?${params.toString()}` : '/api/venues';
+        
         const apiVenues = await apiGet<Array<{ id: string; name?: string | null; email?: string | null; type?: string | null }>>(
-          '/api/venues'
+          path
         );
 
           const merged = (apiVenues || []).map((v) => {

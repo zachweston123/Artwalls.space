@@ -1279,12 +1279,33 @@ app.get('/api/stripe/connect/venue/status', async (req, res) => {
 });
 
 // -----------------------------
-// Venues (simple listing)
+// Venues (simple listing with city-based filtering)
 // -----------------------------
-app.get('/api/venues', async (_req, res) => {
-  // Ensure Auth users are reflected in local table before listing
-  await syncUsersFromSupabaseAuth();
-  return res.json(await listVenues());
+app.get('/api/venues', async (req, res) => {
+  try {
+    // Ensure Auth users are reflected in local table before listing
+    await syncUsersFromSupabaseAuth();
+    
+    const { artistPrimaryCity, artistSecondaryCity } = req.query;
+    let venues = await listVenues();
+    
+    // Filter by artist city if provided (50-mile radius filter)
+    if (artistPrimaryCity || artistSecondaryCity) {
+      const { isVenueNearArtist } = require('./distanceUtils.js');
+      venues = venues.filter(venue => {
+        const artistCities = {
+          primary: artistPrimaryCity,
+          secondary: artistSecondaryCity
+        };
+        return isVenueNearArtist(venue.city, artistCities, 50);
+      });
+    }
+    
+    return res.json(venues);
+  } catch (err) {
+    console.error('[GET /api/venues] Error:', err);
+    return res.status(500).json({ error: err?.message || 'Failed to list venues' });
+  }
 });
 
 app.post('/api/venues', async (req, res) => {
@@ -1299,7 +1320,7 @@ app.post('/api/venues', async (req, res) => {
       }
     }
 
-    const { venueId: bodyVenueId, email, name, defaultVenueFeeBps, type, labels } = req.body || {};
+    const { venueId: bodyVenueId, email, name, defaultVenueFeeBps, type, labels, city } = req.body || {};
     const venueId = authUser?.id || bodyVenueId;
     if (!venueId || typeof venueId !== 'string') return res.status(400).json({ error: 'Missing venueId' });
 
@@ -1310,6 +1331,7 @@ app.post('/api/venues', async (req, res) => {
       type: type || undefined,
       labels: Array.isArray(labels) ? labels : undefined,
       defaultVenueFeeBps,
+      city: city || undefined,
     });
     return res.json(venue);
   } catch (err) {
@@ -1319,12 +1341,33 @@ app.post('/api/venues', async (req, res) => {
 });
 
 // -----------------------------
-// Artists (simple listing)
+// Artists (simple listing with city-based filtering)
 // -----------------------------
-app.get('/api/artists', async (_req, res) => {
-  // Ensure Auth users are reflected in local table before listing
-  await syncUsersFromSupabaseAuth();
-  return res.json(await listArtists());
+app.get('/api/artists', async (req, res) => {
+  try {
+    // Ensure Auth users are reflected in local table before listing
+    await syncUsersFromSupabaseAuth();
+    
+    const { city: venueCity } = req.query;
+    let artists = await listArtists();
+    
+    // Filter by venue city if provided (50-mile radius filter)
+    if (venueCity) {
+      const { isArtistNearVenue } = require('./distanceUtils.js');
+      artists = artists.filter(artist => {
+        const artistCities = {
+          primary: artist.city_primary,
+          secondary: artist.city_secondary
+        };
+        return isArtistNearVenue(artistCities, venueCity, 50);
+      });
+    }
+    
+    return res.json(artists);
+  } catch (err) {
+    console.error('[GET /api/artists] Error:', err);
+    return res.status(500).json({ error: err?.message || 'Failed to list artists' });
+  }
 });
 
 // Fetch a single artist by id
