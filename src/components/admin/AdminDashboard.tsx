@@ -79,7 +79,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
     {
       label: 'Active Displays',
       value: metrics ? String(metrics.totals.activeDisplays) : '-',
-      delta: '89% capacity',
+      delta: metrics && metrics.totals.activeDisplays > 0 ? `${Math.round((metrics.totals.activeDisplays / Math.max(1, metrics.totals.activeDisplays + 50)) * 100)}% utilized` : 'No active displays',
       deltaType: 'neutral' as const,
       icon: Frame,
       iconBg: 'bg-[var(--surface-3)] border border-[var(--border)]',

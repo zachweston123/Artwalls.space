@@ -360,12 +360,35 @@ export default {
       const artistId = url.searchParams.get('artistId');
       if (!artistId) return json({ error: 'Missing artistId' }, { status: 400 });
 
-      const [{ count: totalArtworks }, { count: activeArtworks }, { count: soldArtworks }, { count: availableArtworks }] = await Promise.all([
+      const [{ count: totalArtworks }, { count: activeArtworks }, { count: soldArtworks }, { count: availableArtworks }, { data: artist }, { count: pendingApplicationsCount }] = await Promise.all([
         supabaseAdmin.from('artworks').select('id', { count: 'exact', head: true }).eq('artist_id', artistId),
         supabaseAdmin.from('artworks').select('id', { count: 'exact', head: true }).eq('artist_id', artistId).eq('status', 'active'),
         supabaseAdmin.from('artworks').select('id', { count: 'exact', head: true }).eq('artist_id', artistId).eq('status', 'sold'),
         supabaseAdmin.from('artworks').select('id', { count: 'exact', head: true }).eq('artist_id', artistId).eq('status', 'available'),
-      ]).then((results) => results.map((r: any) => ({ count: r.count || 0 })));
+        supabaseAdmin.from('artists').select('subscription_tier,subscription_status').eq('id', artistId).maybeSingle(),
+        supabaseAdmin.from('invitations').select('id', { count: 'exact', head: true }).eq('artist_id', artistId).eq('status', 'pending'),
+      ]).then((results: any) => results.map((r: any) => r.count !== undefined ? { count: r.count || 0 } : { data: r }));
+
+      // Count active displays (artworks with venue_id assigned and not sold)
+      const { data: displayedArtworks, error: displayErr } = await supabaseAdmin
+        .from('artworks')
+        .select('id', { count: 'exact', head: true })
+        .eq('artist_id', artistId)
+        .not('venue_id', 'is', null)
+        .neq('status', 'sold');
+      const activeDisplays = !displayErr ? (displayedArtworks?.length || 0) : 0;
+
+      // Plan limits based on subscription tier
+      const subscriptionTier = String(artist?.subscription_tier || 'free').toLowerCase();
+      const subscriptionStatus = String(artist?.subscription_status || '').toLowerCase();
+      const isActive = subscriptionStatus === 'active';
+      const planLimits = {
+        free: { artworks: 1, activeDisplays: 1 },
+        starter: { artworks: 10, activeDisplays: 4 },
+        growth: { artworks: 30, activeDisplays: 10 },
+        pro: { artworks: Number.POSITIVE_INFINITY, activeDisplays: Number.POSITIVE_INFINITY },
+      };
+      const limits = isActive ? (planLimits[subscriptionTier as keyof typeof planLimits] || planLimits.free) : planLimits.free;
 
       const now = new Date();
       const past30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
@@ -392,16 +415,77 @@ export default {
 
       return json({
         artistId,
+        subscription: {
+          tier: subscriptionTier,
+          status: subscriptionStatus,
+          isActive,
+          limits,
+        },
         artworks: {
           total: totalArtworks || 0,
           active: activeArtworks || 0,
           available: availableArtworks || 0,
           sold: soldArtworks || 0,
         },
+        displays: {
+          active: activeDisplays,
+          limit: limits.activeDisplays === Number.POSITIVE_INFINITY ? -1 : limits.activeDisplays,
+          isOverage: activeDisplays > (limits.activeDisplays as number),
+        },
+        applications: {
+          pending: pendingApplicationsCount || 0,
+        },
         sales: {
           total: totalSales || 0,
           recent30Days: recentSales || 0,
           totalEarnings: Math.round(totalArtistPayoutCents / 100),
+        },
+      });
+    }
+
+    // Venue stats endpoint
+    if (url.pathname === '/api/stats/venue' && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const venueId = url.searchParams.get('venueId');
+      if (!venueId) return json({ error: 'Missing venueId' }, { status: 400 });
+
+      const [{ data: venue }, { count: totalWallSpaces }, { count: occupiedWallSpaces }, { count: pendingInvitations }] = await Promise.all([
+        supabaseAdmin.from('venues').select('subscription_tier,subscription_status').eq('id', venueId).maybeSingle(),
+        supabaseAdmin.from('wall_spaces').select('id', { count: 'exact', head: true }).eq('venue_id', venueId),
+        supabaseAdmin.from('wall_spaces').select('id', { count: 'exact', head: true }).eq('venue_id', venueId).not('current_artwork_id', 'is', null),
+        supabaseAdmin.from('invitations').select('id', { count: 'exact', head: true }).eq('venue_id', venueId).eq('status', 'pending'),
+      ]).then((results: any) => results);
+
+      const now = new Date();
+      const past30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+      const { count: totalSales } = await supabaseAdmin
+        .from('orders')
+        .select('id', { count: 'exact', head: true })
+        .eq('venue_id', venueId);
+
+      const { data: ordersMonth } = await supabaseAdmin
+        .from('orders')
+        .select('venue_commission_cents')
+        .eq('venue_id', venueId)
+        .gte('created_at', past30)
+        .order('created_at', { ascending: false })
+        .limit(1000);
+      const totalVenueCommissionCents = (ordersMonth || []).reduce((sum: number, o: any) => sum + (o.venue_commission_cents || 0), 0);
+
+      return json({
+        venueId,
+        walls: {
+          total: totalWallSpaces || 0,
+          occupied: occupiedWallSpaces || 0,
+          available: (totalWallSpaces || 0) - (occupiedWallSpaces || 0),
+        },
+        applications: {
+          pending: pendingInvitations || 0,
+        },
+        sales: {
+          total: totalSales || 0,
+          totalEarnings: Math.round(totalVenueCommissionCents / 100),
         },
       });
     }

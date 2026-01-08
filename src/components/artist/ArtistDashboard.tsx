@@ -16,7 +16,13 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
   const [subSuccess, setSubSuccess] = useState<boolean>(false);
   const [subCancelled, setSubCancelled] = useState<boolean>(false);
   const [artworks, setArtworks] = useState<Array<{ id: string; status: string; price?: number }>>([]);
-  const [stats, setStats] = useState<{ artworks: { total: number; active: number; sold: number; available: number }; sales: { total: number; recent30Days: number; totalEarnings: number } } | null>(null);
+  const [stats, setStats] = useState<{
+    subscription?: { tier: string; status: string; isActive: boolean; limits: { artworks: number; activeDisplays: number } };
+    artworks: { total: number; active: number; sold: number; available: number };
+    displays?: { active: number; limit: number; isOverage: boolean };
+    applications?: { pending: number };
+    sales: { total: number; recent30Days: number; totalEarnings: number };
+  } | null>(null);
 
   useEffect(() => {
     try {
@@ -37,9 +43,22 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
     let isMounted = true;
     async function loadStats() {
       try {
-        const s = await apiGet<{ artistId: string; artworks: { total: number; active: number; sold: number; available: number }; sales: { total: number; recent30Days: number; totalEarnings: number } }>(`/api/stats/artist?artistId=${user.id}`);
+        const s = await apiGet<{
+          artistId: string;
+          subscription?: { tier: string; status: string; isActive: boolean; limits: { artworks: number; activeDisplays: number } };
+          artworks: { total: number; active: number; sold: number; available: number };
+          displays?: { active: number; limit: number; isOverage: boolean };
+          applications?: { pending: number };
+          sales: { total: number; recent30Days: number; totalEarnings: number };
+        }>(`/api/stats/artist?artistId=${user.id}`);
         if (!isMounted) return;
-        setStats({ artworks: s.artworks, sales: s.sales });
+        setStats({
+          subscription: s.subscription,
+          artworks: s.artworks,
+          displays: s.displays,
+          applications: s.applications,
+          sales: s.sales,
+        });
       } catch {
         // Fallback to artworks listing for minimal stats
         try {
@@ -88,7 +107,7 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
     },
     {
       label: 'Pending Applications',
-      value: 1,
+      value: stats?.applications?.pending ?? 0,
       subtext: 'Awaiting approval',
       icon: Package,
       color: 'blue',
@@ -251,17 +270,17 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
 
         {/* Active Displays Meter */}
         <ActiveDisplaysMeter
-          currentDisplays={3}
-          includedDisplays={1}
-          plan="free"
-          overageCost={0}
+          currentDisplays={stats?.displays?.active ?? 0}
+          includedDisplays={stats?.subscription?.limits?.activeDisplays ?? 1}
+          plan={(stats?.subscription?.tier ?? 'free') as 'free' | 'starter' | 'growth' | 'pro'}
+          overageCost={stats?.subscription?.tier === 'starter' ? 5 : stats?.subscription?.tier === 'growth' ? 4 : 0}
           onUpgrade={() => onNavigate('plans-pricing')}
           onManage={() => onNavigate('artist-artworks')}
         />
 
         {/* Upgrade Prompt (full-width) */}
         <div className="lg:col-span-2">
-          <UpgradePromptCard currentPlan="free" onUpgrade={() => onNavigate('plans-pricing')} />
+          <UpgradePromptCard currentPlan={stats?.subscription?.tier ?? 'free'} onUpgrade={() => onNavigate('plans-pricing')} />
         </div>
 
         {/* Recent Activity Card */}

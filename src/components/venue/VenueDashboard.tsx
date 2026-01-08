@@ -1,5 +1,6 @@
 import { Frame, Users, DollarSign, Clock } from 'lucide-react';
-import { mockWallSpaces, mockApplications, mockSales } from '../../data/mockData';
+import { useState, useEffect } from 'react';
+import { apiGet } from '../../lib/api';
 import type { User } from '../../App';
 import { VenuePayoutsCard } from './VenuePayoutsCard';
 
@@ -9,10 +10,42 @@ interface VenueDashboardProps {
 }
 
 export function VenueDashboard({ onNavigate, user }: VenueDashboardProps) {
-  const totalWalls = mockWallSpaces.length;
-  const availableWalls = mockWallSpaces.filter(w => w.available).length;
-  const pendingApplications = mockApplications.filter(a => a.status === 'pending').length;
-  const venueEarnings = mockSales.reduce((sum, sale) => sum + sale.venueEarnings, 0);
+  const [stats, setStats] = useState<{
+    walls: { total: number; occupied: number; available: number };
+    applications: { pending: number };
+    sales: { total: number; totalEarnings: number };
+  } | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadStats() {
+      if (!user?.id) return;
+      try {
+        const s = await apiGet<{
+          venueId: string;
+          walls: { total: number; occupied: number; available: number };
+          applications: { pending: number };
+          sales: { total: number; totalEarnings: number };
+        }>(`/api/stats/venue?venueId=${user.id}`);
+        if (!isMounted) return;
+        setStats({
+          walls: s.walls,
+          applications: s.applications,
+          sales: s.sales,
+        });
+      } catch {
+        if (!isMounted) return;
+        setStats(null);
+      }
+    }
+    loadStats();
+    return () => { isMounted = false; };
+  }, [user?.id]);
+
+  const totalWalls = stats?.walls?.total ?? 0;
+  const availableWalls = stats?.walls?.available ?? 0;
+  const pendingApplications = stats?.applications?.pending ?? 0;
+  const venueEarnings = stats?.sales?.totalEarnings ?? 0;
 
   const venueStats = [
     {
