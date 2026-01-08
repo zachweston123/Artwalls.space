@@ -267,28 +267,34 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
           return (
             <div
               key={plan.id}
-              className={`bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-6 relative ${
-                plan.popular ? 'shadow-lg' : ''
+              className={`bg-[var(--surface-2)] rounded-xl border-2 p-8 relative transition-all ${
+                plan.popular ? 'border-[var(--accent)] shadow-lg scale-105' : 'border-[var(--border)]'
               }`}
             >
               {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[var(--accent)] text-[var(--accent-contrast)] px-4 py-1 rounded-full text-xs">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[var(--accent)] text-white px-4 py-1 rounded-full text-xs font-bold">
                   Most Popular
                 </div>
               )}
 
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-[var(--surface-3)] rounded-lg flex items-center justify-center">
-                  <Icon className="w-5 h-5 text-[var(--accent)]" />
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-[var(--text)]">{plan.name}</h3>
+                  <p className="text-xs text-[var(--text-muted)] mt-1">{plan.tagline}</p>
                 </div>
-                <div>
-                  <h3 className="text-lg text-[var(--text)]">{plan.name}</h3>
-                </div>
+                <Icon className="w-8 h-8 text-[var(--accent)] flex-shrink-0" />
+              </div>
+
+              {/* Artist Take-Home Percentage - Prominent Display */}
+              <div className="bg-[var(--surface-3)] border border-[var(--accent)] rounded-lg p-3 mb-4">
+                <div className="text-xs text-[var(--text-muted)] font-semibold">You Take Home</div>
+                <div className="text-2xl font-bold text-[var(--accent)]">{plan.takeHome}%</div>
+                <div className="text-xs text-[var(--text-muted)] mt-1">of each artwork sale</div>
               </div>
 
               <div className="mb-6">
-                <span className="text-3xl text-[var(--text)]">${plan.price}</span>
-                <span className="text-[var(--text-muted)]">{plan.period}</span>
+                <span className="text-3xl font-bold text-[var(--text)]">{plan.price === 0 ? 'Free' : `$${plan.price}`}</span>
+                <span className="text-[var(--text-muted)] ml-1">{plan.period}</span>
               </div>
 
               <ul className="space-y-3 mb-6">
@@ -796,88 +802,107 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
 
       {/* Feature Comparison Table */}
       <div className="max-w-6xl mx-auto mb-12">
-        <h2 className="text-2xl mb-6 text-center text-[var(--text)]">Compare All Features</h2>
+        <h2 className="text-2xl mb-6 text-center text-[var(--text)]">Compare All Plans</h2>
         <div className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-[var(--border)]">
-                <th className="text-left p-4 text-sm text-[var(--text-muted)] font-semibold">Feature</th>
-                <th className="text-center p-4 text-sm text-[var(--text-muted)] font-semibold">Free</th>
-                <th className="text-center p-4 text-sm text-[var(--text-muted)] font-semibold">Starter</th>
-                <th className="text-center p-4 text-sm bg-[var(--surface-3)] text-[var(--text)] font-semibold">Growth</th>
-                <th className="text-center p-4 text-sm text-[var(--text-muted)] font-semibold">Pro</th>
+                <th className="text-left p-4 text-sm text-[var(--text-muted)] font-semibold">What You Get</th>
+                <th className="text-center p-4 text-sm text-[var(--text-muted)] font-semibold">
+                  <div>Free</div>
+                  <div className="text-xs text-[var(--accent)] font-bold mt-1">65% earnings</div>
+                </th>
+                <th className="text-center p-4 text-sm text-[var(--text-muted)] font-semibold">
+                  <div>Starter</div>
+                  <div className="text-xs text-[var(--accent)] font-bold mt-1">80% earnings</div>
+                </th>
+                <th className="text-center p-4 text-sm bg-[var(--surface-3)] text-[var(--text)] font-semibold">
+                  <div>Growth</div>
+                  <div className="text-xs text-[var(--accent)] font-bold mt-1">83% earnings</div>
+                </th>
+                <th className="text-center p-4 text-sm text-[var(--text-muted)] font-semibold">
+                  <div>Pro</div>
+                  <div className="text-xs text-[var(--accent)] font-bold mt-1">85% earnings</div>
+                </th>
               </tr>
             </thead>
             <tbody>
+              <tr className="border-b border-[var(--border)] font-semibold">
+                <td className="p-4 text-sm text-[var(--text)]">Your earnings on a $100 sale</td>
+                <td className="text-center p-4 text-sm text-[var(--accent)]"><strong>$65</strong></td>
+                <td className="text-center p-4 text-sm text-[var(--accent)]"><strong>$80</strong></td>
+                <td className="text-center p-4 text-sm bg-[var(--surface-3)] text-[var(--accent)]"><strong>$83</strong></td>
+                <td className="text-center p-4 text-sm text-[var(--accent)]"><strong>$85</strong></td>
+              </tr>
+              <tr className="border-b border-[var(--border)] bg-[var(--surface-1)]">
+                <td className="p-4 text-sm text-[var(--text)]">Monthly subscription</td>
+                <td className="text-center p-4 text-sm text-[var(--text)]"><strong>Free</strong></td>
+                <td className="text-center p-4 text-sm text-[var(--text)]"><strong>$9</strong></td>
+                <td className="text-center p-4 text-sm bg-[var(--surface-3)] text-[var(--text)]"><strong>$19</strong></td>
+                <td className="text-center p-4 text-sm text-[var(--text)]"><strong>$39</strong></td>
+              </tr>
               <tr className="border-b border-[var(--border)]">
-                <td className="p-4 text-sm text-[var(--text)]"><strong>Active displays included</strong></td>
+                <td className="p-4 text-sm text-[var(--text)]"><strong>Displays you can use</strong></td>
                 <td className="text-center p-4 text-sm text-[var(--text)]"><strong>1</strong></td>
                 <td className="text-center p-4 text-sm text-[var(--text)]"><strong>4</strong></td>
                 <td className="text-center p-4 text-sm bg-[var(--surface-3)] text-[var(--text)]"><strong>10</strong></td>
                 <td className="text-center p-4 text-sm text-[var(--text)]"><strong>Unlimited</strong></td>
               </tr>
               <tr className="border-b border-[var(--border)] bg-[var(--surface-1)]">
-                <td className="p-4 text-sm text-[var(--text)]">Overage pricing</td>
-                <td className="text-center p-4 text-sm text-xs text-[var(--text-muted)]">—</td>
-                <td className="text-center p-4 text-sm text-xs text-[var(--text-muted)]">$5/mo per display</td>
-                <td className="text-center p-4 text-sm text-xs bg-[var(--surface-3)] text-[var(--text)]">$4/mo per display</td>
-                <td className="text-center p-4 text-sm text-xs text-[var(--text-muted)]">—</td>
+                <td className="p-4 text-sm text-[var(--text)]">Extra displays after included</td>
+                <td className="text-center p-4 text-sm text-xs text-[var(--text-muted)]">N/A</td>
+                <td className="text-center p-4 text-sm text-xs text-[var(--text)]">$5/mo each</td>
+                <td className="text-center p-4 text-sm text-xs bg-[var(--surface-3)] text-[var(--text)]">$4/mo each</td>
+                <td className="text-center p-4 text-sm text-xs text-[var(--text)]">—</td>
               </tr>
               <tr className="border-b border-[var(--border)]">
-                <td className="p-4 text-sm text-[var(--text)]">Artwork listings</td>
+                <td className="p-4 text-sm text-[var(--text)]">Artworks you can list</td>
                 <td className="text-center p-4 text-sm text-[var(--text)]">1</td>
                 <td className="text-center p-4 text-sm text-[var(--text)]">10</td>
                 <td className="text-center p-4 text-sm bg-[var(--surface-3)] text-[var(--text)]">30</td>
                 <td className="text-center p-4 text-sm text-[var(--text)]">Unlimited</td>
               </tr>
               <tr className="border-b border-[var(--border)] bg-[var(--surface-1)]">
-                <td className="p-4 text-sm text-[var(--text)]">Venue applications</td>
-                <td className="text-center p-4 text-sm text-[var(--text)]">1/month</td>
-                <td className="text-center p-4 text-sm text-[var(--text)]">3/month</td>
+                <td className="p-4 text-sm text-[var(--text)]">Venue applications per month</td>
+                <td className="text-center p-4 text-sm text-[var(--text)]">1</td>
+                <td className="text-center p-4 text-sm text-[var(--text)]">3</td>
                 <td className="text-center p-4 text-sm bg-[var(--surface-3)] text-[var(--text)]">Unlimited</td>
                 <td className="text-center p-4 text-sm text-[var(--text)]">Unlimited</td>
               </tr>
               <tr className="border-b border-[var(--border)]">
-                <td className="p-4 text-sm text-[var(--text)]"><strong>Platform fee on sales</strong></td>
-                <td className="text-center p-4 text-sm text-[var(--text)]"><strong>15%</strong></td>
-                <td className="text-center p-4 text-sm text-[var(--text)]"><strong>10%</strong></td>
-                <td className="text-center p-4 text-sm bg-[var(--surface-3)] text-[var(--text)]"><strong>8%</strong></td>
-                <td className="text-center p-4 text-sm text-[var(--text)]"><strong>6%</strong></td>
+                <td className="p-4 text-sm text-[var(--text)]"><strong>Payment speed</strong></td>
+                <td className="text-center p-4 text-sm text-[var(--text)]"><strong>Weekly</strong></td>
+                <td className="text-center p-4 text-sm text-[var(--text)]"><strong>Standard</strong></td>
+                <td className="text-center p-4 text-sm bg-[var(--surface-3)] text-[var(--text)]"><strong>Standard</strong></td>
+                <td className="text-center p-4 text-sm text-[var(--text)]"><strong>Fast</strong></td>
               </tr>
               <tr className="border-b border-[var(--border)] bg-[var(--surface-1)]">
-                <td className="p-4 text-sm text-[var(--text)]">Payout speed</td>
-                <td className="text-center p-4 text-sm text-xs text-[var(--text)]">Weekly</td>
-                <td className="text-center p-4 text-sm text-xs text-[var(--text)]">Standard</td>
-                <td className="text-center p-4 text-sm text-xs bg-[var(--surface-3)] text-[var(--text)]">Standard</td>
-                <td className="text-center p-4 text-sm text-xs text-[var(--text)]">Fast</td>
-              </tr>
-              <tr className="border-b border-[var(--border)]">
-                <td className="p-4 text-sm text-[var(--text)]">Analytics</td>
+                <td className="p-4 text-sm text-[var(--text)]">Sales analytics</td>
                 <td className="text-center p-4 text-sm text-[var(--text)]">—</td>
                 <td className="text-center p-4 text-sm text-[var(--text)]">Basic</td>
                 <td className="text-center p-4 text-sm bg-[var(--surface-3)] text-[var(--text)]">Advanced</td>
                 <td className="text-center p-4 text-sm text-[var(--text)]">Advanced</td>
               </tr>
-              <tr className="border-b border-[var(--border)] bg-[var(--surface-1)]">
-                <td className="p-4 text-sm text-[var(--text)]">Priority visibility</td>
+              <tr className="border-b border-[var(--border)]">
+                <td className="p-4 text-sm text-[var(--text)]">Priority visibility in search</td>
                 <td className="text-center p-4 text-sm text-[var(--text)]">—</td>
                 <td className="text-center p-4 text-sm text-[var(--text)]">—</td>
                 <td className="text-center p-4 text-sm bg-[var(--surface-3)] text-[var(--text)]">✓</td>
                 <td className="text-center p-4 text-sm text-[var(--text)]">✓✓</td>
               </tr>
-              <tr className="border-b border-[var(--border)]">
-                <td className="p-4 text-sm text-[var(--text)]"><strong>Protection Plan</strong></td>
-                <td className="text-center p-4 text-sm text-xs text-[var(--text)]">$3/artwork</td>
-                <td className="text-center p-4 text-sm text-xs text-[var(--text)]">$3/artwork</td>
-                <td className="text-center p-4 text-sm text-xs bg-[var(--surface-3)] text-[var(--text)]">$3/artwork</td>
-                <td className="text-center p-4 text-sm text-xs text-[var(--text)]"><strong>INCLUDED</strong></td>
+              <tr className="border-b border-[var(--border)] bg-[var(--surface-1)]">
+                <td className="p-4 text-sm text-[var(--text)]"><strong>Damage protection plan</strong></td>
+                <td className="text-center p-4 text-sm text-xs text-[var(--text)]">$3/artwork/mo</td>
+                <td className="text-center p-4 text-sm text-xs text-[var(--text)]">$3/artwork/mo</td>
+                <td className="text-center p-4 text-sm text-xs bg-[var(--surface-3)] text-[var(--text)]">$3/artwork/mo</td>
+                <td className="text-center p-4 text-sm text-xs text-[var(--text)]"><strong>FREE</strong></td>
               </tr>
               <tr>
-                <td className="p-4 text-sm text-[var(--text)]">Protection cap</td>
-                <td className="text-center p-4 text-sm text-xs text-[var(--text)]">$100</td>
-                <td className="text-center p-4 text-sm text-xs text-[var(--text)]">$100</td>
-                <td className="text-center p-4 text-sm text-xs bg-[var(--surface-3)] text-[var(--text)]">$150</td>
-                <td className="text-center p-4 text-sm text-xs text-[var(--text)]">$200</td>
+                <td className="p-4 text-sm text-[var(--text)]">Max protection coverage</td>
+                <td className="text-center p-4 text-sm text-xs text-[var(--text)]">$100/claim</td>
+                <td className="text-center p-4 text-sm text-xs text-[var(--text)]">$100/claim</td>
+                <td className="text-center p-4 text-sm text-xs bg-[var(--surface-3)] text-[var(--text)]">$150/claim</td>
+                <td className="text-center p-4 text-sm text-xs text-[var(--text)]">$200/claim</td>
               </tr>
             </tbody>
           </table>
