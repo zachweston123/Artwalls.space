@@ -305,8 +305,8 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
           </div>
 
           {/* Bio */}
-          <div>
-            <label className="block text-sm text-[var(--text-muted)] mb-2">
+          <div className="bg-[var(--surface-3)] border border-[var(--border)] rounded-lg p-4">
+            <label className="block text-sm font-semibold text-[var(--text)] mb-2">
               About Your Venue
             </label>
             <textarea
@@ -321,6 +321,14 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
             <p className="text-xs text-[var(--text-muted)] mt-1">
               {formData.bio.length}/600 characters
             </p>
+            <div className="mt-3 p-3 bg-[var(--surface-1)] rounded border-l-4 border-[var(--focus)]">
+              <p className="text-xs font-semibold text-[var(--text)] mb-1">💡 Pro Tip: Attract More Artists</p>
+              <p className="text-xs text-[var(--text-muted)]">
+                Artists browse venues looking for authentic spaces that align with their values. 
+                A compelling bio about your venue&apos;s atmosphere, artist support, and mission helps 
+                talented artists choose your space for collaboration.
+              </p>
+            </div>
           </div>
 
           {/* Founded Year */}

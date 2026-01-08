@@ -1320,19 +1320,45 @@ app.post('/api/venues', async (req, res) => {
       }
     }
 
-    const { venueId: bodyVenueId, email, name, defaultVenueFeeBps, type, labels, city } = req.body || {};
+    const { venueId: bodyVenueId, email, name, defaultVenueFeeBps, type, labels, city, phoneNumber, bio } = req.body || {};
     const venueId = authUser?.id || bodyVenueId;
     if (!venueId || typeof venueId !== 'string') return res.status(400).json({ error: 'Missing venueId' });
 
+    // Update local store for basic fields
     const venue = await upsertVenue({
       id: venueId,
       email: email || authUser?.email || undefined,
       name: name || authUser?.user_metadata?.name || undefined,
-      type: type || undefined,
-      labels: Array.isArray(labels) ? labels : undefined,
       defaultVenueFeeBps,
-      city: city || undefined,
     });
+
+    // Update Supabase venues table with additional fields
+    if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY) {
+      const { createClient } = await import('@supabase/supabase-js');
+      const sbClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+      
+      const updateData = {
+        ...(name && { name }),
+        ...(email && { email }),
+        ...(type && { type }),
+        ...(phoneNumber && { phone_number: phoneNumber }),
+        ...(city && { city }),
+        ...(bio && { bio }),
+        ...(Array.isArray(labels) && { labels }),
+      };
+      
+      if (Object.keys(updateData).length > 0) {
+        const { error: updateErr } = await sbClient
+          .from('venues')
+          .upsert({ id: venueId, ...updateData }, { onConflict: 'id' });
+        
+        if (updateErr) {
+          console.warn('Failed to update Supabase venues table:', updateErr);
+          // Don't fail the entire request, just log the warning
+        }
+      }
+    }
+
     return res.json(venue);
   } catch (err) {
     console.error(err);

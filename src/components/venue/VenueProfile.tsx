@@ -79,6 +79,7 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
         phoneNumber: data.phoneNumber,
         email: data.email,
         city: data.city,
+        bio: data.bio,
       });
 
       // Save cover photo URL to database
@@ -119,6 +120,28 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
       <div className="mb-8">
         <h1 className="text-3xl mb-2">Venue Profile</h1>
         <p className="text-[var(--text-muted)]">Manage your venue information and settings</p>
+      </div>
+
+      {/* Bio Encouragement Banner */}
+      <div className="mb-6 p-4 bg-gradient-to-r from-[var(--surface-2)] to-[var(--surface-1)] border border-[var(--border)] rounded-xl">
+        <div className="flex items-start gap-3">
+          <div className="text-xl">✨</div>
+          <div className="flex-1">
+            <p className="font-semibold text-[var(--text)] mb-1">Tell Artists Your Story</p>
+            <p className="text-sm text-[var(--text-muted)] mb-3">
+              A compelling venue bio helps talented artists discover and choose your space. Share what makes your venue special, your support for local artists, and your unique atmosphere.
+            </p>
+            <button 
+              onClick={() => {
+                setSaveError(null);
+                setIsEditing(true);
+              }}
+              className="text-sm px-3 py-1 bg-[var(--blue)] hover:bg-[var(--blue-hover)] text-[var(--on-blue)] rounded-lg transition-colors"
+            >
+              Edit Profile
+            </button>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
