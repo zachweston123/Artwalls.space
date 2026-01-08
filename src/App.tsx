@@ -64,7 +64,10 @@ export interface User {
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [currentPage, setCurrentPage] = useState('login');
+  const [currentPage, setCurrentPage] = useState<string>(() => {
+    // Try to restore page from localStorage, default to 'login'
+    return localStorage.getItem('currentPage') || 'login';
+  });
   const [selectedVenueId, setSelectedVenueId] = useState<string | null>(null);
   const [selectedArtistId, setSelectedArtistId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -87,6 +90,11 @@ export default function App() {
     };
   };
 
+  // Persist currentPage to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('currentPage', currentPage);
+  }, [currentPage]);
+
   // Restore auth session and keep UI in sync across refreshes/tabs
   useEffect(() => {
     let isMounted = true;
@@ -96,21 +104,31 @@ export default function App() {
       const nextUser = userFromSupabase(data.session?.user);
       if (nextUser) {
         setCurrentUser(nextUser);
-        setCurrentPage(nextUser.role === 'artist' ? 'artist-dashboard' : 'venue-dashboard');
+        // Restore from localStorage if available, otherwise use dashboard
+        const storedPage = localStorage.getItem('currentPage');
+        if (storedPage && storedPage !== 'login') {
+          // Keep the stored page if user is logged in
+          setCurrentPage(storedPage);
+        } else {
+          // Set to appropriate dashboard if no stored page
+          setCurrentPage(nextUser.role === 'artist' ? 'artist-dashboard' : 'venue-dashboard');
+        }
+      } else {
+        setCurrentPage('login');
       }
     });
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       const nextUser = userFromSupabase(session?.user);
       setCurrentUser(nextUser);
-      // Only reset page for logout or if on login page; preserve profile/settings pages during auth updates
+      // Only reset page for logout; preserve all other pages during auth updates
       setCurrentPage((prevPage) => {
-        if (!nextUser) return 'login';
-        if (prevPage === 'artist-profile' || prevPage === 'venue-profile' || prevPage === 'artist-artworks' || prevPage === 'artist-applications' || prevPage === 'artist-sales' || prevPage === 'artist-venues' || prevPage === 'artist-invites' || prevPage === 'venue-applications' || prevPage === 'venue-current' || prevPage === 'venue-walls' || prevPage === 'venue-sales' || prevPage === 'venue-settings' || prevPage === 'find-artists' || prevPage === 'find-venues' || prevPage.startsWith('artist-') || prevPage.startsWith('venue-')) {
-          // Keep current page if it's a user-specific page
-          return prevPage;
+        if (!nextUser) {
+          localStorage.removeItem('currentPage');
+          return 'login';
         }
-        return nextUser.role === 'artist' ? 'artist-dashboard' : 'venue-dashboard';
+        // Keep current page if user is still logged in
+        return prevPage;
       });
     });
 

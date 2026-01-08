@@ -1,10 +1,21 @@
+import { useEffect, useState } from 'react';
 import { Palette } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 interface FooterProps {
   onNavigate: (page: string) => void;
 }
 
 export function Footer({ onNavigate }: FooterProps) {
+  const [userRole, setUserRole] = useState<'artist' | 'venue' | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      const role = data.user?.user_metadata?.role as 'artist' | 'venue' | undefined;
+      setUserRole(role || null);
+    });
+  }, []);
+
   return (
     <footer className="bg-[var(--surface-2)] border-t border-[var(--border)] mt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
@@ -22,49 +33,53 @@ export function Footer({ onNavigate }: FooterProps) {
             </p>
           </div>
 
-          {/* For Artists */}
-          <div>
-            <h3 className="text-sm mb-3 text-[var(--text)]">For Artists</h3>
-            <ul className="space-y-2 text-sm text-[var(--text-muted)]">
-              <li>
-                <button onClick={() => onNavigate('artist-venues')} className="hover:text-[var(--text)] transition-colors">
-                  Browse Venues
-                </button>
-              </li>
-              <li>
-                <button onClick={() => onNavigate('artist-artworks')} className="hover:text-[var(--text)] transition-colors">
-                  Manage Artwork
-                </button>
-              </li>
-              <li>
-                <button onClick={() => onNavigate('artist-sales')} className="hover:text-[var(--text)] transition-colors">
-                  Track Sales
-                </button>
-              </li>
-            </ul>
-          </div>
+          {/* For Artists - Show only if artist is logged in */}
+          {(!userRole || userRole === 'artist') && (
+            <div>
+              <h3 className="text-sm mb-3 text-[var(--text)]">For Artists</h3>
+              <ul className="space-y-2 text-sm text-[var(--text-muted)]">
+                <li>
+                  <button onClick={() => onNavigate('artist-venues')} className="hover:text-[var(--text)] transition-colors">
+                    Browse Venues
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => onNavigate('artist-artworks')} className="hover:text-[var(--text)] transition-colors">
+                    Manage Artwork
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => onNavigate('artist-sales')} className="hover:text-[var(--text)] transition-colors">
+                    Track Sales
+                  </button>
+                </li>
+              </ul>
+            </div>
+          )}
 
-          {/* For Venues */}
-          <div>
-            <h3 className="text-sm mb-3 text-[var(--text)]">For Venues</h3>
-            <ul className="space-y-2 text-sm text-[var(--text-muted)]">
-              <li>
-                <button onClick={() => onNavigate('venue-walls')} className="hover:text-[var(--text)] transition-colors">
-                  Wall Spaces
-                </button>
-              </li>
-              <li>
-                <button onClick={() => onNavigate('venue-applications')} className="hover:text-[var(--text)] transition-colors">
-                  Review Applications
-                </button>
-              </li>
-              <li>
-                <button onClick={() => onNavigate('venue-current')} className="hover:text-[var(--text)] transition-colors">
-                  Current Artwork
-                </button>
-              </li>
-            </ul>
-          </div>
+          {/* For Venues - Show only if venue is logged in */}
+          {(!userRole || userRole === 'venue') && (
+            <div>
+              <h3 className="text-sm mb-3 text-[var(--text)]">For Venues</h3>
+              <ul className="space-y-2 text-sm text-[var(--text-muted)]">
+                <li>
+                  <button onClick={() => onNavigate('venue-walls')} className="hover:text-[var(--text)] transition-colors">
+                    Wall Spaces
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => onNavigate('venue-applications')} className="hover:text-[var(--text)] transition-colors">
+                    Review Applications
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => onNavigate('venue-current')} className="hover:text-[var(--text)] transition-colors">
+                    Current Artwork
+                  </button>
+                </li>
+              </ul>
+            </div>
+          )}
 
           {/* Legal */}
           <div>
