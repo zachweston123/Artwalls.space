@@ -855,13 +855,6 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
               </tr>
             </thead>
             <tbody>
-              <tr className="border-b border-[var(--border)] font-semibold">
-                <td className="p-4 text-sm text-[var(--text)]">Your earnings on a $100 sale</td>
-                <td className="text-center p-4 text-sm text-[var(--accent)]"><strong>$65</strong></td>
-                <td className="text-center p-4 text-sm text-[var(--accent)]"><strong>$80</strong></td>
-                <td className="text-center p-4 text-sm bg-[var(--surface-3)] text-[var(--accent)]"><strong>$83</strong></td>
-                <td className="text-center p-4 text-sm text-[var(--accent)]"><strong>$85</strong></td>
-              </tr>
               <tr className="border-b border-[var(--border)] bg-[var(--surface-1)]">
                 <td className="p-4 text-sm text-[var(--text)]">Monthly subscription</td>
                 <td className="text-center p-4 text-sm text-[var(--text)]"><strong>Free</strong></td>
@@ -910,13 +903,6 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                 <td className="text-center p-4 text-sm text-[var(--text)]">—</td>
                 <td className="text-center p-4 text-sm bg-[var(--surface-3)] text-[var(--text)]"><strong>✓</strong></td>
                 <td className="text-center p-4 text-sm text-[var(--text)]"><strong>✓✓</strong></td>
-              </tr>
-              <tr className="border-b border-[var(--border)]">
-                <td className="p-4 text-sm text-[var(--text)]"><strong>Payout speed</strong></td>
-                <td className="text-center p-4 text-sm text-[var(--text)]"><strong>Weekly</strong></td>
-                <td className="text-center p-4 text-sm text-[var(--text)]"><strong>Standard</strong></td>
-                <td className="text-center p-4 text-sm bg-[var(--surface-3)] text-[var(--text)]"><strong>Standard</strong></td>
-                <td className="text-center p-4 text-sm text-[var(--text)]"><strong>Fast</strong></td>
               </tr>
               <tr className="border-b border-[var(--border)] bg-[var(--surface-1)]">
                 <td className="p-4 text-sm text-[var(--text)]"><strong>Damage protection plan</strong></td>
