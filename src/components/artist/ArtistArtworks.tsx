@@ -288,12 +288,29 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {artworks.map((artwork) => (
+        {artworks.map((artwork) => {
+          const isPro = (artistPlan?.tier || 'free') === 'pro';
+          
+          return (
           <div
             key={artwork.id}
-            className="bg-[var(--surface-1)] rounded-xl overflow-hidden border border-[var(--border)] hover:shadow-lg transition-shadow group"
+            className={`bg-[var(--surface-1)] rounded-xl overflow-hidden border hover:shadow-lg transition-shadow group ${
+              isPro
+                ? 'border-[var(--accent)] border-2 ring-1 ring-[var(--accent)] ring-opacity-30'
+                : 'border-[var(--border)]'
+            }`}
           >
-            <div className="aspect-square bg-[var(--surface-2)] overflow-hidden">
+            {/* Featured badge for Pro tier */}
+            {isPro && (
+              <div className="absolute top-3 right-3 z-10">
+                <div className="flex items-center gap-1 px-3 py-1 bg-[var(--accent)] text-white rounded-full text-xs font-semibold shadow-lg">
+                  <span>★</span>
+                  <span>Featured</span>
+                </div>
+              </div>
+            )}
+            
+            <div className="aspect-square bg-[var(--surface-2)] overflow-hidden relative">
               <img
                 src={artwork.imageUrl}
                 alt={artwork.title}
@@ -357,7 +374,8 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
               </div>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {!loading && artworks.length === 0 && (

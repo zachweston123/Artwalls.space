@@ -891,32 +891,32 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                 <td className="text-center p-4 text-sm text-[var(--text)]">Unlimited</td>
               </tr>
               <tr className="border-b border-[var(--border)] bg-[var(--surface-1)]">
+                <td className="p-4 text-sm text-[var(--text)]"><strong>Sales analytics</strong></td>
+                <td className="text-center p-4 text-sm text-[var(--text)]">—</td>
+                <td className="text-center p-4 text-sm text-[var(--text)]">Basic</td>
+                <td className="text-center p-4 text-sm bg-[var(--surface-3)] text-[var(--text)]"><strong>Advanced</strong></td>
+                <td className="text-center p-4 text-sm text-[var(--text)]"><strong>Advanced</strong></td>
+              </tr>
+              <tr className="border-b border-[var(--border)]">
                 <td className="p-4 text-sm text-[var(--text)]">Venue applications per month</td>
                 <td className="text-center p-4 text-sm text-[var(--text)]">1</td>
                 <td className="text-center p-4 text-sm text-[var(--text)]">3</td>
                 <td className="text-center p-4 text-sm bg-[var(--surface-3)] text-[var(--text)]">Unlimited</td>
                 <td className="text-center p-4 text-sm text-[var(--text)]">Unlimited</td>
               </tr>
+              <tr className="border-b border-[var(--border)] bg-[var(--surface-1)]">
+                <td className="p-4 text-sm text-[var(--text)]"><strong>Priority visibility in search</strong></td>
+                <td className="text-center p-4 text-sm text-[var(--text)]">—</td>
+                <td className="text-center p-4 text-sm text-[var(--text)]">—</td>
+                <td className="text-center p-4 text-sm bg-[var(--surface-3)] text-[var(--text)]"><strong>✓</strong></td>
+                <td className="text-center p-4 text-sm text-[var(--text)]"><strong>✓✓</strong></td>
+              </tr>
               <tr className="border-b border-[var(--border)]">
-                <td className="p-4 text-sm text-[var(--text)]"><strong>Payment speed</strong></td>
+                <td className="p-4 text-sm text-[var(--text)]"><strong>Payout speed</strong></td>
                 <td className="text-center p-4 text-sm text-[var(--text)]"><strong>Weekly</strong></td>
                 <td className="text-center p-4 text-sm text-[var(--text)]"><strong>Standard</strong></td>
                 <td className="text-center p-4 text-sm bg-[var(--surface-3)] text-[var(--text)]"><strong>Standard</strong></td>
                 <td className="text-center p-4 text-sm text-[var(--text)]"><strong>Fast</strong></td>
-              </tr>
-              <tr className="border-b border-[var(--border)] bg-[var(--surface-1)]">
-                <td className="p-4 text-sm text-[var(--text)]">Sales analytics</td>
-                <td className="text-center p-4 text-sm text-[var(--text)]">—</td>
-                <td className="text-center p-4 text-sm text-[var(--text)]">Basic</td>
-                <td className="text-center p-4 text-sm bg-[var(--surface-3)] text-[var(--text)]">Advanced</td>
-                <td className="text-center p-4 text-sm text-[var(--text)]">Advanced</td>
-              </tr>
-              <tr className="border-b border-[var(--border)]">
-                <td className="p-4 text-sm text-[var(--text)]">Priority visibility in search</td>
-                <td className="text-center p-4 text-sm text-[var(--text)]">—</td>
-                <td className="text-center p-4 text-sm text-[var(--text)]">—</td>
-                <td className="text-center p-4 text-sm bg-[var(--surface-3)] text-[var(--text)]">✓</td>
-                <td className="text-center p-4 text-sm text-[var(--text)]">✓✓</td>
               </tr>
               <tr className="border-b border-[var(--border)] bg-[var(--surface-1)]">
                 <td className="p-4 text-sm text-[var(--text)]"><strong>Damage protection plan</strong></td>

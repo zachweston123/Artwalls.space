@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Search, MapPin, Filter, Frame, CheckCircle } from 'lucide-react';
+import { Search, MapPin, Filter, Frame, CheckCircle, Crown } from 'lucide-react';
 import { LabelChip } from '../LabelChip';
 import { VENUE_HIGHLIGHTS } from '../../data/highlights';
 import { apiGet } from '../../lib/api';
@@ -9,10 +9,13 @@ interface FindVenuesProps {
   onViewWallspaces: (venueId: string) => void;
 }
 
+type SubscriptionTier = 'free' | 'starter' | 'growth' | 'pro';
+
 export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [venues, setVenues] = useState<any[]>([]);
+  const [userTier, setUserTier] = useState<SubscriptionTier>('free');
   const [filters, setFilters] = useState({
     labels: [] as string[],
     acceptingArtists: false,
@@ -48,12 +51,19 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
 
     async function loadVenues() {
       try {
+        // Load user tier for priority visibility
+        const me = await apiGet<{ profile?: { subscription_tier?: string } }>('/api/me');
+        if (isMounted) {
+          const tier = (me?.profile?.subscription_tier || 'free').toLowerCase() as SubscriptionTier;
+          setUserTier(tier);
+        }
+
         // Load artist profile to get their cities
-        const me = await apiGet<{ role: string; profile: { city_primary?: string | null; city_secondary?: string | null } }>(
+        const meProfile = await apiGet<{ role: string; profile: { city_primary?: string | null; city_secondary?: string | null } }>(
           '/api/profile/me'
         );
-        const primary = (me?.profile?.city_primary || '').trim();
-        const secondary = (me?.profile?.city_secondary || '').trim();
+        const primary = (meProfile?.profile?.city_primary || '').trim();
+        const secondary = (meProfile?.profile?.city_secondary || '').trim();
         if (isMounted) setArtistCities({ primary, secondary });
 
         // Build query params for city-based filtering
@@ -148,6 +158,32 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
       if (!hasMatchingLabel) return false;
     }
     return true;
+  }).sort((a, b) => {
+    // Tier-based priority sorting: Higher tiers get better visibility
+    const priorityOrder: Record<SubscriptionTier, number> = {
+      'free': 0,
+      'starter': 1,
+      'growth': 2,
+      'pro': 3,
+    };
+    
+    const aPriority = priorityOrder[userTier] || 0;
+    
+    // Growth+ users see featured venues first
+    if (aPriority >= 2) {
+      // Sort by verified status first, then alphabetically
+      if (a.verified !== b.verified) return (b.verified ? 1 : 0) - (a.verified ? 1 : 0);
+    }
+    
+    // For search results, prioritize name match relevance
+    if (searchQuery) {
+      const aMatch = a.name.toLowerCase().startsWith(searchQuery.toLowerCase());
+      const bMatch = b.name.toLowerCase().startsWith(searchQuery.toLowerCase());
+      if (aMatch !== bMatch) return aMatch ? -1 : 1;
+    }
+    
+    // Default sort: by available spaces (more availability = better visibility)
+    return b.availableSpaces - a.availableSpaces;
   });
 
   const currentYear = new Date().getFullYear();
@@ -331,6 +367,12 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
                       </h3>
                       {venue.verified && (
                         <CheckCircle className="w-4 h-4 text-[var(--green)] flex-shrink-0" />
+                      )}
+                      {(['growth', 'pro'] as SubscriptionTier[]).includes(userTier) && venue.verified && (
+                        <div className="flex items-center gap-1 px-2 py-0.5 bg-[var(--accent)] bg-opacity-20 rounded-full">
+                          <Crown className="w-3 h-3 text-[var(--accent)]" />
+                          <span className="text-xs font-semibold text-[var(--accent)]">Featured</span>
+                        </div>
                       )}
                     </div>
                   </button>

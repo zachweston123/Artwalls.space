@@ -1,17 +1,28 @@
 import { useEffect, useState } from 'react';
-import { DollarSign, TrendingUp, Package } from 'lucide-react';
+import { DollarSign, TrendingUp, Package, BarChart3, Calendar, Eye } from 'lucide-react';
 import { apiGet } from '../../lib/api';
 import type { User } from '../../App';
 
 interface ArtistSalesProps { user: User }
 
+type SubscriptionTier = 'free' | 'starter' | 'growth' | 'pro';
+
 export function ArtistSales({ user }: ArtistSalesProps) {
   const [sales, setSales] = useState<Array<{ id: string; price: number; artistEarnings: number; artworkTitle: string; artworkImage?: string | null; venueName?: string | null; saleDate: string }>>([]);
+  const [tier, setTier] = useState<SubscriptionTier>('free');
 
   useEffect(() => {
     let isMounted = true;
-    async function loadSales() {
+    async function loadData() {
       try {
+        // Get subscription tier
+        const meResp = await apiGet<{ profile?: { subscription_tier?: string } }>('/api/me');
+        if (isMounted) {
+          const userTier = (meResp?.profile?.subscription_tier || 'free').toLowerCase() as SubscriptionTier;
+          setTier(userTier);
+        }
+
+        // Get sales data
         const resp = await apiGet<{ sales: Array<{ id: string; price: number; artistEarnings: number; artworkTitle: string; artworkImage?: string | null; venueName?: string | null; saleDate: string }> }>(`/api/sales/artist?artistId=${user.id}`);
         if (!isMounted) return;
         setSales(resp.sales || []);
@@ -20,7 +31,7 @@ export function ArtistSales({ user }: ArtistSalesProps) {
         setSales([]);
       }
     }
-    loadSales();
+    loadData();
     return () => { isMounted = false; };
   }, [user.id]);
 
@@ -75,6 +86,104 @@ export function ArtistSales({ user }: ArtistSalesProps) {
           <div className="text-xs text-[var(--text-muted)]">Per artwork</div>
         </div>
       </div>
+
+      {/* Advanced Analytics - Growth/Pro Only */}
+      {(['growth', 'pro'] as SubscriptionTier[]).includes(tier) && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+          <div className="bg-gradient-to-br from-[var(--surface-2)] to-[var(--surface-3)] rounded-xl p-6 border border-[var(--accent)] border-opacity-30">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-[var(--accent)] bg-opacity-20 rounded-lg flex items-center justify-center">
+                  <Eye className="w-5 h-5 text-[var(--accent)]" />
+                </div>
+                <h3 className="text-sm font-semibold text-[var(--text)]">Top Performing Artwork</h3>
+              </div>
+              <span className="text-xs bg-[var(--accent)] bg-opacity-20 text-[var(--accent)] px-2 py-1 rounded">Advanced</span>
+            </div>
+            {sales.length > 0 ? (
+              <div className="space-y-2">
+                {sales
+                  .reduce((acc, sale) => {
+                    const existing = acc.find(s => s.title === sale.artworkTitle);
+                    if (existing) {
+                      existing.count += 1;
+                      existing.earnings += sale.artistEarnings;
+                    } else {
+                      acc.push({ title: sale.artworkTitle, count: 1, earnings: sale.artistEarnings });
+                    }
+                    return acc;
+                  }, [] as Array<{ title: string; count: number; earnings: number }>)
+                  .sort((a, b) => b.earnings - a.earnings)
+                  .slice(0, 3)
+                  .map((art, idx) => (
+                    <div key={idx} className="flex justify-between text-sm">
+                      <span className="text-[var(--text-muted)] truncate">{art.title}</span>
+                      <span className="text-[var(--accent)] font-semibold">${art.earnings.toFixed(0)}</span>
+                    </div>
+                  ))}
+              </div>
+            ) : (
+              <p className="text-xs text-[var(--text-muted)]">No sales data yet</p>
+            )}
+          </div>
+
+          <div className="bg-gradient-to-br from-[var(--surface-2)] to-[var(--surface-3)] rounded-xl p-6 border border-[var(--accent)] border-opacity-30">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-[var(--accent)] bg-opacity-20 rounded-lg flex items-center justify-center">
+                  <Calendar className="w-5 h-5 text-[var(--accent)]" />
+                </div>
+                <h3 className="text-sm font-semibold text-[var(--text)]">Sales Trend (Last 30 Days)</h3>
+              </div>
+              <span className="text-xs bg-[var(--accent)] bg-opacity-20 text-[var(--accent)] px-2 py-1 rounded">Advanced</span>
+            </div>
+            {sales.length > 0 ? (
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-[var(--text-muted)]">Last 7 days</span>
+                  <span className="text-[var(--accent)] font-semibold">
+                    {sales.filter(s => new Date(s.saleDate) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length} sales
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-[var(--text-muted)]">Last 30 days</span>
+                  <span className="text-[var(--accent)] font-semibold">
+                    {sales.filter(s => new Date(s.saleDate) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).length} sales
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm pt-2 border-t border-[var(--border)]">
+                  <span className="text-[var(--text-muted)]">Monthly average</span>
+                  <span className="text-[var(--accent)] font-semibold">
+                    ${(sales.filter(s => new Date(s.saleDate) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).reduce((sum, s) => sum + s.artistEarnings, 0) / 4).toFixed(0)}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <p className="text-xs text-[var(--text-muted)]">No sales data yet</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Analytics Upsell - Free/Starter Only */}
+      {(['free', 'starter'] as SubscriptionTier[]).includes(tier) && (
+        <div className="mb-8 bg-[var(--surface-2)] border-2 border-[var(--accent)] border-opacity-30 rounded-xl p-6">
+          <div className="flex items-start gap-4">
+            <div className="w-10 h-10 bg-[var(--accent)] bg-opacity-20 rounded-lg flex items-center justify-center flex-shrink-0">
+              <BarChart3 className="w-5 h-5 text-[var(--accent)]" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-[var(--text)] mb-1">Unlock Advanced Analytics</h3>
+              <p className="text-sm text-[var(--text-muted)] mb-3">
+                Upgrade to Growth or Pro to see detailed performance insights, top artworks, and 30-day sales trends.
+              </p>
+              <button className="px-4 py-2 bg-[var(--accent)] text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">
+                View Upgrade Options
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] overflow-hidden">
         <div className="p-6 border-b border-[var(--border)]">
