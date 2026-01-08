@@ -15,7 +15,7 @@ Complete pricing tiers with **active display caps**, **overage pricing**, Artwor
 - **QR Labels:** Basic generation
 - **Platform Fee:** 15%
 - **Payout Speed:** Weekly payouts
-- **Protection Plan:** Optional at $3/artwork/month
+- **Protection Plan:** Optional at $5/artwork/month
 - **Protection Cap:** $100 per incident
 - **Claim Limit:** Up to 2 claims per year
 - **Overage Pricing:** N/A (limited to 1 display)
@@ -72,7 +72,8 @@ Optional (or included on Pro) coverage that helps reimburse certain covered inci
 - **Environmental damage** (within venue safety guidelines)
 
 ### Pricing
-- **Free/Starter/Growth:** $3 per displayed artwork per month
+- **Free:** $5 per displayed artwork per month
+- **Starter/Growth:** $3 per displayed artwork per month
 - **Pro:** Included FREE for all displayed artworks
 
 ### Coverage Caps
@@ -549,7 +550,7 @@ Added prominent notice to:
 
 ### Protection Toggle
 - [ ] Shows on placement screens
-- [ ] Free/Starter/Growth: $3/artwork
+- [ ] Free: $5/artwork | Starter/Growth: $3/artwork
 - [ ] Pro: "Included" badge, toggle disabled
 - [ ] Info icon expands details
 - [ ] Monthly cost calculation correct

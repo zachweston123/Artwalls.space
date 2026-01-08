@@ -34,7 +34,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       activeDisplays: 1,
       overagePricing: null,
       payoutSpeed: 'Weekly',
-      protection: 'Optional at $3/artwork/mo',
+      protection: 'Optional at $5/artwork/mo',
       protectionCap: '$100 per incident',
       claimLimit: 'Up to 2 claims/year',
       cta: currentPlan === 'free' ? 'Current Plan' : 'Downgrade',
@@ -506,7 +506,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                         </div>
                         <div className="flex justify-between">
                           <span className="text-[var(--text-muted)]">Protection Plan</span>
-                          <span className="text-[var(--text)]">$3/artwork/mo</span>
+                          <span className="text-[var(--text)]">$5/artwork/mo</span>
                         </div>
                         <div className="border-t border-[var(--border)] pt-2 mt-2">
                           <div className="flex justify-between font-semibold">
@@ -783,7 +783,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                   </div>
                   <div className="bg-[var(--surface-1)] rounded-lg p-3 border border-[var(--border)]">
                     <p className="text-xs text-[var(--text-muted)] mb-1">Protection cost:</p>
-                    <p className="text-sm text-[var(--text)]">$3/artwork/mo</p>
+                    <p className="text-sm text-[var(--text)]">Free: $5/mo | Others: $3/mo</p>
                     <p className="text-xs text-[var(--text-muted)]">Included on Pro plan</p>
                   </div>
                 </div>
@@ -906,8 +906,8 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
               </tr>
               <tr className="border-b border-[var(--border)] bg-[var(--surface-1)]">
                 <td className="p-4 text-sm text-[var(--text)]"><strong>Damage protection plan</strong></td>
-                <td className="text-center p-4 text-sm text-xs text-[var(--text)]">$3/artwork/mo</td>
-                <td className="text-center p-4 text-sm text-xs text-[var(--text)]">$3/artwork/mo</td>
+                <td className="text-center p-4 text-sm text-xs text-[var(--text)]">$5/artwork/mo</td>
+                <td className="text-center p-4 text-sm text-xs text-[var(--text)]">$5/artwork/mo</td>
                 <td className="text-center p-4 text-sm text-xs bg-[var(--surface-3)] text-[var(--text)]">$3/artwork/mo</td>
                 <td className="text-center p-4 text-sm text-xs text-[var(--text)]"><strong>FREE</strong></td>
               </tr>
@@ -936,7 +936,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
           <div className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-6">
             <h3 className="text-base mb-2 text-[var(--text)]">How does the Protection Plan work if I have multiple artworks displayed?</h3>
             <p className="text-sm text-[var(--text)]">
-              On Free, Starter, and Growth plans, protection costs $3 per displayed artwork per month. On Pro, protection is included FREE for all displayed artworks. You can toggle protection on/off for each placement.
+              On Free plan, protection costs $5 per displayed artwork per month. On Starter and Growth plans, it costs $3 per displayed artwork per month. On Pro, protection is included FREE for all displayed artworks. You can toggle protection on/off for each placement.
             </p>
           </div>
           <div className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-6">

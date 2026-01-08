@@ -256,7 +256,11 @@ export function ArtistAgreement({ onNavigate, onAccept, hasAccepted = false }: A
                 </p>
                 <ul className="list-disc list-inside space-y-2 text-[var(--text)] leading-relaxed mb-3">
                   <li>
-                    Free/Starter: optional add-on at $3 per displayed artwork per month; reimbursement cap up 
+                    Free: optional add-on at $5 per displayed artwork per month; reimbursement cap up 
+                    to $100 per covered incident.
+                  </li>
+                  <li>
+                    Starter: optional add-on at $3 per displayed artwork per month; reimbursement cap up 
                     to $100 per covered incident.
                   </li>
                   <li>
