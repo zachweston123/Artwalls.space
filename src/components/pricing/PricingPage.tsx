@@ -486,12 +486,16 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                 {selectedPlanId === 'free' && (
                   <>
                     <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
-                      <span className="text-[var(--text-muted)]">Platform Fee (15%)</span>
-                      <span className="font-semibold text-[var(--text)]">-${freeEarnings.platformFeeAmount.toFixed(0)}</span>
+                      <span className="text-[var(--text-muted)]">Artist Earnings (65%)</span>
+                      <span className="font-semibold text-[var(--accent)]">${freeEarnings.artistAmount.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
+                      <span className="text-[var(--text-muted)]">Venue Commission (10%)</span>
+                      <span className="font-semibold text-[var(--text)]">${freeEarnings.venueAmount.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-center pt-3 bg-[var(--surface-2)] border border-[var(--border)] p-4 rounded-lg mb-4">
-                      <span className="font-bold text-[var(--text)]">Per-sale earnings</span>
-                      <span className="font-bold text-[var(--accent)] text-xl">${freeEarnings.earnings.toFixed(0)}</span>
+                      <span className="font-bold text-[var(--text)]">Your per-sale earnings</span>
+                      <span className="font-bold text-[var(--accent)] text-xl">${freeEarnings.artistAmount.toFixed(2)}</span>
                     </div>
                     <div className="bg-[var(--surface-3)] p-4 rounded-lg border border-[var(--border)]">
                       <h4 className="text-sm font-semibold text-[var(--text)] mb-2">After Additional Costs:</h4>
@@ -523,12 +527,20 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                 {selectedPlanId === 'starter' && (
                   <>
                     <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
-                      <span className="text-[var(--text-muted)]">Platform Fee (10%)</span>
-                      <span className="font-semibold text-[var(--text)]">-${starterEarnings.platformFeeAmount.toFixed(0)}</span>
+                      <span className="text-[var(--text-muted)]">Artist Earnings (80%)</span>
+                      <span className="font-semibold text-[var(--accent)]">${starterEarnings.artistAmount.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
+                      <span className="text-[var(--text-muted)]">Venue Commission (10%)</span>
+                      <span className="font-semibold text-[var(--text)]">${starterEarnings.venueAmount.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
+                      <span className="text-[var(--text-muted)]">Monthly Subscription</span>
+                      <span className="font-semibold text-[var(--text)]">$9.00</span>
                     </div>
                     <div className="flex justify-between items-center pt-3 bg-[var(--surface-2)] border border-[var(--border)] p-4 rounded-lg mb-4">
-                      <span className="font-bold text-[var(--text)]">Per-sale earnings</span>
-                      <span className="font-bold text-[var(--accent)] text-xl">${starterEarnings.earnings.toFixed(0)}</span>
+                      <span className="font-bold text-[var(--text)]">Your per-sale earnings</span>
+                      <span className="font-bold text-[var(--accent)] text-xl">${starterEarnings.artistAmount.toFixed(2)}</span>
                     </div>
                     <div className="bg-[var(--surface-3)] p-4 rounded-lg border border-[var(--border)]">
                       <h4 className="text-sm font-semibold text-[var(--text)] mb-2">After Additional Costs:</h4>
@@ -560,12 +572,20 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                 {selectedPlanId === 'growth' && (
                   <>
                     <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
-                      <span className="text-[var(--text-muted)]">Platform Fee (8%)</span>
-                      <span className="font-semibold text-[var(--text)]">-${growthEarnings.platformFeeAmount.toFixed(0)}</span>
+                      <span className="text-[var(--text-muted)]">Artist Earnings (83%)</span>
+                      <span className="font-semibold text-[var(--accent)]">${growthEarnings.artistAmount.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
+                      <span className="text-[var(--text-muted)]">Venue Commission (10%)</span>
+                      <span className="font-semibold text-[var(--text)]">${growthEarnings.venueAmount.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
+                      <span className="text-[var(--text-muted)]">Monthly Subscription</span>
+                      <span className="font-semibold text-[var(--text)]">$19.00</span>
                     </div>
                     <div className="flex justify-between items-center pt-3 bg-[var(--surface-2)] border border-[var(--border)] p-4 rounded-lg mb-4">
-                      <span className="font-bold text-[var(--text)]">Per-sale earnings</span>
-                      <span className="font-bold text-[var(--accent)] text-xl">${growthEarnings.earnings.toFixed(0)}</span>
+                      <span className="font-bold text-[var(--text)]">Your per-sale earnings</span>
+                      <span className="font-bold text-[var(--accent)] text-xl">${growthEarnings.artistAmount.toFixed(2)}</span>
                     </div>
                     <div className="bg-[var(--surface-3)] p-4 rounded-lg border border-[var(--border)]">
                       <h4 className="text-sm font-semibold text-[var(--text)] mb-2">After Additional Costs:</h4>
@@ -597,12 +617,20 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                 {selectedPlanId === 'pro' && (
                   <>
                     <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
-                      <span className="text-[var(--text-muted)]">Platform Fee (6%)</span>
-                      <span className="font-semibold text-[var(--text)]">-${proEarnings.platformFeeAmount.toFixed(0)}</span>
+                      <span className="text-[var(--text-muted)]">Artist Earnings (85%)</span>
+                      <span className="font-semibold text-[var(--accent)]">${proEarnings.artistAmount.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
+                      <span className="text-[var(--text-muted)]">Venue Commission (10%)</span>
+                      <span className="font-semibold text-[var(--text)]">${proEarnings.venueAmount.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
+                      <span className="text-[var(--text-muted)]">Monthly Subscription</span>
+                      <span className="font-semibold text-[var(--text)]">$39.00</span>
                     </div>
                     <div className="flex justify-between items-center pt-3 bg-[var(--surface-2)] border border-[var(--border)] p-4 rounded-lg mb-4">
-                      <span className="font-bold text-[var(--text)]">Per-sale earnings</span>
-                      <span className="font-bold text-[var(--accent)] text-xl">${proEarnings.earnings.toFixed(0)}</span>
+                      <span className="font-bold text-[var(--text)]">Your per-sale earnings</span>
+                      <span className="font-bold text-[var(--accent)] text-xl">${proEarnings.artistAmount.toFixed(2)}</span>
                     </div>
                     <div className="bg-[var(--surface-3)] p-4 rounded-lg border border-[var(--border)]">
                       <h4 className="text-sm font-semibold text-[var(--text)] mb-2">After Additional Costs:</h4>
