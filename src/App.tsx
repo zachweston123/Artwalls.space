@@ -7,7 +7,6 @@ import { Login } from './components/Login';
 import { ArtistDashboard } from './components/artist/ArtistDashboard';
 import { ArtistArtworks } from './components/artist/ArtistArtworks';
 import { ArtistVenues } from './components/artist/ArtistVenues';
-import { ArtistApplicationsWithScheduling } from './components/artist/ArtistApplicationsWithScheduling';
 import { ApprovedListings } from './components/artist/ApprovedListings';
 import { ArtistSales } from './components/artist/ArtistSales';
 import { ArtistProfile } from './components/artist/ArtistProfile';
@@ -17,7 +16,6 @@ import { NotificationPreferences } from './components/artist/NotificationPrefere
 import { ArtistInvites } from './components/artist/ArtistInvites';
 import { VenueDashboard } from './components/venue/VenueDashboard';
 import { VenueWalls } from './components/venue/VenueWalls';
-import { VenueApplications } from './components/venue/VenueApplications';
 import { VenueCurrentArtWithScheduling } from './components/venue/VenueCurrentArtWithScheduling';
 import { VenueSales } from './components/venue/VenueSales';
 import { VenueSettings } from './components/venue/VenueSettings';
@@ -28,6 +26,7 @@ import { VenuePasswordSecurity } from './components/venue/VenuePasswordSecurity'
 import { VenueNotificationPreferences } from './components/venue/VenueNotificationPreferences';
 import { VenueWallsPublic } from './components/venue/VenueWallsPublic';
 import { FindArtists } from './components/venue/FindArtists';
+import { ApplicationsAndInvitations } from './components/shared/ApplicationsAndInvitations';
 import { FindVenues } from './components/artist/FindVenues';
 import { NotificationsList } from './components/notifications/NotificationsList';
 import { PoliciesLanding } from './components/legal/PoliciesLanding';
@@ -363,7 +362,7 @@ export default function App() {
             {currentPage === 'venue-view-wallspaces' && (
               <VenueWallsPublic venueId={selectedVenueId || undefined} onBack={() => handleNavigate('artist-venues')} />
             )}
-            {currentPage === 'artist-applications' && <ArtistApplicationsWithScheduling />}
+            {currentPage === 'artist-applications' && <ApplicationsAndInvitations userRole="artist" onBack={() => handleNavigate('artist-profile')} />}
             {currentPage === 'artist-invites' && (
               <ArtistInvites 
                 onApply={(inviteId) => handleNavigate('artist-applications')}
@@ -383,7 +382,7 @@ export default function App() {
           <>
             {currentPage === 'venue-dashboard' && <VenueDashboard onNavigate={handleNavigate} user={currentUser} />}
             {currentPage === 'venue-walls' && <VenueWalls />}
-            {currentPage === 'venue-applications' && <VenueApplications />}
+            {currentPage === 'venue-applications' && <ApplicationsAndInvitations userRole="venue" onBack={() => handleNavigate('venue-dashboard')} />}
             {currentPage === 'venue-current' && <VenueCurrentArtWithScheduling />}
             {currentPage === 'venue-sales' && <VenueSales />}
             {currentPage === 'venue-settings' && <VenueSettingsWithEmptyState />}
