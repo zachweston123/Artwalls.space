@@ -173,9 +173,9 @@ export function ArtistProfileEdit({ onSave, onCancel }: ArtistProfileEditProps) 
           </div>
 
           {/* Bio */}
-          <div>
-            <label className="block text-sm text-[var(--text-muted)] mb-2">
-              Bio
+          <div className="bg-[var(--surface-3)] border border-[var(--border)] rounded-lg p-4">
+            <label className="block text-sm font-semibold text-[var(--text)] mb-2">
+              Your Artistic Bio
             </label>
             <textarea
               value={formData.bio}
@@ -189,6 +189,14 @@ export function ArtistProfileEdit({ onSave, onCancel }: ArtistProfileEditProps) 
             <p className="text-xs text-[var(--text-muted)] mt-1">
               {formData.bio.length}/500 characters
             </p>
+            <div className="mt-3 p-3 bg-[var(--surface-1)] rounded border-l-4 border-[var(--focus)]">
+              <p className="text-xs font-semibold text-[var(--text)] mb-1">💡 Pro Tip: More Personality = More Sales</p>
+              <p className="text-xs text-[var(--text-muted)]">
+                Venues that choose to display your art prefer artists with compelling, authentic bios. 
+                Share your creative process, inspiration, and artistic vision. The more venues know about you, 
+                the more likely they'll want to feature your work.
+              </p>
+            </div>
           </div>
 
           {/* Art Types */}

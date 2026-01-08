@@ -24,21 +24,29 @@ export const VENUE_HIGHLIGHTS_GROUPS: Record<string, Array<{ label: string; tool
     { label: 'Cafe onsite' },
     { label: 'Bar onsite' },
   ],
-  'Art Display Readiness': [
-    { label: 'Rotating exhibitions', tooltip: 'Regularly rotates displayed artwork' },
-    { label: 'Gallery-style walls', tooltip: 'Clean, professional wall surfaces' },
-    { label: 'Dedicated lighting', tooltip: 'Spotlighting or gallery lights for art' },
-    { label: 'Secure hanging systems', tooltip: 'Hardware suitable for framed works' },
-    { label: 'Climate controlled', tooltip: 'Temperature/humidity suitable for art' },
+  'Venue Type & Vibe': [
+    { label: 'Industrial loft', tooltip: 'Raw brick, exposed beams, warehouse aesthetic' },
+    { label: 'Storefront gallery', tooltip: 'Street-level visibility, window displays' },
+    { label: 'Hidden gem', tooltip: 'Intimate, off-the-beaten-path location' },
+    { label: 'Rooftop space', tooltip: 'Elevated venue with views' },
+    { label: 'Bohemian atmosphere', tooltip: 'Eclectic, artistic, casual vibe' },
+    { label: 'Modern minimalist', tooltip: 'Clean lines, contemporary space' },
+    { label: 'Historic building', tooltip: 'Vintage architecture with character' },
   ],
-  'Logistics & Reach': [
-    { label: 'High foot traffic' },
-    { label: 'Weekend peak hours' },
-    { label: 'Downtown location' },
-    { label: 'Neighborhood favorite' },
+  'Location & Foot Traffic': [
+    { label: 'High foot traffic', tooltip: 'Busy pedestrian area' },
+    { label: 'Arts district', tooltip: 'Located in creative neighborhood' },
+    { label: 'Transit accessible', tooltip: 'Near public transportation' },
+    { label: 'Weekend destination', tooltip: 'Popular weekend gathering spot' },
+    { label: 'Emerging neighborhood', tooltip: 'Up-and-coming area with growth' },
+    { label: 'Tourist hotspot', tooltip: 'Popular with visitors' },
   ],
-  'Safety & Assurance': [
-    { label: 'Insurance coverage', tooltip: 'Venue carries insurance for displayed works' },
+  'Collaboration & Community': [
+    { label: 'Artist residencies', tooltip: 'Offers studio space or residency programs' },
+    { label: 'Community events', tooltip: 'Hosts workshops, talks, or artist meetups' },
+    { label: 'Music collaborations', tooltip: 'Partners with musicians and performers' },
+    { label: 'Local artist focus', tooltip: 'Primarily features emerging/local artists' },
+    { label: 'International artists', tooltip: 'Showcases work from diverse origins' },
   ],
 };
 

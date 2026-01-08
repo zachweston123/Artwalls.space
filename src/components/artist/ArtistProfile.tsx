@@ -208,6 +208,25 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
         <p className="text-[var(--text-muted)]">Manage your account information and settings</p>
       </div>
 
+      {/* Bio Encouragement Banner */}
+      <div className="mb-6 p-4 bg-gradient-to-r from-[var(--surface-2)] to-[var(--surface-1)] border border-[var(--border)] rounded-xl">
+        <div className="flex items-start gap-3">
+          <div className="text-xl">✨</div>
+          <div className="flex-1">
+            <p className="font-semibold text-[var(--text)] mb-1">Complete Your Bio to Increase Sales</p>
+            <p className="text-sm text-[var(--text-muted)] mb-3">
+              Venues are more likely to display your artwork when they know your story. A compelling, authentic bio with your artistic vision and creative process helps venues connect with you and your work.
+            </p>
+            <button 
+              onClick={() => setIsEditing(true)}
+              className="text-sm px-3 py-1 bg-[var(--blue)] hover:bg-[var(--blue-hover)] text-[var(--on-blue)] rounded-lg transition-colors"
+            >
+              Edit Profile
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Profile Information Card */}
         <div className="lg:col-span-2 bg-[var(--surface-1)] rounded-xl border border-[var(--border)] overflow-hidden">
