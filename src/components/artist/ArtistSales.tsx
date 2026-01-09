@@ -3,11 +3,14 @@ import { DollarSign, TrendingUp, Package, BarChart3, Calendar, Eye } from 'lucid
 import { apiGet } from '../../lib/api';
 import type { User } from '../../App';
 
-interface ArtistSalesProps { user: User }
+interface ArtistSalesProps { 
+  user: User;
+  onNavigate?: (page: string) => void;
+}
 
 type SubscriptionTier = 'free' | 'starter' | 'growth' | 'pro';
 
-export function ArtistSales({ user }: ArtistSalesProps) {
+export function ArtistSales({ user, onNavigate }: ArtistSalesProps) {
   const [sales, setSales] = useState<Array<{ id: string; price: number; artistEarnings: number; artworkTitle: string; artworkImage?: string | null; venueName?: string | null; saleDate: string }>>([]);
   const [tier, setTier] = useState<SubscriptionTier>('free');
 
@@ -169,15 +172,16 @@ export function ArtistSales({ user }: ArtistSalesProps) {
       {(['free', 'starter'] as SubscriptionTier[]).includes(tier) && (
         <div className="mb-8 bg-[var(--surface-2)] border-2 border-[var(--accent)] border-opacity-30 rounded-xl p-6">
           <div className="flex items-start gap-4">
-            <div className="w-10 h-10 bg-[var(--accent)] bg-opacity-20 rounded-lg flex items-center justify-center flex-shrink-0">
-              <BarChart3 className="w-5 h-5 text-[var(--accent)]" />
-            </div>
+            <BarChart3 className="w-6 h-6 text-[var(--accent)] flex-shrink-0 mt-1" />
             <div>
               <h3 className="text-lg font-semibold text-[var(--text)] mb-1">Unlock Advanced Analytics</h3>
               <p className="text-sm text-[var(--text-muted)] mb-3">
                 Upgrade to Growth or Pro to see detailed performance insights, top artworks, and 30-day sales trends.
               </p>
-              <button className="px-4 py-2 bg-[var(--accent)] text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">
+              <button 
+                onClick={() => onNavigate?.('plans-pricing')}
+                className="px-4 py-2 bg-[var(--accent)] text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+              >
                 View Upgrade Options
               </button>
             </div>

@@ -411,7 +411,7 @@ export default function App() {
                 onNavigate={handleNavigate}
               />
             )}
-            {currentPage === 'artist-sales' && <ArtistSales user={currentUser} />}
+            {currentPage === 'artist-sales' && <ArtistSales user={currentUser} onNavigate={handleNavigate} />}
             {currentPage === 'artist-profile' && <ArtistProfile onNavigate={handleNavigate} />}
             {currentPage === 'artist-password-security' && <PasswordSecurity onBack={() => handleNavigate('artist-profile')} />}
             {currentPage === 'artist-notifications' && <NotificationPreferences onBack={() => handleNavigate('artist-profile')} />}
