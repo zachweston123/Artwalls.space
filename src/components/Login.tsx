@@ -145,8 +145,8 @@ export function Login({ onLogin }: LoginProps) {
               className="group bg-[var(--blue-muted)] rounded-2xl p-6 sm:p-8 border-2 border-[var(--blue)] hover:brightness-95 transition-all active:scale-[0.98]"
             >
               <div className="flex flex-col items-center text-center gap-4">
-                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center group-hover:bg-[var(--blue)] transition-colors">
-                  <Palette className="w-7 h-7 sm:w-8 sm:h-8 text-[var(--blue)] group-hover:text-[var(--on-blue)] transition-colors" />
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center">
+                  <Palette className="w-7 h-7 sm:w-8 sm:h-8 text-[var(--blue)]" />
                 </div>
                 <div>
                   <h2 className="text-xl mb-1 sm:mb-2 text-[var(--blue)] font-bold">I'm an Artist</h2>
@@ -162,8 +162,8 @@ export function Login({ onLogin }: LoginProps) {
               className="group bg-[var(--green-muted)] rounded-2xl p-6 sm:p-8 border-2 border-[var(--green)] hover:brightness-95 transition-all active:scale-[0.98]"
             >
               <div className="flex flex-col items-center text-center gap-4">
-                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center group-hover:bg-[var(--green)] transition-colors">
-                  <Store className="w-7 h-7 sm:w-8 sm:h-8 text-[var(--green)] group-hover:text-[var(--accent-contrast)] transition-colors" />
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center">
+                  <Store className="w-7 h-7 sm:w-8 sm:h-8 text-[var(--green)]" />
                 </div>
                 <div>
                   <h2 className="text-xl mb-1 sm:mb-2 text-[var(--green)] font-bold">I'm a Venue</h2>
