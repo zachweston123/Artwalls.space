@@ -2,6 +2,13 @@ import { useState } from 'react';
 import { Palette, Store } from 'lucide-react';
 import type { User, UserRole } from '../App';
 
+// Google OAuth icon component
+const GoogleIcon = () => (
+  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032 c0-3.331,2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.461,2.268,15.365,1.25,12.545,1.25 c-6.134,0-11.104,4.971-11.104,11.105c0,6.135,4.97,11.104,11.104,11.104c6.134,0,11.104-4.969,11.104-11.104 c0-0.378-0.025-0.75-0.076-1.122H12.545z"/>
+  </svg>
+);
+
 interface LoginProps {
   onLogin: (user: User) => void;
 }
@@ -16,6 +23,33 @@ export function Login({ onLogin }: LoginProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  const handleGoogleSignIn = async () => {
+    if (!selectedRole) return;
+
+    setErrorMessage(null);
+    setInfoMessage(null);
+    setIsLoading(true);
+
+    try {
+      const { supabase } = await import('../lib/supabase');
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      });
+
+      if (error) throw error;
+    } catch (err: any) {
+      setErrorMessage(err?.message || 'Google sign-in failed.');
+      setIsLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -297,6 +331,25 @@ export function Login({ onLogin }: LoginProps) {
               }
             >
               {isLoading ? 'Please wait…' : isSignup ? 'Create Account' : 'Sign In'}
+            </button>
+
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-[var(--border)]"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-[var(--surface)] text-[var(--text-muted)]">Or continue with</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleGoogleSignIn}
+              disabled={isLoading}
+              className="w-full py-3 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] hover:brightness-95 transition disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              <GoogleIcon />
+              {isLoading ? 'Connecting…' : 'Sign in with Google'}
             </button>
           </form>
 

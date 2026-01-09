@@ -75,6 +75,8 @@ export default function App() {
   const [showAdminPasswordPrompt, setShowAdminPasswordPrompt] = useState(false);
   const [adminPasswordVerified, setAdminPasswordVerified] = useState(false);
   const [pendingAdminAccess, setPendingAdminAccess] = useState(false);
+  const [showGoogleRoleSelection, setShowGoogleRoleSelection] = useState(false);
+  const [googleUser, setGoogleUser] = useState<any>(null);
 
   const userFromSupabase = (supaUser: any): User | null => {
     if (!supaUser?.id) return null;
@@ -118,7 +120,19 @@ export default function App() {
       }
     });
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      // Handle OAuth sign-up - need role selection
+      if (event === 'SIGNED_IN' && session?.user) {
+        const userRole = (session.user.user_metadata?.role as UserRole) || null;
+        
+        // If user has no role, they likely just signed up with Google
+        if (!userRole) {
+          setGoogleUser(session.user);
+          setShowGoogleRoleSelection(true);
+          return;
+        }
+      }
+      
       const nextUser = userFromSupabase(session?.user);
       setCurrentUser(nextUser);
       // Only reset page for logout; preserve all other pages during auth updates
@@ -235,6 +249,44 @@ export default function App() {
     setPendingAdminAccess(false);
   };
 
+  const handleGoogleRoleSelection = async (role: UserRole) => {
+    if (!googleUser || !role) return;
+    
+    try {
+      // Update user metadata with selected role
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          role,
+          name: googleUser.user_metadata?.name || googleUser.email?.split('@')[0] || 'User',
+        },
+      });
+
+      if (error) throw error;
+
+      // Provision profile
+      try {
+        await apiPost('/api/profile/provision', {});
+      } catch (e) {
+        console.warn('Profile provision failed', e);
+      }
+
+      // Update local state
+      const user: User = {
+        id: googleUser.id,
+        name: googleUser.user_metadata?.name || googleUser.email?.split('@')[0] || 'User',
+        email: googleUser.email || '',
+        role,
+      };
+
+      setCurrentUser(user);
+      setCurrentPage(role === 'artist' ? 'artist-dashboard' : 'venue-dashboard');
+      setShowGoogleRoleSelection(false);
+      setGoogleUser(null);
+    } catch (err: any) {
+      console.error('Failed to set user role:', err);
+    }
+  };
+
   const handleLogout = async () => {
     if (currentUser?.role === 'admin') {
       setCurrentUser(null);
@@ -291,6 +343,29 @@ export default function App() {
             onVerify={handleAdminPasswordVerified}
             onCancel={handleCancelAdminPassword}
           />
+        )}
+        {/* Google Role Selection Modal */}
+        {showGoogleRoleSelection && googleUser && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-[var(--surface)] rounded-lg p-8 max-w-md w-full mx-4 shadow-lg">
+              <h2 className="text-2xl font-bold text-[var(--text)] mb-2">Welcome to Artwalls!</h2>
+              <p className="text-[var(--text-muted)] mb-6">What would you like to do?</p>
+              <div className="space-y-3">
+                <button
+                  onClick={() => handleGoogleRoleSelection('artist')}
+                  className="w-full py-3 rounded-lg bg-[var(--blue)] text-[var(--on-blue)] hover:brightness-95 transition font-medium flex items-center justify-center gap-2"
+                >
+                  <span>🎨</span> Become an Artist
+                </button>
+                <button
+                  onClick={() => handleGoogleRoleSelection('venue')}
+                  className="w-full py-3 rounded-lg bg-[var(--green)] text-[var(--accent-contrast)] hover:brightness-95 transition font-medium flex items-center justify-center gap-2"
+                >
+                  <span>🏛️</span> Become a Venue
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     );
