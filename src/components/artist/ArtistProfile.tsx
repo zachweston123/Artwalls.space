@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { User, Mail, Phone, Link as LinkIcon, DollarSign, Edit, Save, X, Upload, Loader2, Camera, AlertCircle } from 'lucide-react';
 import { PlanBadge } from '../pricing/PlanBadge';
 import { CitySelect } from '../shared/CitySelect';
@@ -12,11 +12,19 @@ interface ArtistProfileProps {
 }
 
 export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
+  const editFormRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+
+  const handleScrollToEdit = () => {
+    setIsEditing(true);
+    setTimeout(() => {
+      editFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  };
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -238,6 +246,7 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
           instagramHandle,
         }}
         onEditProfile={() => setIsEditing(true)}
+        onScrollToEdit={handleScrollToEdit}
       />
 
       {/* Incomplete Profile Alert */}
@@ -254,6 +263,7 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
           instagramHandle,
         }}
         onEditProfile={() => setIsEditing(true)}
+        onScrollToEdit={handleScrollToEdit}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -350,7 +360,7 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
                 </div>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div ref={editFormRef} className="space-y-4">
                 <div>
                   <label className="block text-sm text-[var(--text-muted)] mb-3">Profile Photo</label>
                   <div className="flex items-center gap-6">

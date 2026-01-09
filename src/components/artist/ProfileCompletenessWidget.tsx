@@ -11,13 +11,15 @@ import {
 
 interface ProfileCompletenessWidgetProps {
   profile: ArtistProfile;
-  onEditProfile: () => void;
+  onEditProfile?: () => void;
+  onScrollToEdit?: () => void;
   compact?: boolean;
 }
 
 export function ProfileCompletenessWidget({
   profile,
   onEditProfile,
+  onScrollToEdit,
   compact = false
 }: ProfileCompletenessWidgetProps) {
   const completeness = calculateProfileCompleteness(profile);
@@ -25,6 +27,11 @@ export function ProfileCompletenessWidget({
   const salesMessage = getSalesImpactMessage(level);
   const bgColor = getCompletionBgColor(completeness.percentage);
   const textColor = getCompletionColor(completeness.percentage);
+
+  // Hide completely if profile is 100% complete
+  if (completeness.percentage === 100 && !compact) {
+    return null;
+  }
 
   if (compact) {
     // Compact version for dashboards/sidebars
@@ -109,7 +116,7 @@ export function ProfileCompletenessWidget({
 
           {/* CTA Button */}
           <button
-            onClick={onEditProfile}
+            onClick={onScrollToEdit || onEditProfile}
             className={`text-sm px-4 py-2 rounded-lg transition-colors ${
               completeness.percentage === 100
                 ? 'bg-[var(--green)] hover:bg-[var(--green-hover)] text-[var(--on-green)]'
@@ -129,12 +136,14 @@ export function ProfileCompletenessWidget({
  */
 export function ProfileIncompleteAlert({
   profile,
-  onEditProfile
+  onEditProfile,
+  onScrollToEdit
 }: Omit<ProfileCompletenessWidgetProps, 'compact'>) {
   const completeness = calculateProfileCompleteness(profile);
 
-  if (completeness.isComplete || completeness.percentage > 75) {
-    return null; // Don't show if profile is mostly complete
+  // Only show if profile is incomplete (< 100%)
+  if (completeness.isComplete || completeness.percentage >= 100) {
+    return null;
   }
 
   return (
@@ -147,10 +156,10 @@ export function ProfileIncompleteAlert({
             Venues prefer artists with detailed profiles. {completeness.nextStep} to improve visibility and attract more sales.
           </p>
           <button
-            onClick={onEditProfile}
+            onClick={onScrollToEdit || onEditProfile}
             className="text-sm text-[var(--blue)] hover:text-[var(--blue-hover)] font-medium transition-colors"
           >
-            Edit Profile Now →
+            Complete Your Profile →
           </button>
         </div>
       </div>
