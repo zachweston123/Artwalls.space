@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   ArrowLeft, 
   User, 
@@ -13,13 +13,17 @@ import {
   StickyNote,
   Frame,
   ShoppingCart,
-  CreditCard
+  CreditCard,
+  Crown
 } from 'lucide-react';
+import { apiGet, apiPost } from '../../lib/api';
 
 interface AdminUserDetailProps {
   userId: string;
   onBack: () => void;
 }
+
+type SubscriptionTier = 'free' | 'starter' | 'growth' | 'pro';
 
 // Simple role badge component for admin use
 function RoleBadge({ role }: { role: 'artist' | 'venue' }) {
@@ -38,9 +42,13 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'placements' | 'orders' | 'subscriptions' | 'notes'>('overview');
   const [pendingAction, setPendingAction] = useState<'suspend' | 'logout' | 'reset' | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSavingTier, setIsSavingTier] = useState(false);
+  const [selectedTier, setSelectedTier] = useState<SubscriptionTier>('free');
+  const [isEditingTier, setIsEditingTier] = useState(false);
 
   // Mock user data
-  const user = {
+  let user = {
     id: userId,
     name: 'User',
     email: 'user@example.com',
@@ -56,6 +64,51 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
     activeDisplays: 0,
     protectionPlanActive: 0,
   };
+
+  // Load user data
+  useEffect(() => {
+    async function loadUser() {
+      try {
+        const artist = await apiGet<any>(`/api/artists/${userId}`);
+        if (artist) {
+          user = {
+            ...user,
+            name: artist.name || 'Artist',
+            email: artist.email || null,
+            plan: (artist.subscriptionTier || 'free').toString().replace(/^(.)/, (m: string) => m.toUpperCase()),
+            status: (artist.subscriptionStatus === 'suspended') ? 'Suspended' : 'Active',
+          };
+          setSelectedTier((artist.subscriptionTier || 'free').toLowerCase() as SubscriptionTier);
+        }
+      } catch (e) {
+        console.error('Failed to load user:', e);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadUser();
+  }, [userId]);
+
+  async function handleTierChange() {
+    if (selectedTier === (user.plan.toLowerCase() === '—' ? 'free' : user.plan.toLowerCase())) {
+      setIsEditingTier(false);
+      return;
+    }
+    
+    setIsSavingTier(true);
+    try {
+      await apiPost(`/api/admin/users/${userId}/tier`, { tier: selectedTier });
+      user.plan = selectedTier.replace(/^(.)/, (m: string) => m.toUpperCase());
+      setToast(`Tier updated to ${selectedTier}`);
+      setIsEditingTier(false);
+      setTimeout(() => setToast(null), 2000);
+    } catch (err: any) {
+      setToast(`Error: ${err?.message || 'Failed to update tier'}`);
+      setTimeout(() => setToast(null), 3000);
+    } finally {
+      setIsSavingTier(false);
+    }
+  }
 
   const tabs = [
     { id: 'overview' as const, label: 'Overview', icon: User },
@@ -107,11 +160,55 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-3xl mb-2 text-[var(--text)]">{user.name}</h1>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <RoleBadge role={user.role} />
-              <span className={`px-2 py-1 rounded-full text-xs ${getPlanBadgeColor(user.plan)}`}>
-                {user.plan}
-              </span>
+              
+              {/* Tier Badge/Selector */}
+              {!isEditingTier ? (
+                <div className="flex items-center gap-2">
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium border ${
+                    selectedTier === 'pro' ? 'bg-[var(--green-muted)] text-[var(--green)] border-[var(--green)]' :
+                    selectedTier === 'growth' ? 'bg-[var(--blue-muted)] text-[var(--blue)] border-[var(--blue)]' :
+                    selectedTier === 'starter' ? 'bg-[var(--surface-3)] text-[var(--accent)] border-[var(--border)]' :
+                    'bg-[var(--surface-3)] text-[var(--text-muted)] border-[var(--border)]'
+                  }`}>
+                    {selectedTier.replace(/^(.)/, (m: string) => m.toUpperCase())} {selectedTier === 'pro' && <Crown className="w-3 h-3 inline ml-1" />}
+                  </span>
+                  <button
+                    onClick={() => setIsEditingTier(true)}
+                    className="px-2 py-1 text-xs text-[var(--blue)] hover:text-[var(--blue-hover)] transition-colors"
+                  >
+                    Change
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <select
+                    value={selectedTier}
+                    onChange={(e) => setSelectedTier(e.target.value as SubscriptionTier)}
+                    className="px-2 py-1 rounded border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--blue)]"
+                  >
+                    <option value="free">Free</option>
+                    <option value="starter">Starter</option>
+                    <option value="growth">Growth</option>
+                    <option value="pro">Pro</option>
+                  </select>
+                  <button
+                    onClick={handleTierChange}
+                    disabled={isSavingTier}
+                    className="px-3 py-1 bg-[var(--blue)] text-[var(--on-blue)] rounded text-xs font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
+                  >
+                    {isSavingTier ? 'Saving...' : 'Save'}
+                  </button>
+                  <button
+                    onClick={() => setIsEditingTier(false)}
+                    className="px-2 py-1 text-xs text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+              
               <span className="px-2 py-1 bg-[var(--green-muted)] text-[var(--green)] border border-[var(--border)] rounded-full text-xs">
                 {user.status}
               </span>

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { User, Mail, Phone, Link as LinkIcon, DollarSign, Edit, Save, X, Upload, Loader2, Camera, AlertCircle } from 'lucide-react';
 import { PlanBadge } from '../pricing/PlanBadge';
 import { CitySelect } from '../shared/CitySelect';
+import { ProfileCompletenessWidget, ProfileIncompleteAlert } from './ProfileCompletenessWidget';
 import { supabase } from '../../lib/supabase';
 import { uploadProfilePhoto } from '../../lib/storage';
 import { compressImage, formatFileSize } from '../../lib/imageCompression';
@@ -19,10 +20,12 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [bio, setBio] = useState('');
   const [portfolioUrl, setPortfolioUrl] = useState('');
   const [phone, setPhone] = useState('');
   const [cityPrimary, setCityPrimary] = useState('');
   const [citySecondary, setCitySecondary] = useState('');
+  const [instagramHandle, setInstagramHandle] = useState('');
   const [currentPlan, setCurrentPlan] = useState<'free' | 'starter' | 'growth' | 'pro'>('free');
   const [avatar, setAvatar] = useState<string>('');
   const [uploading, setUploading] = useState(false);
@@ -75,6 +78,8 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
           setPhone((row.phone_number as string) || ((user.user_metadata?.phone as string) || ''));
           setCityPrimary((row.city_primary as string) || '');
           setCitySecondary((row.city_secondary as string) || '');
+          setBio((row.bio as string) || '');
+          setInstagramHandle((row.instagram_handle as string) || '');
           const tier = (row.subscription_tier as 'free' | 'starter' | 'growth' | 'pro') || 'free';
           setCurrentPlan(tier);
           setAvatar((row?.profile_photo_url as string) || (user.user_metadata?.avatar as string) || '');
@@ -186,7 +191,18 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
         cityPrimary: cityPrimary || null,
         citySecondary: citySecondary || null,
         subscriptionTier: currentPlan,
+        bio: bio || null,
+        instagramHandle: instagramHandle || null,
       });
+
+      // Update bio and instagram in Supabase directly
+      await supabase
+        .from('artists')
+        .update({ 
+          bio: bio || null,
+          instagram_handle: instagramHandle || null
+        })
+        .eq('id', user.id);
 
       // Update metadata and email in auth
       const { error: metaErr } = await supabase.auth.updateUser({ data: { portfolioUrl, phone, cityPrimary, citySecondary }, email });
@@ -208,24 +224,37 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
         <p className="text-[var(--text-muted)]">Manage your account information and settings</p>
       </div>
 
-      {/* Bio Encouragement Banner */}
-      <div className="mb-6 p-4 bg-gradient-to-r from-[var(--surface-2)] to-[var(--surface-1)] border border-[var(--border)] rounded-xl">
-        <div className="flex items-start gap-3">
-          <div className="text-xl">✨</div>
-          <div className="flex-1">
-            <p className="font-semibold text-[var(--text)] mb-1">Complete Your Bio to Increase Sales</p>
-            <p className="text-sm text-[var(--text-muted)] mb-3">
-              Venues are more likely to display your artwork when they know your story. A compelling, authentic bio with your artistic vision and creative process helps venues connect with you and your work.
-            </p>
-            <button 
-              onClick={() => setIsEditing(true)}
-              className="text-sm px-3 py-1 bg-[var(--blue)] hover:bg-[var(--blue-hover)] text-[var(--on-blue)] rounded-lg transition-colors"
-            >
-              Edit Profile
-            </button>
-          </div>
-        </div>
-      </div>
+      {/* Profile Completeness Widget */}
+      <ProfileCompletenessWidget
+        profile={{
+          name,
+          email,
+          bio,
+          profilePhoto: avatar,
+          phone,
+          primaryCity: cityPrimary,
+          secondaryCity: citySecondary,
+          portfolioUrl,
+          instagramHandle,
+        }}
+        onEditProfile={() => setIsEditing(true)}
+      />
+
+      {/* Incomplete Profile Alert */}
+      <ProfileIncompleteAlert
+        profile={{
+          name,
+          email,
+          bio,
+          profilePhoto: avatar,
+          phone,
+          primaryCity: cityPrimary,
+          secondaryCity: citySecondary,
+          portfolioUrl,
+          instagramHandle,
+        }}
+        onEditProfile={() => setIsEditing(true)}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Profile Information Card */}
@@ -444,6 +473,16 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
                 <div>
                   <label className="block text-sm text-[var(--text-muted)] mb-1">Portfolio Website</label>
                   <input value={portfolioUrl} onChange={(e) => setPortfolioUrl(e.target.value)} className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]" placeholder="https://your-portfolio.example" />
+                </div>
+                <div>
+                  <label className="block text-sm text-[var(--text-muted)] mb-1">Bio</label>
+                  <textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Tell venues about yourself, your art style, and what makes your art special..." className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)] resize-none" rows={4} maxLength={500} />
+                  <p className="text-xs text-[var(--text-muted)] mt-1">{bio.length}/500 characters • More info helps venues understand your work</p>
+                </div>
+                <div>
+                  <label className="block text-sm text-[var(--text-muted)] mb-1">Instagram Handle</label>
+                  <input value={instagramHandle} onChange={(e) => setInstagramHandle(e.target.value)} className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]" placeholder="@yourinstagram" />
+                  <p className="text-xs text-[var(--text-muted)] mt-1">Venues can find and follow your work</p>
                 </div>
               </div>
             )}

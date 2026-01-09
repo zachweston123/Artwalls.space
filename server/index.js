@@ -1757,6 +1757,45 @@ app.post('/api/admin/users/:id/activate', async (req, res) => {
   }
 });
 
+// Admin: update user subscription tier (artists only)
+app.post('/api/admin/users/:id/tier', async (req, res) => {
+	const admin = await requireAdmin(req, res); if (!admin) return;
+  try {
+    const userId = req.params.id;
+    const { tier } = req.body || {};
+    
+    if (!userId) return res.status(400).json({ error: 'Missing userId' });
+    if (!tier) return res.status(400).json({ error: 'Missing tier' });
+    
+    // Validate tier is one of the valid options
+    const validTiers = ['free', 'starter', 'growth', 'pro'];
+    if (!validTiers.includes(String(tier).toLowerCase())) {
+      return res.status(400).json({ error: `Invalid tier. Must be one of: ${validTiers.join(', ')}` });
+    }
+
+    const artist = await getArtist(userId);
+    if (!artist) {
+      return res.status(404).json({ error: 'Artist not found' });
+    }
+
+    // Update the tier and set subscription status to active
+    const updated = await upsertArtist({
+      id: userId,
+      subscriptionTier: String(tier).toLowerCase(),
+      subscriptionStatus: 'active',
+    });
+
+    return res.json({ 
+      success: true, 
+      message: `Tier updated to ${tier}`, 
+      user: updated 
+    });
+  } catch (err) {
+    console.error('admin update tier error', err);
+    return res.status(500).json({ error: err?.message || 'Admin update tier failed' });
+  }
+});
+
 // -----------------------------
 // Wallspaces per venue
 // -----------------------------
