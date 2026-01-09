@@ -67,9 +67,9 @@ export function MobileSidebar({ isOpen, onClose, user, onNavigate, onLogout, cur
         <div className="flex items-center justify-between p-6 border-b border-[var(--border)]">
           <div className="flex items-center gap-2">
             {isArtist ? (
-              <Palette className="w-6 h-6 text-[var(--accent)]" />
+              <Palette className="w-6 h-6 text-[var(--blue)]" />
             ) : (
-              <Store className="w-6 h-6 text-[var(--accent)]" />
+              <Store className="w-6 h-6 text-[var(--green)]" />
             )}
             <span className="text-xl tracking-tight text-[var(--text)]">Artwalls</span>
           </div>

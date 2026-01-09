@@ -138,6 +138,29 @@ export default function App() {
     };
   }, []);
 
+  // Update favicon based on user role
+  useEffect(() => {
+    if (!currentUser) {
+      // Default icon when not signed in
+      const favicon = document.querySelector('link[rel="icon"]');
+      if (favicon) {
+        favicon.setAttribute('data-icon', 'default');
+      }
+    } else if (currentUser.role === 'artist') {
+      // Blue palette icon for artists
+      const favicon = document.querySelector('link[rel="icon"]');
+      if (favicon) {
+        favicon.setAttribute('data-icon', 'artist');
+      }
+    } else if (currentUser.role === 'venue') {
+      // Green store icon for venues
+      const favicon = document.querySelector('link[rel="icon"]');
+      if (favicon) {
+        favicon.setAttribute('data-icon', 'venue');
+      }
+    }
+  }, [currentUser?.role]);
+
   // Listen for keyboard shortcut to access admin login (Ctrl+Shift+A)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
