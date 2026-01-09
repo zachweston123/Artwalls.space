@@ -202,14 +202,14 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
       <div className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)] mb-6">
         {/* Search Bar */}
         <div className="flex gap-3 mb-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-muted)]" />
+          <div className="flex-1 relative flex items-center">
+            <Search className="absolute left-3 w-5 h-5 text-[var(--text-muted)] pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by venue name..."
-              className="w-full pl-20 pr-4 py-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
+              className="w-full pl-12 pr-4 py-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
             />
           </div>
           <button
