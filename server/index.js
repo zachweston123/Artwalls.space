@@ -2324,6 +2324,112 @@ app.patch('/api/admin/support/messages/:id/status', async (req, res) => {
   }
 });
 
+// Admin: Dashboard Metrics
+app.get('/api/admin/metrics', async (req, res) => {
+  const admin = await requireAdmin(req, res); 
+  if (!admin) return;
+  
+  try {
+    const { data: artists } = await supabaseAdmin.from('artists').select('id');
+    const { data: venues } = await supabaseAdmin.from('venues').select('id');
+    const { data: artworks } = await supabaseAdmin
+      .from('artworks')
+      .select('id')
+      .not('venue_id', 'is', null)
+      .neq('status', 'sold');
+    const { data: notifications } = await supabaseAdmin
+      .from('notifications')
+      .select('id')
+      .eq('type', 'invite')
+      .eq('read', false);
+    const { data: transactions } = await supabaseAdmin
+      .from('transactions')
+      .select('amount_cents, created_at')
+      .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
+
+    const totalArtists = artists?.length || 0;
+    const totalVenues = venues?.length || 0;
+    const activeDisplays = artworks?.length || 0;
+    const pendingInvites = notifications?.length || 0;
+
+    const monthlyGmv = transactions?.reduce((sum, t) => sum + (t.amount_cents || 0), 0) || 0;
+    const platformFee = Math.round(monthlyGmv * 0.045);
+    const recentActivity = (transactions || [])
+      .slice(0, 10)
+      .map(t => ({
+        type: 'sale',
+        timestamp: t.created_at,
+        amount_cents: t.amount_cents
+      }));
+
+    return res.json({
+      totals: {
+        artists: totalArtists,
+        venues: totalVenues,
+        activeDisplays
+      },
+      month: {
+        gmv: monthlyGmv,
+        platformRevenue: platformFee,
+        gvmDelta: 0
+      },
+      monthlyArtistsDelta: 0,
+      monthlyVenuesDelta: 0,
+      pendingInvites,
+      supportQueue: 0,
+      recentActivity
+    });
+  } catch (err) {
+    console.error('Admin metrics error:', err);
+    return res.status(500).json({ error: err?.message || 'Failed to load metrics' });
+  }
+});
+
+// Admin: Dashboard Metrics
+app.get('/api/admin/metrics', async (req, res) => {
+  const admin = await requireAdmin(req, res);
+  if (!admin) return;
+  try {
+    const { data: artists } = await supabaseAdmin.from('artists').select('id');
+    const { data: venues } = await supabaseAdmin.from('venues').select('id');
+    const { data: artworks } = await supabaseAdmin
+      .from('artworks')
+      .select('id')
+      .not('venue_id', 'is', null)
+      .neq('status', 'sold');
+    const { data: notifications } = await supabaseAdmin
+      .from('notifications')
+      .select('id')
+      .eq('type', 'invite')
+      .eq('read', false);
+    const { data: transactions } = await supabaseAdmin
+      .from('transactions')
+      .select('amount_cents, created_at')
+      .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
+    const totalArtists = artists?.length || 0;
+    const totalVenues = venues?.length || 0;
+    const activeDisplays = artworks?.length || 0;
+    const pendingInvites = notifications?.length || 0;
+    const monthlyGmv = transactions?.reduce((sum, t) => sum + (t.amount_cents || 0), 0) || 0;
+    const platformFee = Math.round(monthlyGmv * 0.045);
+    const recentActivity = (transactions || [])
+      .slice(0, 10)
+      .map(t => ({ type: 'sale', timestamp: t.created_at, amount_cents: t.amount_cents }));
+    return res.json({
+      totals: { artists: totalArtists, venues: totalVenues, activeDisplays },
+      month: { gmv: monthlyGmv, platformRevenue: platformFee, gvmDelta: 0 },
+      monthlyArtistsDelta: 0,
+      monthlyVenuesDelta: 0,
+      pendingInvites,
+      supportQueue: 0,
+      recentActivity
+    });
+  } catch (err) {
+    console.error('Admin metrics error:', err);
+    return res.status(500).json({ error: err?.message || 'Failed to load metrics' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Artwalls server running on http://localhost:${PORT}`);
 });
