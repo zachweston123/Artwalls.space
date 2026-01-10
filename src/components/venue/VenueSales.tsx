@@ -120,12 +120,12 @@ export function VenueSales() {
       <div className="mt-6 bg-[var(--surface-2)] rounded-xl p-6 border border-[var(--border)]">
         <h3 className="text-lg mb-2">Commission Structure</h3>
         <p className="text-sm text-[var(--text-muted)] mb-4">
-          You receive 10% commission on each artwork sold from your venue. Artists receive 80%, and Artwalls keeps 10% as a platform fee.
+          You receive 10% commission on each artwork sold from your venue. Artist earnings vary by their subscription plan (65%-85%), and Artwalls keeps the remainder as a platform & processing fee.
         </p>
         <div className="grid grid-cols-3 gap-4 text-sm">
           <div className="bg-[var(--surface-1)] rounded-lg p-3 border border-[var(--border)]">
             <div className="text-[var(--text-muted)] mb-1">Artist</div>
-            <div className="text-xl text-[var(--blue)]">80%</div>
+            <div className="text-xl text-[var(--blue)]">65-85%*</div>
           </div>
           <div className="bg-[var(--surface-1)] rounded-lg p-3 border border-[var(--border)]">
             <div className="text-[var(--text-muted)] mb-1">Your Venue</div>
@@ -133,9 +133,10 @@ export function VenueSales() {
           </div>
           <div className="bg-[var(--surface-1)] rounded-lg p-3 border border-[var(--border)]">
             <div className="text-[var(--text-muted)] mb-1">Platform</div>
-            <div className="text-xl text-[var(--text-muted)]">10%</div>
+            <div className="text-xl text-[var(--text-muted)]">5-25%</div>
           </div>
         </div>
+        <p className="text-xs text-[var(--text-muted)] mt-3">* Artist payout varies by their subscription plan. Platform fee covers processing and infrastructure costs.</p>
       </div>
     </div>
   );

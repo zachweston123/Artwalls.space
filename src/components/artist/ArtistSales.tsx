@@ -42,6 +42,21 @@ export function ArtistSales({ user, onNavigate }: ArtistSalesProps) {
   const totalSales = sales.length;
   const averageSale = totalSales > 0 ? totalEarnings / totalSales : 0;
 
+  // Get payout percentage based on plan
+  const getPayoutPercentage = (plan: string) => {
+    switch (plan) {
+      case 'starter':
+        return '80%';
+      case 'growth':
+        return '83%';
+      case 'pro':
+        return '85%';
+      case 'free':
+      default:
+        return '65%';
+    }
+  };
+
   return (
     <div className="bg-[var(--bg)] text-[var(--text)]">
       <div className="mb-8">
@@ -60,7 +75,7 @@ export function ArtistSales({ user, onNavigate }: ArtistSalesProps) {
               <div className="text-2xl text-[var(--text)]">${totalEarnings.toFixed(2)}</div>
             </div>
           </div>
-          <div className="text-xs text-[var(--text-muted)]">80% of total sales</div>
+          <div className="text-xs text-[var(--text-muted)]">{getPayoutPercentage(tier)} of total sales</div>
         </div>
 
         <div className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)]">

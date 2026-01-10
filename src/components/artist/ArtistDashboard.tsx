@@ -99,6 +99,20 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
   const totalEarnings = stats ? stats.sales.totalEarnings : artworks.filter(a => a.status === 'sold').reduce((sum, a) => sum + (a.price || 0), 0);
   const recentSales = stats ? stats.sales.total : artworks.filter(a => a.status === 'sold').length;
 
+  const getPayoutPercentage = (plan: string) => {
+    switch (plan) {
+      case 'starter':
+        return '80%';
+      case 'growth':
+        return '83%';
+      case 'pro':
+        return '85%';
+      case 'free':
+      default:
+        return '65%';
+    }
+  };
+
   const dashboardStats = [
     {
       label: 'Active Artworks',
@@ -111,7 +125,7 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
     {
       label: 'Total Earnings',
       value: `$${totalEarnings.toFixed(0)}`,
-      subtext: '80% of sales',
+      subtext: `${getPayoutPercentage(currentPlan)} of sales`,
       icon: DollarSign,
       color: 'blue',
       action: () => onNavigate('artist-sales'),
