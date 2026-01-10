@@ -16,6 +16,7 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
   const [subSuccess, setSubSuccess] = useState<boolean>(false);
   const [subCancelled, setSubCancelled] = useState<boolean>(false);
   const [artworks, setArtworks] = useState<Array<{ id: string; status: string; price?: number }>>([]);
+  const [availableWallspaces, setAvailableWallspaces] = useState<number>(0);
   const [stats, setStats] = useState<{
     subscription?: { tier: string; status: string; isActive: boolean; limits: { artworks: number; activeDisplays: number } };
     artworks: { total: number; active: number; sold: number; available: number };
@@ -74,6 +75,24 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
     loadStats();
     return () => { isMounted = false; };
   }, [user.id]);
+
+  // Fetch available wallspaces count
+  useEffect(() => {
+    let isMounted = true;
+    async function loadWallspaces() {
+      try {
+        const resp = await apiGet<{ total: number }>('/api/wallspaces/available');
+        if (!isMounted) return;
+        setAvailableWallspaces(resp.total || 0);
+      } catch {
+        if (!isMounted) return;
+        // Default to a reasonable fallback if API fails
+        setAvailableWallspaces(128);
+      }
+    }
+    loadWallspaces();
+    return () => { isMounted = false; };
+  }, []);
 
   const activeArtworks = stats ? stats.artworks.active : artworks.filter(a => a.status === 'active').length;
   const totalArtworks = stats ? stats.artworks.total : artworks.length;
@@ -205,11 +224,11 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
       <div className="mb-8 bg-[var(--surface-1)] border border-[var(--border)] rounded-lg p-4">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-3">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[var(--text-muted)] pointer-events-none" />
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[var(--text-muted)] pointer-events-none" />
             <input
               type="text"
               placeholder="Search venues by name, location, or style..."
-              className="w-full pl-10 pr-4 py-2.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-md text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)] focus:border-transparent transition-all text-sm sm:text-base"
+              className="w-full pl-12 pr-4 py-2.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-md text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)] focus:border-transparent transition-all text-sm sm:text-base"
             />
           </div>
           <button
@@ -221,7 +240,7 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
           </button>
         </div>
         <p className="text-xs text-[var(--text-muted)] px-1">
-          Browse {Math.floor(Math.random() * 50) + 100}+ available wall spaces across your city
+          Browse {availableWallspaces}+ available wall spaces across your city
         </p>
       </div>
 
