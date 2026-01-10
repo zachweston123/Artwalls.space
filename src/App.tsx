@@ -29,6 +29,7 @@ import { FindArtists } from './components/venue/FindArtists';
 import { ApplicationsAndInvitations } from './components/shared/ApplicationsAndInvitations';
 import { FindVenues } from './components/artist/FindVenues';
 import { NotificationsList } from './components/notifications/NotificationsList';
+import { WhyArtwalls } from './components/WhyArtwalls';
 import { PoliciesLanding } from './components/legal/PoliciesLanding';
 import { ArtistAgreement } from './components/legal/ArtistAgreement';
 import { VenueAgreement } from './components/legal/VenueAgreement';
@@ -52,6 +53,8 @@ import { AdminCurrentDisplays } from './components/admin/AdminCurrentDisplays';
 import { AdminSupport } from './components/admin/AdminSupport';
 import { AdminPasswordPrompt } from './components/admin/AdminPasswordPrompt';
 import { StripePaymentSetup } from './components/admin/StripePaymentSetup';
+import { SupportInbox } from './components/admin/SupportInbox';
+import { SupportMessageDetail } from './components/admin/SupportMessageDetail';
 
 export type UserRole = 'artist' | 'venue' | 'admin' | null;
 
@@ -70,6 +73,7 @@ export default function App() {
   });
   const [selectedVenueId, setSelectedVenueId] = useState<string | null>(null);
   const [selectedArtistId, setSelectedArtistId] = useState<string | null>(null);
+  const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [hasAcceptedAgreement, setHasAcceptedAgreement] = useState(false);
   const [showAdminPasswordPrompt, setShowAdminPasswordPrompt] = useState(false);
@@ -336,7 +340,7 @@ export default function App() {
   if (!currentUser) {
     return (
       <div>
-        <Login onLogin={handleLogin} />
+        <Login onLogin={handleLogin} onNavigate={handleNavigate} />
         {/* Password Prompt Modal */}
         {showAdminPasswordPrompt && (
           <AdminPasswordPrompt
@@ -393,6 +397,18 @@ export default function App() {
             )}
             {currentPage === 'admin-stripe-payments' && <StripePaymentSetup onNavigate={handleNavigate} />}
             {currentPage === 'admin-activity-log' && <AdminActivityLog />}
+            {currentPage === 'admin-support-messages' && (
+              <SupportInbox onSelectMessage={(messageId) => {
+                setSelectedMessageId(messageId);
+                handleNavigate('admin-support-message-detail');
+              }} />
+            )}
+            {currentPage === 'admin-support-message-detail' && selectedMessageId && (
+              <SupportMessageDetail
+                messageId={selectedMessageId}
+                onBack={() => handleNavigate('admin-support-messages')}
+              />
+            )}
           </main>
         </div>
       </div>
@@ -434,6 +450,12 @@ export default function App() {
         {currentPage === 'privacy-policy' && <PrivacyPolicy onNavigate={handleNavigate} />}
         {currentPage === 'terms-of-service' && <TermsOfService onNavigate={handleNavigate} />}
         {currentPage === 'plans-pricing' && <PricingPage onNavigate={handleNavigate} currentPlan="free" />}
+        {currentPage === 'why-artwalls-artist' && (
+          <WhyArtwalls userRole="artist" onNavigate={handleNavigate} onBack={() => handleNavigate('login')} />
+        )}
+        {currentPage === 'why-artwalls-venue' && (
+          <WhyArtwalls userRole="venue" onNavigate={handleNavigate} onBack={() => handleNavigate('login')} />
+        )}
         {currentPage === 'artist-agreement' && (
           <ArtistAgreement 
             onNavigate={handleNavigate}

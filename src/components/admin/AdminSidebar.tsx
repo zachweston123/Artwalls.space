@@ -7,7 +7,8 @@ import {
   Activity, 
   Settings,
   Shield,
-  CreditCard
+  CreditCard,
+  Mail
 } from 'lucide-react';
 
 interface AdminSidebarProps {
@@ -23,6 +24,7 @@ export function AdminSidebar({ currentPage, onNavigate }: AdminSidebarProps) {
     { id: 'admin-stripe-payments', label: 'Stripe Payments', icon: CreditCard },
     { id: 'admin-announcements', label: 'Announcements', icon: Megaphone },
     { id: 'admin-promo-codes', label: 'Promo Codes', icon: Tag },
+    { id: 'admin-support-messages', label: 'Support Messages', icon: Mail },
     { id: 'admin-activity-log', label: 'Activity Log', icon: Activity },
     // { id: 'admin-settings', label: 'Settings', icon: Settings },
   ];

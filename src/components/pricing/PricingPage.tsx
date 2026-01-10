@@ -793,7 +793,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                 <th className="text-left p-4 text-sm text-[var(--text-muted)] font-semibold">What You Get</th>
                 <th className="text-center p-4 text-sm text-[var(--text-muted)] font-semibold">
                   <div>Free</div>
-                  <div className="text-xs text-[var(--accent)] font-bold mt-1">65% earnings</div>
+                  <div className="text-xs text-[var(--accent)] font-bold mt-1">60% earnings</div>
                 </th>
                 <th className="text-center p-4 text-sm text-[var(--text-muted)] font-semibold">
                   <div>Starter</div>

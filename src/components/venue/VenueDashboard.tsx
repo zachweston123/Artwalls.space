@@ -75,7 +75,7 @@ export function VenueDashboard({ onNavigate, user }: VenueDashboardProps) {
     {
       label: 'Total Earnings',
       value: `$${venueEarnings.toFixed(0)}`,
-      subtext: '10% commission',
+      subtext: '15% commission',
       icon: DollarSign,
       color: 'green',
       action: () => onNavigate('venue-sales'),

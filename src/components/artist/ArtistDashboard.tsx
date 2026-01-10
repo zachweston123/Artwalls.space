@@ -109,7 +109,7 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
         return '85%';
       case 'free':
       default:
-        return '65%';
+        return '60%';
     }
   };
 

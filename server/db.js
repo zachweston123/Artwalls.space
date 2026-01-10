@@ -662,3 +662,104 @@ export async function markNotificationRead(id, userId) {
   throwIfError(error, 'markNotificationRead');
   return mapNotificationRow(data);
 }
+// Support Messages
+
+function mapSupportMessageRow(r) {
+  if (!r) return null;
+  return {
+    id: r.id,
+    email: r.email,
+    message: r.message,
+    roleContext: r.role_context,
+    pageSource: r.page_source,
+    userId: r.user_id,
+    artistId: r.artist_id,
+    venueId: r.venue_id,
+    status: r.status,
+    ipHash: r.ip_hash,
+    userAgent: r.user_agent,
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+  };
+}
+
+export async function createSupportMessage({ email, message, roleContext, pageSource, userId, artistId, venueId, ipHash, userAgent }) {
+  const { data, error } = await supabaseAdmin
+    .from('support_messages')
+    .insert({
+      email,
+      message,
+      role_context: roleContext,
+      page_source: pageSource,
+      user_id: userId || null,
+      artist_id: artistId || null,
+      venue_id: venueId || null,
+      status: 'new',
+      ip_hash: ipHash,
+      user_agent: userAgent,
+      created_at: nowIso(),
+      updated_at: nowIso(),
+    })
+    .select('*')
+    .maybeSingle();
+  throwIfError(error, 'createSupportMessage');
+  return mapSupportMessageRow(data);
+}
+
+export async function listSupportMessages({ limit = 50, offset = 0, status = null, searchEmail = null, searchMessage = null }) {
+  let query = supabaseAdmin
+    .from('support_messages')
+    .select('*', { count: 'exact' });
+
+  if (status) {
+    query = query.eq('status', status);
+  }
+  if (searchEmail) {
+    query = query.ilike('email', `%${searchEmail}%`);
+  }
+  if (searchMessage) {
+    query = query.ilike('message', `%${searchMessage}%`);
+  }
+
+  const { data, error, count } = await query
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  throwIfError(error, 'listSupportMessages');
+  return {
+    messages: (data || []).map(mapSupportMessageRow),
+    total: count || 0,
+  };
+}
+
+export async function getSupportMessage(id) {
+  const { data, error } = await supabaseAdmin
+    .from('support_messages')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle();
+  throwIfError(error, 'getSupportMessage');
+  return mapSupportMessageRow(data);
+}
+
+export async function updateSupportMessageStatus(id, status) {
+  const { data, error } = await supabaseAdmin
+    .from('support_messages')
+    .update({ status, updated_at: nowIso() })
+    .eq('id', id)
+    .select('*')
+    .maybeSingle();
+  throwIfError(error, 'updateSupportMessageStatus');
+  return mapSupportMessageRow(data);
+}
+
+export async function getRecentMessageCountByIp(ipHash, withinMinutes = 60) {
+  const cutoffTime = new Date(Date.now() - withinMinutes * 60 * 1000).toISOString();
+  const { data, error, count } = await supabaseAdmin
+    .from('support_messages')
+    .select('id', { count: 'exact' })
+    .eq('ip_hash', ipHash)
+    .gte('created_at', cutoffTime);
+  throwIfError(error, 'getRecentMessageCountByIp');
+  return count || 0;
+}

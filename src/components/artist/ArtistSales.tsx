@@ -53,7 +53,7 @@ export function ArtistSales({ user, onNavigate }: ArtistSalesProps) {
         return '85%';
       case 'free':
       default:
-        return '65%';
+        return '60%';
     }
   };
 

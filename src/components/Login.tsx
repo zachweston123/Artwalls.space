@@ -11,9 +11,10 @@ const GoogleIcon = () => (
 
 interface LoginProps {
   onLogin: (user: User) => void;
+  onNavigate?: (page: string) => void;
 }
 
-export function Login({ onLogin }: LoginProps) {
+export function Login({ onLogin, onNavigate }: LoginProps) {
   const [selectedRole, setSelectedRole] = useState<UserRole>(null);
   const [isSignup, setIsSignup] = useState(false);
   const [name, setName] = useState('');
@@ -187,6 +188,15 @@ export function Login({ onLogin }: LoginProps) {
                   <p className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
                     Share and sell your artwork at local venues and manage your portfolio
                   </p>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onNavigate?.('why-artwalls-artist');
+                    }}
+                    className="mt-3 text-xs text-[var(--blue)] hover:underline"
+                  >
+                    Learn more →
+                  </button>
                 </div>
               </div>
             </button>
@@ -202,8 +212,17 @@ export function Login({ onLogin }: LoginProps) {
                 <div>
                   <h2 className="text-xl mb-1 sm:mb-2 text-[var(--green)] font-bold">I'm a Venue</h2>
                   <p className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
-                    Support local artists by displaying rotating artworks and earn 10% commission
+                    Support local artists by displaying rotating artworks and earn 15% commission
                   </p>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onNavigate?.('why-artwalls-venue');
+                    }}
+                    className="mt-3 text-xs text-[var(--green)] hover:underline"
+                  >
+                    Learn more →
+                  </button>
                 </div>
               </div>
             </button>
@@ -368,6 +387,15 @@ export function Login({ onLogin }: LoginProps) {
               className="text-sm text-[var(--text-muted)] hover:text-[var(--text)]"
             >
               ← Choose different role
+            </button>
+          </div>
+
+          <div className="mt-3 text-center">
+            <button
+              onClick={() => onNavigate?.(selectedRole === 'artist' ? 'why-artwalls-artist' : 'why-artwalls-venue')}
+              className="text-sm text-[var(--text-muted)] hover:text-[var(--text)]"
+            >
+              Why Artwalls? →
             </button>
           </div>
         </div>

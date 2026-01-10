@@ -38,6 +38,11 @@ import {
   createNotification,
   listNotificationsForUser,
   markNotificationRead,
+  createSupportMessage,
+  listSupportMessages,
+  getSupportMessage,
+  updateSupportMessageStatus,
+  getRecentMessageCountByIp,
 } from './db.js';
 import { sendIcsEmail } from './mail.js';
 
@@ -2184,6 +2189,138 @@ app.post('/api/stripe/create-checkout-session', async (req, res) => {
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: err?.message || 'Stripe error' });
+  }
+});
+
+// Support Messages Endpoint
+app.post('/api/support/messages', async (req, res) => {
+  try {
+    const { email, message, role_context, page_source } = req.body;
+
+    // Input validation
+    if (!email || !message || !role_context || !page_source) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: 'Invalid email format' });
+    }
+
+    // Message length validation
+    if (typeof message !== 'string' || message.length < 10) {
+      return res.status(400).json({ error: 'Message must be at least 10 characters' });
+    }
+
+    // Role context validation
+    const validRoles = ['artist', 'venue', 'other'];
+    if (!validRoles.includes(role_context)) {
+      return res.status(400).json({ error: 'Invalid role context' });
+    }
+
+    // Sanitize message to prevent XSS
+    const sanitizedMessage = String(message)
+      .replace(/[<>]/g, (char) => (char === '<' ? '&lt;' : '&gt;'))
+      .slice(0, 5000); // Limit to 5000 characters
+
+    // Get client IP (respecting proxies)
+    const clientIp = req.headers['x-forwarded-for']
+      ? req.headers['x-forwarded-for'].split(',')[0].trim()
+      : req.socket.remoteAddress || '0.0.0.0';
+
+    // Hash the IP for privacy
+    const ipHash = crypto.createHash('sha256').update(clientIp).digest('hex');
+
+    // Rate limiting: max 5 messages per hour per IP
+    const recentCount = await getRecentMessageCountByIp(ipHash, 60);
+    if (recentCount >= 5) {
+      return res.status(429).json({ error: 'Too many messages. Please try again later.' });
+    }
+
+    // Create the message
+    const msg = await createSupportMessage({
+      email: email.toLowerCase().trim(),
+      message: sanitizedMessage,
+      roleContext: role_context,
+      pageSource: page_source,
+      userId: null, // Not authenticated in this context
+      artistId: null,
+      venueId: null,
+      ipHash,
+      userAgent: req.headers['user-agent'] || 'unknown',
+    });
+
+    return res.status(201).json({
+      success: true,
+      id: msg.id,
+    });
+  } catch (err) {
+    console.error('Support message error:', err);
+    return res.status(500).json({ error: 'Failed to send message. Please try again.' });
+  }
+});
+
+// Admin: Get support messages
+app.get('/api/admin/support/messages', async (req, res) => {
+  try {
+    // TODO: Add auth check for admin role
+    const { limit = 50, offset = 0, status, searchEmail, searchMessage } = req.query;
+
+    const result = await listSupportMessages({
+      limit: Math.min(parseInt(limit, 10) || 50, 100),
+      offset: parseInt(offset, 10) || 0,
+      status: status || null,
+      searchEmail: searchEmail || null,
+      searchMessage: searchMessage || null,
+    });
+
+    return res.json(result);
+  } catch (err) {
+    console.error('List support messages error:', err);
+    return res.status(500).json({ error: 'Failed to fetch messages' });
+  }
+});
+
+// Admin: Get single support message
+app.get('/api/admin/support/messages/:id', async (req, res) => {
+  try {
+    // TODO: Add auth check for admin role
+    const { id } = req.params;
+
+    const msg = await getSupportMessage(id);
+    if (!msg) {
+      return res.status(404).json({ error: 'Message not found' });
+    }
+
+    return res.json(msg);
+  } catch (err) {
+    console.error('Get support message error:', err);
+    return res.status(500).json({ error: 'Failed to fetch message' });
+  }
+});
+
+// Admin: Update message status
+app.patch('/api/admin/support/messages/:id/status', async (req, res) => {
+  try {
+    // TODO: Add auth check for admin role
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const validStatuses = ['new', 'open', 'closed'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ error: 'Invalid status' });
+    }
+
+    const msg = await updateSupportMessageStatus(id, status);
+    if (!msg) {
+      return res.status(404).json({ error: 'Message not found' });
+    }
+
+    return res.json(msg);
+  } catch (err) {
+    console.error('Update message status error:', err);
+    return res.status(500).json({ error: 'Failed to update message' });
   }
 });
 
