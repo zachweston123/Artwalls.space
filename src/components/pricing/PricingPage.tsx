@@ -534,6 +534,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                       <span className="text-[var(--text-muted)]">Artist Earnings (83%)</span>
                       <span className="font-semibold text-[var(--accent)]">${growthEarnings.artistAmount.toFixed(2)}</span>
                     </div>
+                    <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
                       <span className="text-[var(--text-muted)]">Venue Commission (15%)</span>
                     </div>
                     <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
