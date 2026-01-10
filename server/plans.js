@@ -2,18 +2,28 @@
  * Subscription Plans Configuration
  * Single source of truth for all subscription tier definitions.
  * 
+ * ========================================================
+ * NEW BUSINESS MODEL (SOURCE OF TRUTH)
+ * ========================================================
+ * 
  * KEY DEFINITIONS:
  * - artist_take_home_pct: Percentage of LIST PRICE the artist takes home (decimal 0-1)
- * - venue_commission_pct: Percentage of LIST PRICE venue receives (always 0.10 = 10%)
- * - buyer_fee_pct: Percentage of LIST PRICE buyer pays as separate fee (always 0.03 = 3%)
+ * - venue_commission_pct: Percentage of LIST PRICE venue receives (always 0.15 = 15%)
+ * - buyer_fee_pct: Percentage of LIST PRICE buyer pays as separate fee (always 0.045 = 4.5%)
  * - monthly_price: Monthly subscription cost in USD
+ * 
+ * ARTIST TAKE-HOME BY SUBSCRIPTION (OF LIST PRICE):
+ * - Free: 60%
+ * - Starter: 80% ($9/month)
+ * - Growth: 83% ($19/month)
+ * - Pro: 85% ($39/month)
  * 
  * CALCULATION EXAMPLE (for $140 artwork with Pro plan):
  * - List Price: $140.00
- * - Buyer Fee (3%): $4.20 → Buyer pays: $144.20
- * - Venue Commission (10%): $14.00
+ * - Buyer Fee (4.5%): $6.30 → Buyer pays: $146.30
+ * - Venue Commission (15%): $21.00
  * - Artist Take Home (85%): $119.00
- * - Platform + Processing: Remainder after Stripe fees
+ * - Platform + Processing: Remainder after payment processing
  */
 
 export const SUBSCRIPTION_PLANS = {
@@ -21,7 +31,8 @@ export const SUBSCRIPTION_PLANS = {
     id: 'free',
     name: 'Free',
     monthly_price: 0,
-    artist_take_home_pct: 0.65,
+    monthly_price_cents: 0,
+    artist_take_home_pct: 0.60,
     features: ['1 active display', '1 artwork listing', 'Basic QR generation'],
     active_displays: 1,
     artwork_listings: 1,
@@ -30,6 +41,7 @@ export const SUBSCRIPTION_PLANS = {
     id: 'starter',
     name: 'Starter',
     monthly_price: 9,
+    monthly_price_cents: 900,
     artist_take_home_pct: 0.80,
     features: ['4 active displays', 'Up to 10 artworks', 'Priority support'],
     active_displays: 4,
@@ -39,6 +51,7 @@ export const SUBSCRIPTION_PLANS = {
     id: 'growth',
     name: 'Growth',
     monthly_price: 19,
+    monthly_price_cents: 1900,
     artist_take_home_pct: 0.83,
     features: ['10 active displays', 'Up to 30 artworks', 'Visibility boost'],
     active_displays: 10,
@@ -48,6 +61,7 @@ export const SUBSCRIPTION_PLANS = {
     id: 'pro',
     name: 'Pro',
     monthly_price: 39,
+    monthly_price_cents: 3900,
     artist_take_home_pct: 0.85,
     features: ['Unlimited displays', 'Unlimited artworks', 'Free protection'],
     active_displays: Infinity,
@@ -55,9 +69,9 @@ export const SUBSCRIPTION_PLANS = {
   },
 };
 
-// Constants for all plans
-export const VENUE_COMMISSION_PCT = 0.10; // 10% of list price
-export const BUYER_FEE_PCT = 0.03; // 3% of list price
+// Constants for all plans (SOURCE OF TRUTH)
+export const VENUE_COMMISSION_PCT = 0.15; // 15% of list price (UPDATED)
+export const BUYER_FEE_PCT = 0.045; // 4.5% of list price (UPDATED)
 
 /**
  * Get artist take-home percentage for a given plan

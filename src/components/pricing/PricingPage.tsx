@@ -23,7 +23,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       price: 0,
       period: '/mo',
       icon: Sparkles,
-      takeHome: 65,
+      takeHome: 60,
       tagline: 'Perfect for trying Artwalls',
       features: [
         '1 active display included',
@@ -145,13 +145,13 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
 
   // NEW MODEL: Calculate artist take-home per sale
   // Artist takes home a percentage of LIST PRICE
-  // Venue always gets 10% of list price
-  // Buyer pays 3% fee on top of list price at checkout
+  // Venue always gets 15% of list price (UPDATED)
+  // Buyer pays 4.5% fee on top of list price at checkout (UPDATED)
   // Platform & Processing gets the remainder after Stripe fees
   const calculateArtistTakeHome = (listPrice: number, takeHomePct: number) => {
     const artistAmount = listPrice * (takeHomePct / 100);
-    const venueAmount = listPrice * 0.10; // Venue always 10%
-    const buyerFee = listPrice * 0.03; // Buyer fee always 3%
+    const venueAmount = listPrice * 0.15; // Venue always 15% (UPDATED)
+    const buyerFee = listPrice * 0.045; // Buyer fee always 4.5% (UPDATED)
     const buyerTotal = listPrice + buyerFee; // What buyer pays
     const platformGross = listPrice - artistAmount - venueAmount; // Platform's gross before Stripe
     
@@ -184,12 +184,12 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
     };
   };
 
-  const freeEarnings = calculateArtistTakeHome(saleValue, 65);
+  const freeEarnings = calculateArtistTakeHome(saleValue, 60);
   const starterEarnings = calculateArtistTakeHome(saleValue, 80);
   const growthEarnings = calculateArtistTakeHome(saleValue, 83);
   const proEarnings = calculateArtistTakeHome(saleValue, 85);
 
-  const freeMonthly = calculateMonthlyNet('free', 65, 0, false);
+  const freeMonthly = calculateMonthlyNet('free', 60, 0, false);
   const starterMonthly = calculateMonthlyNet('starter', 80, 9, false);
   const growthMonthly = calculateMonthlyNet('growth', 83, 19, false);
   const proMonthly = calculateMonthlyNet('pro', 85, 39, true);
@@ -427,10 +427,10 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {[
-              { id: 'free', name: 'Free', fee: 15, price: 0, earnings: freeEarnings, monthly: freeMonthly },
-              { id: 'starter', name: 'Starter', fee: 10, price: 9, earnings: starterEarnings, monthly: starterMonthly },
-              { id: 'growth', name: 'Growth', fee: 8, price: 19, earnings: growthEarnings, monthly: growthMonthly },
-              { id: 'pro', name: 'Pro', fee: 6, price: 39, earnings: proEarnings, monthly: proMonthly }
+              { id: 'free', name: 'Free', takeHome: 60, price: 0, earnings: freeEarnings, monthly: freeMonthly },
+              { id: 'starter', name: 'Starter', takeHome: 80, price: 9, earnings: starterEarnings, monthly: starterMonthly },
+              { id: 'growth', name: 'Growth', takeHome: 83, price: 19, earnings: growthEarnings, monthly: growthMonthly },
+              { id: 'pro', name: 'Pro', takeHome: 85, price: 39, earnings: proEarnings, monthly: proMonthly }
             ].map((plan) => {
               const isSelected = selectedPlanId === plan.id || (!selectedPlanId && plan.id === 'pro');
               const isCapped = plan.monthly.allowedArtworks < artworksPerMonth;
@@ -486,52 +486,11 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                 {selectedPlanId === 'free' && (
                   <>
                     <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
-                      <span className="text-[var(--text-muted)]">Artist Earnings (65%)</span>
+                      <span className="text-[var(--text-muted)]">Artist Earnings (60%)</span>
                       <span className="font-semibold text-[var(--accent)]">${freeEarnings.artistAmount.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
-                      <span className="text-[var(--text-muted)]">Venue Commission (10%)</span>
-                      <span className="font-semibold text-[var(--text)]">${freeEarnings.venueAmount.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between items-center pt-3 bg-[var(--surface-2)] border border-[var(--border)] p-4 rounded-lg mb-4">
-                      <span className="font-bold text-[var(--text)]">Your per-sale earnings</span>
-                      <span className="font-bold text-[var(--accent)] text-xl">${freeEarnings.artistAmount.toFixed(2)}</span>
-                    </div>
-                    <div className="bg-[var(--surface-3)] p-4 rounded-lg border border-[var(--border)]">
-                      <h4 className="text-sm font-semibold text-[var(--text)] mb-2">After Additional Costs:</h4>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-[var(--text-muted)]">Monthly Subscription</span>
-                          <span className="text-[var(--text)]">$0</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-[var(--text-muted)]">Protection Plan</span>
-                          <span className="text-[var(--text)]">$5/artwork/mo</span>
-                        </div>
-                        <div className="border-t border-[var(--border)] pt-2 mt-2">
-                          <div className="flex justify-between font-semibold">
-                            <span className="text-[var(--text)]">Est. Net Income / month</span>
-                            <span className="text-[var(--text)]">${freeMonthly.monthlyNet.toFixed(0)}</span>
-                          </div>
-                        </div>
-                        {freeMonthly.allowedArtworks < artworksPerMonth && (
-                          <p className="text-xs text-[var(--text-muted)] mt-2">
-                            Limited by plan: Free supports up to 1 artwork.
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {selectedPlanId === 'starter' && (
-                  <>
-                    <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
-                      <span className="text-[var(--text-muted)]">Artist Earnings (80%)</span>
-                      <span className="font-semibold text-[var(--accent)]">${starterEarnings.artistAmount.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
-                      <span className="text-[var(--text-muted)]">Venue Commission (10%)</span>
+                      <span className="text-[var(--text-muted)]">Venue Commission (15%)</span>
                       <span className="font-semibold text-[var(--text)]">${starterEarnings.venueAmount.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
@@ -575,9 +534,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                       <span className="text-[var(--text-muted)]">Artist Earnings (83%)</span>
                       <span className="font-semibold text-[var(--accent)]">${growthEarnings.artistAmount.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
-                      <span className="text-[var(--text-muted)]">Venue Commission (10%)</span>
-                      <span className="font-semibold text-[var(--text)]">${growthEarnings.venueAmount.toFixed(2)}</span>
+                      <span className="text-[var(--text-muted)]">Venue Commission (15%)</span>
                     </div>
                     <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
                       <span className="text-[var(--text-muted)]">Monthly Subscription</span>
@@ -620,9 +577,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                       <span className="text-[var(--text-muted)]">Artist Earnings (85%)</span>
                       <span className="font-semibold text-[var(--accent)]">${proEarnings.artistAmount.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
-                      <span className="text-[var(--text-muted)]">Venue Commission (10%)</span>
-                      <span className="font-semibold text-[var(--text)]">${proEarnings.venueAmount.toFixed(2)}</span>
+                      <span className="text-[var(--text-muted)]">Venue Commission (15%)</span>
                     </div>
                     <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
                       <span className="text-[var(--text-muted)]">Monthly Subscription</span>
@@ -656,7 +611,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
               </div>
 
               <p className="text-xs text-[var(--text-muted)] mt-4">
-                💡 <span className="font-semibold">Pro tip:</span> The Pro plan includes free protection for all your artworks and offers the lowest platform fee (6%) to maximize your earnings!
+                💡 <span className="font-semibold">Pro tip:</span> The Pro plan includes free protection for all your artworks and offers the highest artist take-home (85%) to maximize your earnings!
               </p>
             </div>
           )}
