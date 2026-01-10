@@ -29,6 +29,7 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [bio, setBio] = useState('');
+  const [artTypes, setArtTypes] = useState<string[]>([]);
   const [portfolioUrl, setPortfolioUrl] = useState('');
   const [phone, setPhone] = useState('');
   const [cityPrimary, setCityPrimary] = useState('');
@@ -42,6 +43,12 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
   // Demo values for summary (would come from orders on real data)
   const [totalEarnings] = useState(0);
   const [pendingPayout] = useState(0);
+
+  const allArtTypes = [
+    'Painter', 'Photographer', 'Illustrator', 'Digital', 
+    'Mixed Media', 'Printmaker', 'Collage', 'Sculptor',
+    'Street Artist', 'Installation', 'Textile Artist', 'Ceramicist'
+  ];
 
   useEffect(() => {
     let mounted = true;
@@ -87,6 +94,7 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
           setCityPrimary((row.city_primary as string) || '');
           setCitySecondary((row.city_secondary as string) || '');
           setBio((row.bio as string) || '');
+          setArtTypes((row.art_types as string[]) || []);
           setInstagramHandle((row.instagram_handle as string) || '');
           const tier = (row.subscription_tier as 'free' | 'starter' | 'growth' | 'pro') || 'free';
           setCurrentPlan(tier);
@@ -200,14 +208,16 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
         citySecondary: citySecondary || null,
         subscriptionTier: currentPlan,
         bio: bio || null,
+        artTypes: artTypes.length > 0 ? artTypes : null,
         instagramHandle: instagramHandle || null,
       });
 
-      // Update bio and instagram in Supabase directly
+      // Update bio, art_types and instagram in Supabase directly
       await supabase
         .from('artists')
         .update({ 
           bio: bio || null,
+          art_types: artTypes.length > 0 ? artTypes : [],
           instagram_handle: instagramHandle || null
         })
         .eq('id', user.id);
@@ -238,6 +248,7 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
           name,
           email,
           bio,
+          artTypes,
           profilePhoto: avatar,
           phone,
           primaryCity: cityPrimary,
@@ -255,6 +266,7 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
           name,
           email,
           bio,
+          artTypes,
           profilePhoto: avatar,
           phone,
           primaryCity: cityPrimary,
@@ -314,6 +326,30 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
 
             {!isEditing ? (
               <div className="space-y-4">
+                {bio && (
+                  <div className="flex items-start gap-3 p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg">
+                    <div className="flex-1">
+                      <label className="block text-sm text-[var(--text-muted)] mb-1">Bio</label>
+                      <p className="text-[var(--text)] whitespace-pre-wrap">{bio}</p>
+                    </div>
+                  </div>
+                )}
+
+                {artTypes.length > 0 && (
+                  <div className="flex items-start gap-3 p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg">
+                    <div className="flex-1">
+                      <label className="block text-sm text-[var(--text-muted)] mb-2">Art Types</label>
+                      <div className="flex flex-wrap gap-2">
+                        {artTypes.map((type) => (
+                          <span key={type} className="px-3 py-1 bg-[var(--blue-muted)] text-[var(--blue)] text-sm rounded-full">
+                            {type}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex items-start gap-3 p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg">
                   <Mail className="w-5 h-5 text-[var(--text-muted)] mt-0.5" />
                   <div className="flex-1">
@@ -488,6 +524,32 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
                   <label className="block text-sm text-[var(--text-muted)] mb-1">Bio</label>
                   <textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Tell venues about yourself, your art style, and what makes your art special..." className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)] resize-none" rows={4} maxLength={500} />
                   <p className="text-xs text-[var(--text-muted)] mt-1">{bio.length}/500 characters • More info helps venues understand your work</p>
+                </div>
+                <div>
+                  <label className="block text-sm text-[var(--text-muted)] mb-3">Art Types</label>
+                  <p className="text-xs text-[var(--text-muted)] mb-3">Select your art types so venues can find you more easily</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {allArtTypes.map((type) => (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => {
+                          setArtTypes(prev =>
+                            prev.includes(type)
+                              ? prev.filter(t => t !== type)
+                              : [...prev, type]
+                          );
+                        }}
+                        className={`px-3 py-2 rounded-lg border-2 transition-all text-sm font-medium ${
+                          artTypes.includes(type)
+                            ? 'border-[var(--blue)] bg-[var(--blue-muted)] text-[var(--blue)]'
+                            : 'border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-muted)] hover:border-[var(--blue)]'
+                        }`}
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm text-[var(--text-muted)] mb-1">Instagram Handle</label>
