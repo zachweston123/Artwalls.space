@@ -85,12 +85,12 @@ export default function App() {
   const userFromSupabase = (supaUser: any): User | null => {
     if (!supaUser?.id) return null;
     const role = (supaUser.user_metadata?.role as UserRole) || null;
-    if (role !== 'artist' && role !== 'venue') return null;
+    if (role !== 'artist' && role !== 'venue' && role !== 'admin') return null;
     return {
       id: supaUser.id,
       name:
         (supaUser.user_metadata?.name as string | undefined) ||
-        (role === 'artist' ? 'Artist' : 'Venue'),
+        (role === 'artist' ? 'Artist' : role === 'venue' ? 'Venue' : 'Admin'),
       email: (supaUser.email as string | undefined) || '',
       role,
     };
