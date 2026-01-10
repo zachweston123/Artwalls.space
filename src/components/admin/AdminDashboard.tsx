@@ -229,6 +229,24 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
 
   return (
     <div className="bg-[var(--bg)]">
+      {/* Loading State */}
+      {loading && (
+        <div className="text-center py-12">
+          <p className="text-[var(--text-muted)]">Loading dashboard...</p>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && (
+        <div className="mb-8 bg-[var(--danger-muted)] border border-[var(--danger)] text-[var(--danger)] p-4 rounded-lg">
+          <p className="font-semibold mb-1">Failed to load dashboard</p>
+          <p className="text-sm">{error}</p>
+        </div>
+      )}
+
+      {/* Content - only show if not loading and data exists */}
+      {!loading && metrics && (
+        <>
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl mb-2 text-[var(--text)]">Dashboard</h1>
@@ -388,6 +406,8 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
           </div>
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 }
