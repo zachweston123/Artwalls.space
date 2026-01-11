@@ -18,10 +18,10 @@ CREATE TABLE IF NOT EXISTS support_messages (
 );
 
 -- Create indexes for common queries
-CREATE INDEX idx_support_messages_status ON support_messages(status);
-CREATE INDEX idx_support_messages_email ON support_messages(email);
-CREATE INDEX idx_support_messages_created_at ON support_messages(created_at DESC);
-CREATE INDEX idx_support_messages_ip_hash_created ON support_messages(ip_hash, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_support_messages_status ON support_messages(status);
+CREATE INDEX IF NOT EXISTS idx_support_messages_email ON support_messages(email);
+CREATE INDEX IF NOT EXISTS idx_support_messages_created_at ON support_messages(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_support_messages_ip_hash_created ON support_messages(ip_hash, created_at DESC);
 
 -- Enable RLS (Row Level Security) for safety
 ALTER TABLE support_messages ENABLE ROW LEVEL SECURITY;
@@ -31,16 +31,26 @@ CREATE POLICY support_messages_insert_public ON support_messages
   FOR INSERT
   WITH CHECK (true);
 
--- Only admin can read/update (TODO: link to admin role check)
+-- Only admin can read/update
 CREATE POLICY support_messages_select_admin ON support_messages
   FOR SELECT
-  USING (false); -- TODO: Update with admin role check
+  USING (auth.jwt() ->> 'role' = 'admin');
 
 CREATE POLICY support_messages_update_admin ON support_messages
   FOR UPDATE
-  USING (false) -- TODO: Update with admin role check
-  WITH CHECK (false);
+  USING (auth.jwt() ->> 'role' = 'admin')
+  WITH CHECK (auth.jwt() ->> 'role' = 'admin');
 
--- Add foreign key constraints (optional - if user_id should reference auth.users)
--- ALTER TABLE support_messages
--- ADD CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE SET NULL;
+CREATE POLICY support_messages_delete_admin ON support_messages
+  FOR DELETE
+  USING (auth.jwt() ->> 'role' = 'admin');
+
+-- Add foreign key constraints
+ALTER TABLE support_messages
+ADD CONSTRAINT fk_support_user_id FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE SET NULL;
+
+ALTER TABLE support_messages
+ADD CONSTRAINT fk_support_artist_id FOREIGN KEY (artist_id) REFERENCES artists(id) ON DELETE SET NULL;
+
+ALTER TABLE support_messages
+ADD CONSTRAINT fk_support_venue_id FOREIGN KEY (venue_id) REFERENCES venues(id) ON DELETE SET NULL;
