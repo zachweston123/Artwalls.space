@@ -125,7 +125,7 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
     {
       label: 'Total Earnings',
       value: `$${totalEarnings.toFixed(0)}`,
-      subtext: `${getPayoutPercentage(currentPlan)} of sales`,
+      subtext: `${getPayoutPercentage(stats?.subscription?.tier ?? 'free')}% of sales`,
       icon: DollarSign,
       color: 'blue',
       action: () => onNavigate('artist-sales'),
@@ -186,7 +186,7 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div className="flex-1">
             <h1 className="text-3xl sm:text-4xl font-bold text-[var(--text)] mb-2">
-              Welcome back, {user.name.split(' ')[0] || 'Artist'}
+              Welcome back, {user?.name?.split(' ')[0] || 'Artist'}
             </h1>
             <p className="text-[var(--text-muted)] text-sm sm:text-base">
               Here's what's happening with your artwork

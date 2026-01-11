@@ -16,6 +16,14 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
   const [error, setError] = useState<string | null>(null);
   const [managingPortal, setManagingPortal] = useState<boolean>(false);
 
+  // Helper functions for number formatting
+  const formatCurrency = (centAmount: number) => {
+    return (centAmount / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+  const formatWhole = (num: number) => {
+    return Math.round(num).toLocaleString('en-US');
+  };
+
   const plans = [
     {
       id: 'free',
@@ -446,7 +454,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                 >
                   <div className="font-semibold text-[var(--text)] mb-2">{plan.name}</div>
                   <div className="text-3xl font-bold text-[var(--text)]">
-                    ${plan.monthly.monthlyNet.toFixed(0)}
+                    ${formatWhole(plan.monthly.monthlyNet)}
                   </div>
                   <div className="text-xs text-[var(--text-muted)] mt-1">
                     est. net / month
@@ -475,7 +483,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
               <div className="space-y-3">
                 <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
                   <span className="text-[var(--text-muted)]">Sale Value</span>
-                  <span className="font-semibold text-[var(--text)]">${saleValue.toFixed(0)}</span>
+                  <span className="font-semibold text-[var(--text)]">${formatWhole(saleValue)}</span>
                 </div>
 
                 <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
@@ -487,11 +495,11 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                   <>
                     <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
                       <span className="text-[var(--text-muted)]">Artist Earnings (60%)</span>
-                      <span className="font-semibold text-[var(--accent)]">${freeEarnings.artistAmount.toFixed(2)}</span>
+                      <span className="font-semibold text-[var(--accent)]">${formatCurrency(freeEarnings.artistAmount * 100)}</span>
                     </div>
                     <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
                       <span className="text-[var(--text-muted)]">Venue Commission (15%)</span>
-                      <span className="font-semibold text-[var(--text)]">${starterEarnings.venueAmount.toFixed(2)}</span>
+                      <span className="font-semibold text-[var(--text)]">${formatCurrency(starterEarnings.venueAmount * 100)}</span>
                     </div>
                     <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
                       <span className="text-[var(--text-muted)]">Monthly Subscription</span>
@@ -499,7 +507,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                     </div>
                     <div className="flex justify-between items-center pt-3 bg-[var(--surface-2)] border border-[var(--border)] p-4 rounded-lg mb-4">
                       <span className="font-bold text-[var(--text)]">Your per-sale earnings</span>
-                      <span className="font-bold text-[var(--accent)] text-xl">${starterEarnings.artistAmount.toFixed(2)}</span>
+                      <span className="font-bold text-[var(--accent)] text-xl">${formatCurrency(starterEarnings.artistAmount * 100)}</span>
                     </div>
                     <div className="bg-[var(--surface-3)] p-4 rounded-lg border border-[var(--border)]">
                       <h4 className="text-sm font-semibold text-[var(--text)] mb-2">After Additional Costs:</h4>
@@ -515,7 +523,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                         <div className="border-t border-[var(--border)] pt-2 mt-2">
                           <div className="flex justify-between font-semibold">
                             <span className="text-[var(--text)]">Est. Net Income / month</span>
-                            <span className="text-[var(--text)]">${starterMonthly.monthlyNet.toFixed(0)}</span>
+                            <span className="text-[var(--text)]">${formatWhole(starterMonthly.monthlyNet)}</span>
                           </div>
                         </div>
                         {starterMonthly.allowedArtworks < artworksPerMonth && (
@@ -532,7 +540,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                   <>
                     <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
                       <span className="text-[var(--text-muted)]">Artist Earnings (83%)</span>
-                      <span className="font-semibold text-[var(--accent)]">${growthEarnings.artistAmount.toFixed(2)}</span>
+                      <span className="font-semibold text-[var(--accent)]">${formatCurrency(growthEarnings.artistAmount * 100)}</span>
                     </div>
                     <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
                       <span className="text-[var(--text-muted)]">Venue Commission (15%)</span>
@@ -543,7 +551,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                     </div>
                     <div className="flex justify-between items-center pt-3 bg-[var(--surface-2)] border border-[var(--border)] p-4 rounded-lg mb-4">
                       <span className="font-bold text-[var(--text)]">Your per-sale earnings</span>
-                      <span className="font-bold text-[var(--accent)] text-xl">${growthEarnings.artistAmount.toFixed(2)}</span>
+                      <span className="font-bold text-[var(--accent)] text-xl">${formatCurrency(growthEarnings.artistAmount * 100)}</span>
                     </div>
                     <div className="bg-[var(--surface-3)] p-4 rounded-lg border border-[var(--border)]">
                       <h4 className="text-sm font-semibold text-[var(--text)] mb-2">After Additional Costs:</h4>
@@ -559,7 +567,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                         <div className="border-t border-[var(--border)] pt-2 mt-2">
                           <div className="flex justify-between font-semibold">
                             <span className="text-[var(--text)]">Est. Net Income / month</span>
-                            <span className="text-[var(--text)]">${growthMonthly.monthlyNet.toFixed(0)}</span>
+                            <span className="text-[var(--text)]">${formatWhole(growthMonthly.monthlyNet)}</span>
                           </div>
                         </div>
                         {growthMonthly.allowedArtworks < artworksPerMonth && (
@@ -576,7 +584,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                   <>
                     <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
                       <span className="text-[var(--text-muted)]">Artist Earnings (85%)</span>
-                      <span className="font-semibold text-[var(--accent)]">${proEarnings.artistAmount.toFixed(2)}</span>
+                      <span className="font-semibold text-[var(--accent)]">${formatCurrency(proEarnings.artistAmount * 100)}</span>
                     </div>
                     <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
                       <span className="text-[var(--text-muted)]">Venue Commission (15%)</span>
@@ -587,7 +595,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                     </div>
                     <div className="flex justify-between items-center pt-3 bg-[var(--surface-2)] border border-[var(--border)] p-4 rounded-lg mb-4">
                       <span className="font-bold text-[var(--text)]">Your per-sale earnings</span>
-                      <span className="font-bold text-[var(--accent)] text-xl">${proEarnings.artistAmount.toFixed(2)}</span>
+                      <span className="font-bold text-[var(--accent)] text-xl">${formatCurrency(proEarnings.artistAmount * 100)}</span>
                     </div>
                     <div className="bg-[var(--surface-3)] p-4 rounded-lg border border-[var(--border)]">
                       <h4 className="text-sm font-semibold text-[var(--text)] mb-2">After Additional Costs:</h4>
@@ -603,7 +611,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                         <div className="border-t border-[var(--border)] pt-2 mt-2">
                           <div className="flex justify-between font-semibold">
                             <span className="text-[var(--text)]">Est. Net Income / month</span>
-                            <span className="text-[var(--text)]">${proMonthly.monthlyNet.toFixed(0)}</span>
+                            <span className="text-[var(--text)]">${formatWhole(proMonthly.monthlyNet)}</span>
                           </div>
                         </div>
                       </div>
