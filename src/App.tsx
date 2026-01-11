@@ -350,23 +350,39 @@ export default function App() {
         )}
         {/* Google Role Selection Modal */}
         {showGoogleRoleSelection && googleUser && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-[var(--surface)] rounded-lg p-8 max-w-md w-full mx-4 shadow-lg">
-              <h2 className="text-2xl font-bold text-[var(--text)] mb-2">Welcome to Artwalls!</h2>
-              <p className="text-[var(--text-muted)] mb-6">What would you like to do?</p>
-              <div className="space-y-3">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-[var(--surface)] rounded-2xl p-8 max-w-md w-full shadow-2xl border border-[var(--border)]">
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold text-[var(--text)] mb-2">Welcome to Artwalls!</h2>
+                <p className="text-[var(--text-muted)] text-base">Choose your role to get started</p>
+              </div>
+              
+              <div className="space-y-4">
                 <button
                   onClick={() => handleGoogleRoleSelection('artist')}
-                  className="w-full py-3 rounded-lg bg-[var(--blue)] text-[var(--on-blue)] hover:brightness-95 transition font-medium flex items-center justify-center gap-2"
+                  className="w-full p-6 rounded-xl bg-[var(--blue-muted)] border-2 border-[var(--blue)] text-[var(--text)] hover:brightness-95 transition duration-200 flex flex-col items-center gap-3 active:scale-[0.98]"
                 >
-                  <span>🎨</span> Become an Artist
+                  <div className="text-4xl">🎨</div>
+                  <div>
+                    <div className="font-bold text-lg text-[var(--blue)]">Become an Artist</div>
+                    <div className="text-xs text-[var(--text-muted)] mt-1">Share and sell your artwork</div>
+                  </div>
                 </button>
+                
                 <button
                   onClick={() => handleGoogleRoleSelection('venue')}
-                  className="w-full py-3 rounded-lg bg-[var(--green)] text-[var(--accent-contrast)] hover:brightness-95 transition font-medium flex items-center justify-center gap-2"
+                  className="w-full p-6 rounded-xl bg-[var(--green-muted)] border-2 border-[var(--green)] text-[var(--text)] hover:brightness-95 transition duration-200 flex flex-col items-center gap-3 active:scale-[0.98]"
                 >
-                  <span>🏛️</span> Become a Venue
+                  <div className="text-4xl">🏛️</div>
+                  <div>
+                    <div className="font-bold text-lg text-[var(--green)]">Become a Venue</div>
+                    <div className="text-xs text-[var(--text-muted)] mt-1">Display rotating artworks</div>
+                  </div>
                 </button>
+              </div>
+
+              <div className="mt-6 text-center">
+                <p className="text-xs text-[var(--text-muted)]">You can change your role later in settings</p>
               </div>
             </div>
           </div>
