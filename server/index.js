@@ -2531,6 +2531,107 @@ app.get('/api/admin/metrics', async (req, res) => {
   }
 });
 
+// Artist Dashboard: comprehensive statistics
+app.get('/api/stats/artist', async (req, res) => {
+  try {
+    const artistId = req.query?.artistId;
+    if (!artistId || typeof artistId !== 'string') return res.status(400).json({ error: 'Missing artistId' });
+
+    const artist = await getArtist(artistId);
+    if (!artist) return res.status(404).json({ error: 'Artist not found' });
+
+    // Get subscription info and plan limits
+    const tier = (artist.subscriptionTier || 'free').toLowerCase();
+    const isActive = artist.subscriptionStatus === 'active';
+    const limits = getPlanLimitsForArtist(artist);
+
+    const subscription = {
+      tier,
+      status: artist.subscriptionStatus || 'inactive',
+      isActive,
+      limits: {
+        artworks: limits.artworks,
+        activeDisplays: limits.activeDisplays,
+      },
+    };
+
+    // Get artworks stats
+    const artworks = await listArtworksByArtist(artistId);
+    const artworkStats = {
+      total: artworks?.length || 0,
+      active: (artworks || []).filter(a => a.status === 'active').length,
+      sold: (artworks || []).filter(a => a.status === 'sold').length,
+      available: (artworks || []).filter(a => a.status === 'available').length,
+    };
+
+    // Get active displays (artworks assigned to venues and not sold)
+    const activeDisplays = await countActiveDisplaysForArtist(artistId);
+    const displays = {
+      active: activeDisplays,
+      limit: limits.activeDisplays,
+      isOverage: activeDisplays > limits.activeDisplays,
+    };
+
+    // Get pending applications count
+    const { data: applicationsData } = await supabaseAdmin
+      .from('applications')
+      .select('id')
+      .eq('artist_id', artistId)
+      .eq('status', 'pending');
+    const applications = {
+      pending: applicationsData?.length || 0,
+    };
+
+    // Get sales stats (total sales and earnings)
+    const { data: ordersData } = await supabaseAdmin
+      .from('orders')
+      .select('amount_cents, created_at')
+      .eq('artist_id', artistId)
+      .eq('status', 'completed');
+
+    const totalEarnings = (ordersData || []).reduce((sum, o) => sum + (o.amount_cents || 0), 0);
+    
+    // Calculate recent 30 days sales
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const recent30DaysSales = (ordersData || []).filter(o => new Date(o.created_at) >= thirtyDaysAgo).length;
+
+    const sales = {
+      total: ordersData?.length || 0,
+      recent30Days: recent30DaysSales,
+      totalEarnings,
+    };
+
+    return res.json({
+      artistId,
+      subscription,
+      artworks: artworkStats,
+      displays,
+      applications,
+      sales,
+    });
+  } catch (err) {
+    console.error('artist stats error', err);
+    return res.status(500).json({ error: err?.message || 'Failed to load artist stats' });
+  }
+});
+
+// Available wallspaces for discovery
+app.get('/api/wallspaces/available', async (req, res) => {
+  try {
+    const { data: wallspaces } = await supabaseAdmin
+      .from('wallspaces')
+      .select('id')
+      .eq('available', true);
+    
+    const total = wallspaces?.length || 0;
+    return res.json({ total });
+  } catch (err) {
+    console.error('wallspaces available error', err);
+    return res.status(500).json({ error: err?.message || 'Failed to count available wallspaces' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Artwalls server running on http://localhost:${PORT}`);
 });
