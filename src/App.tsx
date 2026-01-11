@@ -362,7 +362,6 @@ export default function App() {
                   className="group bg-[var(--blue-muted)] rounded-2xl p-8 border-2 border-[var(--blue)] hover:brightness-95 transition-all active:scale-[0.98] cursor-pointer"
                 >
                   <div className="flex flex-col items-center text-center gap-4">
-                    <div className="text-6xl">🎨</div>
                     <div>
                       <h2 className="text-2xl font-bold text-[var(--blue)] mb-2">I'm an Artist</h2>
                       <p className="text-sm text-[var(--text-muted)] leading-relaxed">
@@ -381,7 +380,6 @@ export default function App() {
                   className="group bg-[var(--green-muted)] rounded-2xl p-8 border-2 border-[var(--green)] hover:brightness-95 transition-all active:scale-[0.98] cursor-pointer"
                 >
                   <div className="flex flex-col items-center text-center gap-4">
-                    <div className="text-6xl">🏛️</div>
                     <div>
                       <h2 className="text-2xl font-bold text-[var(--green)] mb-2">I'm a Venue</h2>
                       <p className="text-sm text-[var(--text-muted)] leading-relaxed">
