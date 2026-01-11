@@ -150,6 +150,12 @@ export function VenueDashboard({ onNavigate, user }: VenueDashboardProps) {
             >
               View Sales Report
             </button>
+            <button
+              onClick={() => onNavigate('why-artwalls-venue')}
+              className="w-full px-4 py-3 bg-[var(--surface-2)] text-[var(--text)] rounded-lg hover:bg-[var(--surface-3)] transition-colors"
+            >
+              Why Artwalls?
+            </button>
           </div>
         </div>
       </div>

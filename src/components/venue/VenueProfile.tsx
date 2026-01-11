@@ -73,6 +73,7 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
       if (!userId) throw new Error('Not signed in');
 
       await apiPost('/api/venues', {
+        venueId: userId,
         name: data.name,
         type: data.type,
         labels: data.labels,

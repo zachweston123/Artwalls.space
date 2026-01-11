@@ -377,8 +377,12 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
               className="w-full px-4 py-3 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] text-[var(--text-muted)] hover:text-[var(--text)] font-semibold text-sm rounded-lg border border-[var(--border)] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]"
             >
               View Sales Report
-            </button>
-          </div>
+            </button>            <button
+              onClick={() => onNavigate('why-artwalls-artist')}
+              className="w-full px-4 py-3 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] text-[var(--text-muted)] hover:text-[var(--text)] font-semibold text-sm rounded-lg border border-[var(--border)] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]}"
+            >
+              Why Artwalls?
+            </button>          </div>
         </div>
       </div>
     </div>
