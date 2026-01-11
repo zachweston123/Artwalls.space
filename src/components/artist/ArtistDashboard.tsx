@@ -324,7 +324,11 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
           </div>
           
           <div className="space-y-4">
-            {[].map((item, idx) => (
+            {[
+              { title: 'Profile updated', time: '2 days ago', type: 'info' },
+              { title: 'New artwork approved at Venue Gallery', time: '5 days ago', type: 'success' },
+              { title: 'Payout scheduled', time: '1 week ago', type: 'success' },
+            ].map((item, idx) => (
               <div key={idx} className="flex items-start gap-3 pb-4 border-b border-[var(--border)] last:border-0 last:pb-0">
                 <div
                   className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
