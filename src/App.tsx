@@ -338,6 +338,82 @@ export default function App() {
   }
 
   if (!currentUser) {
+    // Google Role Selection - Full Page
+    if (showGoogleRoleSelection && googleUser) {
+      return (
+        <div className="min-h-svh bg-gradient-to-br from-[var(--bg)] via-[var(--surface)] to-[var(--bg)] flex items-center justify-center px-4 py-12">
+          <div className="w-full max-w-2xl">
+            {/* Background decorative elements */}
+            <div className="fixed inset-0 overflow-hidden pointer-events-none">
+              <div className="absolute top-10 left-10 w-72 h-72 bg-[var(--blue)]/10 rounded-full blur-3xl"></div>
+              <div className="absolute bottom-10 right-10 w-72 h-72 bg-[var(--green)]/10 rounded-full blur-3xl"></div>
+            </div>
+
+            <div className="relative z-10">
+              <div className="text-center mb-12">
+                <h1 className="text-5xl font-bold text-[var(--text)] mb-4">Welcome to Artwalls!</h1>
+                <p className="text-xl text-[var(--text-muted)]">Tell us about yourself to get started</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto mb-8">
+                {/* Artist Card */}
+                <button
+                  onClick={() => handleGoogleRoleSelection('artist')}
+                  className="group bg-[var(--blue-muted)] rounded-2xl p-8 border-2 border-[var(--blue)] hover:brightness-95 transition-all active:scale-[0.98] cursor-pointer"
+                >
+                  <div className="flex flex-col items-center text-center gap-4">
+                    <div className="text-6xl">🎨</div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-[var(--blue)] mb-2">I'm an Artist</h2>
+                      <p className="text-sm text-[var(--text-muted)] leading-relaxed">
+                        Create a beautiful portfolio, reach galleries and venues, and sell your artwork directly to collectors.
+                      </p>
+                    </div>
+                    <div className="mt-4 px-4 py-2 bg-[var(--blue)]/20 rounded-lg">
+                      <p className="text-xs font-semibold text-[var(--blue)]">Get Started</p>
+                    </div>
+                  </div>
+                </button>
+
+                {/* Venue Card */}
+                <button
+                  onClick={() => handleGoogleRoleSelection('venue')}
+                  className="group bg-[var(--green-muted)] rounded-2xl p-8 border-2 border-[var(--green)] hover:brightness-95 transition-all active:scale-[0.98] cursor-pointer"
+                >
+                  <div className="flex flex-col items-center text-center gap-4">
+                    <div className="text-6xl">🏛️</div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-[var(--green)] mb-2">I'm a Venue</h2>
+                      <p className="text-sm text-[var(--text-muted)] leading-relaxed">
+                        Display rotating artworks in your space, support local artists, and grow your venue's unique character.
+                      </p>
+                    </div>
+                    <div className="mt-4 px-4 py-2 bg-[var(--green)]/20 rounded-lg">
+                      <p className="text-xs font-semibold text-[var(--green)]">Get Started</p>
+                    </div>
+                  </div>
+                </button>
+              </div>
+
+              <div className="text-center mt-12 space-y-3">
+                <button
+                  onClick={() => {
+                    setShowGoogleRoleSelection(false);
+                    setGoogleUser(null);
+                    setCurrentPage('login');
+                  }}
+                  className="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition"
+                >
+                  ← Back to login
+                </button>
+                <p className="text-xs text-[var(--text-muted)]">You can change your role later in settings</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div>
         <Login onLogin={handleLogin} onNavigate={handleNavigate} />
@@ -347,31 +423,6 @@ export default function App() {
             onVerify={handleAdminPasswordVerified}
             onCancel={handleCancelAdminPassword}
           />
-        )}
-        {/* Google Role Selection Modal */}
-        {showGoogleRoleSelection && googleUser && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-[var(--surface)] rounded-lg p-8 max-w-md w-full shadow-lg border border-[var(--border)]">
-              <h2 className="text-2xl font-bold text-[var(--text)] mb-1 text-center">Welcome to Artwalls!</h2>
-              <p className="text-[var(--text-muted)] mb-8 text-center text-sm">Choose your role to get started</p>
-              <div className="space-y-3">
-                <button
-                  onClick={() => handleGoogleRoleSelection('artist')}
-                  className="w-full py-4 px-4 rounded-lg bg-[var(--blue)] text-[var(--on-blue)] hover:brightness-95 transition font-semibold flex items-center justify-center gap-3 text-base"
-                >
-                  <span className="text-xl">🎨</span> 
-                  <span>Become an Artist</span>
-                </button>
-                <button
-                  onClick={() => handleGoogleRoleSelection('venue')}
-                  className="w-full py-4 px-4 rounded-lg bg-[var(--green)] text-[var(--accent-contrast)] hover:brightness-95 transition font-semibold flex items-center justify-center gap-3 text-base"
-                >
-                  <span className="text-xl">🏛️</span>
-                  <span>Become a Venue</span>
-                </button>
-              </div>
-            </div>
-          </div>
         )}
       </div>
     );
