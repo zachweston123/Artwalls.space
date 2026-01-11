@@ -168,10 +168,10 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       artistAmount,
       artistPct: takeHomePct,
       venueAmount,
-      venuePct: 10,
+      venuePct: 15,
       buyerFee,
       buyerTotal,
-      buyerFeePct: 3,
+      buyerFeePct: 4.5,
       platformGross,
     };
   };

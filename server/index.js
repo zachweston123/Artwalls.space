@@ -921,7 +921,7 @@ function bpsToAmount(amountCents, bps) {
 function getPlatformFeeBpsForArtist(artist) {
   // NEW MODEL: Convert artist take-home % to basis points representation for legacy code
   // Takes home: Free=65%, Starter=80%, Growth=83%, Pro=85%
-  // Venue: Always 10%
+  // Venue: Always 15%
   // Platform = 1 - artist% - venue%
   // 
   // This function returns basis points for compatibility, but should be deprecated.
@@ -932,17 +932,17 @@ function getPlatformFeeBpsForArtist(artist) {
   
   // NEW: If subscription is inactive, treat as free tier
   if (!isActive) {
-    // Free: 65% artist + 10% venue = 75%, so platform gets 25% = 2500 bps
-    return 2500;
+    // Free: 65% artist + 15% venue = 80%, so platform gets 20% = 2000 bps
+    return 2000;
   }
 
   // NEW: Mapping of take-home % to basis points
-  // Formula: (1 - takeHome% - 10% venue) * 10000
+  // Formula: (1 - takeHome% - 15% venue) * 10000
   const takehomeToFeeBps = {
-    free: 2500,      // 1 - 0.65 - 0.10 = 0.25 = 2500 bps
-    starter: 1000,   // 1 - 0.80 - 0.10 = 0.10 = 1000 bps
-    growth: 700,     // 1 - 0.83 - 0.10 = 0.07 = 700 bps
-    pro: 500,        // 1 - 0.85 - 0.10 = 0.05 = 500 bps
+    free: 2000,      // 1 - 0.65 - 0.15 = 0.20 = 2000 bps
+    starter: 500,    // 1 - 0.80 - 0.15 = 0.05 = 500 bps
+    growth: 200,     // 1 - 0.83 - 0.15 = 0.02 = 200 bps
+    pro: 0,          // 1 - 0.85 - 0.15 = 0.00 = 0 bps
   };
 
   return takehomeToFeeBps[tier] ?? 2500;

@@ -300,7 +300,7 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
 
             <div className="space-y-4">
               <div>
-                <p className="text-sm text-[var(--text-muted)] mb-1">Total Commission (10%)</p>
+                <p className="text-sm text-[var(--text-muted)] mb-1">Total Commission (15%)</p>
                 <p className="text-2xl text-[var(--text)]">${profile.totalEarnings.toFixed(2)}</p>
               </div>
               

@@ -270,7 +270,7 @@ export function ArtistSales({ user, onNavigate }: ArtistSalesProps) {
       <div className="mt-6 bg-[var(--surface-2)] rounded-xl p-6 border border-[var(--border)]">
         <h3 className="text-lg mb-2">Payout Information (by plan)</h3>
         <p className="text-sm text-[var(--text-muted)] mb-4">
-          Artist payout depends on your subscription plan. Venue commission is 10% by default; the remaining percentage is the platform fee.
+          Artist payout depends on your subscription plan. Venue commission is 15% by default; the remaining percentage is the platform fee.
         </p>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
