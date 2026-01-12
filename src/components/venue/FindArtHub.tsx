@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { useState } from 'react';
 import { Search, MapPin, Filter, Grid, List } from 'lucide-react';
 
