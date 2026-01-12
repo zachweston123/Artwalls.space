@@ -23,6 +23,12 @@ export interface PricingBreakdown {
 
 /**
  * Calculate complete pricing breakdown for an artwork sale
+ * 
+ * @param listPriceDollars - The list price of the artwork in dollars
+ * @param artistTierKey - The artist's plan tier (free, starter, growth, pro)
+ * @param buyerFeePct - Buyer support fee percentage (default 4.5%)
+ * @param venuePct - Venue commission percentage (default 15%)
+ * @returns Complete pricing breakdown with all amounts in cents
  */
 export function calculatePricingBreakdown(
   listPriceDollars: number,
@@ -37,12 +43,17 @@ export function calculatePricingBreakdown(
     pro: 0.85,
   };
 
+  // Convert to cents for precise integer math
   const listPriceCents = Math.round(listPriceDollars * 100);
+
+  // Calculate each component
   const buyerFeeCents = Math.round(listPriceCents * buyerFeePct);
   const customerPaysCents = listPriceCents + buyerFeeCents;
   const venueCents = Math.round(listPriceCents * venuePct);
   const artistTakeHomePercent = artistTakeHomePercentages[artistTierKey];
   const artistCents = Math.round(listPriceCents * artistTakeHomePercent);
+
+  // Platform + Processing is what's left after venue and artist take-home
   const platformRemainderCents = listPriceCents - venueCents - artistCents;
 
   return {
@@ -65,7 +76,30 @@ export function formatCentsAsDollars(cents: number): string {
 }
 
 /**
+ * Format a percentage as a string with % sign
+ */
+export function formatPercentage(pct: number, decimals: number = 1): string {
+  return `${(pct * 100).toFixed(decimals)}%`;
+}
+
+/**
+ * Get artist tier label and description
+ */
+export function getArtistTierLabel(tierKey: ArtistTierKey): { name: string; takeHomePercent: number } {
+  const tiers: Record<ArtistTierKey, { name: string; takeHomePercent: number }> = {
+    free: { name: 'Free', takeHomePercent: 0.6 },
+    starter: { name: 'Starter', takeHomePercent: 0.8 },
+    growth: { name: 'Growth', takeHomePercent: 0.83 },
+    pro: { name: 'Pro', takeHomePercent: 0.85 },
+  };
+  return tiers[tierKey];
+}
+
+/**
  * Calculate estimated monthly venue earnings
+ * @param avgPriceDollars - Average artwork price
+ * @param salesPerMonth - Expected sales per month
+ * @returns Monthly earnings in dollars
  */
 export function estimateMonthlyEarnings(
   avgPriceDollars: number,

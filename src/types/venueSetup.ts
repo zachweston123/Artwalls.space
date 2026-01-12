@@ -96,8 +96,8 @@ export const SETUP_STEPS: SetupStep[] = [
 
 // Economics constants for consistency across the app
 export const ECONOMICS = {
-  BUYER_FEE: 0.045, // 4.5% (paid by buyer at checkout)
-  VENUE_COMMISSION: 0.15, // 15% of list price (always)
+  BUYER_FEE: 0.045, // 4.5% Buyer Support Fee
+  VENUE_COMMISSION: 0.15, // 15%
   ARTIST_TIERS: {
     free: 0.6, // 60%
     starter: 0.8, // 80%
@@ -105,7 +105,7 @@ export const ECONOMICS = {
     pro: 0.85, // 85%
   },
   DESCRIPTIONS: {
-    buyerFee: '4.5% buyer support fee (paid by customer)',
+    buyerFee: 'Buyer Support Fee (4.5%)',
     venueCommission: '15% venue commission',
     artistFree: '60% for free tier artists',
     artistStarter: '80% for starter tier artists',
