@@ -347,7 +347,7 @@ export function VenuePartnerKitEmbedded({ onNavigate }: VenuePartnerKitEmbeddedP
               {[
                 {
                   scenario: 'Customer asks: "Who is the artist?"',
-                  response: 'Scan the QR code! You'll see the artist\'s profile, their story, and can buy directly if you love it.',
+                  response: "Scan the QR code! You'll see the artist's profile, their story, and can buy directly if you love it.",
                 },
                 {
                   scenario: 'Customer asks: "How often does this change?"',
