@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { QrCode, MapPin, Calendar, X, Clock, CheckCircle } from 'lucide-react';
 import { mockInstalledArtworks } from '../../data/mockData';
 import type { InstalledArtwork } from '../../data/mockData';
@@ -16,7 +16,7 @@ export function VenueCurrentArtWithScheduling() {
   const [qrArtwork, setQrArtwork] = useState<InstalledArtwork | null>(null);
   const [currentVenueId, setCurrentVenueId] = useState<string>('');
 
-  React.useEffect(() => {
+  useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setCurrentVenueId(data.user?.id || '');
     }).catch(() => setCurrentVenueId(''));
