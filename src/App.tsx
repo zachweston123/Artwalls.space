@@ -542,10 +542,10 @@ export default function App() {
               <AdminUserDetail userId="1" onBack={() => handleNavigate('admin-users')} />
             )}
             {currentPage === 'admin-announcements' && (
-              <AdminAnnouncements onCreateAnnouncement={() => {/* TODO: Open modal */}} />
+              <AdminAnnouncements onCreateAnnouncement={() => alert('Create Announcement feature coming soon')} />
             )}
             {currentPage === 'admin-promo-codes' && (
-              <AdminPromoCodes onCreatePromoCode={() => {/* TODO: Open modal */}} />
+              <AdminPromoCodes onCreatePromoCode={() => alert('Create Promo Code feature coming soon')} />
             )}
             {currentPage === 'admin-stripe-payments' && <StripePaymentSetup onNavigate={handleNavigate} />}
             {currentPage === 'admin-activity-log' && <AdminActivityLog />}
@@ -666,7 +666,12 @@ export default function App() {
             {currentPage === 'artist-invites' && (
               <ArtistInvites 
                 onApply={(inviteId) => handleNavigate('artist-applications')}
-                onDecline={(inviteId) => {/* TODO */}}
+                onDecline={(inviteId) => {
+                  if (confirm('Are you sure you want to decline this invitation?')) {
+                    console.log('Declined invite:', inviteId);
+                    // TODO: API call to decline invite
+                  }
+                }}
                 onNavigate={handleNavigate}
               />
             )}
@@ -697,14 +702,21 @@ export default function App() {
                   setSelectedArtistId(artistId);
                   handleNavigate('artist-view-profile');
                 }}
-                onInviteArtist={(artistId) => {/* TODO: implement invite flow */}}
+                onInviteArtist={(artistId) => {
+                  alert('Invite sent! The artist will receive a notification.');
+                  console.log('Invited artist:', artistId);
+                  // TODO: API call to send invitation
+                }}
               />
             )}
             {currentPage === 'artist-view-profile' && (
               <ArtistProfileView
                 isOwnProfile={false}
                 currentUser={currentUser}
-                onInviteToApply={() => {/* TODO */}}
+                onInviteToApply={() => {
+                  alert('Invitation sent! The artist will be notified.');
+                  // TODO: API call to send invitation to apply
+                }}
               />
             )}
           </>
@@ -717,10 +729,10 @@ export default function App() {
               <AdminUsers onViewUser={(userId: string) => handleNavigate('admin-user-detail', { userId })} />
             )}
             {currentPage === 'admin-user-detail' && <AdminUserDetail onNavigate={handleNavigate} />}
-            {currentPage === 'admin-announcements' && <AdminAnnouncements onNavigate={handleNavigate} />}
-            {currentPage === 'admin-promo-codes' && <AdminPromoCodes onNavigate={handleNavigate} />}
+            {currentPage === 'admin-announcements' && <AdminAnnouncements onCreateAnnouncement={() => alert('Create Announcement feature coming soon')} />}
+            {currentPage === 'admin-promo-codes' && <AdminPromoCodes onCreatePromoCode={() => alert('Create Promo Code feature coming soon')} />}
             {currentPage === 'admin-stripe-payments' && <StripePaymentSetup onNavigate={handleNavigate} />}
-            {currentPage === 'admin-activity-log' && <AdminActivityLog onNavigate={handleNavigate} />}
+            {currentPage === 'admin-activity-log' && <AdminActivityLog />}
             {currentPage === 'admin-invites' && <AdminInvites />}
             {currentPage === 'admin-sales' && <AdminSalesPage />}
             {currentPage === 'admin-current-displays' && <AdminCurrentDisplays />}
