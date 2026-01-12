@@ -129,7 +129,8 @@ export const generateSetupApprovedEmail = (venueName: string, venueId: string): 
       <ul>
         <li><strong>\$200 artwork sale:</strong> You earn \$30, artist gets their tier share</li>
         <li><strong>Free Tier artists:</strong> Keep 60% after our fees</li>
-        <li><strong>Starter artists:</strong> Keep 70% after our fees</li>
+        <li><strong>Starter artists:</strong> Keep 80% after our fees</li>
+        <li><strong>Growth artists:</strong> Keep 83% after our fees</li>
         <li><strong>Pro artists:</strong> Keep 85% after our fees</li>
       </ul>
       
@@ -172,7 +173,8 @@ Economics Reminder:
 You'll earn a 15% commission on every artwork sale from your venue:
 - \$200 artwork sale: You earn \$30, artist gets their tier share
 - Free Tier artists: Keep 60% after our fees
-- Starter artists: Keep 70% after our fees
+- Starter artists: Keep 80% after our fees
+- Growth artists: Keep 83% after our fees
 - Pro artists: Keep 85% after our fees
 
 Next Steps:

@@ -96,23 +96,25 @@ export const SETUP_STEPS: SetupStep[] = [
 
 // Economics constants for consistency across the app
 export const ECONOMICS = {
-  BUYER_FEE: 0.045, // 4.5%
-  VENUE_COMMISSION: 0.15, // 15%
+  BUYER_FEE: 0.045, // 4.5% (paid by buyer at checkout)
+  VENUE_COMMISSION: 0.15, // 15% of list price (always)
   ARTIST_TIERS: {
     free: 0.6, // 60%
-    starter: 0.7, // 70%
+    starter: 0.8, // 80%
+    growth: 0.83, // 83%
     pro: 0.85, // 85%
   },
   DESCRIPTIONS: {
-    buyerFee: '4.5% platform fee',
+    buyerFee: '4.5% buyer support fee (paid by customer)',
     venueCommission: '15% venue commission',
     artistFree: '60% for free tier artists',
-    artistStarter: '70% for starter tier artists',
+    artistStarter: '80% for starter tier artists',
+    artistGrowth: '83% for growth tier artists',
     artistPro: '85% for pro tier artists',
   },
 };
 
-export function calculateArtworkEconomics(price: number, tierKey: 'free' | 'starter' | 'pro') {
+export function calculateArtworkEconomics(price: number, tierKey: 'free' | 'starter' | 'growth' | 'pro') {
   const buyerFee = price * ECONOMICS.BUYER_FEE;
   const venueCommission = price * ECONOMICS.VENUE_COMMISSION;
   const artistEarnings = price * ECONOMICS.ARTIST_TIERS[tierKey];
