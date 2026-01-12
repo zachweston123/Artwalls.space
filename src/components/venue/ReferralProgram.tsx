@@ -240,3 +240,4 @@ export function ReferralProgram({ onNavigate }: ReferralProgramProps) {
       </div>
     </div>
   );
+}
