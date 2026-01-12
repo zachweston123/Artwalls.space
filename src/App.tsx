@@ -48,6 +48,7 @@ import { TermsOfService } from './components/legal/TermsOfService';
 import { Footer } from './components/Footer';
 import { PricingPage } from './components/pricing/PricingPage';
 import { PurchasePage } from './components/PurchasePage';
+import { ProfileCompletion } from './components/ProfileCompletion';
 import { AdminSidebar } from './components/admin/AdminSidebar';
 import { AdminAccessDenied } from './components/admin/AdminAccessDenied';
 import { AdminDashboard } from './components/admin/AdminDashboard';
@@ -90,6 +91,8 @@ export default function App() {
   const [pendingAdminAccess, setPendingAdminAccess] = useState(false);
   const [showGoogleRoleSelection, setShowGoogleRoleSelection] = useState(false);
   const [googleUser, setGoogleUser] = useState<any>(null);
+  const [showProfileCompletion, setShowProfileCompletion] = useState(false);
+  const [pendingPhoneNumber, setPendingPhoneNumber] = useState<string | null>(null);
 
   const userFromSupabase = (supaUser: any): User | null => {
     if (!supaUser?.id) return null;
@@ -291,12 +294,90 @@ export default function App() {
         role,
       };
 
+      // Check if phone number is missing from metadata
+      const hasPhone = googleUser.user_metadata?.phone;
+      
+      if (!hasPhone) {
+        // Show profile completion to collect phone number
+        setShowProfileCompletion(true);
+        setGoogleUser(googleUser); // Keep googleUser for profile completion
+      } else {
+        // Phone exists, proceed directly to dashboard
+        setCurrentUser(user);
+        setCurrentPage(role === 'artist' ? 'artist-dashboard' : 'venue-dashboard');
+        setShowGoogleRoleSelection(false);
+        setGoogleUser(null);
+      }
+    } catch (err: any) {
+      console.error('Failed to set user role:', err);
+    }
+  };
+
+  const handleProfileCompletionSubmit = async (phoneNumber: string) => {
+    if (!googleUser) return;
+
+    try {
+      setShowProfileCompletion(false);
+      
+      // Update user metadata with phone number
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          ...googleUser.user_metadata,
+          phone: phoneNumber,
+        },
+      });
+
+      if (error) throw error;
+
+      // Also provision the profile with phone number
+      try {
+        await apiPost('/api/profile/provision', { phoneNumber });
+      } catch (e) {
+        console.warn('Profile provision with phone failed', e);
+      }
+
+      // Now proceed to dashboard
+      const role = googleUser.user_metadata?.role as UserRole;
+      const user: User = {
+        id: googleUser.id,
+        name: googleUser.user_metadata?.name || googleUser.email?.split('@')[0] || 'User',
+        email: googleUser.email || '',
+        role,
+      };
+
       setCurrentUser(user);
       setCurrentPage(role === 'artist' ? 'artist-dashboard' : 'venue-dashboard');
       setShowGoogleRoleSelection(false);
       setGoogleUser(null);
+      setPendingPhoneNumber(null);
     } catch (err: any) {
-      console.error('Failed to set user role:', err);
+      console.error('Failed to save phone number:', err);
+      setShowProfileCompletion(true); // Show form again on error
+    }
+  };
+
+  const handleProfileCompletionSkip = async () => {
+    if (!googleUser) return;
+
+    try {
+      setShowProfileCompletion(false);
+      
+      // Proceed without phone number
+      const role = googleUser.user_metadata?.role as UserRole;
+      const user: User = {
+        id: googleUser.id,
+        name: googleUser.user_metadata?.name || googleUser.email?.split('@')[0] || 'User',
+        email: googleUser.email || '',
+        role,
+      };
+
+      setCurrentUser(user);
+      setCurrentPage(role === 'artist' ? 'artist-dashboard' : 'venue-dashboard');
+      setShowGoogleRoleSelection(false);
+      setGoogleUser(null);
+      setPendingPhoneNumber(null);
+    } catch (err: any) {
+      console.error('Failed to skip profile completion:', err);
     }
   };
 
@@ -347,6 +428,18 @@ export default function App() {
   }
 
   if (!currentUser) {
+    // Profile Completion - Full Page
+    if (showProfileCompletion && googleUser) {
+      return (
+        <ProfileCompletion
+          email={googleUser.email || ''}
+          userName={googleUser.user_metadata?.name || googleUser.email?.split('@')[0] || 'User'}
+          onComplete={handleProfileCompletionSubmit}
+          onSkip={handleProfileCompletionSkip}
+        />
+      );
+    }
+
     // Google Role Selection - Full Page
     if (showGoogleRoleSelection && googleUser) {
       return (

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Palette, Store } from 'lucide-react';
 import type { User, UserRole } from '../App';
 
@@ -24,6 +24,35 @@ export function Login({ onLogin, onNavigate }: LoginProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Load pre-filled data from user metadata on component mount
+  useEffect(() => {
+    const loadPrefillData = async () => {
+      try {
+        const { supabase } = await import('../lib/supabase');
+        const { data } = await supabase.auth.getSession();
+        
+        if (data.session?.user) {
+          const user = data.session.user;
+          // Pre-fill email and phone from user metadata if available
+          if (user.email) {
+            setEmail(user.email);
+          }
+          if (user.user_metadata?.phone) {
+            setPhone(user.user_metadata.phone);
+          }
+          if (user.user_metadata?.name) {
+            setName(user.user_metadata.name);
+          }
+        }
+      } catch (error) {
+        // Silently fail, this is optional enhancement
+        console.debug('Failed to load prefill data', error);
+      }
+    };
+
+    loadPrefillData();
+  }, []);
 
   const handleGoogleSignIn = async () => {
     if (!selectedRole) return;
