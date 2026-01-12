@@ -26,6 +26,13 @@ import { VenuePasswordSecurity } from './components/venue/VenuePasswordSecurity'
 import { VenueNotificationPreferences } from './components/venue/VenueNotificationPreferences';
 import { VenueWallsPublic } from './components/venue/VenueWallsPublic';
 import { FindArtists } from './components/venue/FindArtists';
+import { VenueProfilePage } from './components/venue/VenueProfilePage';
+import { FindArtHub } from './components/venue/FindArtHub';
+import { VenuePartnerKit } from './components/venue/VenuePartnerKit';
+import { VenueHostingPolicy } from './components/venue/VenueHostingPolicy';
+import { VenueApplication } from './components/venue/VenueApplication';
+import { VenueDashboardModule } from './components/venue/VenueDashboardModule';
+import { ReferralProgram } from './components/venue/ReferralProgram';
 import { ApplicationsAndInvitations } from './components/shared/ApplicationsAndInvitations';
 import { FindVenues } from './components/artist/FindVenues';
 import { NotificationsList } from './components/notifications/NotificationsList';
@@ -507,6 +514,17 @@ export default function App() {
         {currentPage === 'why-artwalls-venue' && (
           <WhyArtwalls userRole="venue" onNavigate={handleNavigate} onBack={() => handleNavigate('login')} />
         )}
+
+        {/* Venue Growth & Exposure Pages */}
+        {currentPage === 'find-art' && <FindArtHub onNavigate={handleNavigate} />}
+        {currentPage === 'venues-partner-kit' && <VenuePartnerKit onNavigate={handleNavigate} />}
+        {currentPage === 'venues-hosting-policy' && <VenueHostingPolicy onNavigate={handleNavigate} />}
+        {currentPage === 'venues-apply' && <VenueApplication onNavigate={handleNavigate} />}
+        {currentPage === 'venue-profile' && selectedVenueId && (
+          <VenueProfilePage venueSlug={selectedVenueId} onNavigate={handleNavigate} />
+        )}
+        {currentPage === 'referral-program' && <ReferralProgram onNavigate={handleNavigate} />}
+
         {currentPage === 'artist-agreement' && (
           <ArtistAgreement 
             onNavigate={handleNavigate}
