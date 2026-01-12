@@ -1,8 +1,9 @@
+<<<<<<< HEAD
 import { useState } from 'react';
 import { Search, MapPin, Filter, Grid, List } from 'lucide-react';
 
 interface FindArtHubProps {
-  onNavigate?: (page: string, venueId?: string) => void;
+  onNavigate?: (page: string, params?: any) => void;
 }
 
 export function FindArtHub({ onNavigate }: FindArtHubProps) {
@@ -14,25 +15,24 @@ export function FindArtHub({ onNavigate }: FindArtHubProps) {
   const venues = [
     {
       id: '1',
-      slug: 'modern-gallery',
       name: 'Modern Gallery Space',
       city: 'San Francisco',
       category: 'Contemporary',
-      description: 'Contemporary art gallery featuring emerging artists',
       image: 'https://images.unsplash.com/photo-1578962996442-48f60103fc96?w=400&h=300&fit=crop',
-      isFeatured: true,
+      featured: true,
     },
     {
       id: '2',
-      slug: 'urban-artworks',
       name: 'Urban Artworks',
       city: 'Los Angeles',
       category: 'Street Art',
-      description: 'Dedicated to street art and urban culture',
       image: 'https://images.unsplash.com/photo-1577720643272-265e434b8e4b?w=400&h=300&fit=crop',
-      isFeatured: false,
+      featured: false,
     },
   ];
+
+  const cities = Array.from(new Set(venues.map(v => v.city)));
+  const categories = Array.from(new Set(venues.map(v => v.category)));
 
   const filteredVenues = venues.filter(venue => {
     const matchesSearch = venue.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -41,9 +41,6 @@ export function FindArtHub({ onNavigate }: FindArtHubProps) {
     const matchesCategory = !selectedCategory || venue.category === selectedCategory;
     return matchesSearch && matchesCity && matchesCategory;
   });
-
-  const cities = Array.from(new Set(venues.map(v => v.city)));
-  const categories = Array.from(new Set(venues.map(v => v.category)));
 
   return (
     <div className="min-h-screen bg-[var(--bg)]">
@@ -100,11 +97,32 @@ export function FindArtHub({ onNavigate }: FindArtHubProps) {
         {viewMode === 'grid' ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredVenues.map(venue => (
-              <div key={venue.id} className="bg-[var(--surface)] rounded-lg overflow-hidden">
-                <img src={venue.image} alt={venue.name} className="w-full h-40 object-cover" />
+              <div
+                key={venue.id}
+                className="group cursor-pointer bg-[var(--surface)] rounded-lg overflow-hidden border border-[var(--border)] hover:shadow-lg transition-shadow"
+                onClick={() => onNavigate?.('venue-profile', { venueId: venue.id })}
+              >
+                <div className="relative h-48 overflow-hidden bg-[var(--surface-2)]">
+                  <img
+                    src={venue.image}
+                    alt={venue.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                  />
+                  {venue.featured && (
+                    <div className="absolute top-3 right-3 px-3 py-1 bg-[var(--accent)] text-[var(--accent-contrast)] text-xs font-semibold rounded-full">
+                      Featured
+                    </div>
+                  )}
+                </div>
                 <div className="p-4">
-                  <h3 className="font-semibold text-[var(--text)]">{venue.name}</h3>
-                  <p className="text-sm text-[var(--text-muted)]">{venue.city}</p>
+                  <h3 className="font-semibold text-[var(--text)] mb-1">{venue.name}</h3>
+                  <div className="flex items-center gap-1 text-sm text-[var(--text-muted)] mb-2">
+                    <MapPin className="w-4 h-4" />
+                    {venue.city}
+                  </div>
+                  <span className="inline-block px-2 py-1 bg-[var(--surface-2)] text-[var(--text-muted)] text-xs rounded">
+                    {venue.category}
+                  </span>
                 </div>
               </div>
             ))}
@@ -112,14 +130,43 @@ export function FindArtHub({ onNavigate }: FindArtHubProps) {
         ) : (
           <div className="space-y-4">
             {filteredVenues.map(venue => (
-              <div key={venue.id} className="bg-[var(--surface)] rounded-lg p-4 flex gap-4">
-                <img src={venue.image} alt={venue.name} className="w-32 h-32 object-cover rounded-lg" />
-                <div>
-                  <h3 className="font-semibold text-[var(--text)]">{venue.name}</h3>
-                  <p className="text-[var(--text-muted)]">{venue.city}</p>
+              <div
+                key={venue.id}
+                className="flex gap-4 p-4 bg-[var(--surface)] rounded-lg border border-[var(--border)] hover:shadow-lg transition-shadow cursor-pointer"
+                onClick={() => onNavigate?.('venue-profile', { venueId: venue.id })}
+              >
+                <img
+                  src={venue.image}
+                  alt={venue.name}
+                  className="w-32 h-32 object-cover rounded-lg"
+                />
+                <div className="flex-1">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h3 className="font-semibold text-[var(--text)]">{venue.name}</h3>
+                      <div className="flex items-center gap-1 text-sm text-[var(--text-muted)] mt-1">
+                        <MapPin className="w-4 h-4" />
+                        {venue.city}
+                      </div>
+                    </div>
+                    {venue.featured && (
+                      <span className="px-2 py-1 bg-[var(--accent)]/20 text-[var(--accent)] text-xs font-semibold rounded">
+                        Featured
+                      </span>
+                    )}
+                  </div>
+                  <span className="inline-block mt-2 px-2 py-1 bg-[var(--surface-2)] text-[var(--text-muted)] text-xs rounded">
+                    {venue.category}
+                  </span>
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {filteredVenues.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-[var(--text-muted)]">No venues found matching your filters.</p>
           </div>
         )}
       </div>

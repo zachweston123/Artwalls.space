@@ -1349,6 +1349,8 @@ app.post('/api/venues', async (req, res) => {
       const sbClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
       
       const updateData = {
+        id: venueId,
+        suspended: false, // Always include this - it's NOT NULL in the database
         ...(name && { name }),
         ...(email && { email }),
         ...(type && { type }),
@@ -1358,15 +1360,13 @@ app.post('/api/venues', async (req, res) => {
         ...(Array.isArray(labels) && { labels }),
       };
       
-      if (Object.keys(updateData).length > 0) {
-        const { error: updateErr } = await sbClient
-          .from('venues')
-          .upsert({ id: venueId, ...updateData, suspended: false }, { onConflict: 'id' });
-        
-        if (updateErr) {
-          console.warn('Failed to update Supabase venues table:', updateErr);
-          // Don't fail the entire request, just log the warning
-        }
+      const { error: updateErr } = await sbClient
+        .from('venues')
+        .upsert(updateData, { onConflict: 'id' });
+      
+      if (updateErr) {
+        console.warn('Failed to update Supabase venues table:', updateErr);
+        // Don't fail the entire request, just log the warning
       }
     }
 
@@ -1685,7 +1685,7 @@ app.get('/api/admin/support-tickets', async (req, res) => {
 
     if (error) throw error;
 
-    const tickets = (data || []).map((n: any) => ({
+    const tickets = (data || []).map((n) => ({
       id: n.id,
       type: n.type,
       subject: n.title || 'Support Ticket',
