@@ -1361,7 +1361,7 @@ app.post('/api/venues', async (req, res) => {
       if (Object.keys(updateData).length > 0) {
         const { error: updateErr } = await sbClient
           .from('venues')
-          .upsert({ id: venueId, ...updateData }, { onConflict: 'id' });
+          .upsert({ id: venueId, ...updateData, suspended: false }, { onConflict: 'id' });
         
         if (updateErr) {
           console.warn('Failed to update Supabase venues table:', updateErr);

@@ -182,7 +182,7 @@ export async function upsertVenue({ id, email, name, type, stripeAccountId, defa
     stripe_account_id: stripeAccountId ?? null,
     default_venue_fee_bps: defaultVenueFeeBps === undefined ? null : toIntOrNull(defaultVenueFeeBps),
     labels: labels === undefined ? undefined : (Array.isArray(labels) ? labels : null),
-    suspended: suspended === undefined ? null : Boolean(suspended),
+    suspended: suspended === undefined ? false : Boolean(suspended),
     updated_at: nowIso(),
   };
 
