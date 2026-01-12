@@ -270,7 +270,7 @@ export function VenuePartnerKit({ onNavigate }: VenuePartnerKitProps) {
           </div>
         </div>
 
-        {/* FAQ */
+        {/* FAQ */}
         <div className="mb-20">
           <h2 className="text-2xl font-bold text-[var(--text)] mb-8">Frequently Asked Questions</h2>
           <div className="space-y-4">
