@@ -29,6 +29,8 @@ import { FindArtists } from './components/venue/FindArtists';
 import { VenueProfilePage } from './components/venue/VenueProfilePage';
 import { FindArtHub } from './components/venue/FindArtHub';
 import { VenuePartnerKit } from './components/venue/VenuePartnerKit';
+import { VenuePartnerKitEmbedded } from './components/venue/VenuePartnerKitEmbedded';
+import { VenueSetupWizard } from './components/venue/VenueSetupWizard';
 import { VenueHostingPolicy } from './components/venue/VenueHostingPolicy';
 import { VenueApplication } from './components/venue/VenueApplication';
 import { VenueDashboardModule } from './components/venue/VenueDashboardModule';
@@ -588,6 +590,8 @@ export default function App() {
         {currentUser.role === 'venue' && (
           <>
             {currentPage === 'venue-dashboard' && <VenueDashboard onNavigate={handleNavigate} user={currentUser} />}
+            {currentPage === 'venue-setup' && <VenueSetupWizard onNavigate={handleNavigate} onComplete={() => handleNavigate('venue-dashboard')} />}
+            {currentPage === 'venue-partner-kit' && <VenuePartnerKitEmbedded onNavigate={handleNavigate} />}
             {currentPage === 'venue-walls' && <VenueWalls />}
             {currentPage === 'venue-applications' && <ApplicationsAndInvitations userRole="venue" onBack={() => handleNavigate('venue-dashboard')} />}
             {currentPage === 'venue-current' && <VenueCurrentArtWithScheduling />}

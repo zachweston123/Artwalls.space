@@ -1,10 +1,15 @@
-import { CheckCircle, Users, TrendingUp, Shield } from 'lucide-react';
+import { CheckCircle, Users, TrendingUp, Shield, Download, AlertCircle, Lightbulb } from 'lucide-react';
+import { ECONOMICS } from '../../types/venueSetup';
 
 interface VenuePartnerKitProps {
   onNavigate?: (page: string) => void;
 }
 
 export function VenuePartnerKit({ onNavigate }: VenuePartnerKitProps) {
+  const handleDownloadPDF = () => {
+    // In a real app, this would generate and download a PDF
+    alert('Downloading Partner Kit PDF...');
+  };
   const steps = [
     {
       number: 1,
@@ -34,35 +39,29 @@ export function VenuePartnerKit({ onNavigate }: VenuePartnerKitProps) {
 
   const economicsExample = [
     { label: 'Artwork Price', value: '$200' },
-    { label: 'Platform Fee (4.5%)', value: '-$9' },
-    { label: 'Venue Commission (15%)', value: '+$30' },
-    { label: 'Artist Earnings (60%)', value: '$120' },
+    { label: `Platform Fee (${(ECONOMICS.BUYER_FEE * 100).toFixed(1)}%)`, value: `-$${(200 * ECONOMICS.BUYER_FEE).toFixed(0)}` },
+    { label: `Venue Commission (${(ECONOMICS.VENUE_COMMISSION * 100).toFixed(0)}%)`, value: `+$${(200 * ECONOMICS.VENUE_COMMISSION).toFixed(0)}` },
+    { label: `Artist Earnings - Free Tier (${(ECONOMICS.ARTIST_TIERS.free * 100).toFixed(0)}%)`, value: `$${(200 * ECONOMICS.ARTIST_TIERS.free).toFixed(0)}` },
   ];
 
   const artistTiers = [
     {
       name: 'Free',
-      commission: '60%',
+      commission: `${(ECONOMICS.ARTIST_TIERS.free * 100).toFixed(0)}%`,
       description: 'Starting artists',
       features: ['Up to 10 artworks', 'Basic profile'],
     },
     {
       name: 'Starter',
-      commission: '80%',
+      commission: `${(ECONOMICS.ARTIST_TIERS.starter * 100).toFixed(0)}%`,
       description: 'Growing artists',
       features: ['Up to 50 artworks', 'Advanced profile', 'Analytics'],
     },
     {
-      name: 'Growth',
-      commission: '83%',
-      description: 'Established artists',
-      features: ['Unlimited artworks', 'Featured placement', 'Priority support'],
-    },
-    {
       name: 'Pro',
-      commission: '85%',
+      commission: `${(ECONOMICS.ARTIST_TIERS.pro * 100).toFixed(0)}%`,
       description: 'Professional artists',
-      features: ['Everything in Growth', 'Direct messaging', 'Custom pricing'],
+      features: ['Unlimited artworks', 'Featured placement', 'Direct messaging', 'Priority support'],
     },
   ];
 
@@ -144,7 +143,134 @@ export function VenuePartnerKit({ onNavigate }: VenuePartnerKitProps) {
           </div>
         </div>
 
-        {/* FAQ */}
+        {/* QR Placement Best Practices */}
+        <div className="mb-20">
+          <h2 className="text-2xl font-bold text-[var(--text)] mb-6 flex items-center gap-3">
+            <Lightbulb className="w-6 h-6 text-[var(--accent)]" />
+            QR Code Placement Best Practices
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="bg-[var(--surface)] p-6 rounded-lg border border-[var(--border)]">
+              <h3 className="font-semibold text-[var(--text)] mb-3">Wall Poster (Large Format)</h3>
+              <p className="text-sm text-[var(--text-muted)] mb-4">Mount near the artwork for detailed viewing and artist discovery.</p>
+              <ul className="text-sm space-y-2 text-[var(--text-muted)]">
+                <li>✓ Place at eye level (48-60" from ground)</li>
+                <li>✓ Use 8.5x11" or larger</li>
+                <li>✓ Ensure good lighting</li>
+              </ul>
+            </div>
+
+            <div className="bg-[var(--surface)] p-6 rounded-lg border border-[var(--border)]">
+              <h3 className="font-semibold text-[var(--text)] mb-3">Table Tent QR Code</h3>
+              <p className="text-sm text-[var(--text-muted)] mb-4">Place on tables for customers to scan during dining or browsing.</p>
+              <ul className="text-sm space-y-2 text-[var(--text-muted)]">
+                <li>✓ Use 4x6" or 5x7" tent cards</li>
+                <li>✓ Place at table center or corner</li>
+                <li>✓ Rotate regularly for visibility</li>
+              </ul>
+            </div>
+
+            <div className="bg-[var(--surface)] p-6 rounded-lg border border-[var(--border)]">
+              <h3 className="font-semibold text-[var(--text)] mb-3">Staff Handout Cards</h3>
+              <p className="text-sm text-[var(--text-muted)] mb-4">Give to interested customers who ask about the artwork.</p>
+              <ul className="text-sm space-y-2 text-[var(--text-muted)]">
+                <li>✓ Business card size (2x3.5")</li>
+                <li>✓ Include artist name and title</li>
+                <li>✓ Train staff on talking points</li>
+              </ul>
+            </div>
+
+            <div className="bg-[var(--surface)] p-6 rounded-lg border border-[var(--border)]">
+              <h3 className="font-semibold text-[var(--text)] mb-3">Social Media Integration</h3>
+              <p className="text-sm text-[var(--text-muted)] mb-4">Share your venue page and current artworks on social channels.</p>
+              <ul className="text-sm space-y-2 text-[var(--text-muted)]">
+                <li>✓ Post about new rotations</li>
+                <li>✓ Tag the artists</li>
+                <li>✓ Share customer experiences</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* Hosting Policy */}
+        <div className="mb-20 bg-[var(--surface)] rounded-lg p-8 border border-[var(--border)]">
+          <h2 className="text-2xl font-bold text-[var(--text)] mb-6">Hosting Policy Summary</h2>
+          <div className="space-y-4">
+            <div className="border-l-4 border-[var(--accent)] pl-4">
+              <h3 className="font-semibold text-[var(--text)]">What You Agree To</h3>
+              <ul className="mt-2 text-sm space-y-1 text-[var(--text-muted)]">
+                <li>✓ Display rotating artworks selected through our platform</li>
+                <li>✓ Maintain artwork safety and proper conditions</li>
+                <li>✓ Handle QR code placement and promotion</li>
+                <li>✓ Coordinate rotation schedules with artists</li>
+              </ul>
+            </div>
+
+            <div className="border-l-4 border-[var(--accent)] pl-4">
+              <h3 className="font-semibold text-[var(--text)]">What We Handle</h3>
+              <ul className="mt-2 text-sm space-y-1 text-[var(--text-muted)]">
+                <li>✓ Artist vetting and quality control</li>
+                <li>✓ Sales transactions and payments</li>
+                <li>✓ Artwork insurance during display</li>
+                <li>✓ Platform and support</li>
+              </ul>
+            </div>
+
+            <div className="border-l-4 border-[var(--accent)] pl-4">
+              <h3 className="font-semibold text-[var(--text)]">Content Guidelines</h3>
+              <ul className="mt-2 text-sm space-y-1 text-[var(--text-muted)]">
+                <li>✓ All artwork vetted for quality and appropriateness</li>
+                <li>✓ You can decline artwork that doesn't fit your space</li>
+                <li>✓ Full transparency on artist background and work</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* Staff One-Liner */}
+        <div className="mb-20 bg-[var(--accent)]/10 rounded-lg p-8 border border-[var(--accent)]/30">
+          <h2 className="text-2xl font-bold text-[var(--text)] mb-4">Staff One-Liner</h2>
+          <p className="text-sm text-[var(--text-muted)] mb-4">Teach your staff this simple description to share with curious customers:</p>
+          <div className="bg-[var(--surface)] p-4 rounded-lg border-2 border-[var(--accent)] mb-4">
+            <p className="text-[var(--text)] font-medium">
+              "Scan the QR code to discover and support emerging artists directly. Every purchase supports the artist, and we're proud to host rotating artwork in our space."
+            </p>
+          </div>
+          <button className="text-sm text-[var(--accent)] hover:underline">
+            Copy to clipboard
+          </button>
+        </div>
+
+        {/* Setup Checklist */}
+        <div className="mb-20">
+          <h2 className="text-2xl font-bold text-[var(--text)] mb-6">Setup Checklist</h2>
+          <div className="space-y-3">
+            {[
+              { title: 'Complete Venue Profile', desc: 'Name, address, hours, website, Instagram' },
+              { title: 'Upload Photos', desc: 'Minimum 3 high-quality photos of your space' },
+              { title: 'Configure Wall Settings', desc: 'Wall type, dimensions, and number of display spots' },
+              { title: 'Select Categories', desc: 'Choose art styles and themes that match your space' },
+              { title: 'Download QR Assets', desc: 'Poster, table tent, and staff card versions' },
+              { title: 'Print & Place QR Codes', desc: 'Install in recommended locations throughout venue' },
+              { title: 'Train Staff', desc: 'Share the one-liner and discuss the program' },
+              { title: 'Share Venue Page', desc: 'Promote on social media and to customers' },
+            ].map((item, idx) => (
+              <div key={idx} className="flex gap-4 p-4 bg-[var(--surface)] rounded-lg border border-[var(--border)]">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-[var(--accent)] text-[var(--accent-contrast)] flex items-center justify-center font-bold text-sm">
+                    {idx + 1}
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-[var(--text)]">{item.title}</h3>
+                  <p className="text-sm text-[var(--text-muted)] mt-1">{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* FAQ */
         <div className="mb-20">
           <h2 className="text-2xl font-bold text-[var(--text)] mb-8">Frequently Asked Questions</h2>
           <div className="space-y-4">
@@ -182,16 +308,55 @@ export function VenuePartnerKit({ onNavigate }: VenuePartnerKitProps) {
           </div>
         </div>
 
-        {/* CTA */}
-        <div className="bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/80 rounded-lg p-8 text-[var(--accent-contrast)] text-center">
-          <h3 className="text-2xl font-bold mb-4">Ready to partner with us?</h3>
-          <p className="mb-6 opacity-90">Join hundreds of venues displaying rotating art and growing with Artwalls.</p>
-          <button
-            onClick={() => onNavigate?.('venues-apply')}
-            className="px-8 py-3 bg-[var(--accent-contrast)] text-[var(--accent)] rounded-lg font-semibold hover:opacity-90 transition-opacity"
-          >
-            Start Your Application
-          </button>
+        {/* CTA & Download */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/80 rounded-lg p-8 text-[var(--accent-contrast)] flex flex-col justify-between">
+            <div>
+              <h3 className="text-2xl font-bold mb-4">Ready to Get Started?</h3>
+              <p className="mb-6 opacity-90">Join hundreds of venues displaying rotating art and earning revenue.</p>
+            </div>
+            <button
+              onClick={() => onNavigate?.('venue-setup')}
+              className="px-6 py-3 bg-[var(--accent-contrast)] text-[var(--accent)] rounded-lg font-semibold hover:opacity-90 transition-opacity w-full"
+            >
+              Begin Setup Wizard
+            </button>
+          </div>
+
+          <div className="bg-[var(--surface)] rounded-lg p-8 border border-[var(--border)] flex flex-col justify-between">
+            <div>
+              <h3 className="text-2xl font-bold text-[var(--text)] mb-2 flex items-center gap-2">
+                <Download className="w-6 h-6 text-[var(--accent)]" />
+                Partner Kit
+              </h3>
+              <p className="text-[var(--text-muted)] mb-4">Download a printable version of this guide with all setup instructions and economics breakdown.</p>
+            </div>
+            <button
+              onClick={handleDownloadPDF}
+              className="px-6 py-3 bg-[var(--accent)] text-[var(--accent-contrast)] rounded-lg font-semibold hover:opacity-90 transition-opacity w-full flex items-center justify-center gap-2"
+            >
+              <Download className="w-4 h-4" />
+              Download PDF
+            </button>
+          </div>
+        </div>
+
+        {/* Important Note */}
+        <div className="mt-12 p-6 bg-amber-50 border-l-4 border-amber-500 rounded-lg">
+          <div className="flex gap-4">
+            <AlertCircle className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <h3 className="font-semibold text-amber-900 mb-2">Economics Consistency Guarantee</h3>
+              <p className="text-sm text-amber-800 mb-2">
+                All economics figures in this guide are consistent across Artwalls:
+              </p>
+              <ul className="text-sm text-amber-800 space-y-1">
+                <li>• Platform Fee: {(ECONOMICS.BUYER_FEE * 100).toFixed(1)}%</li>
+                <li>• Venue Commission: {(ECONOMICS.VENUE_COMMISSION * 100).toFixed(0)}%</li>
+                <li>• Artist Take-Home: {(ECONOMICS.ARTIST_TIERS.free * 100).toFixed(0)}% (Free) to {(ECONOMICS.ARTIST_TIERS.pro * 100).toFixed(0)}% (Pro)</li>
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
     </div>
