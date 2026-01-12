@@ -540,7 +540,7 @@ export function VenuePartnerKitEmbedded({ onNavigate }: VenuePartnerKitEmbeddedP
 
             <div className="space-y-3">
               {[
-                { scenario: 'Customer: "Who is the artist?"', response: 'Scan the QR code! You'll see their profile, story, and can buy if you love it.' },
+                { scenario: 'Customer: "Who is the artist?"', response: 'Scan the QR code! You\'ll see their profile, story, and can buy if you love it.' },
                 { scenario: 'Customer: "How often does this change?"', response: 'Every month or two, depending on sales. Always something new to discover.' },
                 { scenario: 'Customer: "Can I buy it?"', response: 'Yes! Scan to view prices and purchase. We ship anywhere.' },
                 { scenario: 'Customer: "Are these local artists?"', response: 'Yes, independent artists from our network. Your purchase goes 80%+ to support them.' },

@@ -5,6 +5,31 @@
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <title>Artwalls Marketplace Web App</title>
+      <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text x='50' y='50' font-size='80' font-weight='bold' font-family='system-ui, -apple-system, Segoe UI, Roboto, sans-serif' fill='%233B82F6' text-anchor='middle' dominant-baseline='central'>A</text></svg>" />
+      <script>
+        // Update favicon based on stored user role
+        (function() {
+          try {
+            var userJson = localStorage.getItem('sb-project-user');
+            if (userJson) {
+              try {
+                var user = JSON.parse(userJson);
+                var role = user.user?.user_metadata?.role;
+                var faviconLink = document.querySelector('link[rel="icon"]');
+                if (role === 'artist') {
+                  faviconLink.href = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text x='50' y='75' font-size='80' font-weight='bold' font-family='system-ui, -apple-system, Segoe UI, Roboto, sans-serif' fill='%233B82F6' text-anchor='middle' dominant-baseline='middle'>A</text></svg>";
+                } else if (role === 'venue') {
+                  faviconLink.href = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text x='50' y='75' font-size='80' font-weight='bold' font-family='system-ui, -apple-system, Segoe UI, Roboto, sans-serif' fill='%2310B981' text-anchor='middle' dominant-baseline='middle'>A</text></svg>";
+                }
+              } catch (e) {
+                // Silently fail if parsing user data
+              }
+            }
+          } catch (e) {
+            // Silently fail
+          }
+        })();
+      </script>
 
       <script>
         (function () {
@@ -37,7 +62,7 @@
           }
         })();
       </script>
-      <script type="module" crossorigin src="/assets/index-DhrG8e5I.js"></script>
+      <script type="module" crossorigin src="/assets/index-hXGpkBdA.js"></script>
       <link rel="stylesheet" crossorigin href="/assets/index-B6V2l51k.css">
     </head>
 

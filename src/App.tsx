@@ -28,7 +28,6 @@ import { VenueWallsPublic } from './components/venue/VenueWallsPublic';
 import { FindArtists } from './components/venue/FindArtists';
 import { VenueProfilePage } from './components/venue/VenueProfilePage';
 import { FindArtHub } from './components/venue/FindArtHub';
-import { VenuePartnerKit } from './components/venue/VenuePartnerKit';
 import { VenuePartnerKitEmbedded } from './components/venue/VenuePartnerKitEmbedded';
 import { VenueSetupWizard } from './components/venue/VenueSetupWizard';
 import { VenueHostingPolicy } from './components/venue/VenueHostingPolicy';
@@ -612,7 +611,6 @@ export default function App() {
 
         {/* Venue Growth & Exposure Pages */}
         {currentPage === 'find-art' && <FindArtHub onNavigate={handleNavigate} />}
-        {currentPage === 'venues-partner-kit' && <VenuePartnerKit onNavigate={handleNavigate} />}
         {currentPage === 'venues-hosting-policy' && <VenueHostingPolicy onNavigate={handleNavigate} />}
         {currentPage === 'venues-apply' && <VenueApplication onNavigate={handleNavigate} />}
         {currentPage === 'venue-profile' && selectedVenueId && (
