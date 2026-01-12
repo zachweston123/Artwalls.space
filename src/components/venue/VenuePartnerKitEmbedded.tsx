@@ -3,6 +3,165 @@ import { Download, CheckCircle, AlertCircle, BookOpen, MapPin, Users, TrendingUp
 import { ECONOMICS } from '../../types/venueSetup';
 import { calculatePricingBreakdown, formatCentsAsDollars, estimateMonthlyEarnings } from '../../lib/pricingCalculations';
 
+// Collapsible Section Component
+function PartnerKitSection({
+  id,
+  title,
+  icon,
+  expanded,
+  onToggle,
+  children,
+}: {
+  id: string;
+  title: string;
+  icon: React.ReactNode;
+  expanded: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div id={id} className="mb-8 bg-[var(--surface)] border border-[var(--border)] rounded-lg overflow-hidden">
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center justify-between p-6 hover:bg-[var(--surface-2)] transition"
+      >
+        <div className="flex items-center gap-4">
+          <div className="text-[var(--accent)]">{icon}</div>
+          <h2 className="text-xl font-bold text-[var(--text)]">{title}</h2>
+        </div>
+        {expanded ? (
+          <ChevronUp className="w-6 h-6 text-[var(--text-muted)]" />
+        ) : (
+          <ChevronDown className="w-6 h-6 text-[var(--text-muted)]" />
+        )}
+      </button>
+
+      {expanded && (
+        <div className="p-6 border-t border-[var(--border)] bg-[var(--surface)]">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Contact form component for partner inquiries
+ */
+function ContactFormSection() {
+  const [formData, setFormData] = useState({
+    email: '',
+    message: '',
+    company: '', // honeypot field
+  });
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    // Honeypot check
+    if (formData.company) {
+      setSubmitted(true);
+      return;
+    }
+
+    // Basic validation
+    if (!formData.email || !formData.message) {
+      setError('Please fill in all fields');
+      return;
+    }
+
+    if (formData.message.length < 10) {
+      setError('Message must be at least 10 characters');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/support/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email,
+          message: formData.message,
+          role_context: 'venue',
+          page_source: 'partner_kit',
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send message');
+      }
+
+      setSubmitted(true);
+      setFormData({ email: '', message: '', company: '' });
+      setTimeout(() => setSubmitted(false), 5000);
+    } catch (err) {
+      setError('Failed to send message. Please try again later.');
+    }
+  };
+
+  return (
+    <div id="contact-form-section" className="mb-20 bg-[var(--surface)] rounded-lg p-8 border border-[var(--border)]">
+      <h2 className="text-2xl font-bold text-[var(--text)] mb-2">Have questions?</h2>
+      <p className="text-[var(--text-muted)] mb-6">Send us a message and we'll get back to you within 24 hours.</p>
+
+      {submitted ? (
+        <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
+          <p className="text-green-700 font-semibold">Thanks! Your message has been sent.</p>
+          <p className="text-sm text-green-600 mt-1">We'll respond within 24 hours.</p>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+              <p className="text-sm text-red-700">{error}</p>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-semibold text-[var(--text)] mb-2">Email</label>
+            <input
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              className="w-full px-4 py-2 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-[var(--text)]"
+              placeholder="your@email.com"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-[var(--text)] mb-2">Message</label>
+            <textarea
+              value={formData.message}
+              onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+              className="w-full px-4 py-2 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-[var(--text)] resize-none"
+              rows={4}
+              placeholder="Tell us what you'd like to know..."
+            />
+          </div>
+
+          {/* Honeypot */}
+          <input
+            type="hidden"
+            name="company"
+            value={formData.company}
+            onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+          />
+
+          <button
+            type="submit"
+            className="px-6 py-2 bg-[var(--accent)] text-[var(--accent-contrast)] rounded-lg font-semibold hover:opacity-90 transition-opacity"
+          >
+            Send Message
+          </button>
+        </form>
+      )}
+    </div>
+  );
+}
+
 interface VenuePartnerKitEmbeddedProps {
   onNavigate?: (page: string) => void;
 }
@@ -500,165 +659,6 @@ export function VenuePartnerKitEmbedded({ onNavigate }: VenuePartnerKitEmbeddedP
           </button>
         </div>
       </div>
-    </div>
-  );
-}
-
-// Collapsible Section Component
-function PartnerKitSection({
-  id,
-  title,
-  icon,
-  expanded,
-  onToggle,
-  children,
-}: {
-  id: string;
-  title: string;
-  icon: React.ReactNode;
-  expanded: boolean;
-  onToggle: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <div id={id} className="mb-8 bg-[var(--surface)] border border-[var(--border)] rounded-lg overflow-hidden">
-      <button
-        onClick={onToggle}
-        className="w-full flex items-center justify-between p-6 hover:bg-[var(--surface-2)] transition"
-      >
-        <div className="flex items-center gap-4">
-          <div className="text-[var(--accent)]">{icon}</div>
-          <h2 className="text-xl font-bold text-[var(--text)]">{title}</h2>
-        </div>
-        {expanded ? (
-          <ChevronUp className="w-6 h-6 text-[var(--text-muted)]" />
-        ) : (
-          <ChevronDown className="w-6 h-6 text-[var(--text-muted)]" />
-        )}
-      </button>
-
-      {expanded && (
-        <div className="p-6 border-t border-[var(--border)] bg-[var(--surface)]">
-          {children}
-        </div>
-      )}
-    </div>
-  );
-}
-
-/**
- * Contact form component for partner inquiries
- */
-function ContactFormSection() {
-  const [formData, setFormData] = useState({
-    email: '',
-    message: '',
-    company: '', // honeypot field
-  });
-  const [submitted, setSubmitted] = useState(false);
-  const [error, setError] = useState('');
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-
-    // Honeypot check
-    if (formData.company) {
-      setSubmitted(true);
-      return;
-    }
-
-    // Basic validation
-    if (!formData.email || !formData.message) {
-      setError('Please fill in all fields');
-      return;
-    }
-
-    if (formData.message.length < 10) {
-      setError('Message must be at least 10 characters');
-      return;
-    }
-
-    try {
-      const response = await fetch('/api/support/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: formData.email,
-          message: formData.message,
-          role_context: 'venue',
-          page_source: 'partner_kit',
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to send message');
-      }
-
-      setSubmitted(true);
-      setFormData({ email: '', message: '', company: '' });
-      setTimeout(() => setSubmitted(false), 5000);
-    } catch (err) {
-      setError('Failed to send message. Please try again later.');
-    }
-  };
-
-  return (
-    <div id="contact-form-section" className="mb-20 bg-[var(--surface)] rounded-lg p-8 border border-[var(--border)]">
-      <h2 className="text-2xl font-bold text-[var(--text)] mb-2">Have questions?</h2>
-      <p className="text-[var(--text-muted)] mb-6">Send us a message and we'll get back to you within 24 hours.</p>
-
-      {submitted ? (
-        <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
-          <p className="text-green-700 font-semibold">Thanks! Your message has been sent.</p>
-          <p className="text-sm text-green-600 mt-1">We'll respond within 24 hours.</p>
-        </div>
-      ) : (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-              <p className="text-sm text-red-700">{error}</p>
-            </div>
-          )}
-
-          <div>
-            <label className="block text-sm font-semibold text-[var(--text)] mb-2">Email</label>
-            <input
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full px-4 py-2 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-[var(--text)]"
-              placeholder="your@email.com"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-[var(--text)] mb-2">Message</label>
-            <textarea
-              value={formData.message}
-              onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-              className="w-full px-4 py-2 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-[var(--text)] resize-none"
-              rows={4}
-              placeholder="Tell us what you'd like to know..."
-            />
-          </div>
-
-          {/* Honeypot */}
-          <input
-            type="hidden"
-            name="company"
-            value={formData.company}
-            onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-          />
-
-          <button
-            type="submit"
-            className="px-6 py-2 bg-[var(--accent)] text-[var(--accent-contrast)] rounded-lg font-semibold hover:opacity-90 transition-opacity"
-          >
-            Send Message
-          </button>
-        </form>
-      )}
     </div>
   );
 }
