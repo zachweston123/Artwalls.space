@@ -245,6 +245,26 @@ export default function App() {
     syncProfile();
   }, [currentUser]);
 
+  // Role-based page access control - redirect unauthorized users
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const artistOnlyPages = ['artist-venues'];
+    const venueOnlyPages = ['find-art', 'venue-find-artists'];
+
+    // If artist tries to access venue-only pages, redirect to artist dashboard
+    if (currentUser.role === 'artist' && venueOnlyPages.includes(currentPage)) {
+      setCurrentPage('artist-dashboard');
+      return;
+    }
+
+    // If venue tries to access artist-only pages, redirect to venue dashboard
+    if (currentUser.role === 'venue' && artistOnlyPages.includes(currentPage)) {
+      setCurrentPage('venue-dashboard');
+      return;
+    }
+  }, [currentUser, currentPage]);
+
   const handleAdminPasswordVerified = () => {
     setShowAdminPasswordPrompt(false);
     setAdminPasswordVerified(true);
@@ -610,7 +630,6 @@ export default function App() {
         )}
 
         {/* Venue Growth & Exposure Pages */}
-        {currentPage === 'find-art' && <FindArtHub onNavigate={handleNavigate} />}
         {currentPage === 'venues-hosting-policy' && <VenueHostingPolicy onNavigate={handleNavigate} />}
         {currentPage === 'venues-apply' && <VenueApplication onNavigate={handleNavigate} />}
         {currentPage === 'venue-profile' && selectedVenueId && (
@@ -696,6 +715,7 @@ export default function App() {
             {currentPage === 'venue-profile' && <VenueProfile onNavigate={handleNavigate} />}
             {currentPage === 'venue-password-security' && <VenuePasswordSecurity onBack={() => handleNavigate('venue-profile')} />}
             {currentPage === 'venue-notifications' && <VenueNotificationPreferences onBack={() => handleNavigate('venue-profile')} />}
+            {currentPage === 'find-art' && <FindArtHub onNavigate={handleNavigate} />}
             {currentPage === 'venue-find-artists' && (
               <FindArtists
                 onViewProfile={(artistId) => {
