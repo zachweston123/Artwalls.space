@@ -126,14 +126,15 @@ export function CitySelect({
         {/* Input Field */}
         <div
           className={`
-            relative flex items-center w-full px-4 py-2.5 rounded-lg
+            relative flex items-center w-full h-12 px-4 rounded-xl
             border border-[var(--border)] bg-[var(--surface-2)]
-            focus-within:border-[var(--primary)] focus-within:ring-1 focus-within:ring-[var(--primary)]
-            transition-all duration-200
+            focus-within:border-[var(--primary)] focus-within:ring-2 focus-within:ring-[var(--primary)]/20
+            hover:border-[var(--border-hover)] transition-all duration-200
+            box-border
             ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
           `}
         >
-          <Search className="w-4 h-4 text-[var(--text-muted)] mr-2 flex-shrink-0" />
+          <Search className="w-5 h-5 text-[var(--text-muted)] mr-3 flex-shrink-0" />
           <input
             ref={inputRef}
             type="text"
@@ -146,12 +147,12 @@ export function CitySelect({
             onFocus={() => setIsOpen(true)}
             onKeyDown={handleKeyDown}
             disabled={disabled}
-            className="flex-1 bg-transparent outline-none text-[var(--text)] placeholder-[var(--text-muted)]"
+            className="flex-1 bg-transparent outline-none text-[var(--text)] placeholder-[var(--text-muted)] text-sm font-medium leading-none overflow-hidden text-ellipsis whitespace-nowrap"
           />
           {hasValue && !isOpen && (
             <button
               onClick={clearSelection}
-              className="p-1 hover:bg-[var(--surface-1)] rounded transition-colors"
+              className="p-1 hover:bg-[var(--surface-1)] rounded transition-colors flex-shrink-0"
               aria-label="Clear selection"
             >
               <X className="w-4 h-4 text-[var(--text-muted)]" />
@@ -163,7 +164,7 @@ export function CitySelect({
         {isOpen && results.length > 0 && (
           <ul
             ref={listRef}
-            className="absolute z-50 w-full mt-2 bg-[var(--surface-1)] border border-[var(--border)] rounded-lg shadow-lg max-h-64 overflow-y-auto"
+            className="absolute z-50 w-full mt-2 bg-[var(--surface-1)] border border-[var(--border)] rounded-xl shadow-lg max-h-64 overflow-y-auto"
           >
             {results.map((city, index) => (
               <li key={`${city.name}-${city.state}`}>
@@ -172,7 +173,7 @@ export function CitySelect({
                   onClick={() => selectCity(city)}
                   onMouseEnter={() => setHighlightedIndex(index)}
                   className={`
-                    w-full text-left px-4 py-2.5 transition-colors duration-150
+                    w-full text-left px-4 py-3 transition-colors duration-150
                     ${
                       index === highlightedIndex
                         ? 'bg-[var(--primary)] text-white'
@@ -180,8 +181,8 @@ export function CitySelect({
                     }
                   `}
                 >
-                  <div className="font-medium">{city.name}</div>
-                  <div className="text-sm opacity-75">{city.state}</div>
+                  <div className="font-medium text-sm leading-none mb-1">{city.name}</div>
+                  <div className="text-xs opacity-75">{city.state}</div>
                 </button>
               </li>
             ))}
@@ -190,7 +191,7 @@ export function CitySelect({
 
         {/* Empty State */}
         {isOpen && searchQuery && results.length === 0 && (
-          <div className="absolute z-50 w-full mt-2 bg-[var(--surface-1)] border border-[var(--border)] rounded-lg p-4 text-center text-[var(--text-muted)]">
+          <div className="absolute z-50 w-full mt-2 bg-[var(--surface-1)] border border-[var(--border)] rounded-xl p-4 text-center text-[var(--text-muted)] text-sm">
             No cities found for "{searchQuery}"
           </div>
         )}

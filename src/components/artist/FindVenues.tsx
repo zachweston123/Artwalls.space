@@ -203,25 +203,25 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
         {/* Search Bar */}
         <div className="flex gap-3 mb-4">
           <div className="flex-1 relative flex items-center">
-            <Search className="absolute left-3 w-5 h-5 text-[var(--text-muted)] pointer-events-none" />
+            <Search className="absolute left-4 w-5 h-5 text-[var(--text-muted)] pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by venue name..."
-              className="w-full pl-12 pr-4 py-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
+              className="w-full h-12 pl-12 pr-4 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)] text-sm font-medium leading-none placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]/20 hover:border-[var(--border-hover)] transition-all box-border"
             />
           </div>
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`px-6 py-3 rounded-lg border-2 transition-all flex items-center gap-2 ${
+            className={`h-12 px-6 rounded-xl border-2 transition-all flex items-center gap-2 box-border ${
               showFilters || hasActiveFilters
                 ? 'border-[var(--blue)] bg-[var(--surface-2)] text-[var(--blue)]'
                 : 'border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-muted)] hover:border-[var(--blue)]'
             }`}
           >
             <Filter className="w-5 h-5" />
-            Filters
+            <span className="text-sm font-medium leading-none">Filters</span>
             {hasActiveFilters && (
               <span className="ml-1 px-2 py-0.5 bg-[var(--blue)] text-[var(--on-blue)] text-xs rounded-full">
                 {(filters.labels.length + (filters.acceptingArtists ? 1 : 0) + (filters.neighborhood ? 1 : 0) + (filters.venueType ? 1 : 0))}
@@ -241,7 +241,7 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
               <select
                 value={filters.neighborhood}
                 onChange={(e) => setFilters({ ...filters, neighborhood: e.target.value })}
-                className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
+                className="w-full h-12 px-4 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)] text-sm font-medium leading-none focus:outline-none focus:ring-2 focus:ring-[var(--focus)]/20 hover:border-[var(--border-hover)] transition-all box-border"
               >
                 <option value="">All neighborhoods</option>
                 {neighborhoods.map((neighborhood) => (
@@ -260,7 +260,7 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
               <select
                 value={filters.venueType}
                 onChange={(e) => setFilters({ ...filters, venueType: e.target.value })}
-                className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
+                className="w-full h-12 px-4 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)] text-sm font-medium leading-none focus:outline-none focus:ring-2 focus:ring-[var(--focus)]/20 hover:border-[var(--border-hover)] transition-all box-border"
               >
                 <option value="">All venue types</option>
                 {venueTypes.map((type) => (

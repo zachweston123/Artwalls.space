@@ -49,13 +49,13 @@ export function FindArtHub({ onNavigate }: FindArtHubProps) {
           <p className="text-[var(--accent-contrast)]/90 mb-8">Discover galleries and spaces hosting emerging artists</p>
 
           <div className="relative">
-            <Search className="absolute left-4 top-3 w-5 h-5 text-[var(--text-muted)]" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-muted)]" />
             <input
               type="text"
               placeholder="Search by venue or city..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-[var(--surface)] text-[var(--text)] rounded-lg border border-[var(--border)] focus:outline-none focus:border-[var(--accent)]"
+              className="w-full h-12 pl-12 pr-4 bg-[var(--surface)] text-[var(--text)] text-sm font-medium leading-none rounded-xl border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 focus:border-[var(--accent)] hover:border-[var(--border-hover)] transition-all box-border"
             />
           </div>
         </div>
@@ -68,7 +68,7 @@ export function FindArtHub({ onNavigate }: FindArtHubProps) {
             <select
               value={selectedCity}
               onChange={(e) => setSelectedCity(e.target.value)}
-              className="w-full px-4 py-2 bg-[var(--surface)] text-[var(--text)] rounded-lg border border-[var(--border)]"
+              className="w-full h-12 px-4 bg-[var(--surface)] text-[var(--text)] text-sm font-medium leading-none rounded-xl border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 hover:border-[var(--border-hover)] transition-all box-border"
             >
               <option value="">All Cities</option>
               {cities.map(city => (

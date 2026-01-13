@@ -9,6 +9,7 @@
   --surface-2: #ffffff;
   --surface-3: #f1f4fb;
   --border: rgba(0,0,0,.10);
+  --border-hover: rgba(0,0,0,.18);
 
   /* text */
   --text: #0b0c0f;
@@ -44,6 +45,7 @@ html[data-theme="dark"] {
   --surface-2: #121b2b;
   --surface-3: #17233a;
   --border: rgba(255,255,255,.10);
+  --border-hover: rgba(255,255,255,.18);
 
   --text: rgba(255,255,255,.92);
   --text-muted: rgba(255,255,255,.68);
