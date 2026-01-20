@@ -34,7 +34,52 @@ export function ArtistProfileView({
     openToNew: true,
     activeDisplays: 0,
     totalSales: 0,
-  };
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadArtistProfile() {
+      if (!artistId) {
+        setLoading(false);
+        return;
+      }
+      try {
+        const profile = await apiGet<{
+          id: string;
+          name?: string | null;
+          profile_photo_url?: string | null;
+          city_primary?: string | null;
+          bio?: string | null;
+          instagram_handle?: string | null;
+          open_to_placements?: boolean | null;
+        }>(`/api/artists/${artistId}`);
+        
+        if (isMounted && profile) {
+          setArtist({
+            id: profile.id,
+            name: profile.name || 'Artist',
+            avatar: profile.profile_photo_url || '',
+            location: profile.city_primary || '',
+            bio: profile.bio || '',
+            instagram: profile.instagram_handle || '',
+            artTypes: [],
+            openToNew: profile.open_to_placements ?? true,
+            activeDisplays: 0,
+            totalSales: 0,
+          });
+        }
+      } catch (error) {
+        console.error('Failed to load artist profile:', error);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+    loadArtistProfile();
+    return () => {
+      isMounted = false;
+    };
+  }, [artistId]);
 
   const allArtTypes = [
     'Painter', 'Photographer', 'Illustrator', 'Digital', 
