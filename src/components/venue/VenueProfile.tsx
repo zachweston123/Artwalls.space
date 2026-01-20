@@ -45,22 +45,23 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
         phoneNumber: (user.user_metadata?.phone as string | undefined) || prev.phoneNumber,
       }));
 
-      // Load cover photo from database
+      // Load cover photo and city from database
       try {
         const { data: venueData } = await supabase
           .from('venues')
-          .select('cover_photo_url')
+          .select('cover_photo_url, city')
           .eq('id', user.id)
           .single();
         
-        if (venueData?.cover_photo_url) {
+        if (venueData) {
           setProfile((prev) => ({
             ...prev,
-            coverPhoto: venueData.cover_photo_url,
+            coverPhoto: venueData.cover_photo_url || prev.coverPhoto,
+            city: venueData.city || prev.city,
           }));
         }
       } catch (err) {
-        console.warn('Failed to load cover photo:', err);
+        console.warn('Failed to load venue data:', err);
       }
     });
   }, []);
@@ -83,11 +84,19 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
         bio: data.bio,
       });
 
-      // Save cover photo URL to database
+      // Save city and cover photo URL to database
+      const updateData: any = {};
       if (data.coverPhoto) {
+        updateData.cover_photo_url = data.coverPhoto;
+      }
+      if (data.city) {
+        updateData.city = data.city;
+      }
+      
+      if (Object.keys(updateData).length > 0) {
         await supabase
           .from('venues')
-          .update({ cover_photo_url: data.coverPhoto })
+          .update(updateData)
           .eq('id', userId);
       }
 
@@ -108,6 +117,7 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
         type: data.type,
         email: data.email || prev.email,
         phoneNumber: data.phoneNumber || prev.phoneNumber,
+        city: data.city || prev.city,
         address: prev.address, // address remains; city stored separately
       }));
       setIsEditing(false);
@@ -354,7 +364,7 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
 
       {isEditing && (
         <VenueProfileEdit
-          initialData={{ name: profile.name, type: profile.type, email: profile.email, phoneNumber: profile.phoneNumber, city: undefined, coverPhoto: profile.coverPhoto }}
+          initialData={{ name: profile.name, type: profile.type, email: profile.email, phoneNumber: profile.phoneNumber, city: profile.city, coverPhoto: profile.coverPhoto }}
           onSave={handleSave}
           onCancel={() => setIsEditing(false)}
         />

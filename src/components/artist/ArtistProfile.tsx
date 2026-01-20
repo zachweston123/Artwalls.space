@@ -212,13 +212,15 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
         instagramHandle: instagramHandle || null,
       });
 
-      // Update bio, art_types and instagram in Supabase directly
+      // Update bio, art_types, instagram, and cities in Supabase directly
       await supabase
         .from('artists')
         .update({ 
           bio: bio || null,
           art_types: artTypes.length > 0 ? artTypes : [],
-          instagram_handle: instagramHandle || null
+          instagram_handle: instagramHandle || null,
+          city_primary: cityPrimary || null,
+          city_secondary: citySecondary || null,
         })
         .eq('id', user.id);
 
