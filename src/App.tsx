@@ -729,8 +729,9 @@ export default function App() {
                 }}
               />
             )}
-            {currentPage === 'artist-view-profile' && (
+            {currentPage === 'artist-view-profile' && selectedArtistId && (
               <ArtistProfileView
+                artistId={selectedArtistId}
                 isOwnProfile={false}
                 currentUser={currentUser}
                 onInviteToApply={() => {

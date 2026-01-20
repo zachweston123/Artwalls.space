@@ -61,14 +61,14 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
         const city = (me?.profile?.city || '').trim();
         if (isMounted) setVenueCity(city);
         const path = city ? `/api/artists?city=${encodeURIComponent(city)}` : '/api/artists';
-        const resp = await apiGet<{ artists: Array<{ id: string; name?: string | null; email?: string | null }> }>(
+        const resp = await apiGet<{ artists: Array<{ id: string; name?: string | null; email?: string | null; profile_photo_url?: string | null }> }>(
           path
         );
         const apiArtists = resp?.artists || [];
         const shaped = apiArtists.map((a) => ({
           id: a.id,
           name: a.name || 'Artist',
-          avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400',
+          avatar: a.profile_photo_url || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400',
           location: city || 'Local',
           bio: 'Artist on Artwalls',
           artTypes: ['Painter'],
@@ -247,11 +247,17 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
                   className="flex-shrink-0 group"
                 >
                   <div className="w-20 h-20 rounded-full overflow-hidden bg-[var(--surface-2)] border-2 border-[var(--border)] group-hover:border-[var(--green)] transition-colors">
-                    <img
-                      src={artist.avatar}
-                      alt={artist.name}
-                      className="w-full h-full object-cover"
-                    />
+                    {artist.avatar ? (
+                      <img
+                        src={artist.avatar}
+                        alt={artist.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-[var(--surface-3)] text-[var(--text-muted)] text-2xl font-bold">
+                        {artist.name.charAt(0).toUpperCase()}
+                      </div>
+                    )}
                   </div>
                 </button>
 

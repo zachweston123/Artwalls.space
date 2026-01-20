@@ -2,8 +2,11 @@ import { MapPin, Edit, Flag, Eye, Instagram } from 'lucide-react';
 import { LabelChip } from '../LabelChip';
 import { mockArtworks } from '../../data/mockData';
 import type { User } from '../../App';
+import { useEffect, useState } from 'react';
+import { apiGet } from '../../lib/api';
 
 interface ArtistProfileViewProps {
+  artistId?: string;
   isOwnProfile: boolean;
   onEdit?: () => void;
   onInviteToApply?: () => void;
@@ -12,14 +15,15 @@ interface ArtistProfileViewProps {
 }
 
 export function ArtistProfileView({ 
+  artistId,
   isOwnProfile, 
   onEdit, 
   onInviteToApply,
   onViewArtwork,
   currentUser 
 }: ArtistProfileViewProps) {
-  // Mock artist data - in real app would come from props or API
-  const artist = {
+  // Fetch artist data from API
+  const [artist, setArtist] = useState<any>({
     id: '1',
     name: 'Artist',
     avatar: '',
@@ -37,6 +41,17 @@ export function ArtistProfileView({
     'Mixed Media', 'Printmaker', 'Collage', 'Sculptor'
   ];
 
+  if (loading) {
+    return (
+      <div className="bg-[var(--bg)] text-[var(--text)] flex items-center justify-center py-16">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--blue)] rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-[var(--text-muted)]">Loading artist profile...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-[var(--bg)] text-[var(--text)]">
       {/* Profile Header */}
@@ -45,11 +60,17 @@ export function ArtistProfileView({
           {/* Avatar */}
           <div className="flex-shrink-0">
             <div className="w-32 h-32 rounded-full overflow-hidden bg-[var(--surface-2)] border-4 border-[var(--border)]">
-              <img
-                src={artist.avatar}
-                alt={artist.name}
-                className="w-full h-full object-cover"
-              />
+              {artist.avatar ? (
+                <img
+                  src={artist.avatar}
+                  alt={artist.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-[var(--surface-3)] text-[var(--text-muted)] text-3xl font-bold">
+                  {artist.name.charAt(0).toUpperCase()}
+                </div>
+              )}
             </div>
           </div>
 
