@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
+const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || "https://api.artwalls.space";
 
 export default function StripeOnboardingReturn() {
   const [searchParams] = useSearchParams();
@@ -28,7 +29,7 @@ export default function StripeOnboardingReturn() {
         return;
       }
 
-      const response = await fetch('/api/stripe/connect/sync-status', {
+      const response = await fetch(`${API_BASE}/api/stripe/connect/sync-status', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 
+
+const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || 'https://api.artwalls.space';
 interface StripeConnectStatusProps {
   role: 'artist' | 'venue';
   userId: string;
@@ -34,7 +36,7 @@ export default function StripeConnectStatus({ role, userId }: StripeConnectStatu
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const response = await fetch(`/api/stripe/connect/sync-status`, {
+      const response = await fetch(`${API_BASE}/api/stripe/connect/sync-status`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -74,7 +76,7 @@ export default function StripeConnectStatus({ role, userId }: StripeConnectStatu
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const response = await fetch(`/api/stripe/connect/create-account`, {
+      const response = await fetch(`${API_BASE}/api/stripe/connect/create-account`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -103,7 +105,7 @@ export default function StripeConnectStatus({ role, userId }: StripeConnectStatu
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const response = await fetch(`/api/stripe/connect/account-link`, {
+      const response = await fetch(`${API_BASE}/api/stripe/connect/account-link`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
