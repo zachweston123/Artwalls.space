@@ -128,7 +128,7 @@ export function CitySelect({
           className={`
             relative flex items-center w-full h-12 px-4 rounded-xl
             border border-[var(--border)] bg-[var(--surface-2)]
-            focus-within:border-[var(--primary)] focus-within:ring-2 focus-within:ring-[var(--primary)]/20
+            focus-within:border-[var(--blue)] focus-within:ring-2 focus-within:ring-[var(--blue)]/20
             hover:border-[var(--border-hover)] transition-all duration-200
             box-border
             ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
@@ -148,6 +148,11 @@ export function CitySelect({
             onKeyDown={handleKeyDown}
             disabled={disabled}
             className="flex-1 bg-transparent outline-none text-[var(--text)] placeholder-[var(--text-muted)] text-sm font-medium leading-none overflow-hidden text-ellipsis whitespace-nowrap"
+            role="combobox"
+            aria-expanded={isOpen}
+            aria-autocomplete="list"
+            aria-controls={isOpen ? 'city-listbox' : undefined}
+            aria-activedescendant={isOpen && results[highlightedIndex] ? `city-option-${highlightedIndex}` : undefined}
           />
           {hasValue && !isOpen && (
             <button
@@ -163,26 +168,32 @@ export function CitySelect({
         {/* Dropdown List */}
         {isOpen && results.length > 0 && (
           <ul
+            id="city-listbox"
             ref={listRef}
-            className="absolute z-50 w-full mt-2 bg-[var(--surface-1)] border border-[var(--border)] rounded-xl shadow-lg max-h-64 overflow-y-auto"
+            role="listbox"
+            className="absolute z-[100] w-full mt-2 bg-[var(--surface-1)] border border-[var(--border)] rounded-xl shadow-xl max-h-64 overflow-y-auto"
+            style={{ boxShadow: '0 10px 40px rgba(0, 0, 0, 0.15)' }}
           >
             {results.map((city, index) => (
-              <li key={`${city.name}-${city.state}`}>
+              <li key={`${city.name}-${city.state}`} role="presentation">
                 <button
+                  id={`city-option-${index}`}
                   type="button"
                   onClick={() => selectCity(city)}
                   onMouseEnter={() => setHighlightedIndex(index)}
                   className={`
-                    w-full text-left px-4 py-3 transition-colors duration-150
+                    w-full text-left px-4 py-3 transition-colors duration-100
                     ${
                       index === highlightedIndex
-                        ? 'bg-[var(--primary)] text-white'
+                        ? 'bg-[var(--blue)] text-white'
                         : 'hover:bg-[var(--surface-2)] text-[var(--text)]'
                     }
                   `}
+                  aria-selected={index === highlightedIndex}
+                  role="option"
                 >
                   <div className="font-medium text-sm leading-none mb-1">{city.name}</div>
-                  <div className="text-xs opacity-75">{city.state}</div>
+                  <div className="text-xs opacity-90">{city.state}</div>
                 </button>
               </li>
             ))}
@@ -191,7 +202,10 @@ export function CitySelect({
 
         {/* Empty State */}
         {isOpen && searchQuery && results.length === 0 && (
-          <div className="absolute z-50 w-full mt-2 bg-[var(--surface-1)] border border-[var(--border)] rounded-xl p-4 text-center text-[var(--text-muted)] text-sm">
+          <div 
+            className="absolute z-[100] w-full mt-2 bg-[var(--surface-1)] border border-[var(--border)] rounded-xl p-4 text-center text-[var(--text-muted)] text-sm"
+            style={{ boxShadow: '0 10px 40px rgba(0, 0, 0, 0.15)' }}
+          >
             No cities found for "{searchQuery}"
           </div>
         )}
