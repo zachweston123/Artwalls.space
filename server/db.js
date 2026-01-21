@@ -32,6 +32,7 @@ function mapArtistRow(r) {
     bio: r.bio,
     artTypes: r.art_types,
     instagramHandle: r.instagram_handle,
+    portfolioUrl: r.portfolio_url,
     profilePhotoUrl: r.profile_photo_url,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
@@ -137,6 +138,7 @@ export async function upsertArtist({
   bio,
   artTypes,
   instagramHandle,
+  portfolioUrl,
   profilePhotoUrl,
 }) {
   const payload = {
@@ -160,6 +162,7 @@ export async function upsertArtist({
   if (bio !== undefined) payload.bio = bio;
   if (artTypes !== undefined) payload.art_types = artTypes;
   if (instagramHandle !== undefined) payload.instagram_handle = instagramHandle;
+  if (portfolioUrl !== undefined) payload.portfolio_url = portfolioUrl;
   if (profilePhotoUrl !== undefined) payload.profile_photo_url = profilePhotoUrl;
 
   const { data, error } = await supabaseAdmin

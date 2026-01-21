@@ -98,11 +98,9 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
           setInstagramHandle((row.instagram_handle as string) || '');
           const tier = (row.subscription_tier as 'free' | 'starter' | 'growth' | 'pro') || 'free';
           setCurrentPlan(tier);
-          setAvatar((row?.profile_photo_url as string) || (user.user_metadata?.avatar as string) || '');
+          setAvatar((row.profile_photo_url as string) || (user.user_metadata?.avatar as string) || '');
+          setPortfolioUrl((row.portfolio_url as string) || (user.user_metadata?.portfolioUrl as string) || '');
         }
-
-        // Portfolio URL from auth metadata
-        setPortfolioUrl(((user.user_metadata?.portfolioUrl as string) || '').trim());
       } catch (e: any) {
         if (mounted) setError(e?.message || 'Failed to load profile');
       } finally {

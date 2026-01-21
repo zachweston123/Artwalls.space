@@ -1443,7 +1443,8 @@ app.post('/api/artists', async (req, res) => {
       subscriptionTier,
       bio,
       artTypes,
-      instagramHandle
+      instagramHandle,
+      portfolioUrl
     } = req.body || {};
     const artistId = authUser?.id || bodyArtistId;
     if (!artistId || typeof artistId !== 'string') return res.status(400).json({ error: 'Missing artistId' });
@@ -1460,6 +1461,7 @@ app.post('/api/artists', async (req, res) => {
       bio: bio ?? undefined,
       artTypes: artTypes ?? undefined,
       instagramHandle: instagramHandle ?? undefined,
+      portfolioUrl: portfolioUrl ?? undefined,
     });
     return res.json(artist);
   } catch (err) {
