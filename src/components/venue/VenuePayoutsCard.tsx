@@ -28,7 +28,8 @@ export function VenuePayoutsCard({ user }: VenuePayoutsCardProps) {
     setLoading(true);
     setError(null);
     try {
-      const data = await apiGet<ConnectStatus>(`/api/stripe/connect/venue/status`);
+      // Pass user ID as query param or rely on session
+      const data = await apiGet<ConnectStatus>(`/api/stripe/connect/venue/status?userId=${encodeURIComponent(user.id)}`);
       setStatus(data);
     } catch (e: any) {
       setError(e?.message || 'Unable to load payout status');

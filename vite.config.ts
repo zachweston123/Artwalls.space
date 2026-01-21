@@ -5,6 +5,9 @@
 
   export default defineConfig({
     plugins: [react()],
+    server: {
+      allowedHosts: ['api.artwalls.space', 'artwalls.space', '.artwalls.space'],
+    },
     resolve: {
       extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
       alias: {
