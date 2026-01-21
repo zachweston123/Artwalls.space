@@ -142,9 +142,19 @@ export function CitySelect({
             value={isOpen ? searchQuery : displayValue}
             onChange={(e) => {
               setSearchQuery(e.target.value);
+              // If user is clearing their input, ensure it updates
+              if (e.target.value === '' && !isOpen) {
+                  onChange('');
+              }
               if (!isOpen) setIsOpen(true);
             }}
-            onFocus={() => setIsOpen(true)}
+            onFocus={() => {
+              // Populate search query with current value when opening so user can edit it
+              if (displayValue && !searchQuery) {
+                setSearchQuery(displayValue);
+              }
+              setIsOpen(true);
+            }}
             onKeyDown={handleKeyDown}
             disabled={disabled}
             className="flex-1 bg-transparent outline-none text-[var(--text)] placeholder-[var(--text-muted)] text-sm font-medium leading-none overflow-hidden text-ellipsis whitespace-nowrap"
