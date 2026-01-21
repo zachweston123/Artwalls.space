@@ -167,6 +167,60 @@ export default function App() {
     };
   }, []);
 
+  // Check if user has accepted the agreement
+  useEffect(() => {
+    async function checkAgreementStatus() {
+      if (!currentUser) return;
+      
+      // Admin doesn't need to accept agreements
+      if (currentUser.role === 'admin') {
+        setHasAcceptedAgreement(true);
+        return;
+      }
+
+      const table = currentUser.role === 'artist' ? 'artists' : 'venues';
+      
+      const { data, error } = await supabase
+        .from(table)
+        .select('agreement_accepted_at')
+        .eq('id', currentUser.id)
+        .single();
+        
+      if (!error && data?.agreement_accepted_at) {
+        setHasAcceptedAgreement(true);
+      } else {
+        setHasAcceptedAgreement(false);
+      }
+    }
+    
+    checkAgreementStatus();
+  }, [currentUser]);
+
+  const handleAgreementAccept = async () => {
+    if (!currentUser) return;
+    
+    // Optimistic update
+    setHasAcceptedAgreement(true);
+
+    const table = currentUser.role === 'artist' ? 'artists' : 'venues';
+    
+    try {
+      const { error } = await supabase
+        .from(table)
+        .update({ agreement_accepted_at: new Date().toISOString() })
+        .eq('id', currentUser.id);
+
+      if (error) {
+        console.error('Error recording agreement acceptance:', error);
+        // Revert on error
+        setHasAcceptedAgreement(false);
+      }
+    } catch (err) {
+      console.error('Error recording agreement acceptance:', err);
+      setHasAcceptedAgreement(false);
+    }
+  };
+
   // Update favicon based on user role
   useEffect(() => {
     if (!currentUser) {
@@ -640,14 +694,14 @@ export default function App() {
         {currentPage === 'artist-agreement' && (
           <ArtistAgreement 
             onNavigate={handleNavigate}
-            onAccept={() => setHasAcceptedAgreement(true)}
+            onAccept={() => handleAgreementAccept()}
             hasAccepted={hasAcceptedAgreement}
           />
         )}
         {currentPage === 'venue-agreement' && (
           <VenueAgreement 
             onNavigate={handleNavigate}
-            onAccept={() => setHasAcceptedAgreement(true)}
+            onAccept={() => handleAgreementAccept()}
             hasAccepted={hasAcceptedAgreement}
           />
         )}
