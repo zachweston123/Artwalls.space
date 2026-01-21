@@ -19,12 +19,19 @@ async function getAuthHeader(): Promise<Record<string, string>> {
 
 export async function apiGet<T>(path: string): Promise<T> {
   const authHeader = await getAuthHeader();
-  const res = await fetch(`${API_BASE}${path}`, {
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json', ...authHeader },
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}${path}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json', ...authHeader },
+    });
+  } catch (fetchErr: any) {
+    console.error('[apiGet] Network error:', fetchErr);
+    throw new Error(`Network error: ${fetchErr?.message || 'Failed to fetch'}`);
+  }
   if (!res.ok) {
-    const text = await res.text();
+    const text = await res.text().catch(() => '');
+    console.error('[apiGet] Server error:', res.status, text);
     throw new Error(text || `Request failed: ${res.status}`);
   }
   return (await res.json()) as T;
