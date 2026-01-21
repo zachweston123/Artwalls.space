@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 
-
 const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || 'https://api.artwalls.space';
+
 interface StripeConnectStatusProps {
   role: 'artist' | 'venue';
   userId: string;
@@ -58,7 +58,6 @@ export default function StripeConnectStatus({ role, userId }: StripeConnectStatu
           lastSyncAt: data.syncedAt,
         });
       } else if (response.status === 404) {
-        // No account yet
         setStatus({ hasAccount: false });
       }
     } catch (err) {
@@ -103,17 +102,17 @@ export default function StripeConnectStatus({ role, userId }: StripeConnectStatu
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const response = await fetch(`${API_BASE}/api/stripe/connect/account-link`, {
-        method: 'POST',${role}/account-link`, {
+      const response = await fetch(`${API_BASE}/api/stripe/connect/${role}/account-link`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${session.access_token}`,
-        }
+        },
+      });
 
       if (response.ok) {
         const { url } = await response.json();
-        window.location.href = url; // Redirect to Stripe onboarding
+        window.location.href = url;
       } else {
         const error = await response.json();
         alert(error.error || 'Failed to start onboarding');
@@ -151,8 +150,8 @@ export default function StripeConnectStatus({ role, userId }: StripeConnectStatu
         </h3>
         <p className="text-gray-600 dark:text-gray-300 mb-4">
           {role === 'artist'
-            ? 'Connect your Stripe account to receive automatic payouts when your artwork sells. You\'ll take home 60-85% of the artwork price depending on your subscription plan.'
-            : 'Connect your Stripe account to receive automatic payouts. Venues earn 15% of the artwork price on every sale hosted in your space.'}
+            ? 'Connect your Stripe account to receive automatic payouts when your artwork sells.'
+            : 'Connect your Stripe account to receive automatic payouts.'}
         </p>
         <button
           onClick={createAccount}

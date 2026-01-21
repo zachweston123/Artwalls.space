@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
-const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || "https://api.artwalls.space";
+
+const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || 'https://api.artwalls.space';
 
 export default function StripeOnboardingReturn() {
   const [searchParams] = useSearchParams();
@@ -29,17 +30,16 @@ export default function StripeOnboardingReturn() {
         return;
       }
 
-      const response = await fetch(`${API_BASE}/api/stripe/connect/sync-status', {
-        method: 'POST',
+      const response = await fetch(`${API_BASE}/api/stripe/connect/${role}/status`, {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ role }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to sync status');
+        throw new Error('Failed to fetch status');
       }
 
       const data = await response.json();
@@ -49,7 +49,7 @@ export default function StripeOnboardingReturn() {
         setMessage('Your payouts are now enabled! You\'ll receive automatic transfers when sales are made.');
       } else if (data.detailsSubmitted) {
         setStatus('pending');
-        setMessage('Your information is being verified. This usually takes a few minutes. You\'ll receive an email when verification is complete.');
+        setMessage('Your information is being verified. This usually takes a few minutes.');
       } else {
         setStatus('pending');
         setMessage('Additional information is required. Please complete your Stripe onboarding.');
