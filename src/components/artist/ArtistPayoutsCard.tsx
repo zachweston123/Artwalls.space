@@ -28,7 +28,7 @@ export function ArtistPayoutsCard({ user }: ArtistPayoutsCardProps) {
     setLoading(true);
     setError(null);
     try {
-      const data = await apiGet<ConnectStatus>(`/api/stripe/connect/artist/status`
+      const data = await apiGet<ConnectStatus>(`/api/stripe/connect/artist/status`);
       setStatus(data);
     } catch (e: any) {
       setError(e?.message || 'Unable to load payout status');
