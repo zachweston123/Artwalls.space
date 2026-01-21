@@ -100,6 +100,13 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
           setCurrentPlan(tier);
           setAvatar((row.profile_photo_url as string) || (user.user_metadata?.avatar as string) || '');
           setPortfolioUrl((row.portfolio_url as string) || (user.user_metadata?.portfolioUrl as string) || '');
+          
+          // Fallback to metadata if DB fields are empty (robustness)
+          if (!row.city_primary && user.user_metadata?.cityPrimary) setCityPrimary(user.user_metadata.cityPrimary);
+          if (!row.city_secondary && user.user_metadata?.citySecondary) setCitySecondary(user.user_metadata.citySecondary);
+          if (!row.bio && user.user_metadata?.bio) setBio(user.user_metadata.bio);
+          if ((!row.art_types || row.art_types.length === 0) && user.user_metadata?.artTypes) setArtTypes(user.user_metadata.artTypes);
+          if (!row.instagram_handle && user.user_metadata?.instagramHandle) setInstagramHandle(user.user_metadata.instagramHandle);
         }
       } catch (e: any) {
         if (mounted) setError(e?.message || 'Failed to load profile');
@@ -208,10 +215,24 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
         bio: bio || null,
         artTypes: artTypes.length > 0 ? artTypes : null,
         instagramHandle: instagramHandle || null,
+        portfolioUrl: portfolioUrl || null,
+        profilePhotoUrl: avatar || null
       });
 
-      // Update metadata and email in auth (keep this for auth session consistency)
-      const { error: metaErr } = await supabase.auth.updateUser({ data: { portfolioUrl, phone, cityPrimary, citySecondary }, email });
+      // Update metadata and email in auth (keep this for auth session consistency and fallback)
+      const { error: metaErr } = await supabase.auth.updateUser({ 
+        data: { 
+          portfolioUrl, 
+          phone, 
+          cityPrimary, 
+          citySecondary,
+          bio,
+          artTypes,
+          instagramHandle,
+          avatar
+        }, 
+        email 
+      });
       if (metaErr) throw metaErr;
 
       setInfo('Profile updated successfully');
