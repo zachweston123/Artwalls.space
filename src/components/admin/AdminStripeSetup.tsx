@@ -23,10 +23,19 @@ export default function AdminStripeSetup() {
   const [pendingPayouts, setPendingPayouts] = useState<PendingPayout[]>([]);
   const [checking, setChecking] = useState(true);
   const [retrying, setRetrying] = useState<string | null>(null);
+  const [showKeyInput, setShowKeyInput] = useState(false);
+  const [stripeKey, setStripeKey] = useState('');
+  const [webhookSecret, setWebhookSecret] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     checkEnvironment();
     loadPendingPayouts();
+    // Load saved keys from localStorage if available
+    const savedKey = localStorage.getItem('dev_stripe_key');
+    const savedWebhook = localStorage.getItem('dev_webhook_secret');
+    if (savedKey) setStripeKey(savedKey);
+    if (savedWebhook) setWebhookSecret(savedWebhook);
   }, []);
 
   async function checkEnvironment() {
@@ -112,7 +121,46 @@ export default function AdminStripeSetup() {
         alert('Payout retried successfully!');
         await loadPendingPayouts();
       } else {
-        const error = await response.json();
+   
+
+  function saveKeysToLocalStorage() {
+    setSaving(true);
+    try {
+      if (stripeKey) {
+        localStorage.setItem('dev_stripe_key', stripeKey);
+      }
+      if (webhookSecret) {
+        localStorage.setItem('dev_webhook_secret', webhookSecret);
+      }
+      
+      // Show instructions for adding to .env
+      const envContent = `\n# Add these to your ~/Artwalls.space/.env file:\nSTRIPE_SECRET_KEY=${stripeKey}\nSTRIPE_WEBHOOK_SECRET=${webhookSecret || 'whsec_YOUR_WEBHOOK_SECRET'}`;
+      
+      navigator.clipboard.writeText(envContent).then(() => {
+        alert('✅ Keys saved to browser storage!\n\n📋 Environment variables copied to clipboard.\n\nPaste them into ~/Artwalls.space/.env file and restart your server.');
+      }).catch(() => {
+        alert('✅ Keys saved to browser storage!\n\nCopy these to ~/Artwalls.space/.env:\n' + envContent);
+      });
+      
+      setShowKeyInput(false);
+      setTimeout(checkEnvironment, 1000);
+    } catch (err) {
+      console.error('Failed to save keys', err);
+      alert('Failed to save keys');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function clearStoredKeys() {
+    if (confirm('Clear stored Stripe keys from browser?')) {
+      localStorage.removeItem('dev_stripe_key');
+      localStorage.removeItem('dev_webhook_secret');
+      setStripeKey('');
+      setWebhookSecret('');
+      alert('Keys cleared');
+    }
+  }     const error = await response.json();
         alert(error.error || 'Failed to retry payout');
       }
     } catch (err) {
@@ -129,13 +177,78 @@ export default function AdminStripeSetup() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
       <div className="max-w-4xl mx-auto space-y-6">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-            Stripe Connect Setup
-          </h1>
-
-          {checking ? (
-            <div className="animate-pulse space-y-3">
+        <div classNaAdd your Stripe keys to test locally:
+                  </p>
+                  
+                  {!showKeyInput ? (
+                    <button
+                      onClick={() => setShowKeyInput(true)}
+                      className="w-full bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded font-medium"
+                    >
+                      🔑 Add Stripe Test Keys
+                    </button>
+                  ) : (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-1">
+                          Stripe Secret Key (starts with sk_test_)
+                        </label>
+                        <input
+                          type="password"
+                          value={stripeKey}
+                          onChange={(e) => setStripeKey(e.target.value)}
+                          placeholder="sk_test_51..."
+                          className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-yellow-300 dark:border-yellow-700 rounded text-sm font-mono"
+                        />
+                        <a
+                          href="https://dashboard.stripe.com/test/apikeys"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-yellow-700 dark:text-yellow-300 hover:underline mt-1 inline-block"
+                        >
+                          Get your key from Stripe Dashboard →
+                        </a>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-1">
+                          Webhook Secret (optional, starts with whsec_)
+                        </label>
+                        <input
+                          type="password"
+                          value={webhookSecret}
+                          onChange={(e) => setWebhookSecret(e.target.value)}
+                          placeholder="whsec_... (optional for local dev)"
+                          className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-yellow-300 dark:border-yellow-700 rounded text-sm font-mono"
+                        />
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <button
+                          onClick={saveKeysToLocalStorage}
+                          disabled={!stripeKey || saving}
+                          className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded font-medium"
+                        >
+                          {saving ? 'Saving...' : '💾 Save & Copy to Clipboard'}
+                        </button>
+                        <button
+                          onClick={() => setShowKeyInput(false)}
+                          className="px-4 py-2 bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                      
+                      {stripeKey && (
+                        <button
+                          onClick={clearStoredKeys}
+                          className="w-full text-xs text-red-600 dark:text-red-400 hover:underline"
+                        >
+                          Clear stored keys
+                        </button>
+                      )}
+                    </div>
+                  )}me="animate-pulse space-y-3">
               <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
               <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
             </div>
