@@ -1751,6 +1751,7 @@ export default {
       }
     }
 
+<<<<<<< HEAD
     // Student Verification Endpoints
     // POST /api/students/verify - Create verification record for student
     if (url.pathname === '/api/students/verify' && method === 'POST') {
@@ -1935,6 +1936,104 @@ export default {
         console.error('[POST /api/students/discount] Error:', err?.message);
         return json({ error: err?.message || 'Internal server error' }, { status: 500 });
       }
+=======
+    // Billing: Create subscription session
+    if (url.pathname === '/api/stripe/billing/create-subscription-session' && method === 'POST') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const user = await requireArtist(request);
+      if (!user) return json({ error: 'Missing or invalid Authorization bearer token (artist required)' }, { status: 401 });
+
+      const payload = await request.json().catch(() => ({}));
+      const rawTier = String((payload as any)?.tier || '').toLowerCase();
+      const allowedTiers = ['starter', 'growth', 'pro'];
+      if (!allowedTiers.includes(rawTier)) {
+        return json({ error: 'Invalid tier' }, { status: 400 });
+      }
+
+      const priceMap: Record<string, string | undefined> = {
+        starter: env.STRIPE_PRICE_ID_STARTER || env.STRIPE_SUB_PRICE_STARTER,
+        growth: env.STRIPE_PRICE_ID_GROWTH || env.STRIPE_SUB_PRICE_GROWTH,
+        pro: env.STRIPE_PRICE_ID_PRO || env.STRIPE_SUB_PRICE_PRO,
+      };
+
+      const priceId = priceMap[rawTier];
+      if (!priceId) {
+        return json({ error: `Price ID not configured for ${rawTier}` }, { status: 500 });
+      }
+
+      // Create or get customer
+      let customerId = null;
+      const { data: artist } = await supabaseAdmin
+        .from('artists')
+        .select('stripe_customer_id')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (artist?.stripe_customer_id) {
+        customerId = artist.stripe_customer_id;
+      } else {
+        // Create new customer
+        const customerBody = toForm({
+          email: user.email,
+          name: user.user_metadata?.name || user.email,
+          metadata: { artistId: user.id },
+        });
+        const resp = await stripeFetch('/v1/customers', { method: 'POST', body: customerBody });
+        const data = await resp.json();
+        if (!resp.ok) return json(data, { status: resp.status });
+        customerId = data.id;
+        await supabaseAdmin
+          .from('artists')
+          .update({ stripe_customer_id: customerId })
+          .eq('id', user.id);
+      }
+
+      const successUrl = `${pagesOrigin}/#/artist-dashboard?sub=success`;
+      const cancelUrl = `${pagesOrigin}/#/artist-dashboard?sub=cancel`;
+      const body = toForm({
+        mode: 'subscription',
+        customer: customerId,
+        'line_items[0][price]': priceId,
+        'line_items[0][quantity]': '1',
+        'metadata[artistId]': user.id,
+        'metadata[tier]': rawTier,
+        'subscription_data[metadata][artistId]': user.id,
+        'subscription_data[metadata][tier]': rawTier,
+        success_url: successUrl,
+        cancel_url: cancelUrl,
+      });
+      const resp = await stripeFetch('/v1/checkout/sessions', { method: 'POST', body });
+      const session = await resp.json();
+      if (!resp.ok) return json(session, { status: resp.status });
+      return json({ url: session.url });
+    }
+
+    // Billing: Create portal session
+    if (url.pathname === '/api/stripe/billing/create-portal-session' && method === 'POST') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const user = await requireArtist(request);
+      if (!user) return json({ error: 'Missing or invalid Authorization bearer token (artist required)' }, { status: 401 });
+
+      const { data: artist } = await supabaseAdmin
+        .from('artists')
+        .select('stripe_customer_id')
+        .eq('id', user.id)
+        .single();
+
+      if (!artist?.stripe_customer_id) {
+        return json({ error: 'No subscription found to manage' }, { status: 400 });
+      }
+
+      const returnUrl = `${pagesOrigin}/#/artist-dashboard`;
+      const portalBody = toForm({
+        customer: artist.stripe_customer_id,
+        return_url: returnUrl,
+      });
+      const pResp = await stripeFetch('/v1/billing_portal/sessions', { method: 'POST', body: portalBody });
+      const session = await pResp.json();
+      if (!pResp.ok) return json(session, { status: pResp.status });
+      return json({ url: session.url });
+>>>>>>> 2d6a269 (feat: add stripe subscription checkout endpoints and configuration)
     }
 
     return new Response('Not found', { status: 404 });

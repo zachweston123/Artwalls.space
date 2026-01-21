@@ -51,14 +51,32 @@ export async function apiPost<T>(path: string, body: unknown, headers?: Record<s
       body: JSON.stringify(body),
     });
   } catch (fetchErr: any) {
-    console.error('[apiPost] Network error:', fetchErr);
-    throw new Error(`Network error: ${fetchErr?.message || 'Failed to fetch'}`);
+    // Distinguish network/CORS errors from server errors
+    const isCorsError = fetchErr?.message?.includes('Failed to fetch') || 
+                       fetchErr?.message?.includes('CORS');
+    const isOffline = !navigator.onLine;
+    
+    if (isOffline) {
+      throw new Error('You appear to be offline. Please check your internet connection and try again.');
+    }
+    if (isCorsError) {
+      throw new Error('Connection blocked by browser security. Please refresh the page and try again.');
+    }
+    throw new Error(`Network error: ${fetchErr?.message || 'Unable to connect to server'}`);
   }
+  
   if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    console.error('[apiPost] Server error:', res.status, text);
-    throw new Error(text || `Request failed: ${res.status}`);
+    let errorMsg = `Request failed: ${res.status}`;
+    try {
+      const errorData = await res.json();
+      errorMsg = errorData.error || errorData.message || errorMsg;
+    } catch {
+      // If not JSON, use status text
+      errorMsg = res.statusText || errorMsg;
+    }
+    throw new Error(errorMsg);
   }
+  
   return (await res.json()) as T;
 }
 

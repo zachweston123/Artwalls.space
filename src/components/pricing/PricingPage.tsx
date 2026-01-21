@@ -227,7 +227,23 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       );
       window.location.href = url;
     } catch (e: any) {
-      setError(e?.message || 'Unable to start subscription checkout');
+      console.error('Subscription error:', e);
+      
+      // Better error messages
+      let userMessage = 'Unable to start subscription checkout';
+      if (e.message?.includes('CORS') || e.message?.includes('Failed to fetch')) {
+        userMessage = 'Connection issue. Please refresh the page and try again.';
+      } else if (e.message?.includes('offline')) {
+        userMessage = 'You appear to be offline. Please check your connection.';
+      } else if (e.message?.includes('Unauthorized')) {
+        userMessage = 'Please sign in to purchase a subscription plan.';
+      } else if (e.message?.includes('Invalid tier')) {
+        userMessage = 'Invalid plan selected. Please try again.';
+      } else if (e.message) {
+        userMessage = e.message; // Use the specific error message from server
+      }
+      
+      setError(userMessage);
     } finally {
       setSubscribing(null);
     }
@@ -253,7 +269,23 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       );
       window.location.href = url;
     } catch (e: any) {
-      setError(e?.message || 'Unable to open Billing Portal');
+      console.error('Billing portal error:', e);
+      
+      // Better error messages
+      let userMessage = 'Unable to open Billing Portal';
+      if (e.message?.includes('CORS') || e.message?.includes('Failed to fetch')) {
+        userMessage = 'Connection issue. Please refresh the page and try again.';
+      } else if (e.message?.includes('offline')) {
+        userMessage = 'You appear to be offline. Please check your connection.';
+      } else if (e.message?.includes('Unauthorized')) {
+        userMessage = 'Please sign in to manage your subscription.';
+      } else if (e.message?.includes('No subscription found')) {
+        userMessage = 'No active subscription found. Please purchase a plan first.';
+      } else if (e.message) {
+        userMessage = e.message; // Use the specific error message from server
+      }
+      
+      setError(userMessage);
     } finally {
       setManagingPortal(false);
     }
