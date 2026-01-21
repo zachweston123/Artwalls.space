@@ -131,20 +131,22 @@ export async function upsertArtist({
 }) {
   const payload = {
     id,
-    email: email ?? null,
-    name: name ?? null,
-    role: role ?? 'artist',
-    phone_number: phoneNumber ?? null,
-    stripe_account_id: stripeAccountId ?? null,
-    stripe_customer_id: stripeCustomerId ?? null,
-    subscription_tier: subscriptionTier ?? 'free',
-    subscription_status: subscriptionStatus ?? 'inactive',
-    stripe_subscription_id: stripeSubscriptionId ?? null,
-    platform_fee_bps: platformFeeBps === undefined ? null : toIntOrNull(platformFeeBps),
-    city_primary: cityPrimary ?? null,
-    city_secondary: citySecondary ?? null,
     updated_at: nowIso(),
   };
+
+  // Only add fields if they are defined (allow null to set to null)
+  if (email !== undefined) payload.email = email;
+  if (name !== undefined) payload.name = name;
+  if (role !== undefined) payload.role = role ?? 'artist';
+  if (phoneNumber !== undefined) payload.phone_number = phoneNumber;
+  if (stripeAccountId !== undefined) payload.stripe_account_id = stripeAccountId;
+  if (stripeCustomerId !== undefined) payload.stripe_customer_id = stripeCustomerId;
+  if (subscriptionTier !== undefined) payload.subscription_tier = subscriptionTier;
+  if (subscriptionStatus !== undefined) payload.subscription_status = subscriptionStatus;
+  if (stripeSubscriptionId !== undefined) payload.stripe_subscription_id = stripeSubscriptionId;
+  if (platformFeeBps !== undefined) payload.platform_fee_bps = platformFeeBps === null ? null : toIntOrNull(platformFeeBps);
+  if (cityPrimary !== undefined) payload.city_primary = cityPrimary;
+  if (citySecondary !== undefined) payload.city_secondary = citySecondary;
 
   const { data, error } = await supabaseAdmin
     .from('artists')
@@ -175,16 +177,17 @@ export async function listArtists() {
 export async function upsertVenue({ id, email, name, type, stripeAccountId, defaultVenueFeeBps, suspended, labels, city }) {
   const payload = {
     id,
-    email: email ?? null,
-    name: name ?? null,
-    type: type ?? null,
-    city: city ?? null,
-    stripe_account_id: stripeAccountId ?? null,
-    default_venue_fee_bps: defaultVenueFeeBps === undefined ? null : toIntOrNull(defaultVenueFeeBps),
-    labels: labels === undefined ? undefined : (Array.isArray(labels) ? labels : null),
-    suspended: suspended === undefined ? false : Boolean(suspended),
     updated_at: nowIso(),
   };
+
+  if (email !== undefined) payload.email = email;
+  if (name !== undefined) payload.name = name;
+  if (type !== undefined) payload.type = type;
+  if (city !== undefined) payload.city = city;
+  if (stripeAccountId !== undefined) payload.stripe_account_id = stripeAccountId;
+  if (defaultVenueFeeBps !== undefined) payload.default_venue_fee_bps = defaultVenueFeeBps === null ? null : toIntOrNull(defaultVenueFeeBps);
+  if (labels !== undefined) payload.labels = Array.isArray(labels) ? labels : null;
+  if (suspended !== undefined) payload.suspended = suspended;
 
   const { data, error } = await supabaseAdmin
     .from('venues')
