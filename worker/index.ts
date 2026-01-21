@@ -1092,10 +1092,10 @@ export default {
 
     // Connect: Artist status
     if (url.pathname === '/api/stripe/connect/artist/status' && method === 'GET') {
-      const artistId = url.searchParams.get('artistId');
-      if (!artistId) return json({ error: 'Missing artistId' }, { status: 400 });
+      const user = await requireArtist(request);
+      if (!user) return json({ error: 'Missing or invalid Authorization bearer token (artist required)' }, { status: 401 });
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
-      const { data: artist } = await supabaseAdmin.from('artists').select('*').eq('id', artistId).maybeSingle();
+      const { data: artist } = await supabaseAdmin.from('artists').select('*').eq('id', user.id).maybeSingle();
       if (!artist?.stripe_account_id) return json({ hasAccount: false });
       const resp = await stripeFetch(`/v1/accounts/${artist.stripe_account_id}`);
       const acc = await resp.json();
@@ -1103,10 +1103,12 @@ export default {
       return json({
         hasAccount: true,
         accountId: artist.stripe_account_id,
-        charges_enabled: acc.charges_enabled,
-        payouts_enabled: acc.payouts_enabled,
-        details_submitted: acc.details_submitted,
-        requirements: acc.requirements,
+        chargesEnabled: acc.charges_enabled,
+        payoutsEnabled: acc.payouts_enabled,
+        detailsSubmitted: acc.details_submitted,
+        requirementsCurrentlyDue: acc.requirements?.currently_due || [],
+        requirementsEventuallyDue: acc.requirements?.eventually_due || [],
+        syncedAt: new Date().toISOString(),
       });
     }
 
@@ -1164,10 +1166,10 @@ export default {
 
     // Connect: Venue status
     if (url.pathname === '/api/stripe/connect/venue/status' && method === 'GET') {
-      const venueId = url.searchParams.get('venueId');
-      if (!venueId) return json({ error: 'Missing venueId' }, { status: 400 });
+      const user = await requireVenue(request);
+      if (!user) return json({ error: 'Missing or invalid Authorization bearer token (venue required)' }, { status: 401 });
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
-      const { data: venue } = await supabaseAdmin.from('venues').select('*').eq('id', venueId).maybeSingle();
+      const { data: venue } = await supabaseAdmin.from('venues').select('*').eq('id', user.id).maybeSingle();
       if (!venue?.stripe_account_id) return json({ hasAccount: false });
       const resp = await stripeFetch(`/v1/accounts/${venue.stripe_account_id}`);
       const acc = await resp.json();
@@ -1175,10 +1177,12 @@ export default {
       return json({
         hasAccount: true,
         accountId: venue.stripe_account_id,
-        charges_enabled: acc.charges_enabled,
-        payouts_enabled: acc.payouts_enabled,
-        details_submitted: acc.details_submitted,
-        requirements: acc.requirements,
+        chargesEnabled: acc.charges_enabled,
+        payoutsEnabled: acc.payouts_enabled,
+        detailsSubmitted: acc.details_submitted,
+        requirementsCurrentlyDue: acc.requirements?.currently_due || [],
+        requirementsEventuallyDue: acc.requirements?.eventually_due || [],
+        syncedAt: new Date().toISOString(),
       });
     }
 
