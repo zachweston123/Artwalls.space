@@ -23,10 +23,18 @@ export default function AdminStripeSetup() {
   const [pendingPayouts, setPendingPayouts] = useState<PendingPayout[]>([]);
   const [checking, setChecking] = useState(true);
   const [retrying, setRetrying] = useState<string | null>(null);
+  const [showKeyInput, setShowKeyInput] = useState(false);
+  const [stripeKey, setStripeKey] = useState('');
+  const [webhookSecret, setWebhookSecret] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     checkEnvironment();
     loadPendingPayouts();
+    const savedKey = localStorage.getItem('dev_stripe_key');
+    const savedWebhook = localStorage.getItem('dev_webhook_secret');
+    if (savedKey) setStripeKey(savedKey);
+    if (savedWebhook) setWebhookSecret(savedWebhook);
   }, []);
 
   async function checkEnvironment() {
@@ -123,6 +131,41 @@ export default function AdminStripeSetup() {
     }
   }
 
+  function saveKeysToLocalStorage() {
+    setSaving(true);
+    try {
+      if (stripeKey) localStorage.setItem('dev_stripe_key', stripeKey);
+      if (webhookSecret) localStorage.setItem('dev_webhook_secret', webhookSecret);
+      
+      const envContent = `
+# Add to ~/Artwalls.space/.env:
+STRIPE_SECRET_KEY=${stripeKey}
+STRIPE_WEBHOOK_SECRET=${webhookSecret || 'whsec_YOUR_WEBHOOK_SECRET'}`;
+      
+      navigator.clipboard.writeText(envContent).then(() => {
+        alert('✅ Keys saved!\n\n📋 Copied to clipboard.\n\nPaste into ~/Artwalls.space/.env and restart server.');
+      }).catch(() => {
+        alert('✅ Keys saved!\n\nAdd to .env:' + envContent);
+      });
+      
+      setShowKeyInput(false);
+      setTimeout(checkEnvironment, 1000);
+    } catch (err) {
+      alert('Failed to save');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function clearKeys() {
+    if (confirm('Clear keys?')) {
+      localStorage.removeItem('dev_stripe_key');
+      localStorage.removeItem('dev_webhook_secret');
+      setStripeKey('');
+      setWebhookSecret('');
+    }
+  }
+
   const allChecksPass = envChecks.every((c) => c.value || !c.required);
   const webhookUrl = typeof window !== 'undefined' ? `${window.location.origin}/api/stripe/webhook` : '';
 
@@ -147,10 +190,7 @@ export default function AdminStripeSetup() {
                 </h2>
                 <div className="space-y-2">
                   {envChecks.map((check) => (
-                    <div
-                      key={check.key}
-                      className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded"
-                    >
+                    <div key={check.key} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded">
                       <span className="text-gray-700 dark:text-gray-300">{check.label}</span>
                       {check.value ? (
                         <span className="text-green-600 dark:text-green-400 font-medium">✓ Set</span>
@@ -165,72 +205,101 @@ export default function AdminStripeSetup() {
               {!allChecksPass && (
                 <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
                   <h3 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-2">
-                    Action Required
+                    🔑 Add Stripe Test Keys
                   </h3>
                   <p className="text-sm text-yellow-700 dark:text-yellow-300 mb-3">
-                    Set the following environment variables in your server:
+                    Enter your keys below:
                   </p>
-                  <pre className="bg-yellow-100 dark:bg-yellow-900/40 p-3 rounded text-xs overflow-x-auto">
-{`STRIPE_SECRET_KEY=sk_test_...
-STRIPE_WEBHOOK_SECRET=whsec_...
-APP_URL=https://artwalls.space`}
-                  </pre>
+                  
+                  {!showKeyInput ? (
+                    <button
+                      onClick={() => setShowKeyInput(true)}
+                      className="w-full bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded font-medium"
+                    >
+                      ➕ Add Keys
+                    </button>
+                  ) : (
+                    <div className="space-y-3 bg-white dark:bg-gray-800 p-4 rounded">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                          Secret Key (sk_live_...)
+                        </label>
+                        <textarea
+                          value={stripeKey}
+                          onChange={(e) => setStripeKey(e.target.value)}
+                          placeholder="sk_live_51..."
+                          rows={2}
+                          className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded text-sm font-mono text-gray-900 dark:text-white"
+                          autoFocus
+                        />
+                        <a href="https://dashboard.stripe.com/apikeys" target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline">
+                          Get from Stripe →
+                        </a>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                          Webhook (optional)
+                        </label>
+                        <input
+                          type="text"
+                          value={webhookSecret}
+                          onChange={(e) => setWebhookSecret(e.target.value)}
+                          placeholder="whsec_..."
+                          className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded text-sm font-mono text-gray-900 dark:text-white"
+                        />
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <button
+                          onClick={saveKeysToLocalStorage}
+                          disabled={!stripeKey || saving}
+                          className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded"
+                        >
+                          {saving ? 'Saving...' : '💾 Save'}
+                        </button>
+                        <button onClick={() => setShowKeyInput(false)} className="px-4 py-2 bg-gray-300 hover:bg-gray-400 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded">
+                          Cancel
+                        </button>
+                      </div>
+                      
+                      {stripeKey && (
+                        <button onClick={clearKeys} className="w-full text-xs text-red-600 dark:text-red-400 hover:underline">
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
 
               <div>
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                  Webhook Configuration
+                  Webhook URL
                 </h2>
-                <div className="space-y-3">
-                  <div className="bg-gray-50 dark:bg-gray-700 rounded p-4">
-                    <label className="text-sm text-gray-600 dark:text-gray-400 block mb-2">
-                      Webhook URL (copy this):
-                    </label>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        readOnly
-                        value={webhookUrl}
-                        className="flex-1 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-sm font-mono"
-                      />
-                      <button
-                        onClick={() => navigator.clipboard.writeText(webhookUrl)}
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm"
-                      >
-                        Copy
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                    <h4 className="font-semibold text-blue-900 dark:text-blue-200 mb-2">
-                      Stripe Dashboard Steps:
-                    </h4>
-                    <ol className="text-sm text-blue-800 dark:text-blue-300 space-y-1 list-decimal list-inside">
-                      <li>Go to Stripe Dashboard → Developers → Webhooks</li>
-                      <li>Click "Add endpoint"</li>
-                      <li>Paste the webhook URL above</li>
-                      <li>Select events: charge.succeeded, account.updated, checkout.session.completed</li>
-                      <li>Copy the signing secret and set it as STRIPE_WEBHOOK_SECRET</li>
-                    </ol>
-                    <a
-                      href="https://dashboard.stripe.com/webhooks"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-block mt-3 text-blue-600 dark:text-blue-400 hover:underline text-sm"
+                <div className="bg-gray-50 dark:bg-gray-700 rounded p-4">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value={webhookUrl}
+                      className="flex-1 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-sm font-mono"
+                    />
+                    <button
+                      onClick={() => navigator.clipboard.writeText(webhookUrl)}
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm"
                     >
-                      Open Stripe Dashboard →
-                    </a>
+                      Copy
+                    </button>
                   </div>
                 </div>
               </div>
 
               <button
                 onClick={checkEnvironment}
-                className="w-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white px-4 py-2 rounded"
+                className="w-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 text-gray-900 dark:text-white px-4 py-2 rounded"
               >
-                Recheck Configuration
+                Recheck
               </button>
             </div>
           )}
@@ -243,24 +312,12 @@ APP_URL=https://artwalls.space`}
             </h2>
             <div className="space-y-3">
               {pendingPayouts.map((payout) => (
-                <div
-                  key={payout.orderId}
-                  className="border border-gray-200 dark:border-gray-700 rounded-lg p-4"
-                >
+                <div key={payout.orderId} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                   <div className="flex items-start justify-between">
                     <div className="space-y-1">
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
-                        Order: {payout.orderId.slice(0, 8)}...
-                      </div>
-                      <div className="text-sm">
-                        Artist: ${payout.artistAmount.toFixed(2)} | Venue: ${payout.venueAmount.toFixed(2)}
-                      </div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">
-                        {new Date(payout.orderCreatedAt).toLocaleString()}
-                      </div>
-                      {payout.payoutError && (
-                        <div className="text-xs text-red-600 dark:text-red-400">{payout.payoutError}</div>
-                      )}
+                      <div className="text-sm text-gray-500">{payout.orderId.slice(0, 8)}...</div>
+                      <div className="text-sm">Artist: ${payout.artistAmount.toFixed(2)} | Venue: ${payout.venueAmount.toFixed(2)}</div>
+                      {payout.payoutError && <div className="text-xs text-red-600">{payout.payoutError}</div>}
                     </div>
                     <button
                       onClick={() => retryPayout(payout.orderId)}
