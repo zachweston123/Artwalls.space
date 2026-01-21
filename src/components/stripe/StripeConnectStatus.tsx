@@ -36,13 +36,12 @@ export default function StripeConnectStatus({ role, userId }: StripeConnectStatu
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const response = await fetch(`${API_BASE}/api/stripe/connect/sync-status`, {
-        method: 'POST',
+      const response = await fetch(`${API_BASE}/api/stripe/connect/${role}/status`, {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ role }),
       });
 
       if (response.ok) {
@@ -76,13 +75,12 @@ export default function StripeConnectStatus({ role, userId }: StripeConnectStatu
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const response = await fetch(`${API_BASE}/api/stripe/connect/create-account`, {
+      const response = await fetch(`${API_BASE}/api/stripe/connect/${role}/create-account`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ role }),
       });
 
       if (response.ok) {
@@ -106,13 +104,12 @@ export default function StripeConnectStatus({ role, userId }: StripeConnectStatu
       if (!session) return;
 
       const response = await fetch(`${API_BASE}/api/stripe/connect/account-link`, {
+        method: 'POST',${role}/account-link`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ role }),
-      });
+        }
 
       if (response.ok) {
         const { url } = await response.json();
