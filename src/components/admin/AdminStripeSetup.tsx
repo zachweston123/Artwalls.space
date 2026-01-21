@@ -121,7 +121,16 @@ export default function AdminStripeSetup() {
         alert('Payout retried successfully!');
         await loadPendingPayouts();
       } else {
-   
+        const error = await response.json();
+        alert(error.error || 'Failed to retry payout');
+      }
+    } catch (err) {
+      console.error('Failed to retry payout', err);
+      alert('Failed to retry payout');
+    } finally {
+      setRetrying(null);
+    }
+  }
 
   function saveKeysToLocalStorage() {
     setSaving(true);
@@ -160,15 +169,6 @@ export default function AdminStripeSetup() {
       setWebhookSecret('');
       alert('Keys cleared');
     }
-  }     const error = await response.json();
-        alert(error.error || 'Failed to retry payout');
-      }
-    } catch (err) {
-      console.error('Failed to retry payout', err);
-      alert('Failed to retry payout');
-    } finally {
-      setRetrying(null);
-    }
   }
 
   const allChecksPass = envChecks.every((c) => c.value || !c.required);
@@ -177,78 +177,92 @@ export default function AdminStripeSetup() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
       <div className="max-w-4xl mx-auto space-y-6">
-        <div classNaAdd your Stripe keys to test locally:
-                  </p>
-                  
-                  {!showKeyInput ? (
-                    <button
-                      onClick={() => setShowKeyInput(true)}
-                      className="w-full bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded font-medium"
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Stripe Setup</h1>
+          
+          {!allChecksPass && (
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-6">
+              <h3 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-2">
+                Local Development Mode
+              </h3>
+              <p className="text-sm text-yellow-700 dark:text-yellow-300 mb-4">
+                Add your Stripe keys to test locally:
+              </p>
+              
+              {!showKeyInput ? (
+                <button
+                  onClick={() => setShowKeyInput(true)}
+                  className="w-full bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded font-medium"
+                >
+                  🔑 Add Stripe Test Keys
+                </button>
+              ) : (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-1">
+                      Stripe Secret Key (starts with sk_test_)
+                    </label>
+                    <input
+                      type="password"
+                      value={stripeKey}
+                      onChange={(e) => setStripeKey(e.target.value)}
+                      placeholder="sk_test_51..."
+                      className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-yellow-300 dark:border-yellow-700 rounded text-sm font-mono"
+                    />
+                    <a
+                      href="https://dashboard.stripe.com/test/apikeys"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-yellow-700 dark:text-yellow-300 hover:underline mt-1 inline-block"
                     >
-                      🔑 Add Stripe Test Keys
+                      Get your key from Stripe Dashboard →
+                    </a>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-1">
+                      Webhook Secret (optional, starts with whsec_)
+                    </label>
+                    <input
+                      type="password"
+                      value={webhookSecret}
+                      onChange={(e) => setWebhookSecret(e.target.value)}
+                      placeholder="whsec_... (optional for local dev)"
+                      className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-yellow-300 dark:border-yellow-700 rounded text-sm font-mono"
+                    />
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <button
+                      onClick={saveKeysToLocalStorage}
+                      disabled={!stripeKey || saving}
+                      className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded font-medium"
+                    >
+                      {saving ? 'Saving...' : '💾 Save & Copy to Clipboard'}
                     </button>
-                  ) : (
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-1">
-                          Stripe Secret Key (starts with sk_test_)
-                        </label>
-                        <input
-                          type="password"
-                          value={stripeKey}
-                          onChange={(e) => setStripeKey(e.target.value)}
-                          placeholder="sk_test_51..."
-                          className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-yellow-300 dark:border-yellow-700 rounded text-sm font-mono"
-                        />
-                        <a
-                          href="https://dashboard.stripe.com/test/apikeys"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs text-yellow-700 dark:text-yellow-300 hover:underline mt-1 inline-block"
-                        >
-                          Get your key from Stripe Dashboard →
-                        </a>
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-1">
-                          Webhook Secret (optional, starts with whsec_)
-                        </label>
-                        <input
-                          type="password"
-                          value={webhookSecret}
-                          onChange={(e) => setWebhookSecret(e.target.value)}
-                          placeholder="whsec_... (optional for local dev)"
-                          className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-yellow-300 dark:border-yellow-700 rounded text-sm font-mono"
-                        />
-                      </div>
-                      
-                      <div className="flex gap-2">
-                        <button
-                          onClick={saveKeysToLocalStorage}
-                          disabled={!stripeKey || saving}
-                          className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded font-medium"
-                        >
-                          {saving ? 'Saving...' : '💾 Save & Copy to Clipboard'}
-                        </button>
-                        <button
-                          onClick={() => setShowKeyInput(false)}
-                          className="px-4 py-2 bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                      
-                      {stripeKey && (
-                        <button
-                          onClick={clearStoredKeys}
-                          className="w-full text-xs text-red-600 dark:text-red-400 hover:underline"
-                        >
-                          Clear stored keys
-                        </button>
-                      )}
-                    </div>
-                  )}me="animate-pulse space-y-3">
+                    <button
+                      onClick={() => setShowKeyInput(false)}
+                      className="px-4 py-2 bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                  
+                  {stripeKey && (
+                    <button
+                      onClick={clearStoredKeys}
+                      className="w-full text-xs text-red-600 dark:text-red-400 hover:underline"
+                    >
+                      Clear stored keys
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+          
+          {checking ? (
+            <div className="animate-pulse space-y-3">
               <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
               <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
             </div>
