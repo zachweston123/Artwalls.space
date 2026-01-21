@@ -23,9 +23,9 @@ export default {
     const requestOrigin = request.headers.get('origin') || '';
     const pagesOrigin = env.PAGES_ORIGIN || 'https://artwalls.space';
 
-    // CORS: mirror the caller's origin when provided to avoid blocking Pages/staging domains.
-    // This is safe because we require bearer auth for stateful routes.
-    const allowOrigin = requestOrigin || pagesOrigin || '*';
+    // CORS: fully permissive for API calls that already require bearer auth.
+    // Using '*' avoids mismatches across Pages/staging domains.
+    const allowOrigin = '*';
 
     // Preflight CORS
     if (method === 'OPTIONS') {
@@ -34,7 +34,7 @@ export default {
         headers: {
           'Access-Control-Allow-Origin': allowOrigin,
           'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-          'Access-Control-Allow-Headers': 'authorization, content-type, x-admin-password',
+          'Access-Control-Allow-Headers': 'authorization, content-type, x-admin-password, x-client-info, apikey',
           'Access-Control-Max-Age': '86400',
           Vary: 'Origin',
         },
@@ -46,7 +46,7 @@ export default {
       headers.set('Content-Type', 'application/json');
       headers.set('Access-Control-Allow-Origin', allowOrigin);
       headers.set('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-      headers.set('Access-Control-Allow-Headers', 'authorization, content-type');
+      headers.set('Access-Control-Allow-Headers', 'authorization, content-type, x-admin-password, x-client-info, apikey');
       headers.set('Vary', 'Origin');
       const body = JSON.stringify(obj);
       return new Response(body, { status: init?.status ?? 200, headers });
@@ -57,7 +57,7 @@ export default {
       headers.set('Content-Type', 'text/plain; charset=utf-8');
       headers.set('Access-Control-Allow-Origin', allowOrigin);
       headers.set('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-      headers.set('Access-Control-Allow-Headers', 'authorization, content-type');
+      headers.set('Access-Control-Allow-Headers', 'authorization, content-type, x-admin-password, x-client-info, apikey');
       headers.set('Vary', 'Origin');
       return new Response(body, { status: init?.status ?? 200, headers });
     }
