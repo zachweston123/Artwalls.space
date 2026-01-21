@@ -1,11 +1,12 @@
 import { useEffect, useState, useRef } from 'react';
-import { User, Mail, Phone, Link as LinkIcon, DollarSign, Edit, Save, X, Upload, Loader2, Camera, AlertCircle } from 'lucide-react';
+import { User, Mail, Phone, Link as LinkIcon, DollarSign, Edit, Save, X, Upload, Loader2, Camera, AlertCircle, GraduationCap } from 'lucide-react';
 import { PlanBadge } from '../pricing/PlanBadge';
 import { CitySelect } from '../shared/CitySelect';
 import { ProfileCompletenessWidget, ProfileIncompleteAlert } from './ProfileCompletenessWidget';
 import { supabase } from '../../lib/supabase';
 import { uploadProfilePhoto } from '../../lib/storage';
 import { compressImage, formatFileSize } from '../../lib/imageCompression';
+import { SchoolSearch } from '../shared/SchoolSearch';
 
 interface ArtistProfileProps {
   onNavigate: (page: string) => void;
@@ -39,6 +40,14 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
   const [avatar, setAvatar] = useState<string>('');
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+
+  // Student fields
+  const [isStudent, setIsStudent] = useState(false);
+  const [pronouns, setPronouns] = useState('');
+  const [schoolId, setSchoolId] = useState<string>('');
+  const [schoolName, setSchoolName] = useState('');
+  const [isStudentVerified, setIsStudentVerified] = useState(false);
+  const [studentDiscountActive, setStudentDiscountActive] = useState(false);
 
   // Demo values for summary (would come from orders on real data)
   const [totalEarnings] = useState(0);
@@ -96,6 +105,12 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
           setBio((row.bio as string) || '');
           setArtTypes((row.art_types as string[]) || []);
           setInstagramHandle((row.instagram_handle as string) || '');
+          setIsStudent((row.is_student as boolean) || false);
+          setPronouns((row.pronouns as string) || '');
+          setSchoolId((row.school_id as string) || '');
+          setSchoolName((row.school_name as string) || '');
+          setIsStudentVerified((row.is_student_verified as boolean) || false);
+          setStudentDiscountActive((row.student_discount_active as boolean) || false);
           const tier = (row.subscription_tier as 'free' | 'starter' | 'growth' | 'pro') || 'free';
           setCurrentPlan(tier);
           setAvatar((row.profile_photo_url as string) || (user.user_metadata?.avatar as string) || '');
@@ -216,7 +231,11 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
         artTypes: artTypes.length > 0 ? artTypes : null,
         instagramHandle: instagramHandle || null,
         portfolioUrl: portfolioUrl || null,
-        profilePhotoUrl: avatar || null
+        profilePhotoUrl: avatar || null,
+        isStudent,
+        pronouns: pronouns || null,
+        schoolId: schoolId || null,
+        schoolName: schoolName || null,
       });
 
       // Update metadata and email in auth (keep this for auth session consistency and fallback)
@@ -264,6 +283,9 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
           secondaryCity: citySecondary,
           portfolioUrl,
           instagramHandle,
+          isStudent,
+          pronouns,
+          schoolName,
         }}
         onEditProfile={() => setIsEditing(true)}
         onScrollToEdit={handleScrollToEdit}
@@ -282,6 +304,9 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
           secondaryCity: citySecondary,
           portfolioUrl,
           instagramHandle,
+          isStudent,
+          pronouns,
+          schoolName,
         }}
         onEditProfile={() => setIsEditing(true)}
         onScrollToEdit={handleScrollToEdit}
@@ -403,6 +428,32 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
                     </div>
                   </div>
                 </div>
+
+                {isStudent && (
+                  <div className="border-t border-[var(--border)] pt-4 mt-4">
+                    <div className="flex items-center gap-2 mb-4">
+                      <GraduationCap className="w-4 h-4 text-[var(--blue)]" />
+                      <h3 className="font-medium text-[var(--text)]">Student Profile</h3>
+                      {isStudentVerified && (
+                        <span className="px-2 py-1 bg-[var(--green)]/10 text-[var(--green)] text-xs rounded-full">✓ Verified</span>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {pronouns && (
+                        <div className="p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg">
+                          <label className="block text-sm text-[var(--text-muted)] mb-1">Pronouns</label>
+                          <p className="text-[var(--text)]">{pronouns}</p>
+                        </div>
+                      )}
+                      {schoolName && (
+                        <div className="p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg">
+                          <label className="block text-sm text-[var(--text-muted)] mb-1">School/University</label>
+                          <p className="text-[var(--text)]">{schoolName}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div ref={editFormRef} className="space-y-4">
@@ -564,6 +615,75 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
                   <label className="block text-sm text-[var(--text-muted)] mb-1">Instagram Handle</label>
                   <input value={instagramHandle} onChange={(e) => setInstagramHandle(e.target.value)} className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]" placeholder="@yourinstagram" />
                   <p className="text-xs text-[var(--text-muted)] mt-1">Venues can find and follow your work</p>
+                </div>
+
+                {/* Student Information Section */}
+                <div className="border-t border-[var(--border)] pt-6 mt-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <GraduationCap className="w-5 h-5 text-[var(--blue)]" />
+                    <h3 className="text-lg font-medium text-[var(--text)]">Student Profile (Optional)</h3>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3 p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg">
+                      <input
+                        type="checkbox"
+                        id="is-student"
+                        checked={isStudent}
+                        onChange={(e) => setIsStudent(e.target.checked)}
+                        className="w-5 h-5 rounded cursor-pointer"
+                      />
+                      <label htmlFor="is-student" className="flex-1 cursor-pointer">
+                        <p className="text-[var(--text)] font-medium">I am a student</p>
+                        <p className="text-xs text-[var(--text-muted)] mt-1">Unlock student discounts and verification benefits</p>
+                      </label>
+                    </div>
+
+                    {isStudent && (
+                      <>
+                        <div>
+                          <label className="block text-sm text-[var(--text-muted)] mb-1">Pronouns (Optional)</label>
+                          <input
+                            value={pronouns}
+                            onChange={(e) => setPronouns(e.target.value)}
+                            className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
+                            placeholder="e.g. she/her, he/him, they/them"
+                          />
+                          <p className="text-xs text-[var(--text-muted)] mt-1">How would you like to be referred to?</p>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm text-[var(--text-muted)] mb-2">School/University</label>
+                          <SchoolSearch
+                            selectedSchoolId={schoolId}
+                            selectedSchoolName={schoolName}
+                            onSchoolSelect={(id, name) => {
+                              setSchoolId(id);
+                              setSchoolName(name);
+                            }}
+                          />
+                          {schoolName && (
+                            <p className="text-xs text-[var(--green)] mt-2">✓ Selected: {schoolName}</p>
+                          )}
+                          <p className="text-xs text-[var(--text-muted)] mt-1">Search for your school to verify your student status and unlock discounts</p>
+                        </div>
+
+                        {schoolName && isStudentVerified && (
+                          <div className="p-4 bg-[var(--green)]/10 border border-[var(--green)]/30 rounded-lg">
+                            <p className="text-sm text-[var(--green)] font-medium">✓ Student Status Verified</p>
+                            <p className="text-xs text-[var(--green)]/80 mt-1">You have access to student discounts</p>
+                          </div>
+                        )}
+
+                        {schoolName && !isStudentVerified && (
+                          <div className="p-4 bg-[var(--yellow)]/10 border border-[var(--yellow)]/30 rounded-lg">
+                            <p className="text-sm text-[var(--yellow)] font-medium">Verification Pending</p>
+                            <p className="text-xs text-[var(--yellow)]/80 mt-1">We're verifying your student status. Check back soon!</p>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
             )}

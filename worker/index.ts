@@ -1631,6 +1631,179 @@ export default {
       }
     }
 
+    // Student Verification Endpoints
+    // POST /api/students/verify - Create verification record for student
+    if (url.pathname === '/api/students/verify' && method === 'POST') {
+      try {
+        if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+        
+        const user = await getSupabaseUserFromRequest(request);
+        if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
+        
+        const payload = await request.json().catch(() => ({}));
+        const { schoolId, verificationMethod = 'email_domain' } = payload;
+        
+        if (!schoolId) {
+          return json({ error: 'Missing schoolId' }, { status: 400 });
+        }
+        
+        // Create verification record
+        const { data: verification, error: verifyErr } = await supabaseAdmin
+          .from('student_verifications')
+          .insert({
+            artist_id: user.id,
+            school_id: schoolId,
+            verification_method: verificationMethod,
+            is_verified: verificationMethod === 'email_domain', // Auto-verify for email domain
+            verified_at: verificationMethod === 'email_domain' ? new Date().toISOString() : null,
+            expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year from now
+          })
+          .select('*')
+          .single();
+        
+        if (verifyErr) {
+          console.error('[POST /api/students/verify] Error:', verifyErr.message);
+          return json({ error: verifyErr.message }, { status: 500 });
+        }
+        
+        // Get school info
+        const { data: school } = await supabaseAdmin
+          .from('schools')
+          .select('name')
+          .eq('id', schoolId)
+          .single();
+        
+        // Update artist profile
+        const { error: updateErr } = await supabaseAdmin
+          .from('artists')
+          .update({
+            is_student: true,
+            is_student_verified: verificationMethod === 'email_domain',
+            school_id: schoolId,
+            school_name: school?.name,
+            student_discount_active: verificationMethod === 'email_domain',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', user.id);
+        
+        if (updateErr) {
+          console.error('[POST /api/students/verify] Artist update error:', updateErr.message);
+          return json({ error: updateErr.message }, { status: 500 });
+        }
+        
+        return json({
+          success: true,
+          verification,
+          message: verificationMethod === 'email_domain' 
+            ? 'Student status verified automatically!' 
+            : 'Verification pending admin review',
+        });
+      } catch (err: any) {
+        console.error('[POST /api/students/verify] Error:', err?.message);
+        return json({ error: err?.message || 'Internal server error' }, { status: 500 });
+      }
+    }
+
+    // GET /api/students/status - Check student verification status
+    if (url.pathname === '/api/students/status' && method === 'GET') {
+      try {
+        if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+        
+        const user = await getSupabaseUserFromRequest(request);
+        if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
+        
+        // Get artist student status
+        const { data: artist, error: artistErr } = await supabaseAdmin
+          .from('artists')
+          .select('is_student, is_student_verified, school_id, school_name, student_discount_active')
+          .eq('id', user.id)
+          .single();
+        
+        if (artistErr) {
+          return json({ error: artistErr.message }, { status: 500 });
+        }
+        
+        if (!artist?.is_student) {
+          return json({
+            isStudent: false,
+            isVerified: false,
+            discountActive: false,
+            school: null,
+          });
+        }
+        
+        // Get verification history
+        const { data: verifications } = await supabaseAdmin
+          .from('student_verifications')
+          .select('*, schools(name)')
+          .eq('artist_id', user.id)
+          .order('created_at', { ascending: false });
+        
+        return json({
+          isStudent: artist.is_student,
+          isVerified: artist.is_student_verified,
+          discountActive: artist.student_discount_active,
+          school: {
+            id: artist.school_id,
+            name: artist.school_name,
+          },
+          verifications: verifications || [],
+        });
+      } catch (err: any) {
+        console.error('[GET /api/students/status] Error:', err?.message);
+        return json({ error: err?.message || 'Internal server error' }, { status: 500 });
+      }
+    }
+
+    // POST /api/students/discount - Apply student discount to artist tier
+    if (url.pathname === '/api/students/discount' && method === 'POST') {
+      try {
+        if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+        
+        const user = await getSupabaseUserFromRequest(request);
+        if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
+        
+        const { data: artist, error: artistErr } = await supabaseAdmin
+          .from('artists')
+          .select('is_student_verified, subscription_tier')
+          .eq('id', user.id)
+          .single();
+        
+        if (artistErr || !artist?.is_student_verified) {
+          return json({ error: 'Not a verified student' }, { status: 403 });
+        }
+        
+        // Apply discount logic: if on free plan, upgrade to starter with discount
+        // Otherwise, apply discount percentage to current tier
+        const { error: updateErr } = await supabaseAdmin
+          .from('artists')
+          .update({
+            student_discount_active: true,
+            student_discount_applied_at: new Date().toISOString(),
+            subscription_tier: artist.subscription_tier === 'free' ? 'starter' : artist.subscription_tier,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', user.id);
+        
+        if (updateErr) {
+          console.error('[POST /api/students/discount] Error:', updateErr.message);
+          return json({ error: updateErr.message }, { status: 500 });
+        }
+        
+        return json({
+          success: true,
+          message: 'Student discount applied!',
+          newTier: artist.subscription_tier === 'free' ? 'starter' : artist.subscription_tier,
+          discountDescription: artist.subscription_tier === 'free' 
+            ? 'Free upgrade to Starter tier' 
+            : 'Professional discount applied to your current tier',
+        });
+      } catch (err: any) {
+        console.error('[POST /api/students/discount] Error:', err?.message);
+        return json({ error: err?.message || 'Internal server error' }, { status: 500 });
+      }
+    }
+
     return new Response('Not found', { status: 404 });
   },
 };

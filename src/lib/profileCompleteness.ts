@@ -14,6 +14,9 @@ export interface ArtistProfile {
   secondaryCity?: string;
   portfolioUrl?: string;
   instagramHandle?: string;
+  isStudent?: boolean;
+  pronouns?: string;
+  schoolName?: string;
 }
 
 export interface ProfileCompleteness {
