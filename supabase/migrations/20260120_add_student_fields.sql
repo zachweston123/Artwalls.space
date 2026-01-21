@@ -1,18 +1,10 @@
 -- Student Verification and Profile Enhancement
 -- Adds support for student status, pronouns, school/university, and discount tracking
 
--- Add student-related columns to artists table
-ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS is_student boolean DEFAULT false;
-ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS pronouns text;
-ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS school_id uuid REFERENCES public.schools(id) ON DELETE SET NULL;
-ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS school_name text;
-ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS is_student_verified boolean DEFAULT false;
-ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS student_verification_token text;
-ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS student_verification_expires_at timestamptz;
-ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS student_discount_active boolean DEFAULT false;
-ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS student_discount_applied_at timestamptz;
+-- Enable UUID extension if not already enabled
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Create schools/universities table
+-- Create schools/universities table FIRST (before foreign key references)
 CREATE TABLE IF NOT EXISTS public.schools (
   id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
   name text NOT NULL UNIQUE,
@@ -41,6 +33,17 @@ CREATE TABLE IF NOT EXISTS public.student_verifications (
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
+
+-- Add student-related columns to artists table (NOW that schools table exists)
+ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS is_student boolean DEFAULT false;
+ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS pronouns text;
+ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS school_id uuid REFERENCES public.schools(id) ON DELETE SET NULL;
+ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS school_name text;
+ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS is_student_verified boolean DEFAULT false;
+ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS student_verification_token text;
+ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS student_verification_expires_at timestamptz;
+ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS student_discount_active boolean DEFAULT false;
+ALTER TABLE public.artists ADD COLUMN IF NOT EXISTS student_discount_applied_at timestamptz;
 
 -- Create indexes for performance
 CREATE INDEX IF NOT EXISTS artists_is_student_idx ON public.artists(is_student);
