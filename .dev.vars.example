@@ -1,0 +1,16 @@
+# Stripe Configuration
+# Get these from: https://dashboard.stripe.com/apikeys
+STRIPE_SECRET_KEY=sk_live_YOUR_SECRET_KEY_HERE
+STRIPE_WEBHOOK_SECRET=whsec_YOUR_WEBHOOK_SECRET_HERE
+
+# Stripe Price IDs
+# Copy these from Stripe Dashboard > Product Catalog
+STRIPE_SUB_PRICE_STARTER=price_1SrsqDE1V7i70KPhBmE4lAaC
+STRIPE_SUB_PRICE_GROWTH=price_1SrsrDE1V7i70KPhHjMGLwvu
+STRIPE_SUB_PRICE_PRO=price_1SrsrdE1V7i70KPhorOqhCge
+
+# Supabase Configuration
+# Get these from: https://supabase.com/dashboard
+SUPABASE_URL=https://YOUR_PROJECT_ID.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
