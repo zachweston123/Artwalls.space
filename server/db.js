@@ -27,6 +27,12 @@ function mapArtistRow(r) {
     stripeSubscriptionId: r.stripe_subscription_id,
     platformFeeBps: r.platform_fee_bps,
     venueFeeBps: r.venue_fee_bps,
+    cityPrimary: r.city_primary,
+    citySecondary: r.city_secondary,
+    bio: r.bio,
+    artTypes: r.art_types,
+    instagramHandle: r.instagram_handle,
+    profilePhotoUrl: r.profile_photo_url,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
   };
@@ -128,6 +134,10 @@ export async function upsertArtist({
   phoneNumber,
   cityPrimary,
   citySecondary,
+  bio,
+  artTypes,
+  instagramHandle,
+  profilePhotoUrl,
 }) {
   const payload = {
     id,
@@ -147,6 +157,10 @@ export async function upsertArtist({
   if (platformFeeBps !== undefined) payload.platform_fee_bps = platformFeeBps === null ? null : toIntOrNull(platformFeeBps);
   if (cityPrimary !== undefined) payload.city_primary = cityPrimary;
   if (citySecondary !== undefined) payload.city_secondary = citySecondary;
+  if (bio !== undefined) payload.bio = bio;
+  if (artTypes !== undefined) payload.art_types = artTypes;
+  if (instagramHandle !== undefined) payload.instagram_handle = instagramHandle;
+  if (profilePhotoUrl !== undefined) payload.profile_photo_url = profilePhotoUrl;
 
   const { data, error } = await supabaseAdmin
     .from('artists')

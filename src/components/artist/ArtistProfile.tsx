@@ -212,19 +212,7 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
         instagramHandle: instagramHandle || null,
       });
 
-      // Update bio, art_types, instagram, and cities in Supabase directly
-      await supabase
-        .from('artists')
-        .update({ 
-          bio: bio || null,
-          art_types: artTypes.length > 0 ? artTypes : [],
-          instagram_handle: instagramHandle || null,
-          city_primary: cityPrimary || null,
-          city_secondary: citySecondary || null,
-        })
-        .eq('id', user.id);
-
-      // Update metadata and email in auth
+      // Update metadata and email in auth (keep this for auth session consistency)
       const { error: metaErr } = await supabase.auth.updateUser({ data: { portfolioUrl, phone, cityPrimary, citySecondary }, email });
       if (metaErr) throw metaErr;
 

@@ -1433,7 +1433,18 @@ app.post('/api/artists', async (req, res) => {
       }
     }
 
-    const { artistId: bodyArtistId, email, name, phoneNumber, cityPrimary, citySecondary, subscriptionTier } = req.body || {};
+    const { 
+      artistId: bodyArtistId, 
+      email, 
+      name, 
+      phoneNumber, 
+      cityPrimary, 
+      citySecondary, 
+      subscriptionTier,
+      bio,
+      artTypes,
+      instagramHandle
+    } = req.body || {};
     const artistId = authUser?.id || bodyArtistId;
     if (!artistId || typeof artistId !== 'string') return res.status(400).json({ error: 'Missing artistId' });
 
@@ -1446,6 +1457,9 @@ app.post('/api/artists', async (req, res) => {
       cityPrimary: cityPrimary ?? undefined,
       citySecondary: citySecondary ?? undefined,
       subscriptionTier: subscriptionTier ?? undefined,
+      bio: bio ?? undefined,
+      artTypes: artTypes ?? undefined,
+      instagramHandle: instagramHandle ?? undefined,
     });
     return res.json(artist);
   } catch (err) {
