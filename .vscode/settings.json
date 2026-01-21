@@ -1,0 +1,22 @@
+{
+  // Use PostgreSQL for SQL files instead of SQL Server
+  "files.associations": {
+    "*.sql": "postgres"
+  },
+  
+  // Disable SQL Server linting for PostgreSQL migrations
+  "mssql.enabled": false,
+  
+  // Configure Supabase migrations directory
+  "sqltools.connections": [
+    {
+      "name": "Supabase Local",
+      "driver": "PostgreSQL",
+      "database": "postgres",
+      "server": "localhost",
+      "port": 54322,
+      "username": "postgres",
+      "password": "postgres"
+    }
+  ]
+}
