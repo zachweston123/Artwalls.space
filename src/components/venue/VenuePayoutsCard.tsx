@@ -7,10 +7,11 @@ import { supabase } from '../../lib/supabase';
 type ConnectStatus = {
   hasAccount: boolean;
   accountId?: string;
-  charges_enabled?: boolean;
-  payouts_enabled?: boolean;
-  details_submitted?: boolean;
-  requirements?: any;
+  chargesEnabled?: boolean;
+  payoutsEnabled?: boolean;
+  detailsSubmitted?: boolean;
+  requirementsCurrentlyDue?: string[];
+  requirementsEventuallyDue?: string[];
 };
 
 interface VenuePayoutsCardProps {
@@ -27,7 +28,7 @@ export function VenuePayoutsCard({ user }: VenuePayoutsCardProps) {
     setLoading(true);
     setError(null);
     try {
-      const data = await apiGet<ConnectStatus>(`/api/stripe/connect/venue/status?venueId=${encodeURIComponent(user.id)}`);
+      const data = await apiGet<ConnectStatus>(`/api/stripe/connect/venue/status`${encodeURIComponent(user.id)}`);
       setStatus(data);
     } catch (e: any) {
       setError(e?.message || 'Unable to load payout status');
@@ -54,16 +55,12 @@ export function VenuePayoutsCard({ user }: VenuePayoutsCardProps) {
       }
 
       // 1) Ensure account exists
-      await apiPost<{ accountId: string }>('/api/stripe/connect/venue/create-account', {
-        venueId: user.id,
-        email: user.email,
-        name: user.name,
-      });
+      await apiPost<{ accountId: string }>('/api/stripe/connect/venue/create-account', {});
 
       // 2) Get onboarding link
       const { url } = await apiPost<{ url: string }>(
         '/api/stripe/connect/venue/account-link',
-        { venueId: user.id },
+        {},
       );
 
       window.open(url, '_blank', 'noopener,noreferrer');
@@ -87,7 +84,7 @@ export function VenuePayoutsCard({ user }: VenuePayoutsCardProps) {
       }
       const { url } = await apiPost<{ url: string }>(
         '/api/stripe/connect/venue/login-link',
-        { venueId: user.id },
+        {},
       );
       window.open(url, '_blank', 'noopener,noreferrer');
     } catch (e: any) {
@@ -97,7 +94,7 @@ export function VenuePayoutsCard({ user }: VenuePayoutsCardProps) {
     }
   };
 
-  const isReady = !!status.hasAccount && !!status.payouts_enabled;
+  const isReady = !!status.hasAccount && !!status.payoutsEnabled;
 
   return (
     <div className="bg-[var(--surface-1)] text-[var(--text)] rounded-xl p-6 border border-[var(--border)]">

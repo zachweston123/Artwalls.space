@@ -7,10 +7,11 @@ import { supabase } from '../../lib/supabase';
 type ConnectStatus = {
   hasAccount: boolean;
   accountId?: string;
-  charges_enabled?: boolean;
-  payouts_enabled?: boolean;
-  details_submitted?: boolean;
-  requirements?: any;
+  chargesEnabled?: boolean;
+  payoutsEnabled?: boolean;
+  detailsSubmitted?: boolean;
+  requirementsCurrentlyDue?: string[];
+  requirementsEventuallyDue?: string[];
 };
 
 interface ArtistPayoutsCardProps {
@@ -27,7 +28,7 @@ export function ArtistPayoutsCard({ user }: ArtistPayoutsCardProps) {
     setLoading(true);
     setError(null);
     try {
-      const data = await apiGet<ConnectStatus>(`/api/stripe/connect/artist/status?artistId=${encodeURIComponent(user.id)}`);
+      const data = await apiGet<ConnectStatus>(`/api/stripe/connect/artist/status`
       setStatus(data);
     } catch (e: any) {
       setError(e?.message || 'Unable to load payout status');
@@ -55,16 +56,12 @@ export function ArtistPayoutsCard({ user }: ArtistPayoutsCardProps) {
       }
 
       // 1) Ensure account exists
-      await apiPost<{ accountId: string }>('/api/stripe/connect/artist/create-account', {
-        artistId: user.id,
-        email: user.email,
-        name: user.name,
-      });
+      await apiPost<{ accountId: string }>('/api/stripe/connect/artist/create-account', {});
 
       // 2) Get onboarding link
       const { url } = await apiPost<{ url: string }>(
         '/api/stripe/connect/artist/account-link',
-        { artistId: user.id },
+        {},
       );
 
       window.open(url, '_blank', 'noopener,noreferrer');
@@ -89,7 +86,7 @@ export function ArtistPayoutsCard({ user }: ArtistPayoutsCardProps) {
       }
       const { url } = await apiPost<{ url: string }>(
         '/api/stripe/connect/artist/login-link',
-        { artistId: user.id },
+        {},
       );
       window.open(url, '_blank', 'noopener,noreferrer');
     } catch (e: any) {
@@ -99,7 +96,7 @@ export function ArtistPayoutsCard({ user }: ArtistPayoutsCardProps) {
     }
   };
 
-  const isReady = !!status.hasAccount && !!status.payouts_enabled;
+  const isReady = !!status.hasAccount && !!status.payoutsEnabled;
 
   return (
     <div className="bg-[var(--surface-1)] text-[var(--text)] rounded-xl p-6 border border-[var(--border)]">
