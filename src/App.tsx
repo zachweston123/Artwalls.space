@@ -84,7 +84,7 @@ export default function App() {
   const [selectedArtistId, setSelectedArtistId] = useState<string | null>(null);
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [hasAcceptedAgreement, setHasAcceptedAgreement] = useState(false);
+  const [hasAcceptedAgreement, setHasAcceptedAgreement] = useState<boolean | null>(null);
   const [showAdminPasswordPrompt, setShowAdminPasswordPrompt] = useState(false);
   const [adminPasswordVerified, setAdminPasswordVerified] = useState(false);
   const [pendingAdminAccess, setPendingAdminAccess] = useState(false);
@@ -663,7 +663,7 @@ export default function App() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         {/* Background is controlled by system dark mode preference set on html/body */}
         {/* Agreement Banner */}
-        {!hasAcceptedAgreement && 
+        {hasAcceptedAgreement === false && 
          !['policies', 'artist-agreement', 'venue-agreement'].includes(currentPage) && (
           <AgreementBanner 
             role={currentUser.role as 'artist' | 'venue'} 
@@ -695,14 +695,14 @@ export default function App() {
           <ArtistAgreement 
             onNavigate={handleNavigate}
             onAccept={() => handleAgreementAccept()}
-            hasAccepted={hasAcceptedAgreement}
+            hasAccepted={!!hasAcceptedAgreement}
           />
         )}
         {currentPage === 'venue-agreement' && (
           <VenueAgreement 
             onNavigate={handleNavigate}
             onAccept={() => handleAgreementAccept()}
-            hasAccepted={hasAcceptedAgreement}
+            hasAccepted={!!hasAcceptedAgreement}
           />
         )}
 
