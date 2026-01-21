@@ -22,17 +22,30 @@ export default {
     // Determine allowed origin - accept requests from the frontend origin
     const requestOrigin = request.headers.get('origin') || '';
     const pagesOrigin = env.PAGES_ORIGIN || 'https://artwalls.space';
-    
-    // Allow CORS for: production domain, any .pages.dev subdomain, or localhost in development
+
+    // Allow CORS for: production domain, any .pages.dev subdomain, localhost in development,
+    // and any extra origins provided via env.FRONTEND_ALLOWED_ORIGINS (comma-separated)
+    const extraOrigins = (env as any).FRONTEND_ALLOWED_ORIGINS
+      ? String((env as any).FRONTEND_ALLOWED_ORIGINS)
+          .split(',')
+          .map((o) => o.trim())
+          .filter(Boolean)
+      : [];
+
+    const isAllowedOrigin = (origin: string) => {
+      if (!origin) return false;
+      if (origin === pagesOrigin) return true;
+      if (origin === 'https://artwalls.space') return true;
+      if (origin.endsWith('.pages.dev')) return true;
+      if (origin.startsWith('http://localhost')) return true;
+      if (origin.startsWith('http://127.0.0.1')) return true;
+      if (extraOrigins.includes(origin)) return true;
+      return false;
+    };
+
     let allowOrigin = pagesOrigin;
-    if (requestOrigin) {
-      if (requestOrigin === pagesOrigin || 
-          requestOrigin.endsWith('.pages.dev') ||
-          requestOrigin === 'https://artwalls.space' ||
-          requestOrigin.startsWith('http://localhost') || 
-          requestOrigin.startsWith('http://127.0.0.1')) {
-        allowOrigin = requestOrigin;
-      }
+    if (requestOrigin && isAllowedOrigin(requestOrigin)) {
+      allowOrigin = requestOrigin;
     }
 
     // Preflight CORS
