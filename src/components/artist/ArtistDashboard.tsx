@@ -16,7 +16,8 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
   const [subSuccess, setSubSuccess] = useState<boolean>(false);
   const [subCancelled, setSubCancelled] = useState<boolean>(false);
   const [artworks, setArtworks] = useState<Array<{ id: string; status: string; price?: number }>>([]);
-  const [availableWallspaces, setAvailableWallspaces] = useState<number>(0);
+  const [availableWallspaces, setAvailableWallspaces] = useState<number | null>(null);
+  const [availableWallspacesStatus, setAvailableWallspacesStatus] = useState<'loading' | 'loaded' | 'error'>('loading');
   const [stats, setStats] = useState<{
     subscription?: { tier: string; status: string; isActive: boolean; limits: { artworks: number; activeDisplays: number } };
     artworks: { total: number; active: number; sold: number; available: number };
@@ -84,15 +85,23 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
         const resp = await apiGet<{ total: number }>('/api/wallspaces/available');
         if (!isMounted) return;
         setAvailableWallspaces(resp.total || 0);
+        setAvailableWallspacesStatus('loaded');
       } catch {
         if (!isMounted) return;
-        // Default to a reasonable fallback if API fails
-        setAvailableWallspaces(128);
+        setAvailableWallspaces(null);
+        setAvailableWallspacesStatus('error');
       }
     }
     loadWallspaces();
     return () => { isMounted = false; };
   }, []);
+
+  const wallspacesMessage =
+    availableWallspacesStatus === 'loaded'
+      ? `Browse ${availableWallspaces ?? 0}+ available wall spaces across your city`
+      : availableWallspacesStatus === 'loading'
+        ? 'Loading wall space availability...'
+        : 'Wall space availability is temporarily unavailable';
 
   const activeArtworks = stats ? stats.artworks.active : artworks.filter(a => a.status === 'active').length;
   const totalArtworks = stats ? stats.artworks.total : artworks.length;
@@ -254,7 +263,7 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
           </button>
         </div>
         <p className="text-xs text-[var(--text-muted)] px-1">
-          Browse {availableWallspaces}+ available wall spaces across your city
+          {wallspacesMessage}
         </p>
       </div>
 
