@@ -7,6 +7,8 @@
     plugins: [react()],
     server: {
       allowedHosts: ['api.artwalls.space', 'artwalls.space', '.artwalls.space'],
+      port: 3000,
+      open: true,
     },
     resolve: {
       extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
@@ -56,9 +58,5 @@
     build: {
       target: 'esnext',
       outDir: 'dist',
-    },
-    server: {
-      port: 3000,
-      open: true,
     },
   });
