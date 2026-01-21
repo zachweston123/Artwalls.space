@@ -393,6 +393,63 @@ app.get('/api/venues/:venueId/availability', async (req, res) => {
   }
 });
 
+// Venue metrics (real data for dashboard)
+app.get('/api/venues/:venueId/metrics', async (req, res) => {
+  const venue = await requireVenue(req, res);
+  if (!venue) return;
+
+  const requestedVenueId = req.params.venueId;
+  if (requestedVenueId && requestedVenueId !== venue.id) {
+    return res.status(403).json({ error: 'Forbidden: can only view metrics for your venue' });
+  }
+
+  try {
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
+    // Artworks linked to this venue
+    const { data: artworks, error: artworksErr } = await supabaseAdmin
+      .from('artworks')
+      .select('id, artist_id')
+      .eq('venue_id', venue.id);
+    if (artworksErr) throw artworksErr;
+
+    const totalArtworks = artworks?.length || 0;
+    const activeArtists = new Set((artworks || []).map(a => a.artist_id).filter(Boolean)).size;
+
+    // Revenue in current month for this venue
+    const { data: orders, error: ordersErr } = await supabaseAdmin
+      .from('orders')
+      .select('amount_cents')
+      .eq('venue_id', venue.id)
+      .gte('created_at', monthStart);
+    if (ordersErr) throw ordersErr;
+
+    const monthlyRevenueCents = (orders || []).reduce((sum, o) => sum + (o.amount_cents || 0), 0);
+
+    const completionPercentage = venue.status === 'live'
+      ? 100
+      : venue.status === 'approved'
+      ? 85
+      : venue.status === 'pending_review'
+      ? 75
+      : 50;
+
+    return res.json({
+      metrics: {
+        totalArtworks,
+        activeArtists,
+        monthlyRevenueCents,
+        monthlyRevenue: monthlyRevenueCents / 100,
+        completionPercentage,
+      },
+    });
+  } catch (err) {
+    console.error('[GET /api/venues/:venueId/metrics] Error:', err);
+    return res.status(500).json({ error: err?.message || 'Failed to load venue metrics' });
+  }
+});
+
 app.post('/api/venues/:venueId/bookings', async (req, res) => {
   try {
     const artist = await requireArtist(req, res);

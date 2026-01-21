@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import SetupHealthChecklist from './SetupHealthChecklist';
 import VenuePartnerKitEmbedded from './VenuePartnerKitEmbedded';
 import { useVenueData } from '../hooks/useVenueData';
-import { supabase } from '../supabase-client';
+import { apiGet } from '../lib/api';
 import '../styles/venue-dashboard.css';
 
 interface DashboardTab {
@@ -52,26 +52,20 @@ const VenueDashboard: React.FC = () => {
   }, [venue?.id]);
 
   const loadMetrics = async () => {
+    if (!venue?.id) return;
     try {
-      // TODO: Replace with actual API calls
-      // For now, using mock data based on venue setup status
-
-      const completion = venue?.status === 'live' 
-        ? 100 
+      const resp = await apiGet<{ metrics: DashboardMetrics }>(`/api/venues/${venue.id}/metrics`);
+      setMetrics(resp.metrics);
+    } catch (error) {
+      console.error('Error loading metrics:', error);
+      const fallbackCompletion = venue?.status === 'live'
+        ? 100
         : venue?.status === 'approved'
         ? 85
         : venue?.status === 'pending_review'
         ? 75
         : 50;
-
-      setMetrics({
-        totalArtworks: 0, // TODO: Query artworks for this venue
-        activeArtists: 0, // TODO: Query active artist connections
-        monthlyRevenue: 0, // TODO: Query revenue data from sales
-        completionPercentage: completion
-      });
-    } catch (error) {
-      console.error('Error loading metrics:', error);
+      setMetrics((prev) => ({ ...prev, completionPercentage: fallbackCompletion }));
     }
   };
 
