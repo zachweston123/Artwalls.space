@@ -238,15 +238,19 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
               </div>
 
               <div>
-                <label className="block text-sm text-[var(--text)] mb-2">Description</label>
+                <label className="block text-sm text-[var(--text)] mb-2">
+                  Backstory <span className="text-[var(--text-muted)] font-normal">(Optional but recommended)</span>
+                </label>
                 <textarea
-                  required
                   value={newArtwork.description}
                   onChange={(e) => setNewArtwork({ ...newArtwork, description: e.target.value })}
                   rows={4}
                   className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
-                  placeholder="Describe your artwork, medium, inspiration..."
+                  placeholder="Share the story behind your artwork—what inspired it, your creative process, or what makes it special. Buyers love connecting with the artist's journey."
                 />
+                <p className="text-xs text-[var(--text-muted)] mt-1.5">
+                  💡 Artworks with backstories get 3x more buyer engagement
+                </p>
               </div>
 
               <div>
