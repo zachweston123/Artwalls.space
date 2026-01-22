@@ -1,0 +1,167 @@
+#!/bin/bash
+
+# Stripe Webhook Configuration Helper
+# Helps you set up webhooks in Stripe Dashboard
+
+echo "🔗 Stripe Webhook Configuration Helper"
+echo "======================================"
+echo ""
+
+# Colors
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+echo "This script will help you configure webhooks in Stripe Dashboard."
+echo ""
+
+# Determine the webhook URL
+echo "📍 Step 1: Webhook URL"
+echo "----------------------"
+echo ""
+echo "Your webhook endpoint URL should be:"
+echo -e "${BLUE}https://api.artwalls.space/api/stripe/webhook${NC}"
+echo ""
+echo "For local testing, use:"
+echo -e "${YELLOW}http://localhost:4242/api/stripe/webhook${NC}"
+echo ""
+echo "Note: For local testing, you'll need Stripe CLI or ngrok to forward webhooks"
+echo ""
+
+read -p "Press Enter to continue..."
+echo ""
+
+# Events to listen for
+echo "📡 Step 2: Events to Listen For"
+echo "--------------------------------"
+echo ""
+echo "You need to select these events in Stripe Dashboard:"
+echo ""
+echo "  ✅ checkout.session.completed"
+echo "     → Triggers when payment succeeds and subscription created"
+echo ""
+echo "  ✅ customer.subscription.updated"
+echo "     → Triggers when subscription changes (plan upgrade/downgrade)"
+echo ""
+echo "  ✅ customer.subscription.deleted"
+echo "     → Triggers when subscription is cancelled"
+echo ""
+
+read -p "Press Enter to continue..."
+echo ""
+
+# Instructions
+echo "📝 Step 3: Stripe Dashboard Instructions"
+echo "------------------------------------------"
+echo ""
+echo "1. Open Stripe Dashboard:"
+echo "   https://dashboard.stripe.com/webhooks"
+echo ""
+echo "2. Click 'Add endpoint' button"
+echo ""
+echo "3. Enter endpoint URL:"
+echo "   https://api.artwalls.space/api/stripe/webhook"
+echo ""
+echo "4. Click 'Select events'"
+echo ""
+echo "5. Search for and select:"
+echo "   - checkout.session.completed"
+echo "   - customer.subscription.updated"
+echo "   - customer.subscription.deleted"
+echo ""
+echo "6. Click 'Add endpoint'"
+echo ""
+echo "7. Copy the 'Signing secret' (starts with whsec_...)"
+echo ""
+echo "8. Add to your environment:"
+echo "   STRIPE_WEBHOOK_SECRET=whsec_..."
+echo ""
+
+read -p "Press Enter to continue..."
+echo ""
+
+# Webhook secret
+echo "🔐 Step 4: Webhook Signing Secret"
+echo "----------------------------------"
+echo ""
+echo "After creating the webhook, you'll see a 'Signing secret'"
+echo ""
+echo "Add this to your .dev.vars file:"
+echo ""
+echo -e "${YELLOW}STRIPE_WEBHOOK_SECRET=whsec_...${NC}"
+echo ""
+echo "For Cloudflare Workers deployment:"
+echo "1. Go to Cloudflare Dashboard → Workers → your api worker"
+echo "2. Settings → Variables"
+echo "3. Add: STRIPE_WEBHOOK_SECRET = whsec_..."
+echo ""
+
+read -p "Press Enter to continue..."
+echo ""
+
+# Testing
+echo "🧪 Step 5: Test Webhook"
+echo "------------------------"
+echo ""
+echo "To test your webhook:"
+echo ""
+echo "1. Make a test subscription purchase:"
+echo "   - Go to https://artwalls.space/#/plans-pricing"
+echo "   - Click 'Select Plan' on any tier"
+echo "   - Use test card: 4242 4242 4242 4242"
+echo "   - Complete checkout"
+echo ""
+echo "2. Check webhook delivery:"
+echo "   - Go to Stripe Dashboard → Webhooks"
+echo "   - Click on your endpoint"
+echo "   - View 'Logs' tab"
+echo "   - Recent events should show '200 OK'"
+echo ""
+echo "3. Verify database update:"
+echo "   - Check that user's subscription_tier changed"
+echo "   - subscription_status should be 'active'"
+echo ""
+
+read -p "Press Enter to continue..."
+echo ""
+
+# Local testing with Stripe CLI
+echo "🔧 Bonus: Local Testing with Stripe CLI"
+echo "----------------------------------------"
+echo ""
+echo "For local development, use Stripe CLI to forward webhooks:"
+echo ""
+echo "1. Install Stripe CLI:"
+echo "   https://stripe.com/docs/stripe-cli"
+echo ""
+echo "2. Login to Stripe:"
+echo "   stripe login"
+echo ""
+echo "3. Forward webhooks to local server:"
+echo "   stripe listen --forward-to localhost:4242/api/stripe/webhook"
+echo ""
+echo "4. Copy the webhook signing secret shown"
+echo ""
+echo "5. Update .dev.vars with the secret"
+echo ""
+echo "6. Test locally:"
+echo "   stripe trigger checkout.session.completed"
+echo ""
+
+read -p "Press Enter to finish..."
+echo ""
+
+# Summary
+echo "✅ Configuration Complete!"
+echo "========================="
+echo ""
+echo "Next steps:"
+echo "1. ✓ Configure webhook in Stripe Dashboard"
+echo "2. ✓ Copy signing secret to environment"
+echo "3. ✓ Test webhook delivery"
+echo "4. ✓ Verify tier upgrades work"
+echo ""
+echo "For troubleshooting, see:"
+echo "STRIPE_SUBSCRIPTION_COMPLETE_GUIDE.md"
+echo ""
