@@ -987,7 +987,7 @@ export default {
         const customerBody = toForm({
           email: (artist?.email as string | undefined) || (user.email as string | undefined) || undefined,
           name: (artist?.name as string | undefined) || (user.user_metadata?.name as string | undefined) || undefined,
-          'metadata[artistId]': user.id,
+          'metadata': JSON.stringify({ artistId: user.id }),
         });
         const resp = await stripeFetch('/v1/customers', { method: 'POST', body: customerBody });
         const data = await resp.json();
@@ -1068,10 +1068,10 @@ export default {
         customer: customerId,
         'line_items[0][price]': priceId,
         'line_items[0][quantity]': '1',
-        'metadata[artistId]': user.id,
-        'metadata[tier]': rawTier,
-        'subscription_data[metadata][artistId]': user.id,
-        'subscription_data[metadata][tier]': rawTier,
+        'metadata': JSON.stringify({ artistId: user.id, tier: rawTier }),
+        'subscription_data': JSON.stringify({
+          metadata: { artistId: user.id, tier: rawTier }
+        }),
       });
       const resp = await stripeFetch('/v1/checkout/sessions', { method: 'POST', body });
       const session = await resp.json();
@@ -1093,7 +1093,7 @@ export default {
         email: user.email ?? undefined,
         'capabilities[card_payments][requested]': 'true',
         'capabilities[transfers][requested]': 'true',
-        'metadata[artistId]': user.id,
+        'metadata': JSON.stringify({ artistId: user.id }),
       });
       const resp = await stripeFetch('/v1/accounts', { method: 'POST', body });
       const json = await resp.json();
