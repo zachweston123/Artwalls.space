@@ -69,7 +69,9 @@ export async function apiPost<T>(path: string, body: unknown, headers?: Record<s
     let errorMsg = `Request failed: ${res.status}`;
     try {
       const errorData = await res.json();
-      errorMsg = errorData.error || errorData.message || errorMsg;
+      const extracted = errorData?.error ?? errorData?.message ?? errorMsg;
+      // Guard against non-string values turning into "[object Object]"
+      errorMsg = typeof extracted === 'string' ? extracted : JSON.stringify(extracted);
     } catch {
       // If not JSON, use status text
       errorMsg = res.statusText || errorMsg;
