@@ -174,6 +174,67 @@ app.post('/api/stripe/billing/create-portal-session', async (req, res) => {
     return res.status(500).json({ error: err?.message || 'Billing portal error' });
   }
 });
+
+// Subscription checkout: start a recurring plan for the artist
+app.post('/api/stripe/billing/create-subscription-session', async (req, res) => {
+  try {
+    const artist = await requireArtist(req, res);
+    if (!artist) return;
+
+    const tier = req.body?.tier;
+    const allowedTiers = ['starter', 'growth', 'pro'];
+    if (!tier || !allowedTiers.includes(String(tier))) {
+      return res.status(400).json({ error: 'Invalid tier' });
+    }
+
+    const normalizedTier = String(tier);
+
+    // Support both old (STRIPE_SUB_PRICE_*) and new (STRIPE_PRICE_ID_*) env names
+    const priceMap = {
+      starter: process.env.STRIPE_PRICE_ID_STARTER || process.env.STRIPE_SUB_PRICE_STARTER,
+      growth: process.env.STRIPE_PRICE_ID_GROWTH || process.env.STRIPE_SUB_PRICE_GROWTH,
+      pro: process.env.STRIPE_PRICE_ID_PRO || process.env.STRIPE_SUB_PRICE_PRO,
+    };
+
+    const priceId = priceMap[normalizedTier];
+    if (!priceId) {
+      console.error('Missing Stripe price ID for tier', normalizedTier);
+      return res.status(500).json({ error: `Price ID not configured for ${normalizedTier}` });
+    }
+
+    // Ensure the artist has a Stripe customer record
+    let customerId = artist.stripeCustomerId;
+    if (!customerId) {
+      const customer = await stripe.customers.create({
+        email: artist.email || undefined,
+        name: artist.name || undefined,
+        metadata: { artistId: artist.id },
+      });
+      customerId = customer.id;
+      await upsertArtist({ id: artist.id, stripeCustomerId: customerId });
+    }
+
+    const successUrl = SUB_SUCCESS_URL || `${APP_URL}/#/artist-dashboard?sub=success`;
+    const cancelUrl = SUB_CANCEL_URL || `${APP_URL}/#/artist-dashboard?sub=cancel`;
+
+    const session = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+      customer: customerId,
+      line_items: [{ price: priceId, quantity: 1 }],
+      metadata: { artistId: artist.id, tier: normalizedTier },
+      subscription_data: {
+        metadata: { artistId: artist.id, tier: normalizedTier },
+      },
+    });
+
+    return res.json({ url: session.url });
+  } catch (err) {
+    console.error('create-subscription-session error', err);
+    return res.status(500).json({ error: err?.message || 'Unable to start subscription checkout' });
+  }
+});
 // Middleware
 const CORS_OPTIONS = {
   origin: CORS_ORIGIN,
