@@ -945,7 +945,7 @@ export default {
       if (!stripeKey) return json({ error: 'Missing STRIPE_SECRET_KEY' }, { status: 500 });
       const headers = new Headers(init.headers || {});
       headers.set('Authorization', `Bearer ${stripeKey}`);
-      if (!headers.has('Content-Type')) headers.set('Content-Type', 'application/x-www-form-urlencoded');
+      if (!headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
       return fetch(`https://api.stripe.com${path}`, { ...init, headers });
     }
 
@@ -984,12 +984,12 @@ export default {
 
       let customerId = artist?.stripe_customer_id as string | null | undefined;
       if (!customerId) {
-        const customerBody = toForm({
+        const customerBody = JSON.stringify({
           email: (artist?.email as string | undefined) || (user.email as string | undefined) || undefined,
           name: (artist?.name as string | undefined) || (user.user_metadata?.name as string | undefined) || undefined,
-          'metadata': JSON.stringify({ artistId: user.id }),
+          metadata: { artistId: user.id }
         });
-        const resp = await stripeFetch('/v1/customers', { method: 'POST', body: customerBody });
+        const resp = await stripeFetch('/v1/customers', { method: 'POST', body: customerBody, headers: { 'Content-Type': 'application/json' } });
         const data = await resp.json();
         if (!resp.ok) return json(data, { status: resp.status });
         customerId = data.id;
@@ -1004,7 +1004,7 @@ export default {
         customer: customerId,
         return_url: returnUrl,
       });
-      const pResp = await stripeFetch('/v1/billing_portal/sessions', { method: 'POST', body: portalBody });
+      const pResp = await stripeFetch('/v1/billing_portal/sessions', { method: 'POST', body: portalBody, headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
       const session = await pResp.json();
       if (!pResp.ok) return json(session, { status: pResp.status });
       return json({ url: session.url });
@@ -1043,12 +1043,12 @@ export default {
 
       let customerId = artist?.stripe_customer_id as string | null | undefined;
       if (!customerId) {
-        const customerBody = toForm({
+        const customerBody = JSON.stringify({
           email: (artist?.email as string | undefined) || (user.email as string | undefined) || undefined,
           name: (artist?.name as string | undefined) || (user.user_metadata?.name as string | undefined) || undefined,
-          'metadata[artistId]': user.id,
+          metadata: { artistId: user.id }
         });
-        const resp = await stripeFetch('/v1/customers', { method: 'POST', body: customerBody });
+        const resp = await stripeFetch('/v1/customers', { method: 'POST', body: customerBody, headers: { 'Content-Type': 'application/json' } });
         const data = await resp.json();
         if (!resp.ok) return json(data, { status: resp.status });
         customerId = data.id;
@@ -1061,19 +1061,18 @@ export default {
       const successUrl = `${pagesOrigin}/#/artist-dashboard?sub=success`;
       const cancelUrl = `${pagesOrigin}/#/artist-dashboard?sub=cancel`;
 
-      const body = toForm({
+      const body = JSON.stringify({
         mode: 'subscription',
         success_url: successUrl,
         cancel_url: cancelUrl,
         customer: customerId,
-        'line_items[0][price]': priceId,
-        'line_items[0][quantity]': '1',
-        'metadata': JSON.stringify({ artistId: user.id, tier: rawTier }),
-        'subscription_data': JSON.stringify({
+        line_items: [{ price: priceId, quantity: 1 }],
+        metadata: { artistId: user.id, tier: rawTier },
+        subscription_data: {
           metadata: { artistId: user.id, tier: rawTier }
-        }),
+        }
       });
-      const resp = await stripeFetch('/v1/checkout/sessions', { method: 'POST', body });
+      const resp = await stripeFetch('/v1/checkout/sessions', { method: 'POST', body, headers: { 'Content-Type': 'application/json' } });
       const session = await resp.json();
       if (!resp.ok) return json(session, { status: resp.status });
       return json({ url: session.url });
@@ -1088,14 +1087,16 @@ export default {
       await upsertArtist({ id: user.id, email: user.email ?? null, name: user.user_metadata?.name ?? null, role: 'artist', phoneNumber: (user.user_metadata?.phone as string | undefined) || null });
 
       // Create Stripe account
-      const body = toForm({
+      const body = JSON.stringify({
         type: 'express',
         email: user.email ?? undefined,
-        'capabilities[card_payments][requested]': 'true',
-        'capabilities[transfers][requested]': 'true',
-        'metadata': JSON.stringify({ artistId: user.id }),
+        capabilities: {
+          card_payments: { requested: true },
+          transfers: { requested: true }
+        },
+        metadata: { artistId: user.id }
       });
-      const resp = await stripeFetch('/v1/accounts', { method: 'POST', body });
+      const resp = await stripeFetch('/v1/accounts', { method: 'POST', body, headers: { 'Content-Type': 'application/json' } });
       const json = await resp.json();
       if (!resp.ok) return json(json, { status: resp.status });
       // Save accountId
