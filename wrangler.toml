@@ -22,3 +22,8 @@ PAGES_ORIGIN = "https://artwalls.space"
 # wrangler secret put TWILIO_ACCOUNT_SID
 # wrangler secret put TWILIO_AUTH_TOKEN
 # wrangler secret put TWILIO_FROM_NUMBER
+
+[env.production]
+routes = [
+	{ pattern = "api.artwalls.space/*", zone_name = "artwalls.space" }
+]

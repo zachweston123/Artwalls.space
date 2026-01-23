@@ -25,6 +25,8 @@ export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     const method = request.method.toUpperCase();
+    console.log(`Request: ${method} ${url.pathname}`);
+    if (url.pathname.startsWith('/api/stripe')) console.log(`Stripe request: ${method} ${url.pathname}`);
     
     // Determine allowed origin - accept requests from the frontend origin
     const requestOrigin = request.headers.get('origin') || '';
