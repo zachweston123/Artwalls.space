@@ -140,6 +140,17 @@ app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async
   }
 });
 
+// Middleware
+const CORS_OPTIONS = {
+  origin: CORS_ORIGIN,
+  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-password', 'x-admin-secret', 'x-admin'],
+};
+app.use(cors(CORS_OPTIONS));
+// Ensure preflight across all routes
+app.options('*', cors(CORS_OPTIONS));
+app.use(express.json({ limit: '2mb' }));
+
 // Billing Portal: manage subscription and payment methods
 app.post('/api/stripe/billing/create-portal-session', async (req, res) => {
   try {
@@ -235,16 +246,6 @@ app.post('/api/stripe/billing/create-subscription-session', async (req, res) => 
     return res.status(500).json({ error: err?.message || 'Unable to start subscription checkout' });
   }
 });
-// Middleware
-const CORS_OPTIONS = {
-  origin: CORS_ORIGIN,
-  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-password', 'x-admin-secret', 'x-admin'],
-};
-app.use(cors(CORS_OPTIONS));
-// Ensure preflight across all routes
-app.options('*', cors(CORS_OPTIONS));
-app.use(express.json({ limit: '2mb' }));
 
 // -----------------------------
 // Health + Debug (no secrets)
