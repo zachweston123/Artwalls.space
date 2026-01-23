@@ -221,7 +221,7 @@ export function StudentDiscount({ onNavigate }: StudentDiscountProps) {
               <div className="flex items-start justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <Gift className="w-5 h-5 text-[var(--green)]" />
-                  <h3 className="font-medium text-[var(--text)]">Growth Plan - 30% Off</h3>
+                  <h3 className="font-medium text-[var(--text)]">Growth Plan - 25% Off</h3>
                 </div>
                 {benefits?.isVerified && (
                   <span className="px-2 py-1 bg-[var(--green)]/10 text-[var(--green)] text-xs rounded-full">
@@ -240,7 +240,7 @@ export function StudentDiscount({ onNavigate }: StudentDiscountProps) {
                 <li>✓ Marketing tools</li>
               </ul>
               <p className="text-sm font-medium text-[var(--green)]">
-                Just $99/month (normally $149) - 30% student discount
+                Just $14.25/month (normally $19) - 25% student discount
               </p>
             </div>
 
@@ -268,7 +268,7 @@ export function StudentDiscount({ onNavigate }: StudentDiscountProps) {
                 <li>✓ White-label options</li>
               </ul>
               <p className="text-sm font-medium text-[var(--blue)]">
-                Just $449/month (normally $599) - 25% student discount
+                Just $29.25/month (normally $39) - 25% student discount
               </p>
             </div>
 
