@@ -228,9 +228,11 @@ app.post('/api/stripe/billing/create-subscription-session', async (req, res) => 
     const successUrl = SUB_SUCCESS_URL || `${APP_URL}/#/artist-dashboard?sub=success`;
     const cancelUrl = SUB_CANCEL_URL || `${APP_URL}/#/artist-dashboard?sub=cancel`;
 
-    // Stripe metadata values must be strings; coerce defensively to avoid [object Object]/invalid_request_error
-    const metaArtistId = artist.id ? String(artist.id) : undefined;
-    const metaTier = normalizedTier ? String(normalizedTier) : undefined;
+    // Stripe metadata: must be a plain object with string values.
+    const meta = {
+      artistId: String(artist.id),
+      tier: String(normalizedTier),
+    };
 
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
@@ -238,9 +240,9 @@ app.post('/api/stripe/billing/create-subscription-session', async (req, res) => 
       cancel_url: cancelUrl,
       customer: customerId,
       line_items: [{ price: priceId, quantity: 1 }],
-      metadata: metaArtistId && metaTier ? { artistId: metaArtistId, tier: metaTier } : undefined,
+      metadata: meta,
       subscription_data: {
-        metadata: metaArtistId && metaTier ? { artistId: metaArtistId, tier: metaTier } : undefined,
+        metadata: meta,
       },
     });
 
