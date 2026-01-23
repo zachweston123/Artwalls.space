@@ -233,6 +233,7 @@ app.post('/api/stripe/billing/create-subscription-session', async (req, res) => 
       artistId: String(artist.id),
       tier: String(normalizedTier),
     };
+    console.log('[stripe] creating subscription session metadata', meta);
 
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
@@ -240,9 +241,8 @@ app.post('/api/stripe/billing/create-subscription-session', async (req, res) => 
       cancel_url: cancelUrl,
       customer: customerId,
       line_items: [{ price: priceId, quantity: 1 }],
-      metadata: meta,
       subscription_data: {
-        metadata: meta,
+        metadata: { ...meta },
       },
     });
 
