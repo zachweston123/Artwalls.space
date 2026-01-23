@@ -1767,6 +1767,22 @@ export default {
           return json({ error: 'Missing schoolId' }, { status: 400 });
         }
         
+        // Get school info
+        const { data: school, error: schoolErr } = await supabaseAdmin
+          .from('schools')
+          .select('name, email_domain')
+          .eq('id', schoolId)
+          .single();
+        
+        if (schoolErr || !school) {
+          return json({ error: 'School not found' }, { status: 404 });
+        }
+        
+        // Check if user's email matches school domain for auto-verification
+        const userEmail = user.email || '';
+        const isEmailDomainMatch = school.email_domain && userEmail.toLowerCase().endsWith('@' + school.email_domain.toLowerCase());
+        const shouldAutoVerify = verificationMethod === 'email_domain' && isEmailDomainMatch;
+        
         // Create verification record
         const { data: verification, error: verifyErr } = await supabaseAdmin
           .from('student_verifications')
@@ -1774,23 +1790,11 @@ export default {
             artist_id: user.id,
             school_id: schoolId,
             verification_method: verificationMethod,
-            is_verified: verificationMethod === 'email_domain', // Auto-verify for email domain
-            verified_at: verificationMethod === 'email_domain' ? new Date().toISOString() : null,
+            is_verified: shouldAutoVerify,
+            verified_at: shouldAutoVerify ? new Date().toISOString() : null,
             expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year from now
           })
           .select('*')
-          .single();
-        
-        if (verifyErr) {
-          console.error('[POST /api/students/verify] Error:', verifyErr.message);
-          return json({ error: verifyErr.message }, { status: 500 });
-        }
-        
-        // Get school info
-        const { data: school } = await supabaseAdmin
-          .from('schools')
-          .select('name')
-          .eq('id', schoolId)
           .single();
         
         // Update artist profile
@@ -1798,10 +1802,10 @@ export default {
           .from('artists')
           .update({
             is_student: true,
-            is_student_verified: verificationMethod === 'email_domain',
+            is_student_verified: shouldAutoVerify,
             school_id: schoolId,
-            school_name: school?.name,
-            student_discount_active: verificationMethod === 'email_domain',
+            school_name: school.name,
+            student_discount_active: shouldAutoVerify,
             updated_at: new Date().toISOString(),
           })
           .eq('id', user.id);
@@ -1814,9 +1818,9 @@ export default {
         return json({
           success: true,
           verification,
-          message: verificationMethod === 'email_domain' 
-            ? 'Student status verified automatically!' 
-            : 'Verification pending admin review',
+          message: shouldAutoVerify 
+            ? 'Student status verified automatically via email domain!' 
+            : 'Verification submitted for admin review',
         });
       } catch (err: any) {
         console.error('[POST /api/students/verify] Error:', err?.message);
