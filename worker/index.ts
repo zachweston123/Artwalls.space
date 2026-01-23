@@ -12,6 +12,13 @@ type Env = {
   TWILIO_ACCOUNT_SID?: string;
   TWILIO_AUTH_TOKEN?: string;
   TWILIO_FROM_NUMBER?: string;
+  // Subscription price IDs (either older SUB_* or newer PRICE_ID_* names)
+  STRIPE_SUB_PRICE_STARTER?: string;
+  STRIPE_SUB_PRICE_GROWTH?: string;
+  STRIPE_SUB_PRICE_PRO?: string;
+  STRIPE_PRICE_ID_STARTER?: string;
+  STRIPE_PRICE_ID_GROWTH?: string;
+  STRIPE_PRICE_ID_PRO?: string;
 };
 
 export default {
@@ -958,6 +965,116 @@ export default {
       const user = await getSupabaseUserFromRequest(req);
       if (!user || user.user_metadata?.role !== 'venue') return null;
       return user;
+    }
+
+    // Billing Portal: manage subscription and payment methods
+    if (url.pathname === '/api/stripe/billing/create-portal-session' && method === 'POST') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const user = await requireArtist(request);
+      if (!user) return json({ error: 'Missing or invalid Authorization bearer token (artist required)' }, { status: 401 });
+
+      const { data: artist, error } = await supabaseAdmin
+        .from('artists')
+        .select('id,email,name,stripe_customer_id')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (error) return json({ error: error.message }, { status: 500 });
+
+      let customerId = artist?.stripe_customer_id as string | null | undefined;
+      if (!customerId) {
+        const customerBody = toForm({
+          email: (artist?.email as string | undefined) || (user.email as string | undefined) || undefined,
+          name: (artist?.name as string | undefined) || (user.user_metadata?.name as string | undefined) || undefined,
+          'metadata[artistId]': user.id,
+        });
+        const resp = await stripeFetch('/v1/customers', { method: 'POST', body: customerBody });
+        const data = await resp.json();
+        if (!resp.ok) return json(data, { status: resp.status });
+        customerId = data.id;
+        await supabaseAdmin
+          .from('artists')
+          .update({ stripe_customer_id: customerId })
+          .eq('id', user.id);
+      }
+
+      const returnUrl = `${pagesOrigin}/#/artist-dashboard`;
+      const portalBody = toForm({
+        customer: customerId,
+        return_url: returnUrl,
+      });
+      const pResp = await stripeFetch('/v1/billing_portal/sessions', { method: 'POST', body: portalBody });
+      const session = await pResp.json();
+      if (!pResp.ok) return json(session, { status: pResp.status });
+      return json({ url: session.url });
+    }
+
+    // Subscription checkout: start a recurring plan for the artist
+    if (url.pathname === '/api/stripe/billing/create-subscription-session' && method === 'POST') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const user = await requireArtist(request);
+      if (!user) return json({ error: 'Missing or invalid Authorization bearer token (artist required)' }, { status: 401 });
+
+      const payload = await request.json().catch(() => ({}));
+      const rawTier = String((payload as any)?.tier || '').toLowerCase();
+      const allowedTiers = ['starter', 'growth', 'pro'];
+      if (!allowedTiers.includes(rawTier)) {
+        return json({ error: 'Invalid tier' }, { status: 400 });
+      }
+
+      const priceMap: Record<string, string | undefined> = {
+        starter: env.STRIPE_PRICE_ID_STARTER || env.STRIPE_SUB_PRICE_STARTER,
+        growth: env.STRIPE_PRICE_ID_GROWTH || env.STRIPE_SUB_PRICE_GROWTH,
+        pro: env.STRIPE_PRICE_ID_PRO || env.STRIPE_SUB_PRICE_PRO,
+      };
+      const priceId = priceMap[rawTier];
+      if (!priceId) {
+        return json({ error: `Price ID not configured for ${rawTier}` }, { status: 500 });
+      }
+
+      // Ensure Stripe customer exists for this artist
+      const { data: artist, error } = await supabaseAdmin
+        .from('artists')
+        .select('id,email,name,stripe_customer_id')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (error) return json({ error: error.message }, { status: 500 });
+
+      let customerId = artist?.stripe_customer_id as string | null | undefined;
+      if (!customerId) {
+        const customerBody = toForm({
+          email: (artist?.email as string | undefined) || (user.email as string | undefined) || undefined,
+          name: (artist?.name as string | undefined) || (user.user_metadata?.name as string | undefined) || undefined,
+          'metadata[artistId]': user.id,
+        });
+        const resp = await stripeFetch('/v1/customers', { method: 'POST', body: customerBody });
+        const data = await resp.json();
+        if (!resp.ok) return json(data, { status: resp.status });
+        customerId = data.id;
+        await supabaseAdmin
+          .from('artists')
+          .update({ stripe_customer_id: customerId })
+          .eq('id', user.id);
+      }
+
+      const successUrl = `${pagesOrigin}/#/artist-dashboard?sub=success`;
+      const cancelUrl = `${pagesOrigin}/#/artist-dashboard?sub=cancel`;
+
+      const body = toForm({
+        mode: 'subscription',
+        success_url: successUrl,
+        cancel_url: cancelUrl,
+        customer: customerId,
+        'line_items[0][price]': priceId,
+        'line_items[0][quantity]': '1',
+        'metadata[artistId]': user.id,
+        'metadata[tier]': rawTier,
+        'subscription_data[metadata][artistId]': user.id,
+        'subscription_data[metadata][tier]': rawTier,
+      });
+      const resp = await stripeFetch('/v1/checkout/sessions', { method: 'POST', body });
+      const session = await resp.json();
+      if (!resp.ok) return json(session, { status: resp.status });
+      return json({ url: session.url });
     }
 
     // Connect: Artist create account
