@@ -137,7 +137,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
   const maxArtworksForCalculatorUI = useMemo(() => {
     // For non-Pro, match the plan's listing limit.
     // For Pro, allow a higher slider range (still unlimited in plan copy).
-    if (selectedPlanForCalculator === 'pro') return 100;
+    if (selectedPlanForCalculator === 'pro') return 75;
     return planArtworkLimits[selectedPlanForCalculator];
   }, [selectedPlanForCalculator]);
 
@@ -390,7 +390,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                 type="range"
                 min="0"
                 max="2000"
-                step="10"
+                step="5"
                 value={saleValue}
                 onChange={(e) => setSaleValue(Number(e.target.value))}
                 className="flex-1 h-2 bg-[var(--surface-3)] rounded-lg appearance-none cursor-pointer accent-[var(--accent)]"
