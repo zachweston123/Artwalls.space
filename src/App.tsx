@@ -64,6 +64,7 @@ import { AdminPasswordPrompt } from './components/admin/AdminPasswordPrompt';
 import { StripePaymentSetup } from './components/admin/StripePaymentSetup';
 import { SupportInbox } from './components/admin/SupportInbox';
 import { SupportMessageDetail } from './components/admin/SupportMessageDetail';
+import VerifyEmail from './pages/VerifyEmail';
 
 export type UserRole = 'artist' | 'venue' | 'admin' | null;
 
@@ -92,6 +93,11 @@ export default function App() {
   const [googleUser, setGoogleUser] = useState<any>(null);
   const [showProfileCompletion, setShowProfileCompletion] = useState(false);
   const [pendingPhoneNumber, setPendingPhoneNumber] = useState<string | null>(null);
+
+  // Direct-route override for email verification page
+  if (typeof window !== 'undefined' && window.location.pathname === '/verify-email') {
+    return <VerifyEmail />;
+  }
 
   const userFromSupabase = (supaUser: any): User | null => {
     if (!supaUser?.id) return null;
