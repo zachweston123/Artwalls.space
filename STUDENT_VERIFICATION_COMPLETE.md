@@ -131,7 +131,8 @@ CREATE TABLE student_verifications (
 ```json
 {
   "schoolId": "uuid-string",
-  "verificationMethod": "email_domain" // or "manual_upload"
+  "studentEmail": "student@school.edu",
+  "verificationMethod": "email_domain"
 }
 ```
 
@@ -140,15 +141,16 @@ CREATE TABLE student_verifications (
 {
   "success": true,
   "verification": { /* verification record */ },
-  "message": "Student status verified automatically!"
+  "message": "Student status verified automatically via email domain!"
 }
 ```
 
 **Workflow**:
-1. Create student_verifications record
-2. Update artist profile with student status
-3. If email_domain method: auto-verify and activate discount
-4. If manual_upload: set expires_at to 1 year, pending admin review
+1. Validate studentEmail format and .edu domain match
+2. Create student_verifications record
+3. Update artist profile with student status
+4. If email matches school domain: auto-verify and activate discount
+5. If no match: set pending admin review
 
 ### 2. GET /api/students/status
 **Purpose**: Check current student verification status
@@ -198,24 +200,25 @@ CREATE TABLE student_verifications (
    - Pronouns field (optional)
    - School/University search field
 5. Artist searches for and selects their school
-6. Verification triggered based on school type
+6. Student Email field appears (.edu required)
+7. Artist enters their .edu email address
+8. Clicks "Verify Student Status" button
 
-### Workflow 2: Automatic Verification (Email Domain)
-1. Artist selects school with verified email_domain
-2. System automatically creates verification record
-3. Sets is_student_verified to true
-4. Activates student_discount_active
-5. Shows success message "Student status verified!"
-6. Student can immediately claim benefits
+### Workflow 2: Automatic Verification (Email Domain Match)
+1. Artist enters .edu email that matches selected school's domain
+2. System validates email format and domain match
+3. Creates verification record with is_verified = true
+4. Updates artist profile with student status
+5. Activates student discounts immediately
+6. Shows success message "Student status verified automatically via email domain!"
 
-### Workflow 3: Manual Verification (Pending)
-1. Artist selects school without email_domain
-2. System creates verification record
-3. Sets verification_method to "manual_upload"
-4. Shows "Verification Pending" message
-5. Admin reviews verification (out of scope for this implementation)
-6. Admin approves/rejects via admin dashboard
-7. Once approved, student discounts activate
+### Workflow 3: Manual Verification (Domain Mismatch)
+1. Artist enters email that doesn't match school domain
+2. System creates verification record with is_verified = false
+3. Sets verification_method to "email_domain" but marks as pending
+4. Shows "Verification submitted for admin review" message
+5. Admin reviews the submission manually
+6. Once approved, student discounts activate
 
 ### Workflow 4: Claiming Student Benefits
 1. Verified student navigates to "Student Benefits" page

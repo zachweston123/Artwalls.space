@@ -37,9 +37,12 @@ Merge and deploy these files:
 3. Scroll to "Student Profile" section
 4. Check "I am a student"
 5. Search for "Stanford" in School field
-6. Select it and save
-7. Go to "Student Benefits" page
-8. See discounts listed
+6. Select Stanford University
+7. Enter your .edu email (e.g., yourname@stanford.edu) in Student Email field
+8. Click "Verify Student Status"
+9. See verification success message
+10. Go to "Student Benefits" page
+11. See 25% discount applied to plans
 
 ### 4️⃣ Deploy to Production
 Use your standard deployment process (git, CI/CD, etc.)
@@ -81,8 +84,12 @@ If school doesn't have email domain:
 ### Create Verification
 ```
 POST /api/students/verify
-Body: { "schoolId": "uuid" }
-Response: { "success": true, "message": "..." }
+Body: { 
+  "schoolId": "uuid", 
+  "studentEmail": "student@school.edu",
+  "verificationMethod": "email_domain"
+}
+Response: { "success": true, "message": "Student status verified automatically via email domain!" }
 ```
 
 ### Check Status

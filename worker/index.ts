@@ -1761,10 +1761,20 @@ export default {
         if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
         
         const payload = await request.json().catch(() => ({}));
-        const { schoolId, verificationMethod = 'email_domain' } = payload;
+        const { schoolId, verificationMethod = 'email_domain', studentEmail } = payload;
         
         if (!schoolId) {
           return json({ error: 'Missing schoolId' }, { status: 400 });
+        }
+        
+        if (!studentEmail) {
+          return json({ error: 'Missing student email for verification' }, { status: 400 });
+        }
+        
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(studentEmail)) {
+          return json({ error: 'Invalid email format' }, { status: 400 });
         }
         
         // Get school info
@@ -1778,9 +1788,8 @@ export default {
           return json({ error: 'School not found' }, { status: 404 });
         }
         
-        // Check if user's email matches school domain for auto-verification
-        const userEmail = user.email || '';
-        const isEmailDomainMatch = school.email_domain && userEmail.toLowerCase().endsWith('@' + school.email_domain.toLowerCase());
+        // Check if provided email matches school domain for auto-verification
+        const isEmailDomainMatch = school.email_domain && studentEmail.toLowerCase().endsWith('@' + school.email_domain.toLowerCase());
         const shouldAutoVerify = verificationMethod === 'email_domain' && isEmailDomainMatch;
         
         // Create verification record

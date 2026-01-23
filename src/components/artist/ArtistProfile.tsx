@@ -7,6 +7,7 @@ import { supabase } from '../../lib/supabase';
 import { uploadProfilePhoto } from '../../lib/storage';
 import { compressImage, formatFileSize } from '../../lib/imageCompression';
 import { SchoolSearch } from '../shared/SchoolSearch';
+import { apiPost } from '../../lib/api';
 
 interface ArtistProfileProps {
   onNavigate: (page: string) => void;
@@ -46,8 +47,10 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
   const [pronouns, setPronouns] = useState('');
   const [schoolId, setSchoolId] = useState<string>('');
   const [schoolName, setSchoolName] = useState('');
+  const [studentEmail, setStudentEmail] = useState('');
   const [isStudentVerified, setIsStudentVerified] = useState(false);
   const [studentDiscountActive, setStudentDiscountActive] = useState(false);
+  const [verifyingStudent, setVerifyingStudent] = useState(false);
 
   // Demo values for summary (would come from orders on real data)
   const [totalEarnings] = useState(0);
@@ -260,6 +263,27 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
       setError(e?.message || 'Failed to save changes');
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleVerifyStudent() {
+    if (!schoolId || !studentEmail) return;
+    
+    setVerifyingStudent(true);
+    try {
+      await apiPost('/api/students/verify', {
+        schoolId,
+        studentEmail,
+        verificationMethod: 'email_domain'
+      });
+      
+      // Reload profile data to get updated verification status
+      await loadProfile();
+      setInfo('Student verification submitted! Check back soon for status.');
+    } catch (e: any) {
+      setError(e?.message || 'Failed to verify student status');
+    } finally {
+      setVerifyingStudent(false);
     }
   }
 
@@ -668,6 +692,40 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
                           <p className="text-xs text-[var(--text-muted)] mt-1">Search for your school to verify your student status and unlock discounts</p>
                         </div>
 
+                        {schoolName && (
+                          <div>
+                            <label className="block text-sm text-[var(--text-muted)] mb-2">Student Email (.edu required)</label>
+                            <input
+                              type="email"
+                              value={studentEmail}
+                              onChange={(e) => setStudentEmail(e.target.value)}
+                              className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
+                              placeholder="your.email@school.edu"
+                            />
+                            <p className="text-xs text-[var(--text-muted)] mt-1">Enter your .edu email address for verification</p>
+                          </div>
+                        )}
+
+                        {schoolName && studentEmail && !isStudentVerified && (
+                          <button
+                            onClick={handleVerifyStudent}
+                            disabled={verifyingStudent}
+                            className="w-full px-4 py-2 bg-[var(--blue)] hover:bg-[var(--blue-hover)] disabled:bg-[var(--blue)]/50 text-white rounded-lg transition-colors flex items-center justify-center gap-2"
+                          >
+                            {verifyingStudent ? (
+                              <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                Verifying...
+                              </>
+                            ) : (
+                              <>
+                                <GraduationCap className="w-4 h-4" />
+                                Verify Student Status
+                              </>
+                            )}
+                          </button>
+                        )}
+
                         {schoolName && isStudentVerified && (
                           <div className="p-4 bg-[var(--green)]/10 border border-[var(--green)]/30 rounded-lg">
                             <p className="text-sm text-[var(--green)] font-medium">✓ Student Status Verified</p>
@@ -675,10 +733,10 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
                           </div>
                         )}
 
-                        {schoolName && !isStudentVerified && (
+                        {schoolName && !isStudentVerified && studentEmail && (
                           <div className="p-4 bg-[var(--yellow)]/10 border border-[var(--yellow)]/30 rounded-lg">
-                            <p className="text-sm text-[var(--yellow)] font-medium">Verification Pending</p>
-                            <p className="text-xs text-[var(--yellow)]/80 mt-1">We're verifying your student status. Check back soon!</p>
+                            <p className="text-sm text-[var(--yellow)] font-medium">Ready for Verification</p>
+                            <p className="text-xs text-[var(--yellow)]/80 mt-1">Click verify to submit your student status for approval</p>
                           </div>
                         )}
                       </>
