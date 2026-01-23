@@ -228,22 +228,14 @@ app.post('/api/stripe/billing/create-subscription-session', async (req, res) => 
     const successUrl = SUB_SUCCESS_URL || `${APP_URL}/#/artist-dashboard?sub=success`;
     const cancelUrl = SUB_CANCEL_URL || `${APP_URL}/#/artist-dashboard?sub=cancel`;
 
-    // Stripe metadata: must be a plain object with string values.
-    const meta = {
-      artistId: String(artist.id),
-      tier: String(normalizedTier),
-    };
-    console.log('[stripe] creating subscription session metadata', meta);
-
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       success_url: successUrl,
       cancel_url: cancelUrl,
       customer: customerId,
       line_items: [{ price: priceId, quantity: 1 }],
-      subscription_data: {
-        metadata: { ...meta },
-      },
+      // Omitting metadata entirely to avoid Stripe metadata validation issues.
+      subscription_data: {},
     });
 
     return res.json({ url: session.url });
