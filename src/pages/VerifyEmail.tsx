@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { AlertCircle, CheckCircle2, MailCheck, RefreshCcw } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Button } from '../components/ui/button';
@@ -20,7 +19,11 @@ function parseHashTokens(hash: string) {
 }
 
 export default function VerifyEmail() {
-  const navigate = useNavigate();
+  const navigate = (path: string) => {
+    if (typeof window !== 'undefined') {
+      window.location.href = path;
+    }
+  };
   const [view, setView] = useState<ViewState>('verifying');
   const [message, setMessage] = useState('Verifying your email…');
   const [email, setEmail] = useState('');
