@@ -1,54 +1,99 @@
-import { useState } from 'react';
-import { Plus, Tag, Copy } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Plus, Tag, Copy, RefreshCw } from 'lucide-react';
 
-interface AdminPromoCodesProps {
-  onCreatePromoCode: () => void;
+type PromoStatus = 'active' | 'inactive' | 'expired';
+
+type PromoCode = {
+  id: string;
+  code: string;
+  discountLabel: string;
+  duration: string;
+  maxRedemptions: number | null;
+  redeemedCount: number;
+  expiresAt: string | null;
+  status: PromoStatus;
+};
+
+async function fetchPromoCodes(): Promise<PromoCode[]> {
+  const res = await fetch('/api/admin/promo-codes', { credentials: 'include' });
+  if (!res.ok) {
+    throw new Error(`Failed to load promo codes (${res.status})`);
+  }
+  const data = await res.json();
+  return (data?.promoCodes || data || []).map((p: any) => ({
+    id: String(p.id),
+    code: p.code,
+    discountLabel: p.discountLabel ?? p.discount ?? '',
+    duration: p.duration ?? '—',
+    maxRedemptions: p.maxRedemptions ?? p.max_redemptions ?? null,
+    redeemedCount: p.redeemedCount ?? p.redeemed_count ?? 0,
+    expiresAt: p.expiresAt ?? p.expires ?? p.expires_at ?? null,
+    status: (p.status?.toLowerCase?.() as PromoStatus) ?? 'active',
+  }));
 }
 
-export function AdminPromoCodes({ onCreatePromoCode }: AdminPromoCodesProps) {
-  const [promos, setPromos] = useState([
-    {
-      id: '1',
-      code: 'WELCOME15',
-      discount: '15% off',
-      duration: 'Once',
-      maxRedemptions: 100,
-      redeemedCount: 47,
-      expires: '2024-12-31',
-      status: 'Active',
-    },
-    {
-      id: '2',
-      code: 'SUMMER2024',
-      discount: '$10 off',
-      duration: '3 months',
-      maxRedemptions: null,
-      redeemedCount: 12,
-      expires: '2024-08-31',
-      status: 'Active',
-    },
-    {
-      id: '3',
-      code: 'LAUNCH50',
-      discount: '50% off',
-      duration: 'Forever',
-      maxRedemptions: 50,
-      redeemedCount: 50,
-      expires: null,
-      status: 'Inactive',
-    },
-  ]);
-  const [selected, setSelected] = useState<any | null>(null);
+async function deactivatePromoCode(id: string) {
+  const res = await fetch(`/api/admin/promo-codes/${id}/deactivate`, {
+    method: 'POST',
+    credentials: 'include',
+  });
+  if (!res.ok) {
+    throw new Error('Failed to deactivate promo code');
+  }
+}
+
+export function AdminPromoCodes() {
+  const [promos, setPromos] = useState<PromoCode[]>([]);
+  const [selected, setSelected] = useState<PromoCode | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [deactivatingId, setDeactivatingId] = useState<string | null>(null);
+
+  const load = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const latest = await fetchPromoCodes();
+      setPromos(latest);
+    } catch (err: any) {
+      setError(err?.message || 'Unable to load promo codes');
+      setPromos([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Active':
+    switch (status.toLowerCase()) {
+      case 'active':
         return 'bg-[var(--green-muted)] text-[var(--green)] border border-[var(--border)]';
-      case 'Inactive':
-        return 'bg-[var(--surface-3)] text-[var(--text-muted)] border border-[var(--border)]';
+      case 'expired':
+        return 'bg-[var(--surface-3)] text-[var(--warning)] border border-[var(--border)]';
+      case 'inactive':
       default:
         return 'bg-[var(--surface-3)] text-[var(--text-muted)] border border-[var(--border)]';
+    }
+  };
+
+  const sortedPromos = useMemo(
+    () => [...promos].sort((a, b) => a.code.localeCompare(b.code)),
+    [promos]
+  );
+
+  const handleDeactivate = async (id: string) => {
+    try {
+      setDeactivatingId(id);
+      await deactivatePromoCode(id);
+      setPromos((prev) => prev.map((p) => (p.id === id ? { ...p, status: 'inactive' } : p)));
+    } catch (err: any) {
+      setError(err?.message || 'Unable to deactivate code');
+    } finally {
+      setDeactivatingId(null);
     }
   };
 
@@ -61,13 +106,28 @@ export function AdminPromoCodes({ onCreatePromoCode }: AdminPromoCodesProps) {
             Create and manage subscription discount codes
           </p>
         </div>
-        <button
-          onClick={onCreatePromoCode}
+        <a
+          href="https://dashboard.stripe.com/promotions"
+          target="_blank"
+          rel="noreferrer"
           className="flex items-center gap-2 px-6 py-3 bg-[var(--blue)] text-[var(--on-blue)] rounded-lg hover:bg-[var(--blue-hover)] transition-colors"
         >
           <Plus className="w-5 h-5" />
-          Create Promo Code
+          Open Stripe Promo Codes
+        </a>
+      </div>
+
+      <div className="flex items-center gap-3 mb-4 text-sm text-[var(--text-muted)]">
+        <button
+          onClick={load}
+          className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-[var(--border)] text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+          disabled={loading}
+        >
+          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          Refresh
         </button>
+        {loading && <span>Loading promo codes…</span>}
+        {error && <span className="text-[var(--danger)]">{error}</span>}
       </div>
 
       <div className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] overflow-hidden">
@@ -86,7 +146,7 @@ export function AdminPromoCodes({ onCreatePromoCode }: AdminPromoCodesProps) {
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border)]">
-              {promos.map((promo) => (
+              {sortedPromos.map((promo) => (
                 <tr key={promo.id} className="hover:bg-[var(--surface-3)]">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
@@ -97,10 +157,10 @@ export function AdminPromoCodes({ onCreatePromoCode }: AdminPromoCodesProps) {
                       {copiedId === promo.id && <span className="text-xs text-[var(--green)]">Copied</span>}
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-[var(--text)]">{promo.discount}</td>
-                  <td className="px-6 py-4 text-sm text-[var(--text-muted)]">{promo.duration}</td>
+                  <td className="px-6 py-4 text-sm text-[var(--text)]">{promo.discountLabel || '—'}</td>
+                  <td className="px-6 py-4 text-sm text-[var(--text-muted)]">{promo.duration || '—'}</td>
                   <td className="px-6 py-4 text-sm text-[var(--text-muted)]">
-                    {promo.maxRedemptions || 'Unlimited'}
+                    {promo.maxRedemptions ?? 'Unlimited'}
                   </td>
                   <td className="px-6 py-4 text-sm text-[var(--text)]">
                     {promo.redeemedCount}
@@ -109,11 +169,11 @@ export function AdminPromoCodes({ onCreatePromoCode }: AdminPromoCodesProps) {
                     )}
                   </td>
                   <td className="px-6 py-4 text-sm text-[var(--text-muted)]">
-                    {promo.expires || 'Never'}
+                    {promo.expiresAt || 'Never'}
                   </td>
                   <td className="px-6 py-4">
                     <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(promo.status)}`}>
-                      {promo.status}
+                      {promo.status.charAt(0).toUpperCase() + promo.status.slice(1)}
                     </span>
                   </td>
                   <td className="px-6 py-4">
@@ -121,8 +181,8 @@ export function AdminPromoCodes({ onCreatePromoCode }: AdminPromoCodesProps) {
                       <button onClick={() => setSelected(promo)} className="px-3 py-1 bg-[var(--blue)] text-[var(--on-blue)] rounded text-xs hover:bg-[var(--blue-hover)] transition-colors">
                         View
                       </button>
-                      {promo.status === 'Active' && (
-                        <button onClick={() => setPromos(promos.map(p => p.id === promo.id ? { ...p, status: 'Inactive' } : p))} className="px-3 py-1 bg-[var(--surface-3)] text-[var(--danger)] border border-[var(--border)] rounded text-xs hover:bg-[var(--surface-2)] transition-colors">
+                      {promo.status === 'active' && (
+                        <button onClick={() => handleDeactivate(promo.id)} disabled={deactivatingId === promo.id} className="px-3 py-1 bg-[var(--surface-3)] text-[var(--danger)] border border-[var(--border)] rounded text-xs hover:bg-[var(--surface-2)] transition-colors disabled:opacity-60">
                           Deactivate
                         </button>
                       )}
@@ -135,7 +195,7 @@ export function AdminPromoCodes({ onCreatePromoCode }: AdminPromoCodesProps) {
         </div>
       </div>
 
-      {promos.length === 0 && (
+      {!loading && promos.length === 0 && !error && (
         <div className="text-center py-16 bg-[var(--surface-2)] rounded-xl border border-[var(--border)]">
           <div className="w-16 h-16 bg-[var(--surface-3)] border border-[var(--border)] rounded-full flex items-center justify-center mx-auto mb-4">
             <Tag className="w-8 h-8 text-[var(--text-muted)]" />
@@ -144,12 +204,14 @@ export function AdminPromoCodes({ onCreatePromoCode }: AdminPromoCodesProps) {
           <p className="text-[var(--text-muted)] mb-6">
             Create your first promo code to offer subscription discounts
           </p>
-          <button
-            onClick={onCreatePromoCode}
+          <a
+            href="https://dashboard.stripe.com/promotions"
+            target="_blank"
+            rel="noreferrer"
             className="px-6 py-2 bg-[var(--blue)] text-[var(--on-blue)] rounded-lg hover:bg-[var(--blue-hover)] transition-colors"
           >
-            Create Promo Code
-          </button>
+            Create in Stripe
+          </a>
         </div>
       )}
 

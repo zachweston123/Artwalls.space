@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import { supabase } from '../supabase-client';
 
 const router = Router();
 
@@ -68,35 +69,37 @@ router.get('/venues/:id', async (req: Request, res: Response) => {
   try {
     const { id: venueId } = req.params;
 
-    // TODO: Fetch venue from database
-    // TODO: Include all setup fields:
-    //   - basics (name, address, hours, website, instagram)
-    //   - photos
-    //   - wall (type, displaySpots, dimensions)
-    //   - categories
-    //   - status
-    //   - qrDownloaded, qrPlaced (booleans)
+    // Pull the venue from the database (real data only)
+    const { data: venue, error } = await supabase
+      .from('venues')
+      .select(
+        `id, name, address, hours, website_url, instagram_handle, photos, wall_type, display_spots, wall_dimensions, categories, status, qr_downloaded, qr_placed, created_at, updated_at`
+      )
+      .eq('id', venueId)
+      .single();
 
-    const venue = {
-      id: venueId,
-      name: 'Example Venue',
-      address: '123 Main St',
-      hours: 'Mon-Fri 9am-6pm',
-      website: 'https://example.com',
-      instagram: '@example',
-      photos: [],
-      wallType: 'single',
-      displaySpots: 1,
-      wallDimensions: '',
-      categories: ['Contemporary'],
-      status: 'draft',
-      qrDownloaded: false,
-      qrPlaced: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    if (error || !venue) {
+      return res.status(404).json({ error: 'Venue not found' });
+    }
 
-    res.json(venue);
+    res.json({
+      id: venue.id,
+      name: venue.name,
+      address: venue.address,
+      hours: venue.hours,
+      website: venue.website_url,
+      instagram: venue.instagram_handle,
+      photos: venue.photos || [],
+      wallType: venue.wall_type,
+      displaySpots: venue.display_spots,
+      wallDimensions: venue.wall_dimensions,
+      categories: venue.categories || [],
+      status: venue.status,
+      qrDownloaded: venue.qr_downloaded,
+      qrPlaced: venue.qr_placed,
+      createdAt: venue.created_at,
+      updatedAt: venue.updated_at,
+    });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch venue' });
   }

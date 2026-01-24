@@ -625,7 +625,7 @@ export default function App() {
               <AdminAnnouncements onCreateAnnouncement={() => alert('Create Announcement feature coming soon')} />
             )}
             {currentPage === 'admin-promo-codes' && (
-              <AdminPromoCodes onCreatePromoCode={() => alert('Create Promo Code feature coming soon')} />
+              <AdminPromoCodes />
             )}
             {currentPage === 'admin-stripe-payments' && <StripePaymentSetup onNavigate={handleNavigate} />}
             {currentPage === 'admin-activity-log' && <AdminActivityLog />}
@@ -811,7 +811,7 @@ export default function App() {
             )}
             {currentPage === 'admin-user-detail' && <AdminUserDetail onNavigate={handleNavigate} />}
             {currentPage === 'admin-announcements' && <AdminAnnouncements onCreateAnnouncement={() => alert('Create Announcement feature coming soon')} />}
-            {currentPage === 'admin-promo-codes' && <AdminPromoCodes onCreatePromoCode={() => alert('Create Promo Code feature coming soon')} />}
+            {currentPage === 'admin-promo-codes' && <AdminPromoCodes />}
             {currentPage === 'admin-stripe-payments' && <StripePaymentSetup onNavigate={handleNavigate} />}
             {currentPage === 'admin-activity-log' && <AdminActivityLog />}
             {currentPage === 'admin-invites' && <AdminInvites />}

@@ -1,72 +1,58 @@
-import { Activity } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Activity, RefreshCw } from 'lucide-react';
+
+type ActivityLog = {
+  id: string;
+  timestamp: string;
+  admin: string;
+  action: string;
+  target?: string | null;
+  details?: string | null;
+};
+
+async function fetchActivity(): Promise<ActivityLog[]> {
+  const res = await fetch('/api/admin/activity-log', { credentials: 'include' });
+  if (!res.ok) {
+    throw new Error(`Failed to load activity (${res.status})`);
+  }
+  const data = await res.json();
+  return (data?.activity || data || []).map((item: any) => ({
+    id: String(item.id),
+    timestamp: item.timestamp ?? item.created_at ?? '',
+    admin: item.admin ?? item.adminEmail ?? 'admin',
+    action: item.action ?? '',
+    target: item.target ?? null,
+    details: item.details ?? item.metadata ?? null,
+  }));
+}
 
 export function AdminActivityLog() {
-  const mockActivity = [
-    {
-      id: '1',
-      timestamp: '2024-01-22 14:32:15',
-      admin: 'admin@artwalls.com',
-      action: 'Created promo code',
-      target: 'WELCOME15',
-      details: '15% off for new customers',
-    },
-    {
-      id: '2',
-      timestamp: '2024-01-22 13:15:42',
-      admin: 'admin@artwalls.com',
-      action: 'Published announcement',
-      target: 'New Protection Plan Available',
-      details: 'Targeted to Artists',
-    },
-    {
-      id: '3',
-      timestamp: '2024-01-22 11:20:08',
-      admin: 'support@artwalls.com',
-      action: 'Suspended user',
-      target: 'emma.liu@example.com',
-      details: 'Violation of terms',
-    },
-    {
-      id: '4',
-      timestamp: '2024-01-22 10:45:33',
-      admin: 'support@artwalls.com',
-      action: 'Reset password',
-      target: 'marcus.r@example.com',
-      details: 'User requested password reset',
-    },
-    {
-      id: '5',
-      timestamp: '2024-01-22 09:12:17',
-      admin: 'admin@artwalls.com',
-      action: 'Created promo code',
-      target: 'SUMMER2024',
-      details: '$10 off, 3 months duration',
-    },
-    {
-      id: '6',
-      timestamp: '2024-01-21 16:55:28',
-      admin: 'support@artwalls.com',
-      action: 'Added note',
-      target: 'sarah.chen@example.com',
-      details: 'Resolved billing issue',
-    },
-    {
-      id: '7',
-      timestamp: '2024-01-21 15:30:41',
-      admin: 'admin@artwalls.com',
-      action: 'Deactivated promo code',
-      target: 'LAUNCH50',
-      details: 'Max redemptions reached',
-    },
-    {
-      id: '8',
-      timestamp: '2024-01-21 14:22:09',
-      admin: 'support@artwalls.com',
-      action: 'Reinstated user',
-      target: 'jordan.taylor@example.com',
-      details: 'Cleared after verification',
-    },
-  ];
+  const [activity, setActivity] = useState<ActivityLog[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const items = await fetchActivity();
+      setActivity(items);
+    } catch (err: any) {
+      setError(err?.message || 'Unable to load activity');
+      setActivity([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const rows = useMemo(
+    () => [...activity].sort((a, b) => b.timestamp.localeCompare(a.timestamp)),
+    [activity]
+  );
 
   const getActionColor = (action: string) => {
     if (action.includes('Suspended')) {
@@ -90,6 +76,19 @@ export function AdminActivityLog() {
         </p>
       </div>
 
+      <div className="flex items-center gap-3 mb-4 text-sm text-[var(--text-muted)]">
+        <button
+          onClick={load}
+          className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-[var(--border)] text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+          disabled={loading}
+        >
+          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          Refresh
+        </button>
+        {loading && <span>Loading activity…</span>}
+        {error && <span className="text-[var(--danger)]">{error}</span>}
+      </div>
+
       <div className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -104,7 +103,7 @@ export function AdminActivityLog() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border)]">
-              {mockActivity.map((log) => (
+              {rows.map((log) => (
                 <tr key={log.id} className="hover:bg-[var(--surface-3)]">
                   <td className="px-6 py-4 text-sm text-[var(--text-muted)]">
                     {log.timestamp}
@@ -118,10 +117,10 @@ export function AdminActivityLog() {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm text-[var(--text)]">
-                    {log.target}
+                    {log.target || '—'}
                   </td>
                   <td className="px-6 py-4 text-sm text-[var(--text-muted)]">
-                    {log.details}
+                    {log.details || '—'}
                   </td>
                   <td className="px-6 py-4">
                     <button className="px-3 py-1 text-[var(--blue)] hover:text-[var(--blue-hover)] text-xs transition-colors">
@@ -137,20 +136,20 @@ export function AdminActivityLog() {
         {/* Pagination */}
         <div className="p-4 border-t border-[var(--border)] flex items-center justify-between">
           <p className="text-sm text-[var(--text-muted)]">
-            Showing 1-{mockActivity.length} of 247 entries
+            Showing {rows.length} entr{rows.length === 1 ? 'y' : 'ies'}
           </p>
           <div className="flex gap-2">
-            <button className="px-3 py-1 bg-[var(--surface-3)] border border-[var(--border)] text-[var(--text)] rounded hover:bg-[var(--surface-2)] transition-colors text-sm">
+            <button className="px-3 py-1 bg-[var(--surface-3)] border border-[var(--border)] text-[var(--text)] rounded hover:bg-[var(--surface-2)] transition-colors text-sm" disabled>
               Previous
             </button>
-            <button className="px-3 py-1 bg-[var(--blue)] text-[var(--on-blue)] rounded hover:bg-[var(--blue-hover)] transition-colors text-sm">
+            <button className="px-3 py-1 bg-[var(--surface-3)] border border-[var(--border)] text-[var(--text)] rounded text-sm" disabled>
               Next
             </button>
           </div>
         </div>
       </div>
 
-      {mockActivity.length === 0 && (
+      {!loading && rows.length === 0 && !error && (
         <div className="text-center py-16 bg-[var(--surface-2)] rounded-xl border border-[var(--border)]">
           <div className="w-16 h-16 bg-[var(--surface-3)] border border-[var(--border)] rounded-full flex items-center justify-center mx-auto mb-4">
             <Activity className="w-8 h-8 text-[var(--text-muted)]" />
