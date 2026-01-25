@@ -5,17 +5,17 @@ main = "worker/index.ts"
 # Required: set your Cloudflare account_id
 account_id = "940b4ccc48653a5ea5bdf7c01279d832"
 
-# Bind the Worker to the api subdomain
+# Bind the Worker to the main domain /api/* path
 routes = [
-	{ pattern = "api.artwalls.space/*", zone_name = "artwalls.space" }
+	{ pattern = "artwalls.space/api/*", zone_name = "artwalls.space" }
 ]
 
 [vars]
-API_BASE_URL = "https://api.artwalls.space"
+API_BASE_URL = "https://artwalls.space"
 SUPABASE_URL = "https://twclqgysvpefufpnmjcl.supabase.co"
 PAGES_ORIGIN = "https://artwalls.space"
 
-# Stripe Price IDs (Replace with your actual IDs from Stripe Dashboard)
+# Stripe Price IDs
 STRIPE_SUB_PRICE_STARTER = "price_1SrsqDE1V7i70KPhBmE4lAaC"
 STRIPE_SUB_PRICE_GROWTH = "price_1SrsrDE1V7i70KPhHjMGLwvu"
 STRIPE_SUB_PRICE_PRO = "price_1SrsrdE1V7i70KPhorOqhCge"
@@ -30,5 +30,5 @@ STRIPE_SUB_PRICE_PRO = "price_1SrsrdE1V7i70KPhorOqhCge"
 
 [env.production]
 routes = [
-	{ pattern = "api.artwalls.space/*", zone_name = "artwalls.space" }
+	{ pattern = "artwalls.space/api/*", zone_name = "artwalls.space" }
 ]
