@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
-
-const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || 'https://api.artwalls.space';
+import { apiGet, apiPost } from '../../lib/api';
 
 interface StripeConnectStatusProps {
   role: 'artist' | 'venue';
@@ -33,19 +32,9 @@ export default function StripeConnectStatus({ role, userId }: StripeConnectStatu
   async function loadStatus() {
     try {
       setLoading(true);
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-
-      const response = await fetch(`${API_BASE}/api/stripe/connect/${role}/status`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
+      // Try API first using the smart client (handles localhost/prod automatically)
+      try {
+        const data = await apiGet<any>(`/api/stripe/connect/${role}/status`);
         setStatus({
           hasAccount: !!data.accountId,
           accountId: data.accountId,
@@ -57,9 +46,34 @@ export default function StripeConnectStatus({ role, userId }: StripeConnectStatu
           requirementsEventuallyDue: data.requirementsEventuallyDue,
           lastSyncAt: data.syncedAt,
         });
-      } else if (response.status === 404) {
+        return;
+      } catch (apiErr) {
+        console.warn('Stripe API status check failed, falling back to database:', apiErr);
+      }
+
+      // Fallback: Check local database for stripe_account_id
+      const table = role === 'artist' ? 'artists' : 'venues';
+      const { data, error } = await supabase
+        .from(table)
+        .select('stripe_account_id')
+        .eq('id', userId)
+        .single();
+      
+      if (data?.stripe_account_id) {
+        // We know they have an account, but can't verify status without API
+        // Assume 'pending' or 'complete' based on presence to avoid blocking UI excessively
+        setStatus({
+          hasAccount: true,
+          accountId: data.stripe_account_id,
+          onboardingStatus: 'pending', // Safe default so they can try to resume/sync
+          chargesEnabled: false,
+          payoutsEnabled: false,
+          detailsSubmitted: false
+        });
+      } else {
         setStatus({ hasAccount: false });
       }
+
     } catch (err) {
       console.error('Failed to load Connect status', err);
       setStatus({ hasAccount: false });
@@ -71,26 +85,16 @@ export default function StripeConnectStatus({ role, userId }: StripeConnectStatu
   async function createAccount() {
     try {
       setCreating(true);
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-
-      const response = await fetch(`${API_BASE}/api/stripe/connect/${role}/create-account`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-
-      if (response.ok) {
+      // Must use API for creation
+       try {
+        await apiPost(`/api/stripe/connect/${role}/create-account`, {});
         await loadStatus();
-      } else {
-        const error = await response.json();
-        alert(error.error || 'Failed to create account');
+      } catch (apiErr: any) {
+        throw new Error(apiErr.message || 'Failed to connect to server');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to create account', err);
-      alert('Failed to create account');
+      alert(err.message || 'Failed to create account');
     } finally {
       setCreating(false);
     }
@@ -98,28 +102,17 @@ export default function StripeConnectStatus({ role, userId }: StripeConnectStatu
 
   async function startOnboarding() {
     try {
-      setCreating(true);
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-
-      const response = await fetch(`${API_BASE}/api/stripe/connect/${role}/account-link`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-
-      if (response.ok) {
-        const { url } = await response.json();
+      setCreating(true); // Reusing creating loading state
+      
+      try {
+        const { url } = await apiPost<any>(`/api/stripe/connect/${role}/account-link`, {});
         window.location.href = url;
-      } else {
-        const error = await response.json();
-        alert(error.error || 'Failed to start onboarding');
+      } catch (apiErr: any) {
+        throw new Error(apiErr.message || 'Failed to start onboarding');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to start onboarding', err);
-      alert('Failed to start onboarding');
+      alert(err.message || 'Failed to start onboarding');
     } finally {
       setCreating(false);
     }
@@ -127,6 +120,12 @@ export default function StripeConnectStatus({ role, userId }: StripeConnectStatu
 
   async function refreshStatus() {
     setSyncing(true);
+    // Try to trigger a sync on the backend if possible
+    try {
+       await apiPost(`/api/stripe/connect/${role}/sync`, {});
+    } catch (e) {
+       console.warn('Backend sync failed, reloading local status only');
+    }
     await loadStatus();
     setSyncing(false);
   }
