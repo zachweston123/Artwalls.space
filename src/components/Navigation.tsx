@@ -1,5 +1,7 @@
+import { useEffect, useRef, useState } from 'react';
 import { Palette, Store, LogOut, Menu, Bell } from 'lucide-react';
 import type { User } from '../App';
+import { getMyNotifications } from '../lib/api';
 
 interface NavigationProps {
   user: User;
@@ -12,6 +14,47 @@ interface NavigationProps {
 
 export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClick, unreadCount = 2 }: NavigationProps) {
   const isArtist = user.role === 'artist';
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [loadingNotifications, setLoadingNotifications] = useState(false);
+  const [notifications, setNotifications] = useState<Array<{ id: string; title: string; message?: string; createdAt: string; isRead?: boolean }>>([]);
+  const notificationRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (notificationRef.current && !notificationRef.current.contains(e.target as Node)) {
+        setShowNotifications(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (!showNotifications) return;
+    let mounted = true;
+    setLoadingNotifications(true);
+    getMyNotifications()
+      .then(({ notifications: items }) => {
+        if (!mounted) return;
+        setNotifications((items || []).map((n) => ({
+          id: n.id,
+          title: n.title,
+          message: n.message || '',
+          createdAt: n.createdAt,
+          isRead: n.isRead,
+        })));
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setNotifications([]);
+      })
+      .finally(() => {
+        if (mounted) setLoadingNotifications(false);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, [showNotifications]);
 
   const artistLinks = [
     { id: 'artist-dashboard', label: 'Dashboard' },
@@ -79,17 +122,56 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
 
           <div className="flex items-center gap-4">
             {/* Notification Bell */}
-            <button
-              onClick={() => onNavigate(user.role === 'artist' ? 'artist-notifications' : 'venue-notifications')}
-              className="relative p-2 text-[var(--text-muted)] hover:bg-[var(--surface-3)] rounded-lg transition-colors"
-            >
-              <Bell className="w-5 h-5" />
-              {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 w-4 h-4 text-[var(--accent-contrast)] text-xs rounded-full flex items-center justify-center bg-[var(--accent)]">
-                  {unreadCount}
-                </span>
+            <div className="relative" ref={notificationRef}>
+              <button
+                onClick={() => setShowNotifications((prev) => !prev)}
+                className="relative p-2 text-[var(--text-muted)] hover:bg-[var(--surface-3)] rounded-lg transition-colors"
+              >
+                <Bell className="w-5 h-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 w-4 h-4 text-[var(--accent-contrast)] text-xs rounded-full flex items-center justify-center bg-[var(--accent)]">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+
+              {showNotifications && (
+                <div className="absolute right-0 mt-2 w-80 bg-[var(--surface-1)] border border-[var(--border)] rounded-xl shadow-xl z-50">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)]">
+                    <span className="text-sm font-semibold text-[var(--text)]">Notifications</span>
+                    <button
+                      onClick={() => onNavigate(user.role === 'artist' ? 'artist-notifications' : 'venue-notifications')}
+                      className="text-xs text-[var(--blue)] hover:underline"
+                    >
+                      View all
+                    </button>
+                  </div>
+
+                  <div className="max-h-80 overflow-y-auto">
+                    {loadingNotifications && (
+                      <div className="px-4 py-6 text-xs text-[var(--text-muted)]">Loading notifications...</div>
+                    )}
+                    {!loadingNotifications && notifications.length === 0 && (
+                      <div className="px-4 py-6 text-xs text-[var(--text-muted)]">No notifications yet.</div>
+                    )}
+                    {!loadingNotifications && notifications.map((n) => (
+                      <div key={n.id} className="px-4 py-3 border-b border-[var(--border)] last:border-b-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="text-sm text-[var(--text)]">
+                            {n.title}
+                            {!n.isRead && <span className="ml-2 inline-block w-2 h-2 bg-[var(--blue)] rounded-full" />}
+                          </p>
+                          <span className="text-xs text-[var(--text-muted)] whitespace-nowrap">
+                            {new Date(n.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          </span>
+                        </div>
+                        {n.message && <p className="text-xs text-[var(--text-muted)] mt-1">{n.message}</p>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
-            </button>
+            </div>
 
             {/* Role Badge - Mobile Only */}
             <div className="lg:hidden px-3 py-1 rounded-full text-xs bg-[var(--surface-3)] text-[var(--text)] border border-[var(--border)]">
