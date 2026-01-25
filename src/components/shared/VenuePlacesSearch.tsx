@@ -21,9 +21,13 @@ interface VenuePlacesSearchProps {
 
 export function VenuePlacesSearch({ onPlaceSelect, placeholder = 'Search a coffee shop, restaurant, bar…', disabled }: VenuePlacesSearchProps) {
   const [query, setQuery] = useState('');
+  const [manualName, setManualName] = useState('');
+  const [manualAddress, setManualAddress] = useState('');
   const [loading, setLoading] = useState(false);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [manualMode, setManualMode] = useState(false);
   const [predictions, setPredictions] = useState<any[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const serviceRef = useRef<any>(null);
@@ -32,7 +36,9 @@ export function VenuePlacesSearch({ onPlaceSelect, placeholder = 'Search a coffe
   useEffect(() => {
     const apiKey = (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
     if (!apiKey) {
-      setError('Missing Google Maps API key.');
+      setManualMode(true);
+      setNotice('Google Places search is unavailable. Enter venue details manually.');
+      setError(null);
       return;
     }
 
@@ -46,12 +52,14 @@ export function VenuePlacesSearch({ onPlaceSelect, placeholder = 'Search a coffe
       })
       .catch((err) => {
         console.error('Google Maps load failed', err);
-        setError('Failed to load Google Places.');
+        setManualMode(true);
+        setNotice('Google Places failed to load. Enter venue details manually.');
+        setError(null);
       });
   }, []);
 
   useEffect(() => {
-    if (!ready || query.trim().length < 2 || disabled) {
+    if (manualMode || !ready || query.trim().length < 2 || disabled) {
       setPredictions([]);
       return;
     }
@@ -110,48 +118,114 @@ export function VenuePlacesSearch({ onPlaceSelect, placeholder = 'Search a coffe
     );
   };
 
+  const handleManualSubmit = () => {
+    const name = manualName.trim();
+    const address = manualAddress.trim();
+    if (!name) {
+      setError('Venue name is required.');
+      return;
+    }
+    setError(null);
+    const placeId = `manual:${name.toLowerCase().replace(/\s+/g, '-')}:${Date.now()}`;
+    const details: VenuePlaceDetails = {
+      placeId,
+      displayName: name,
+      formattedAddress: address,
+      googleMapsUri: null,
+      websiteUri: null,
+      nationalPhoneNumber: null,
+    };
+    setManualName('');
+    setManualAddress('');
+    onPlaceSelect(details);
+  };
+
   return (
     <div ref={containerRef} className="relative">
-      <div className="flex items-center px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] focus-within:ring-2 focus-within:ring-[var(--focus)]">
-        <Search className="w-4 h-4 text-[var(--text-muted)]" />
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder={placeholder}
-          disabled={disabled || !!error}
-          className="flex-1 ml-2 bg-transparent outline-none text-[var(--text)] placeholder:text-[var(--text-muted)]"
-        />
-        {loading && <Loader2 className="w-4 h-4 text-[var(--blue)] animate-spin" />}
-      </div>
+      {!manualMode && (
+        <>
+          <div className="flex items-center px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] focus-within:ring-2 focus-within:ring-[var(--focus)]">
+            <Search className="w-4 h-4 text-[var(--text-muted)]" />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={placeholder}
+              disabled={disabled || !!error}
+              className="flex-1 ml-2 bg-transparent outline-none text-[var(--text)] placeholder:text-[var(--text-muted)]"
+            />
+            {loading && <Loader2 className="w-4 h-4 text-[var(--blue)] animate-spin" />}
+          </div>
 
-      {error && (
-        <div className="mt-2 text-xs text-[var(--warning)]">
-          {error}
-        </div>
+          {error && (
+            <div className="mt-2 text-xs text-[var(--warning)]">
+              {error}
+            </div>
+          )}
+
+          {predictions.length > 0 && (
+            <div className="absolute top-full left-0 right-0 mt-2 bg-[var(--surface-1)] border border-[var(--border)] rounded-lg shadow-lg z-50">
+              <div className="max-h-64 overflow-y-auto">
+                {predictions.map((p) => (
+                  <button
+                    key={p.place_id}
+                    onClick={() => handleSelect(p)}
+                    className="w-full text-left px-4 py-3 hover:bg-[var(--surface-2)] border-b border-[var(--border)] last:border-b-0 transition-colors"
+                  >
+                    <div className="flex items-start gap-2">
+                      <MapPin className="w-4 h-4 text-[var(--text-muted)] mt-0.5" />
+                      <div>
+                        <p className="text-sm text-[var(--text)]">{p.structured_formatting?.main_text || p.description}</p>
+                        {p.structured_formatting?.secondary_text && (
+                          <p className="text-xs text-[var(--text-muted)]">{p.structured_formatting.secondary_text}</p>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
       )}
 
-      {predictions.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-[var(--surface-1)] border border-[var(--border)] rounded-lg shadow-lg z-50">
-          <div className="max-h-64 overflow-y-auto">
-            {predictions.map((p) => (
-              <button
-                key={p.place_id}
-                onClick={() => handleSelect(p)}
-                className="w-full text-left px-4 py-3 hover:bg-[var(--surface-2)] border-b border-[var(--border)] last:border-b-0 transition-colors"
-              >
-                <div className="flex items-start gap-2">
-                  <MapPin className="w-4 h-4 text-[var(--text-muted)] mt-0.5" />
-                  <div>
-                    <p className="text-sm text-[var(--text)]">{p.structured_formatting?.main_text || p.description}</p>
-                    {p.structured_formatting?.secondary_text && (
-                      <p className="text-xs text-[var(--text-muted)]">{p.structured_formatting.secondary_text}</p>
-                    )}
-                  </div>
-                </div>
-              </button>
-            ))}
+      {manualMode && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
+            <MapPin className="w-3.5 h-3.5" />
+            {notice || 'Enter venue details manually.'}
           </div>
+          <div>
+            <label className="block text-xs text-[var(--text-muted)] mb-1">Venue name</label>
+            <input
+              type="text"
+              value={manualName}
+              onChange={(e) => setManualName(e.target.value)}
+              placeholder="e.g., Sundown Coffee"
+              disabled={disabled}
+              className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-[var(--text-muted)] mb-1">Address (optional)</label>
+            <input
+              type="text"
+              value={manualAddress}
+              onChange={(e) => setManualAddress(e.target.value)}
+              placeholder="123 Main St, San Diego"
+              disabled={disabled}
+              className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
+            />
+          </div>
+          {error && <div className="text-xs text-[var(--warning)]">{error}</div>}
+          <button
+            type="button"
+            onClick={handleManualSubmit}
+            disabled={disabled}
+            className="px-4 py-2 rounded-lg bg-[var(--blue)] text-[var(--on-blue)] text-sm hover:brightness-95 transition"
+          >
+            Use this venue
+          </button>
         </div>
       )}
     </div>
