@@ -2,6 +2,23 @@ const API_BASE =
   (import.meta as any).env?.VITE_API_BASE_URL ||
   (typeof window !== 'undefined' ? window.location.origin : '');
 
+const SAME_ORIGIN_BASE = typeof window !== 'undefined' ? window.location.origin : '';
+
+async function fetchWithFallback(input: string, init: RequestInit) {
+  try {
+    return await fetch(input, init);
+  } catch (err) {
+    const shouldFallback =
+      SAME_ORIGIN_BASE &&
+      API_BASE &&
+      API_BASE !== SAME_ORIGIN_BASE &&
+      input.startsWith(API_BASE);
+    if (!shouldFallback) throw err;
+    const fallbackUrl = input.replace(API_BASE, SAME_ORIGIN_BASE);
+    return await fetch(fallbackUrl, init);
+  }
+}
+
 async function getAuthHeader(): Promise<Record<string, string>> {
   try {
     const { supabase } = await import('./supabase');
@@ -23,7 +40,7 @@ export async function apiGet<T>(path: string): Promise<T> {
   const authHeader = await getAuthHeader();
   let res: Response;
   try {
-    res = await fetch(`${API_BASE}${path}`, {
+    res = await fetchWithFallback(`${API_BASE}${path}`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json', ...authHeader },
     });
@@ -43,7 +60,7 @@ export async function apiPost<T>(path: string, body: unknown, headers?: Record<s
   const authHeader = await getAuthHeader();
   let res: Response;
   try {
-    res = await fetch(`${API_BASE}${path}`, {
+    res = await fetchWithFallback(`${API_BASE}${path}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
