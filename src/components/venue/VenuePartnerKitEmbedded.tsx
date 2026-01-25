@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Download, CheckCircle, AlertCircle, BookOpen, MapPin, Users, TrendingUp, FileText, ArrowRight, ChevronDown, ChevronUp, Calculator, Zap } from 'lucide-react';
+import { Download, CheckCircle, AlertCircle, BookOpen, MapPin, Users, TrendingUp, FileText, ArrowRight, ChevronDown, ChevronUp, Zap } from 'lucide-react';
 import { ECONOMICS } from '../../types/venueSetup';
-import { calculatePricingBreakdown, formatCentsAsDollars, estimateMonthlyEarnings } from '../../lib/pricingCalculations';
+import { calculatePricingBreakdown, formatCentsAsDollars } from '../../lib/pricingCalculations';
 
 // Collapsible Section Component
 function PartnerKitSection({
@@ -168,16 +168,12 @@ interface VenuePartnerKitEmbeddedProps {
 
 export function VenuePartnerKitEmbedded({ onNavigate }: VenuePartnerKitEmbeddedProps) {
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
-    estimator: true,
     economics: true,
     checklist: true,
     qr: false,
     hosting: false,
     staffTalking: false,
   });
-
-  const [estimatorPrice, setEstimatorPrice] = useState(140);
-  const [estimatorSalesPerMonth, setEstimatorSalesPerMonth] = useState(1);
 
   const toggleSection = (section: string) => {
     setExpandedSections(prev => ({
@@ -189,7 +185,6 @@ export function VenuePartnerKitEmbedded({ onNavigate }: VenuePartnerKitEmbeddedP
   const handleDownloadPDF = () => {
     // Expand all sections for the PDF
     setExpandedSections({
-      estimator: true,
       economics: true,
       checklist: true,
       qr: true,
@@ -212,7 +207,6 @@ export function VenuePartnerKitEmbedded({ onNavigate }: VenuePartnerKitEmbeddedP
 
   // Calculate current breakdown for the revenue example
   const currentBreakdown = calculatePricingBreakdown(200, 'free');
-  const monthlyEarnings = estimateMonthlyEarnings(estimatorPrice, estimatorSalesPerMonth);
 
   return (
     <div className="min-h-screen bg-[var(--bg)] py-12 px-4">
@@ -266,7 +260,7 @@ export function VenuePartnerKitEmbedded({ onNavigate }: VenuePartnerKitEmbeddedP
         <div className="mb-12">
           <h1 className="text-4xl font-bold text-[var(--text)] mb-4">Venue Success Guide</h1>
           <p className="text-lg text-[var(--text-muted)] mb-6">
-            Turn your walls into a destination. Support local culture, drive foot traffic, and earn revenue.
+            Turn your walls into a destination. Support local culture, drive foot traffic, and support the arts.
           </p>
 
           {/* Download PDF Button */}
@@ -283,10 +277,6 @@ export function VenuePartnerKitEmbedded({ onNavigate }: VenuePartnerKitEmbeddedP
         <div className="bg-[var(--surface)] border border-[var(--border)] rounded-lg p-6 mb-12">
           <h2 className="text-lg font-bold text-[var(--text)] mb-4">Quick Navigation</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <a href="#earnings-estimator" className="flex items-center gap-2 text-[var(--accent)] hover:underline">
-              <Calculator className="w-5 h-5" />
-              Community Revenue
-            </a>
             <a href="#economics" className="flex items-center gap-2 text-[var(--accent)] hover:underline">
               <TrendingUp className="w-5 h-5" />
               The Partnership Model
@@ -309,65 +299,6 @@ export function VenuePartnerKitEmbedded({ onNavigate }: VenuePartnerKitEmbeddedP
             </a>
           </div>
         </div>
-
-        {/* Earnings Estimator */}
-        <PartnerKitSection
-          id="earnings-estimator"
-          title="Community Revenue Estimator"
-          icon={<Calculator className="w-6 h-6" />}
-          expanded={expandedSections.estimator}
-          onToggle={() => toggleSection('estimator')}
-        >
-          <div className="space-y-6">
-            <p className="text-[var(--text-muted)]">
-              See how supporting local art translates to revenue for your venue.
-            </p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-              <div>
-                <label className="block text-sm font-semibold text-[var(--text)] mb-2">
-                  Average Artwork Price
-                </label>
-                <div className="flex items-center gap-2">
-                  <span className="text-[var(--text-muted)]">$</span>
-                  <input
-                    type="number"
-                    value={estimatorPrice}
-                    onChange={(e) => setEstimatorPrice(Number(e.target.value))}
-                    className="flex-1 px-4 py-2 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-[var(--text)]"
-                    min="10"
-                    step="10"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-[var(--text)] mb-2">
-                  Community Supporters / Month
-                </label>
-                <input
-                  type="number"
-                  value={estimatorSalesPerMonth}
-                  onChange={(e) => setEstimatorSalesPerMonth(Number(e.target.value))}
-                  className="w-full px-4 py-2 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-[var(--text)]"
-                  min="1"
-                  step="1"
-                />
-              </div>
-            </div>
-
-            <div className="bg-gradient-to-r from-[var(--accent)]/10 to-[var(--accent)]/5 rounded-lg p-6 border border-[var(--accent)]/30">
-              <p className="text-[var(--text-muted)] text-sm mb-3">Estimated monthly revenue share:</p>
-              <div className="flex items-baseline gap-2 mb-4">
-                <span className="text-4xl font-bold text-[var(--accent)]">{formatCentsAsDollars(Math.round(monthlyEarnings * 100))}</span>
-                <span className="text-[var(--text-muted)]">per month</span>
-              </div>
-              <p className="text-sm text-[var(--text-muted)]">
-                You earn 15% of the list price on each sale. With {estimatorSalesPerMonth} supporters/month at ${estimatorPrice} average, that's {estimatorSalesPerMonth} × 15% = your venue's share.
-              </p>
-            </div>
-          </div>
-        </PartnerKitSection>
 
         {/* Setup Checklist Section */}
         <PartnerKitSection
@@ -449,14 +380,7 @@ export function VenuePartnerKitEmbedded({ onNavigate }: VenuePartnerKitEmbeddedP
                   impact: 'Deepest engagement - 25% of scans',
                 },
                 {
-                  location: '🚻 Captive Audience (ID: Restroom)',
-                  why: 'Private moment where guests have time to read and browse.',
-                  placement: 'At eye level, framed or laminated',
-                  format: 'Table tent or small poster',
-                  impact: 'Surprising discovery - 10% of scans',
-                },
-                {
-                  location: '🖼️ The Storyteller (ID: Near Art)',
+                  location: '️ The Storyteller (ID: Near Art)',
                   why: 'Connects the viewer directly to the creator\'s story.',
                   placement: 'Below or beside the artwork',
                   format: 'Table tent or sticker version',
@@ -506,7 +430,7 @@ export function VenuePartnerKitEmbedded({ onNavigate }: VenuePartnerKitEmbeddedP
         >
           <div className="space-y-6">
             <p className="text-[var(--text-muted)]">
-              A transparent model designed to support artists while rewarding venues for their space and community stewardship.
+              Our model creates a sustainable ecosystem for local creativity. The majority of every purchase goes directly to the artist, while a portion supports your venue's role as a cultural host.
             </p>
 
             {/* Live Economics Breakdown */}
@@ -529,7 +453,7 @@ export function VenuePartnerKitEmbedded({ onNavigate }: VenuePartnerKitEmbeddedP
               </div>
 
               <div className="flex justify-between items-center p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)]">
-                <span className="text-[var(--text)]">Venue Revenue (15%)</span>
+                <span className="text-[var(--text)]">Venue Support Share (15%)</span>
                 <span className="font-semibold text-green-600">+{formatCentsAsDollars(currentBreakdown.venueCents)}</span>
               </div>
 
@@ -581,14 +505,14 @@ export function VenuePartnerKitEmbedded({ onNavigate }: VenuePartnerKitEmbeddedP
 
             {/* Key Points */}
             <div className="space-y-2">
-              <p className="font-semibold text-[var(--text)]">Key Economics Points</p>
+              <p className="font-semibold text-[var(--text)]">How It Supports Everyone</p>
               {[
-                '✓ You earn 15% on every sale, regardless of artist tier',
+                '✓ Your venue receives 15% as a thank you for hosting and managing the display',
                 '✓ Buyer Support Fee: 4.5% (paid by the customer at checkout)',
                 '✓ No upfront fees or hidden charges',
                 '✓ Payouts processed monthly to your bank account',
                 '✓ Artists choose their commission tier - you benefit either way',
-                '✓ More art rotations = more chances for sales = higher earnings',
+                '✓ More art rotations = more discovery offering for your community',
               ].map((point, idx) => (
                 <p key={idx} className="text-sm text-[var(--text-muted)] flex items-start gap-2">
                   <span className="flex-shrink-0">{point.split(' ')[0]}</span>
