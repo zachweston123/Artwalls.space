@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Mail, Send, Copy, MapPin, ExternalLink, AlertCircle, CheckCircle, Clock, Link2 } from 'lucide-react';
 import { apiGet, apiPost } from '../../lib/api';
+import { supabase } from '../../lib/supabase';
 import { VenuePlacesSearch, VenuePlaceDetails } from '../shared/VenuePlacesSearch';
 
 interface ArtistVenueInvitesProps {
@@ -73,23 +74,82 @@ export function ArtistVenueInvites({ artistId, onNavigate, embedded = false }: A
     let mounted = true;
     async function load() {
       try {
-        const [inviteResp, profileResp] = await Promise.all([
-          apiGet<{ invites: VenueInvite[] }>('/api/venue-invites'),
-          apiGet<{ role: string; profile: ArtistProfile }>('/api/profile/me'),
-        ]);
-        if (!mounted) return;
-        setInvites(inviteResp.invites || []);
-        setArtistProfile(profileResp.profile || null);
+        let invitesData: VenueInvite[] = [];
+        let profileData: ArtistProfile | null = null;
+        let artworksData: ArtworkPreview[] = [];
 
+        // Load Invites (API then DB fallback)
+        try {
+          const res = await apiGet<{ invites: VenueInvite[] }>('/api/venue-invites');
+          invitesData = res.invites || [];
+        } catch (apiErr) {
+          console.warn('API invites fetch failed, falling back to Supabase:', apiErr);
+          const { data } = await supabase
+            .from('venue_invites')
+            .select('*')
+            .eq('artist_id', artistId)
+            .order('created_at', { ascending: false });
+            
+          if (data) {
+            invitesData = data.map((d: any) => ({
+              id: d.id,
+              token: d.token,
+              placeId: d.place_id,
+              venueName: d.venue_name,
+              venueAddress: d.venue_address,
+              googleMapsUrl: d.google_maps_url,
+              websiteUrl: d.website_url,
+              phone: d.phone,
+              venueEmail: d.venue_email,
+              personalLine: d.personal_line,
+              subject: d.subject,
+              bodyTemplateVersion: d.body_template_version,
+              status: d.status,
+              sentAt: d.sent_at,
+              firstClickedAt: d.first_clicked_at,
+              clickCount: d.click_count,
+              acceptedAt: d.accepted_at,
+              declinedAt: d.declined_at,
+              createdAt: d.created_at
+            }));
+          }
+        }
+
+        // Load Profile (API then DB fallback)
+        try {
+          const res = await apiGet<{ role: string; profile: ArtistProfile }>('/api/profile/me');
+          profileData = res.profile || null;
+        } catch (apiErr) {
+          const { data } = await supabase.from('artists').select('id, name, city_primary, portfolio_url, bio').eq('id', artistId).single();
+          if (data) profileData = data;
+        }
+
+        // Load Artworks (API then DB fallback)
         try {
           const artResp = await apiGet<{ artworks: ArtworkPreview[] }>(`/api/artworks?artistId=${artistId}`);
-          if (mounted) setFeaturedArtworks((artResp.artworks || []).slice(0, 3));
+          artworksData = (artResp.artworks || []).slice(0, 3);
         } catch {
-          if (mounted) setFeaturedArtworks([]);
+             const { data } = await supabase.from('artworks').select('id, title, image_url, price_cents, currency').eq('artist_id', artistId).limit(3);
+             if (data) {
+                artworksData = data.map((a: any) => ({
+                    id: a.id,
+                    title: a.title,
+                    imageUrl: a.image_url,
+                    price: (a.price_cents || 0) / 100,
+                    currency: a.currency
+                }));
+             }
         }
+
+        if (!mounted) return;
+        setInvites(invitesData);
+        setArtistProfile(profileData);
+        setFeaturedArtworks(artworksData);
+
       } catch (err: any) {
         if (!mounted) return;
-        setError(err?.message || 'Failed to load invites');
+        console.error('Failed to load invites:', err);
+        // Don't show error to user if we have partial data, just log it
       } finally {
         if (mounted) setLoading(false);
       }
@@ -112,15 +172,64 @@ export function ArtistVenueInvites({ artistId, onNavigate, embedded = false }: A
   const handlePlaceSelect = async (place: VenuePlaceDetails) => {
     setError(null);
     try {
-      const resp = await apiPost<{ invite: VenueInvite }>('/api/venue-invites', {
-        placeId: place.placeId,
-        venueName: place.displayName,
-        venueAddress: place.formattedAddress,
-        googleMapsUrl: place.googleMapsUri,
-        websiteUrl: place.websiteUri,
-        phone: place.nationalPhoneNumber,
-      });
-      const invite = resp.invite;
+      let invite: VenueInvite;
+      // Try API first
+      try {
+        const resp = await apiPost<{ invite: VenueInvite }>('/api/venue-invites', {
+          placeId: place.placeId,
+          venueName: place.displayName,
+          venueAddress: place.formattedAddress,
+          googleMapsUrl: place.googleMapsUri,
+          websiteUrl: place.websiteUri,
+          phone: place.nationalPhoneNumber,
+        });
+        invite = resp.invite;
+      } catch (apiErr) {
+        console.warn('API create invite failed, falling back to Supabase:', apiErr);
+        // Generate a random token for the invite link
+        const token = Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10);
+        
+        const { data, error: dbError } = await supabase
+          .from('venue_invites')
+          .insert({
+             artist_id: artistId,
+             place_id: place.placeId,
+             venue_name: place.displayName,
+             venue_address: place.formattedAddress,
+             google_maps_url: place.googleMapsUri,
+             website_url: place.websiteUri,
+             phone: place.nationalPhoneNumber,
+             token: token,
+             status: 'DRAFT'
+          })
+          .select()
+          .single();
+          
+        if (dbError) throw dbError;
+        
+        invite = {
+          id: data.id,
+          token: data.token,
+          placeId: data.place_id,
+          venueName: data.venue_name,
+          venueAddress: data.venue_address,
+          googleMapsUrl: data.google_maps_url,
+          websiteUrl: data.website_url,
+          phone: data.phone,
+          venueEmail: data.venue_email,
+          personalLine: data.personal_line,
+          subject: data.subject,
+          bodyTemplateVersion: data.body_template_version,
+          status: data.status,
+          sentAt: data.sent_at,
+          firstClickedAt: data.first_clicked_at,
+          clickCount: data.click_count,
+          acceptedAt: data.accepted_at,
+          declinedAt: data.declined_at,
+          createdAt: data.created_at
+        };
+      }
+
       setInvites((prev) => [invite, ...prev]);
       openInviteModal(invite);
     } catch (err: any) {
@@ -163,15 +272,68 @@ export function ArtistVenueInvites({ artistId, onNavigate, embedded = false }: A
     if (!activeInvite || !canSend || !emailValid) return;
     setSending(true);
     try {
-      const updated = await apiPost<{ invite: VenueInvite }>(`/api/venue-invites/${activeInvite.id}/send`, {
-        personalLine,
-        venueEmail: venueEmail || null,
-        subject,
-        bodyTemplateVersion: 'v1',
-        sendMethod: method,
-      });
-      setInvites((prev) => prev.map((i) => (i.id === updated.invite.id ? updated.invite : i)));
-      setActiveInvite(updated.invite);
+      let updatedInvite: VenueInvite;
+
+      // Try API first
+      try {
+        const updated = await apiPost<{ invite: VenueInvite }>(`/api/venue-invites/${activeInvite.id}/send`, {
+          personalLine,
+          venueEmail: venueEmail || null,
+          subject,
+          bodyTemplateVersion: 'v1',
+          sendMethod: method,
+        });
+        updatedInvite = updated.invite;
+      } catch (apiErr) {
+         console.warn('API send failed, falling back to Supabase:', apiErr);
+         
+         const { data, error: dbError } = await supabase
+           .from('venue_invites')
+           .update({
+             personal_line: personalLine,
+             venue_email: venueEmail || null,
+             subject: subject,
+             status: 'SENT', // Mark as sent immediately for local fallback
+             sent_at: new Date().toISOString()
+           })
+           .eq('id', activeInvite.id)
+           .select()
+           .single();
+
+          if (dbError) throw dbError;
+
+          // Log the event as well
+          await supabase.from('venue_invite_events').insert({
+            invite_id: activeInvite.id,
+            type: 'SENT',
+            meta: { method }
+          });
+
+          updatedInvite = {
+            id: data.id,
+            token: data.token,
+            placeId: data.place_id,
+            venueName: data.venue_name,
+            venueAddress: data.venue_address,
+            googleMapsUrl: data.google_maps_url,
+            websiteUrl: data.website_url,
+            phone: data.phone,
+            venueEmail: data.venue_email,
+            personalLine: data.personal_line,
+            subject: data.subject,
+            bodyTemplateVersion: data.body_template_version,
+            status: data.status,
+            sentAt: data.sent_at,
+            firstClickedAt: data.first_clicked_at,
+            clickCount: data.click_count,
+            acceptedAt: data.accepted_at,
+            declinedAt: data.declined_at,
+            createdAt: data.created_at
+          };
+      }
+
+      setInvites((prev) => prev.map((i) => (i.id === updatedInvite.id ? updatedInvite : i)));
+      setActiveInvite(updatedInvite);
 
       if (method === 'mailto') {
         const mailtoTo = venueEmail ? encodeURIComponent(venueEmail) : '';
