@@ -290,7 +290,7 @@ export function ArtistSales({ user, onNavigate }: ArtistSalesProps) {
                 <th className="text-left px-4 py-3 text-[var(--text-muted)]">Plan</th>
                 <th className="text-left px-4 py-3 text-[var(--text-muted)]">Artist</th>
                 <th className="text-left px-4 py-3 text-[var(--text-muted)]">Venue</th>
-                <th className="text-left px-4 py-3 text-[var(--text-muted)]">Platform</th>
+                <th className="text-left px-4 py-3 text-[var(--text-muted)]">Platform fee</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border)]">
