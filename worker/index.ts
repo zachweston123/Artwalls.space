@@ -178,6 +178,33 @@ export default {
       return allowed[current]?.includes(next) || false;
     }
 
+    function mapVenueInviteRow(r: any) {
+      if (!r) return null;
+      return {
+        id: r.id,
+        token: r.token,
+        artistId: r.artist_id,
+        placeId: r.place_id,
+        venueName: r.venue_name,
+        venueAddress: r.venue_address,
+        googleMapsUrl: r.google_maps_url,
+        websiteUrl: r.website_url,
+        phone: r.phone,
+        venueEmail: r.venue_email,
+        personalLine: r.personal_line,
+        subject: r.subject,
+        bodyTemplateVersion: r.body_template_version,
+        status: r.status,
+        sentAt: r.sent_at,
+        firstClickedAt: r.first_clicked_at,
+        clickCount: r.click_count,
+        acceptedAt: r.accepted_at,
+        declinedAt: r.declined_at,
+        createdAt: r.created_at,
+        updatedAt: r.updated_at,
+      };
+    }
+
     // Clean and validate Supabase config
     const rawSupabaseUrl = (env.SUPABASE_URL || '').trim().replace(/\/+$/, '');
     const rawServiceKey = (env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
@@ -1726,7 +1753,7 @@ export default {
       if (error) return json({ error: error.message }, { status: 500 });
 
       await supabaseAdmin.from('venue_invite_events').insert({ invite_id: invite.id, type: 'CREATED', meta: { at: nowIso } });
-      return json({ invite });
+      return json({ invite: mapVenueInviteRow(invite) });
     }
 
     if (url.pathname === '/api/venue-invites' && method === 'GET') {
@@ -1739,7 +1766,7 @@ export default {
         .eq('artist_id', user.id)
         .order('created_at', { ascending: false });
       if (error) return json({ error: error.message }, { status: 500 });
-      return json({ invites: data || [] });
+      return json({ invites: (data || []).map(mapVenueInviteRow) });
     }
 
     if (url.pathname.startsWith('/api/venue-invites/') && url.pathname.endsWith('/send') && method === 'POST') {
@@ -1791,7 +1818,7 @@ export default {
       if (!invite.sent_at) {
         await supabaseAdmin.from('venue_invite_events').insert({ invite_id: invite.id, type: 'SENT', meta: { method: payload?.sendMethod || 'unknown', at: nowIso } });
       }
-      return json({ invite: updated });
+      return json({ invite: mapVenueInviteRow(updated) });
     }
 
     if (url.pathname.startsWith('/api/venue-invites/token/') && method === 'GET') {
@@ -1821,7 +1848,7 @@ export default {
         .order('created_at', { ascending: false })
         .limit(3);
       const artworks = (arts || []).map((a: any) => ({ id: a.id, title: a.title, imageUrl: a.image_url, price: a.price_cents ? a.price_cents / 100 : null, currency: a.currency || 'usd' }));
-      return json({ invite, artist, artworks });
+      return json({ invite: mapVenueInviteRow(invite), artist, artworks });
     }
 
     if (url.pathname.startsWith('/api/venue-invites/token/') && url.pathname.endsWith('/open') && method === 'POST') {
@@ -1887,7 +1914,7 @@ export default {
 
       await supabaseAdmin.from('venue_invite_events').insert({ invite_id: invite.id, type: 'ACCEPTED', meta: { at: nowIso } });
       await supabaseAdmin.from('notifications').insert({ user_id: invite.artist_id, type: 'venue_invite', title: 'Venue accepted your invite', message: `${invite.venue_name} accepted your invite.` });
-      return json({ invite: updated });
+      return json({ invite: mapVenueInviteRow(updated) });
     }
 
     if (url.pathname.startsWith('/api/venue-invites/token/') && url.pathname.endsWith('/decline') && method === 'POST') {
@@ -1915,7 +1942,7 @@ export default {
       if (updateErr) return json({ error: updateErr.message }, { status: 500 });
 
       await supabaseAdmin.from('venue_invite_events').insert({ invite_id: invite.id, type: 'DECLINED', meta: { at: nowIso } });
-      return json({ invite: updated });
+      return json({ invite: mapVenueInviteRow(updated) });
     }
 
     if (url.pathname.startsWith('/api/venue-invites/token/') && url.pathname.endsWith('/question') && method === 'POST') {
