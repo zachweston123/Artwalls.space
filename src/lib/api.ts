@@ -8,9 +8,22 @@ const DEFAULT_API_BASE = (() => {
 const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || DEFAULT_API_BASE;
 const SAME_ORIGIN_BASE = typeof window !== 'undefined' ? window.location.origin : '';
 
-async function fetchWithFallback(input: string, init: RequestInit) {
+async function fetchWithFallback(input: string, init: RequestInit, allowSameOriginRetry = false) {
   try {
-    return await fetch(input, init);
+    const res = await fetch(input, init);
+    if (!allowSameOriginRetry) return res;
+
+    const shouldRetrySameOrigin =
+      SAME_ORIGIN_BASE &&
+      API_BASE &&
+      API_BASE !== SAME_ORIGIN_BASE &&
+      input.startsWith(API_BASE) &&
+      res.status === 404;
+
+    if (!shouldRetrySameOrigin) return res;
+
+    const fallbackUrl = input.replace(API_BASE, SAME_ORIGIN_BASE);
+    return await fetch(fallbackUrl, init);
   } catch (err) {
     const host = typeof window !== 'undefined' ? window.location.hostname : '';
     const shouldFallback =
@@ -49,7 +62,7 @@ export async function apiGet<T>(path: string): Promise<T> {
     res = await fetchWithFallback(`${API_BASE}${path}`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json', ...authHeader },
-    });
+    }, true);
   } catch (fetchErr: any) {
     console.error('[apiGet] Network error:', fetchErr);
     throw new Error(`Network error: ${fetchErr?.message || 'Failed to fetch'}`);
@@ -79,7 +92,7 @@ export async function apiPost<T>(path: string, body: unknown, headers?: Record<s
         ...(headers || {}),
       },
       body: JSON.stringify(body),
-    });
+    }, true);
   } catch (fetchErr: any) {
     // Distinguish network/CORS errors from server errors
     const isCorsError = fetchErr?.message?.includes('Failed to fetch') || 
