@@ -39,8 +39,9 @@ export function ArtistSales({ user, onNavigate }: ArtistSalesProps) {
   }, [user.id]);
 
   const totalEarnings = sales.reduce((sum, sale) => sum + (sale.artistEarnings || 0), 0);
+  const totalGross = sales.reduce((sum, sale) => sum + (sale.price || 0), 0);
   const totalSales = sales.length;
-  const averageSale = totalSales > 0 ? totalEarnings / totalSales : 0;
+  const averageSale = totalSales > 0 ? totalGross / totalSales : 0;
 
   // Get payout percentage based on plan
   const getPayoutPercentage = (plan: string) => {
@@ -55,6 +56,14 @@ export function ArtistSales({ user, onNavigate }: ArtistSalesProps) {
       default:
         return '60%';
     }
+  };
+
+  const actualPayoutPercent = totalGross > 0 ? Math.round((totalEarnings / totalGross) * 100) : null;
+  const payoutPercentLabel = actualPayoutPercent != null ? `${actualPayoutPercent}%` : getPayoutPercentage(tier);
+
+  const getSalePayoutPercent = (sale: { price: number; artistEarnings: number }) => {
+    if (!sale.price) return null;
+    return Math.round((sale.artistEarnings / sale.price) * 100);
   };
 
   return (
@@ -75,7 +84,7 @@ export function ArtistSales({ user, onNavigate }: ArtistSalesProps) {
               <div className="text-2xl text-[var(--text)]">${totalEarnings.toFixed(2)}</div>
             </div>
           </div>
-          <div className="text-xs text-[var(--text-muted)]">{getPayoutPercentage(tier)} of total sales</div>
+          <div className="text-xs text-[var(--text-muted)]">{payoutPercentLabel} of total sales</div>
         </div>
 
         <div className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)]">
@@ -240,7 +249,9 @@ export function ArtistSales({ user, onNavigate }: ArtistSalesProps) {
                   <td className="px-6 py-4">
                     <div className="text-sm">
                       <span className="text-[var(--accent)]">${sale.artistEarnings.toFixed(2)}</span>
-                      <span className="text-xs text-[var(--text-muted)] ml-1">(80%)</span>
+                      {getSalePayoutPercent(sale) != null && (
+                        <span className="text-xs text-[var(--text-muted)] ml-1">({getSalePayoutPercent(sale)}%)</span>
+                      )}
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm text-[var(--text-muted)]">
