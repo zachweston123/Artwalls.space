@@ -229,7 +229,7 @@ export function ArtistAgreement({ onNavigate, onAccept, hasAccepted = false }: A
 
                 <h3 className="text-base mb-2 mt-4 text-[var(--text)]">Revenue split on completed sales</h3>
                 <p className="text-[var(--text)] leading-relaxed mb-2">
-                  Artist 80% / Venue 10% / Artwalls 10% (with plan-based fee adjustments as shown above).
+                  Artist take-home varies by plan, venues receive 15%, and Artwalls retains the remainder (with plan-based fee adjustments as shown above).
                 </p>
                 <p className="text-[var(--text)] leading-relaxed mb-3">
                   Payment processing fees may apply as disclosed at checkout or in your dashboard.

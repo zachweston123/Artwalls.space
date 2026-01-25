@@ -10,7 +10,7 @@ export function VenueSales() {
     <div className="bg-[var(--bg)] text-[var(--text)]">
       <div className="mb-8">
         <h1 className="text-3xl mb-2">Sales & Earnings</h1>
-        <p className="text-[var(--text-muted)]">Track artwork sales and your commission (10% of sales)</p>
+        <p className="text-[var(--text-muted)]">Track artwork sales and your commission (15% of sales)</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
@@ -90,7 +90,7 @@ export function VenueSales() {
                   <td className="px-6 py-4">
                     <div className="text-sm">
                       <span className="text-[var(--green)]">${sale.venueEarnings.toFixed(2)}</span>
-                      <span className="text-xs text-[var(--text-muted)] ml-1">(10%)</span>
+                      <span className="text-xs text-[var(--text-muted)] ml-1">(15%)</span>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm text-[var(--text-muted)]">

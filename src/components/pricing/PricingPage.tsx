@@ -939,7 +939,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
           <div className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-6">
             <h3 className="text-base mb-2 text-[var(--text)]">What's the revenue split on sales?</h3>
             <p className="text-sm text-[var(--text)]">
-              Artists receive a percentage of the sale price based on their current subscription plan, while venues always receive 10%. The platform fee is determined by the artist's subscription plan and is applied in addition to this split.
+              Artists receive a percentage of the sale price based on their current subscription plan, while venues always receive 15%. The platform fee is determined by the artist's subscription plan and is applied in addition to this split.
             </p>
           </div>
         </div>

@@ -218,8 +218,8 @@ export function VenueAgreement({ onNavigate, onAccept, hasAccepted = false }: Ve
                 </p>
                 <ul className="list-disc list-inside space-y-2 text-[var(--text)] leading-relaxed">
                   <li>Artist payout: 80% of sale price</li>
-                  <li>Venue share: 10% of sale price</li>
-                  <li>Artwalls fee: 10% of sale price</li>
+                  <li>Venue share: 15% of sale price</li>
+                  <li>Artwalls fee: remainder after artist and venue shares</li>
                 </ul>
                 <p className="text-[var(--text)] leading-relaxed mt-3">
                   You agree not to interfere with QR labels or purchase links and not to misrepresent pricing 

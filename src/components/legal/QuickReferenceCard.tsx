@@ -19,7 +19,7 @@ export function QuickReferenceCard({ role, onNavigate }: QuickReferenceCardProps
   ];
 
   const venueQuickFacts = [
-    { icon: DollarSign, label: 'Your Commission', value: '10% of sale price' },
+    { icon: DollarSign, label: 'Your Commission', value: '15% of sale price' },
     { icon: Calendar, label: 'Install Window', value: 'Set weekly schedule' },
     { icon: Shield, label: 'Duty of Care', value: 'Reasonable care required' },
     { icon: AlertCircle, label: 'Incident Reporting', value: 'Notify within 48 hours' },
