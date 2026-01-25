@@ -37,7 +37,8 @@ import { ReferralProgram } from './components/venue/ReferralProgram';
 import { ApplicationsAndInvitations } from './components/shared/ApplicationsAndInvitations';
 import { FindVenues } from './components/artist/FindVenues';
 import { NotificationsList } from './components/notifications/NotificationsList';
-import { WhyArtwalls } from './components/WhyArtwalls';
+import { WhyArtwallsArtistsPage } from './pages/WhyArtwallsArtists';
+import { VenuesLandingPage } from './pages/VenuesLanding';
 import { PoliciesLanding } from './components/legal/PoliciesLanding';
 import { ArtistAgreement } from './components/legal/ArtistAgreement';
 import { VenueAgreement } from './components/legal/VenueAgreement';
@@ -95,6 +96,21 @@ export default function App() {
   const [showProfileCompletion, setShowProfileCompletion] = useState(false);
   const [pendingPhoneNumber, setPendingPhoneNumber] = useState<string | null>(null);
 
+  const marketingPages = new Set(['why-artwalls-artist', 'why-artwalls-venue', 'venues']);
+
+  const getPageFromPath = (path: string) => {
+    const normalized = path.toLowerCase();
+    if (normalized === '/why-artwalls' || normalized === '/why-artwalls/artists') return 'why-artwalls-artist';
+    if (normalized === '/venues' || normalized === '/venue/login' || normalized === '/why-artwalls/venues') return 'venues';
+    return null;
+  };
+
+  const getPathFromPage = (page: string) => {
+    if (page === 'why-artwalls-artist') return '/why-artwalls';
+    if (page === 'why-artwalls-venue' || page === 'venues') return '/venues';
+    return null;
+  };
+
   // Direct-route override for email verification page
   if (typeof window !== 'undefined' && window.location.pathname === '/verify-email') {
     return <VerifyEmail />;
@@ -143,7 +159,8 @@ export default function App() {
           setCurrentPage(nextUser.role === 'artist' ? 'artist-dashboard' : 'venue-dashboard');
         }
       } else {
-        setCurrentPage('login');
+        const pageFromPath = getPageFromPath(window.location.pathname);
+        setCurrentPage(pageFromPath || 'login');
       }
     });
 
@@ -166,7 +183,8 @@ export default function App() {
       setCurrentPage((prevPage) => {
         if (!nextUser) {
           localStorage.removeItem('currentPage');
-          return 'login';
+          const pageFromPath = getPageFromPath(window.location.pathname);
+          return pageFromPath || 'login';
         }
         // Keep current page if user is still logged in
         return prevPage;
@@ -482,7 +500,14 @@ export default function App() {
     if (params?.userId) setSelectedArtistId(params.userId);
     if (params?.venueId) setSelectedVenueId(params.venueId);
     if (params?.artistId) setSelectedArtistId(params.artistId);
-    
+
+    const nextPath = getPathFromPage(page);
+    if (nextPath) {
+      window.history.pushState({}, '', nextPath);
+    } else if (getPageFromPath(window.location.pathname)) {
+      window.history.pushState({}, '', '/');
+    }
+
     if (page.startsWith('purchase-')) {
       window.location.hash = `#/purchase-${page.split('-')[1]}`;
     } else if (window.location.hash) {
@@ -490,6 +515,16 @@ export default function App() {
       window.location.hash = '';
     }
   };
+
+  useEffect(() => {
+    const syncPath = () => {
+      const page = getPageFromPath(window.location.pathname);
+      if (page) setCurrentPage(page);
+    };
+    syncPath();
+    window.addEventListener('popstate', syncPath);
+    return () => window.removeEventListener('popstate', syncPath);
+  }, []);
 
   // Initialize from URL hash (QR deep link) and keep in sync
   useEffect(() => {
@@ -513,6 +548,30 @@ export default function App() {
   }
 
   if (!currentUser) {
+    const isMarketingPage = marketingPages.has(currentPage);
+
+    if (isMarketingPage) {
+      const showArtistsPage = currentPage === 'why-artwalls-artist';
+      const showVenuesPage = currentPage === 'venues' || currentPage === 'why-artwalls-venue';
+
+      return (
+        <div className="min-h-screen">
+          <Navigation
+            user={null}
+            onNavigate={handleNavigate}
+            onLogout={() => {}}
+            currentPage={currentPage}
+          />
+
+          <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+            {showArtistsPage && <WhyArtwallsArtistsPage onNavigate={handleNavigate} />}
+            {showVenuesPage && <VenuesLandingPage onNavigate={handleNavigate} onLogin={handleLogin} />}
+          </main>
+          <Footer onNavigate={handleNavigate} />
+        </div>
+      );
+    }
+
     // Profile Completion - Full Page
     if (showProfileCompletion && googleUser) {
       return (
@@ -689,10 +748,10 @@ export default function App() {
         {currentPage === 'terms-of-service' && <TermsOfService onNavigate={handleNavigate} />}
         {currentPage === 'plans-pricing' && <PricingPage onNavigate={handleNavigate} currentPlan="free" />}
         {currentPage === 'why-artwalls-artist' && (
-          <WhyArtwalls userRole="artist" onNavigate={handleNavigate} onBack={() => handleNavigate('login')} />
+          <WhyArtwallsArtistsPage onNavigate={handleNavigate} />
         )}
-        {currentPage === 'why-artwalls-venue' && (
-          <WhyArtwalls userRole="venue" onNavigate={handleNavigate} onBack={() => handleNavigate('login')} />
+        {(currentPage === 'why-artwalls-venue' || currentPage === 'venues') && (
+          <VenuesLandingPage onNavigate={handleNavigate} />
         )}
 
         {/* Venue Growth & Exposure Pages */}

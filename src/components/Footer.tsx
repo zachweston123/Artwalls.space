@@ -19,7 +19,7 @@ export function Footer({ onNavigate }: FooterProps) {
   return (
     <footer className="bg-[var(--surface-2)] border-t border-[var(--border)] mt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
           {/* Brand */}
           <div className="md:col-span-1">
             <div className="flex items-center gap-2 mb-4">
@@ -80,6 +80,33 @@ export function Footer({ onNavigate }: FooterProps) {
               </ul>
             </div>
           )}
+
+          {/* Learn */}
+          <div>
+            <h3 className="text-sm mb-3 text-[var(--text)]">Learn</h3>
+            <ul className="space-y-2 text-sm text-[var(--text-muted)]">
+              <li>
+                <button onClick={() => onNavigate('why-artwalls-artist')} className="hover:text-[var(--text)] transition-colors">
+                  Why Artwalls (Artists)
+                </button>
+              </li>
+              <li>
+                <button onClick={() => onNavigate('venues')} className="hover:text-[var(--text)] transition-colors">
+                  Why Artwalls (Venues)
+                </button>
+              </li>
+              <li>
+                <button onClick={() => onNavigate('plans-pricing')} className="hover:text-[var(--text)] transition-colors">
+                  Plans & Pricing
+                </button>
+              </li>
+              <li>
+                <button onClick={() => onNavigate('venues')} className="hover:text-[var(--text)] transition-colors">
+                  Venues
+                </button>
+              </li>
+            </ul>
+          </div>
 
           {/* Legal */}
           <div>

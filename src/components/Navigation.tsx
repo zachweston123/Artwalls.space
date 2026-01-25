@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { Palette, Store, LogOut, Menu, Bell } from 'lucide-react';
+import { Palette, Store, LogOut, Menu, Bell, ChevronDown } from 'lucide-react';
 import type { User } from '../App';
 import { getMyNotifications } from '../lib/api';
 
 interface NavigationProps {
-  user: User;
+  user: User | null;
   onNavigate: (page: string) => void;
   onLogout: () => void;
   currentPage: string;
@@ -13,16 +13,22 @@ interface NavigationProps {
 }
 
 export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClick, unreadCount = 2 }: NavigationProps) {
-  const isArtist = user.role === 'artist';
+  const isLoggedIn = !!user;
+  const isArtist = user?.role === 'artist';
   const [showNotifications, setShowNotifications] = useState(false);
   const [loadingNotifications, setLoadingNotifications] = useState(false);
   const [notifications, setNotifications] = useState<Array<{ id: string; title: string; message?: string; createdAt: string; isRead?: boolean }>>([]);
   const notificationRef = useRef<HTMLDivElement>(null);
+  const learnRef = useRef<HTMLDivElement>(null);
+  const [showLearnMenu, setShowLearnMenu] = useState(false);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (notificationRef.current && !notificationRef.current.contains(e.target as Node)) {
         setShowNotifications(false);
+      }
+      if (learnRef.current && !learnRef.current.contains(e.target as Node)) {
+        setShowLearnMenu(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -30,7 +36,7 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
   }, []);
 
   useEffect(() => {
-    if (!showNotifications) return;
+    if (!showNotifications || !user) return;
     let mounted = true;
     setLoadingNotifications(true);
     getMyNotifications()
@@ -80,6 +86,72 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
 
   const links = isArtist ? artistLinks : venueLinks;
 
+  const learnLinks = [
+    { id: 'why-artwalls-artist', label: 'Why Artwalls (Artists)' },
+    { id: 'venues', label: 'Why Artwalls (Venues)' },
+    { id: 'plans-pricing', label: 'Plans & Pricing' },
+  ];
+
+  if (!isLoggedIn) {
+    return (
+      <nav className="bg-[var(--surface-2)] border-b border-[var(--border)]">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center gap-2">
+              <Palette className="w-6 h-6 text-[var(--blue)]" />
+              <span className="text-xl tracking-tight text-[var(--text)]">Artwalls</span>
+            </div>
+
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="relative" ref={learnRef}>
+                <button
+                  onClick={() => setShowLearnMenu((prev) => !prev)}
+                  className="flex items-center gap-1 px-3 py-2 rounded-lg text-[var(--text-muted)] hover:bg-[var(--surface-3)] transition-colors"
+                >
+                  Learn
+                  <ChevronDown className="w-4 h-4" />
+                </button>
+                {showLearnMenu && (
+                  <div className="absolute right-0 mt-2 w-56 bg-[var(--surface-1)] border border-[var(--border)] rounded-xl shadow-xl z-50">
+                    {learnLinks.map((link) => (
+                      <button
+                        key={link.id}
+                        onClick={() => {
+                          setShowLearnMenu(false);
+                          onNavigate(link.id);
+                        }}
+                        className="w-full text-left px-4 py-3 text-sm text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+                      >
+                        {link.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <button
+                onClick={() => onNavigate('venues')}
+                className={`px-3 py-2 rounded-lg transition-colors ${
+                  currentPage === 'venues'
+                    ? 'bg-[var(--surface-3)] text-[var(--text)]'
+                    : 'text-[var(--text-muted)] hover:bg-[var(--surface-3)]'
+                }`}
+              >
+                Venues
+              </button>
+              <button
+                onClick={() => onNavigate('login')}
+                className="px-4 py-2 rounded-lg bg-[var(--surface-1)] border border-[var(--border)] text-[var(--text)] hover:bg-[var(--surface-2)] transition"
+              >
+                Log In
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
+    );
+  }
+
   return (
     <nav className="bg-[var(--surface-2)] border-b border-[var(--border)]">
       <div className="max-w-7xl mx-auto px-6">
@@ -117,6 +189,32 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
                   {link.label}
                 </button>
               ))}
+
+              <div className="relative" ref={learnRef}>
+                <button
+                  onClick={() => setShowLearnMenu((prev) => !prev)}
+                  className="px-4 py-2 rounded-lg transition-colors text-[var(--text-muted)] hover:bg-[var(--surface-3)] inline-flex items-center gap-1"
+                >
+                  Learn
+                  <ChevronDown className="w-4 h-4" />
+                </button>
+                {showLearnMenu && (
+                  <div className="absolute left-0 mt-2 w-56 bg-[var(--surface-1)] border border-[var(--border)] rounded-xl shadow-xl z-50">
+                    {learnLinks.map((link) => (
+                      <button
+                        key={link.id}
+                        onClick={() => {
+                          setShowLearnMenu(false);
+                          onNavigate(link.id);
+                        }}
+                        className="w-full text-left px-4 py-3 text-sm text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+                      >
+                        {link.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
