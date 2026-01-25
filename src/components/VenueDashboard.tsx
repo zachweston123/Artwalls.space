@@ -40,7 +40,7 @@ const VenueDashboard: React.FC = () => {
   const dashboardTabs: DashboardTab[] = [
     { id: 'overview', label: 'Overview', icon: '📊' },
     { id: 'setup', label: 'Setup Progress', icon: '⚙️' },
-    { id: 'partner-kit', label: 'Partner Kit', icon: '📚' },
+    { id: 'partner-kit', label: 'Success Guide', icon: '📚' },
     { id: 'settings', label: 'Settings', icon: '⚙️' }
   ];
 
@@ -152,9 +152,9 @@ const VenueDashboard: React.FC = () => {
         <div className="alert alert-success">
           <div className="alert-content">
             <h3>🎉 Your Setup is Complete!</h3>
-            <p>Your venue is now live. Check out the Partner Kit for tips to maximize sales.</p>
+            <p>Your venue is now live. Check out the Venue Success Guide for tips to maximize sales.</p>
             <button className="btn btn-secondary" onClick={handleViewPartnerKit}>
-              View Partner Kit
+              View Success Guide
             </button>
           </div>
         </div>
@@ -225,7 +225,7 @@ const VenueDashboard: React.FC = () => {
                 
                 <button className="action-button" onClick={handleViewPartnerKit}>
                   <span className="action-icon">📚</span>
-                  <span className="action-label">Partner Resources</span>
+                  <span className="action-label">Success Guide</span>
                 </button>
 
                 <button 

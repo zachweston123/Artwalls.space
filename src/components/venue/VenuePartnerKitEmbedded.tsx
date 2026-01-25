@@ -208,9 +208,9 @@ export function VenuePartnerKitEmbedded({ onNavigate }: VenuePartnerKitEmbeddedP
       <div className="max-w-3xl mx-auto">
         {/* Header */}
         <div className="mb-12">
-          <h1 className="text-4xl font-bold text-[var(--text)] mb-4">Artwalls Partner Kit</h1>
+          <h1 className="text-4xl font-bold text-[var(--text)] mb-4">Venue Success Guide</h1>
           <p className="text-lg text-[var(--text-muted)] mb-6">
-            Everything you need to successfully host rotating art and maximize artist discovery
+            Turn your walls into a destination. Support local culture, drive foot traffic, and earn revenue.
           </p>
 
           {/* Download PDF Button */}
@@ -219,7 +219,7 @@ export function VenuePartnerKitEmbedded({ onNavigate }: VenuePartnerKitEmbeddedP
             className="inline-flex items-center gap-2 px-6 py-3 bg-[var(--accent)] text-[var(--accent-contrast)] rounded-lg font-semibold hover:opacity-90 transition"
           >
             <Download className="w-5 h-5" />
-            Download as PDF
+            Download Success Guide
           </button>
         </div>
 
@@ -229,27 +229,27 @@ export function VenuePartnerKitEmbedded({ onNavigate }: VenuePartnerKitEmbeddedP
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <a href="#earnings-estimator" className="flex items-center gap-2 text-[var(--accent)] hover:underline">
               <Calculator className="w-5 h-5" />
-              Earnings Estimator
+              Community Revenue
             </a>
             <a href="#economics" className="flex items-center gap-2 text-[var(--accent)] hover:underline">
               <TrendingUp className="w-5 h-5" />
-              How Earnings Work
+              The Partnership Model
             </a>
             <a href="#setup-checklist" className="flex items-center gap-2 text-[var(--accent)] hover:underline">
               <CheckCircle className="w-5 h-5" />
-              Setup Checklist
+              Launch Checklist
             </a>
             <a href="#qr-placement" className="flex items-center gap-2 text-[var(--accent)] hover:underline">
               <MapPin className="w-5 h-5" />
-              QR Placement Guide
+              Engagement & Discovery
             </a>
             <a href="#hosting-policy" className="flex items-center gap-2 text-[var(--accent)] hover:underline">
               <FileText className="w-5 h-5" />
-              Hosting Policy
+              Partnership Promise
             </a>
             <a href="#staff-talking" className="flex items-center gap-2 text-[var(--accent)] hover:underline">
               <Users className="w-5 h-5" />
-              Staff Talking Points
+              Local Art Ambassadors
             </a>
           </div>
         </div>
@@ -257,14 +257,14 @@ export function VenuePartnerKitEmbedded({ onNavigate }: VenuePartnerKitEmbeddedP
         {/* Earnings Estimator */}
         <PartnerKitSection
           id="earnings-estimator"
-          title="Earnings Estimator"
+          title="Community Revenue Estimator"
           icon={<Calculator className="w-6 h-6" />}
           expanded={expandedSections.estimator}
           onToggle={() => toggleSection('estimator')}
         >
           <div className="space-y-6">
             <p className="text-[var(--text-muted)]">
-              Calculate your estimated monthly earnings based on your venue's sales volume.
+              See how supporting local art translates to revenue for your venue.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
@@ -287,7 +287,7 @@ export function VenuePartnerKitEmbedded({ onNavigate }: VenuePartnerKitEmbeddedP
 
               <div>
                 <label className="block text-sm font-semibold text-[var(--text)] mb-2">
-                  Expected Sales per Month
+                  Community Supporters / Month
                 </label>
                 <input
                   type="number"
@@ -301,13 +301,13 @@ export function VenuePartnerKitEmbedded({ onNavigate }: VenuePartnerKitEmbeddedP
             </div>
 
             <div className="bg-gradient-to-r from-[var(--accent)]/10 to-[var(--accent)]/5 rounded-lg p-6 border border-[var(--accent)]/30">
-              <p className="text-[var(--text-muted)] text-sm mb-3">At your estimated sales volume:</p>
+              <p className="text-[var(--text-muted)] text-sm mb-3">Estimated monthly revenue share:</p>
               <div className="flex items-baseline gap-2 mb-4">
                 <span className="text-4xl font-bold text-[var(--accent)]">{formatCentsAsDollars(Math.round(monthlyEarnings * 100))}</span>
                 <span className="text-[var(--text-muted)]">per month</span>
               </div>
               <p className="text-sm text-[var(--text-muted)]">
-                You earn 15% of the list price on each sale. With {estimatorSalesPerMonth} sales/month at ${estimatorPrice} average, that's {estimatorSalesPerMonth} × 15% = your monthly earnings.
+                You earn 15% of the list price on each sale. With {estimatorSalesPerMonth} supporters/month at ${estimatorPrice} average, that's {estimatorSalesPerMonth} × 15% = your venue's share.
               </p>
             </div>
           </div>
@@ -316,26 +316,26 @@ export function VenuePartnerKitEmbedded({ onNavigate }: VenuePartnerKitEmbeddedP
         {/* Setup Checklist Section */}
         <PartnerKitSection
           id="setup-checklist"
-          title="Setup Checklist"
+          title="Launch Checklist"
           icon={<CheckCircle className="w-6 h-6" />}
           expanded={expandedSections.checklist}
           onToggle={() => toggleSection('checklist')}
         >
           <div className="space-y-4">
             <p className="text-[var(--text-muted)]">
-              Follow this checklist to ensure your venue is fully set up and artists can find you:
+              Get ready to become a local art hub. Follow these steps to ensure artists can find you:
             </p>
 
             <div className="space-y-3">
               {[
-                { step: 1, title: 'Complete Your Profile', desc: 'Fill in venue name, address, hours, and links' },
-                { step: 2, title: 'Upload 5+ Photos', desc: 'Show entrance, wall space, and overall ambiance' },
-                { step: 3, title: 'Configure Your Walls', desc: 'Set display spots, dimensions, rotation preferences' },
-                { step: 4, title: 'Categorize Your Space', desc: 'Select 2-4 categories that describe your venue' },
-                { step: 5, title: 'Download QR Assets', desc: 'Get poster (8.5x11") and table tent (4x6") versions' },
-                { step: 6, title: 'Place QR Codes', desc: 'Post in entrance, counter, restroom, and near art' },
-                { step: 7, title: 'Brief Your Staff', desc: 'Share one-liners and collection methods with team' },
-                { step: 8, title: 'Go Live', desc: 'Publish your profile to start receiving artist applications' },
+                { step: 1, title: 'Tell Your Story', desc: 'Fill in venue name, address, hours, and your vibe' },
+                { step: 2, title: 'Showcase Your Space', desc: 'Upload 5+ photos showing entrance, walls, and ambiance' },
+                { step: 3, title: 'Define Your Gallery', desc: 'Set display spots, dimensions, and rotation style' },
+                { step: 4, title: 'Set Your Vibe', desc: 'Select categories that match your venue (e.g. Modern, Cozy)' },
+                { step: 5, title: 'Get Discovery Assets', desc: 'Download your custom QR posters and table tents' },
+                { step: 6, title: 'Activate Discovery', desc: 'Place QR codes in high-visibility spots to start conversations' },
+                { step: 7, title: 'Empower Your Team', desc: 'Brief staff on how to be local art ambassadors' },
+                { step: 8, title: 'Go Live', desc: 'Publish your profile to start connecting with local artists' },
               ].map((item) => (
                 <div key={item.step} className="flex gap-4 p-4 bg-[var(--surface-2)] rounded-lg border border-[var(--border)]">
                   <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[var(--accent)] text-[var(--accent-contrast)] flex items-center justify-center font-bold text-sm">
@@ -355,7 +355,7 @@ export function VenuePartnerKitEmbedded({ onNavigate }: VenuePartnerKitEmbeddedP
                 <div>
                   <p className="font-medium text-green-600">Pro Tip</p>
                   <p className="text-sm text-green-600/80 mt-1">
-                    Venues with all 8 steps completed receive 40% more artist applications and get featured in discovery.
+                    Venues with a complete story and 5+ photos see 40% more artist applications.
                   </p>
                 </div>
               </div>
@@ -366,52 +366,52 @@ export function VenuePartnerKitEmbedded({ onNavigate }: VenuePartnerKitEmbeddedP
         {/* QR Placement Guide */}
         <PartnerKitSection
           id="qr-placement"
-          title="QR Placement Strategy"
+          title="Engagement & Discovery"
           icon={<MapPin className="w-6 h-6" />}
           expanded={expandedSections.qr}
           onToggle={() => toggleSection('qr')}
         >
           <div className="space-y-6">
             <p className="text-[var(--text-muted)]">
-              Strategic QR placement increases discovery by up to 40%. Follow these recommendations:
+              Placement isn't just about scanning; it's about starting conversations. Strategic signs increase engagement by 40%.
             </p>
 
             <div className="space-y-4">
               {[
                 {
-                  location: '📍 Entrance/Main Door',
-                  why: 'First impression point',
+                  location: '📍 The Welcome Moment (ID: Entrance)',
+                  why: 'Sets the tone immediately: "This is a creative space."',
                   placement: 'Eye level, 3-5 feet from entrance',
                   format: 'Large poster version (8.5x11")',
                   impact: 'Highest traffic - 60% of scans',
                 },
                 {
-                  location: '💼 Counter/Register',
-                  why: 'Natural pause point during transaction',
+                  location: '💼 Conversation Starters (ID: Counter)',
+                  why: 'Natural pause point to discuss the art during service.',
                   placement: 'Standing easel or laminated card',
                   format: 'Table tent version (4x6")',
-                  impact: 'Secondary engagement - 25% of scans',
+                  impact: 'Deepest engagement - 25% of scans',
                 },
                 {
-                  location: '🚻 Restroom',
-                  why: 'Captive audience with time to browse',
+                  location: '🚻 Captive Audience (ID: Restroom)',
+                  why: 'Private moment where guests have time to read and browse.',
                   placement: 'At eye level, framed or laminated',
                   format: 'Table tent or small poster',
-                  impact: 'Tertiary discovery - 10% of scans',
+                  impact: 'Surprising discovery - 10% of scans',
                 },
                 {
-                  location: '🖼️ Near Displayed Art',
-                  why: 'Direct connection to current artwork',
+                  location: '🖼️ The Storyteller (ID: Near Art)',
+                  why: 'Connects the viewer directly to the creator\'s story.',
                   placement: 'Below or beside the artwork',
                   format: 'Table tent or sticker version',
-                  impact: 'Drives immediate purchases - variable',
+                  impact: 'Drives purchase intent',
                 },
                 {
-                  location: '🚪 Exit',
-                  why: 'Last chance to engage',
+                  location: '🚪 The Send-off (ID: Exit)',
+                  why: 'Last chance to take the experience home.',
                   placement: 'Eye level near door',
                   format: 'Small poster or sticker',
-                  impact: 'Follow-up engagement - 5% of scans',
+                  impact: 'Follow-up engagement',
                 },
               ].map((item, idx) => (
                 <div key={idx} className="p-4 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] space-y-2">
@@ -432,7 +432,7 @@ export function VenuePartnerKitEmbedded({ onNavigate }: VenuePartnerKitEmbeddedP
                 <div>
                   <p className="font-medium text-blue-600">Best Practice</p>
                   <p className="text-sm text-blue-600/80 mt-1">
-                    Test placement locations with team. Move codes that get low engagement to higher-traffic spots.
+                    Experiment! Move codes that get low engagement to higher-traffic spots to find what works for your unique flow.
                   </p>
                 </div>
               </div>
@@ -443,19 +443,19 @@ export function VenuePartnerKitEmbedded({ onNavigate }: VenuePartnerKitEmbeddedP
         {/* Economics Section */}
         <PartnerKitSection
           id="economics"
-          title="How Earnings Work"
+          title="The Partnership Model"
           icon={<TrendingUp className="w-6 h-6" />}
           expanded={expandedSections.economics}
           onToggle={() => toggleSection('economics')}
         >
           <div className="space-y-6">
             <p className="text-[var(--text-muted)]">
-              Transparent economics. Venues earn 15% per sale. Artists choose their plan (60%, 80%, 83%, or 85% earnings).
+              A transparent model designed to support artists while rewarding venues for their space and community stewardship.
             </p>
 
             {/* Live Economics Breakdown */}
             <div className="space-y-4">
-              <p className="font-semibold text-[var(--text)]">Example: $200 Artwork Sale (Live Calculation)</p>
+              <p className="font-semibold text-[var(--text)]">Example: $200 Community Support (Live Calculation)</p>
 
               <div className="flex justify-between items-center p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)]">
                 <span className="text-[var(--text)]">List Price</span>
@@ -473,12 +473,12 @@ export function VenuePartnerKitEmbedded({ onNavigate }: VenuePartnerKitEmbeddedP
               </div>
 
               <div className="flex justify-between items-center p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)]">
-                <span className="text-[var(--text)]">Venue Earns (15%)</span>
+                <span className="text-[var(--text)]">Venue Revenue (15%)</span>
                 <span className="font-semibold text-green-600">+{formatCentsAsDollars(currentBreakdown.venueCents)}</span>
               </div>
 
               <div className="flex justify-between items-center p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)]">
-                <span className="text-[var(--text)]">Artist Takes Home (Free: 60%)</span>
+                <span className="text-[var(--text)]">Artist Support (Free: 60%)</span>
                 <span className="font-semibold text-blue-600">{formatCentsAsDollars(currentBreakdown.artistCents)}</span>
               </div>
 
@@ -546,7 +546,7 @@ export function VenuePartnerKitEmbedded({ onNavigate }: VenuePartnerKitEmbeddedP
         {/* Hosting Policy */}
         <PartnerKitSection
           id="hosting-policy"
-          title="Hosting Policy & Best Practices"
+          title="Partnership Promise"
           icon={<FileText className="w-6 h-6" />}
           expanded={expandedSections.hosting}
           onToggle={() => toggleSection('hosting')}
@@ -555,28 +555,28 @@ export function VenuePartnerKitEmbedded({ onNavigate }: VenuePartnerKitEmbeddedP
             <div className="space-y-3">
               {[
                 {
-                  title: 'Art Rotation',
-                  content: 'Rotate artworks every 30-60 days for best results. More rotations = more discovery = more earnings.',
+                  title: 'Fresh Perspectives',
+                  content: 'Rotate artworks every 30-60 days to keep your walls alive. New art = new reasons for customers to return.',
                 },
                 {
-                  title: 'Display Standards',
-                  content: 'Ensure artworks are clean, properly framed/mounted, and protected from direct sunlight or moisture.',
+                  title: 'Showcase Standards',
+                  content: 'Treat the art with respect. Ensure it is displayed safely, lit well, and free from hazards.',
                 },
                 {
-                  title: 'Artist Communication',
-                  content: 'Keep artists updated on sales, foot traffic, and display performance through our platform.',
+                  title: 'Artist Connection',
+                  content: 'You share this space. Keep communication open with your artists about how their work is being received.',
                 },
                 {
-                  title: 'QR Code Maintenance',
-                  content: 'Check QR codes monthly for damage. Laminate them or protect with clear acrylic covers.',
+                  title: 'Care for the Tools',
+                  content: 'Keep QR codes clean and visible. They are the bridge between your customers and the artists.',
                 },
                 {
-                  title: 'Customer Service',
-                  content: 'Respond to collector inquiries promptly. Customer satisfaction = more referrals and repeats.',
+                  title: 'Community Connection',
+                  content: 'Be a host. When customers ask, share the story. Your enthusiasm makes the sale.',
                 },
                 {
-                  title: 'Photography & Social',
-                  content: 'Share photos of displayed art on your social media. Tag artists. This drives traffic for both parties.',
+                  title: 'Shared Success',
+                  content: 'Celebrate wins! Share photos of the art, tag the artists, and let your followers know you support local creators.',
                 },
               ].map((policy, idx) => (
                 <div key={idx} className="p-4 bg-[var(--surface-2)] rounded-lg border border-[var(--border)]">
@@ -591,37 +591,37 @@ export function VenuePartnerKitEmbedded({ onNavigate }: VenuePartnerKitEmbeddedP
         {/* Staff Talking Points */}
         <PartnerKitSection
           id="staff-talking"
-          title="Staff Talking Points"
+          title="Local Art Ambassadors"
           icon={<Users className="w-6 h-6" />}
           expanded={expandedSections.staffTalking}
           onToggle={() => toggleSection('staffTalking')}
         >
           <div className="space-y-4">
             <p className="text-[var(--text-muted)]">
-              Train your staff to share these points when customers ask about the art:
+              Your team is the face of this partnership. Help them feel confident sharing the story:
             </p>
 
             <div className="space-y-3">
               {[
                 {
                   scenario: 'Customer asks: "Who is the artist?"',
-                  response: "Scan the QR code! You'll see the artist's profile, their story, and can buy directly if you love it.",
+                  response: "This is [Artist Name], a local creator. Scan the QR code to read their full story and see more of their work!",
                 },
                 {
                   scenario: 'Customer asks: "How often does this change?"',
-                  response: 'We rotate artworks every month or two, depending on sales and artist availability. Always something new to discover.',
+                  response: 'We feature new local artists every month or so. It keeps our space fresh and supports more creators in our community.',
                 },
                 {
                   scenario: 'Customer asks: "Can I buy it?"',
-                  response: 'Yes! Scan the QR below the artwork to view prices and purchase. We ship anywhere.',
+                  response: 'Yes! It takes 10 seconds. Just scan the code, pay on your phone, and it supports the artist directly.',
                 },
                 {
                   scenario: 'Customer asks: "Is this supporting local artists?"',
-                  response: 'Absolutely. These are independent artists from [your region/network]. Your purchase goes 85% to support them.',
+                  response: '100%. We partner with local artists to give them exhibition space. 85% of the sale goes directly to supporting their career.',
                 },
                 {
                   scenario: 'Customer asks: "Why do you have art on the walls?"',
-                  response: 'It creates a unique atmosphere, supports our community, and gives you something beautiful to enjoy while [waiting/dining/etc].',
+                  response: 'We believe our walls should do more than just hold up the roof. They should build up our community.',
                 },
               ].map((talking, idx) => (
                 <div key={idx} className="p-4 bg-[var(--surface-2)] rounded-lg border border-[var(--border)]">
@@ -634,9 +634,9 @@ export function VenuePartnerKitEmbedded({ onNavigate }: VenuePartnerKitEmbeddedP
             </div>
 
             <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4">
-              <p className="font-medium text-purple-600 mb-2">💡 Empowerment Angle</p>
+              <p className="font-medium text-purple-600 mb-2">💡 The Mission</p>
               <p className="text-sm text-purple-600/80">
-                Frame this as: "We're giving artists a way to reach collectors, and giving you a way to discover emerging talent. It's a win-win."
+                Remind your team: "We aren't just selling art; we are connecting our customers with the creative soul of our city."
               </p>
             </div>
           </div>
@@ -646,9 +646,9 @@ export function VenuePartnerKitEmbedded({ onNavigate }: VenuePartnerKitEmbeddedP
         <ContactFormSection />
 
         <div className="mt-12 p-8 bg-gradient-to-r from-[var(--accent)]/10 to-[var(--accent)]/5 border border-[var(--accent)]/30 rounded-lg">
-          <h2 className="text-2xl font-bold text-[var(--text)] mb-4">Ready to Get Started?</h2>
+          <h2 className="text-2xl font-bold text-[var(--text)] mb-4">Start Your Art Journey</h2>
           <p className="text-[var(--text-muted)] mb-6">
-            You've reviewed the Partner Kit. Now it's time to set up your profile and start receiving artist applications.
+            You have the guide. Now bring the art to your walls and the community to your door.
           </p>
           <button
             onClick={() => onNavigate?.('venue-dashboard')}

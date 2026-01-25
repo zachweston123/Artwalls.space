@@ -55,10 +55,10 @@ export function VenueApplication({ onNavigate }: VenueApplicationProps) {
           <h1 className="text-3xl font-bold text-[var(--text)] mb-2">Application Submitted!</h1>
           <p className="text-[var(--text-muted)] mb-6">Thanks for applying. Our team will review and contact you within 2-3 business days.</p>
           <button
-            onClick={() => onNavigate?.('venues-partner-kit')}
+            onClick={() => onNavigate?.('venue-partner-kit')}
             className="px-6 py-2 bg-[var(--accent)] text-[var(--accent-contrast)] rounded-lg font-semibold hover:opacity-90"
           >
-            Back to Partner Kit
+            Back to Success Guide
           </button>
         </div>
       </div>

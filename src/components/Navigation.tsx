@@ -147,7 +147,7 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
     { id: 'venue-find-artists', label: 'Find Artists' },
     { id: 'venue-current', label: 'Current Art' },
     { id: 'venue-sales', label: 'Sales' },
-    { id: 'venue-partner-kit', label: 'Partner Kit' },
+    { id: 'venue-partner-kit', label: 'Success Guide' },
   ];
 
   const links = isArtist ? artistLinks : venueLinks;
