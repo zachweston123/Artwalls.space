@@ -55,6 +55,23 @@ export function VenueSetupWizard({ onNavigate, onComplete }: VenueSetupWizardPro
     staffOneLiners: [],
   });
 
+  useEffect(() => {
+    try {
+      const raw = typeof window !== 'undefined' ? localStorage.getItem('venueInvitePrefill') : null;
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      setFormData((prev) => ({
+        ...prev,
+        name: prev.name || parsed?.name || '',
+        address: prev.address || parsed?.address || '',
+        website: prev.website || parsed?.website || '',
+      }));
+      localStorage.removeItem('venueInvitePrefill');
+    } catch {
+      // ignore
+    }
+  }, []);
+
   const totalSteps = 5;
   const progress = (step / totalSteps) * 100;
 

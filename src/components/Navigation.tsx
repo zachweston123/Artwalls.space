@@ -18,6 +18,7 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
     { id: 'artist-profile', label: 'Profile' },
     { id: 'artist-artworks', label: 'My Artworks' },
     { id: 'artist-venues', label: 'Find Venues' },
+    { id: 'artist-venue-invites', label: 'Invite a venue' },
     { id: 'artist-applications', label: 'Applications' },
     { id: 'artist-invites', label: 'Invitations' },
     { id: 'artist-sales', label: 'Sales & Earnings' },

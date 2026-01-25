@@ -636,6 +636,159 @@ export async function getBookingById(id) {
   return mapBookingRow(data);
 }
 
+// --- Venue Invites ---
+function mapVenueInviteRow(r) {
+  if (!r) return null;
+  return {
+    id: r.id,
+    token: r.token,
+    artistId: r.artist_id,
+    placeId: r.place_id,
+    venueName: r.venue_name,
+    venueAddress: r.venue_address,
+    googleMapsUrl: r.google_maps_url,
+    websiteUrl: r.website_url,
+    phone: r.phone,
+    venueEmail: r.venue_email,
+    personalLine: r.personal_line,
+    subject: r.subject,
+    bodyTemplateVersion: r.body_template_version,
+    status: r.status,
+    sentAt: r.sent_at,
+    firstClickedAt: r.first_clicked_at,
+    clickCount: r.click_count,
+    acceptedAt: r.accepted_at,
+    declinedAt: r.declined_at,
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+  };
+}
+
+export async function createVenueInvite(invite) {
+  const payload = {
+    token: invite.token,
+    artist_id: invite.artistId,
+    place_id: invite.placeId,
+    venue_name: invite.venueName,
+    venue_address: invite.venueAddress ?? null,
+    google_maps_url: invite.googleMapsUrl ?? null,
+    website_url: invite.websiteUrl ?? null,
+    phone: invite.phone ?? null,
+    venue_email: invite.venueEmail ?? null,
+    personal_line: invite.personalLine ?? null,
+    subject: invite.subject ?? null,
+    body_template_version: invite.bodyTemplateVersion ?? 'v1',
+    status: invite.status ?? 'DRAFT',
+    sent_at: invite.sentAt ?? null,
+    first_clicked_at: invite.firstClickedAt ?? null,
+    click_count: invite.clickCount ?? 0,
+    accepted_at: invite.acceptedAt ?? null,
+    declined_at: invite.declinedAt ?? null,
+    created_at: nowIso(),
+    updated_at: nowIso(),
+  };
+  const { data, error } = await supabaseAdmin
+    .from('venue_invites')
+    .insert(payload)
+    .select('*')
+    .single();
+  throwIfError(error, 'createVenueInvite');
+  return mapVenueInviteRow(data);
+}
+
+export async function listVenueInvitesByArtist(artistId, limit = 100) {
+  const { data, error } = await supabaseAdmin
+    .from('venue_invites')
+    .select('*')
+    .eq('artist_id', artistId)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  throwIfError(error, 'listVenueInvitesByArtist');
+  return (data || []).map(mapVenueInviteRow);
+}
+
+export async function getVenueInviteById(id) {
+  const { data, error } = await supabaseAdmin
+    .from('venue_invites')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle();
+  throwIfError(error, 'getVenueInviteById');
+  return mapVenueInviteRow(data);
+}
+
+export async function getVenueInviteByToken(token) {
+  const { data, error } = await supabaseAdmin
+    .from('venue_invites')
+    .select('*')
+    .eq('token', token)
+    .maybeSingle();
+  throwIfError(error, 'getVenueInviteByToken');
+  return mapVenueInviteRow(data);
+}
+
+export async function updateVenueInvite(id, updates) {
+  const payload = { updated_at: nowIso() };
+  if (updates.status !== undefined) payload.status = updates.status;
+  if (updates.sentAt !== undefined) payload.sent_at = updates.sentAt;
+  if (updates.firstClickedAt !== undefined) payload.first_clicked_at = updates.firstClickedAt;
+  if (updates.clickCount !== undefined) payload.click_count = updates.clickCount;
+  if (updates.acceptedAt !== undefined) payload.accepted_at = updates.acceptedAt;
+  if (updates.declinedAt !== undefined) payload.declined_at = updates.declinedAt;
+  if (updates.venueEmail !== undefined) payload.venue_email = updates.venueEmail;
+  if (updates.personalLine !== undefined) payload.personal_line = updates.personalLine;
+  if (updates.subject !== undefined) payload.subject = updates.subject;
+  if (updates.bodyTemplateVersion !== undefined) payload.body_template_version = updates.bodyTemplateVersion;
+  if (updates.venueName !== undefined) payload.venue_name = updates.venueName;
+  if (updates.venueAddress !== undefined) payload.venue_address = updates.venueAddress;
+  if (updates.googleMapsUrl !== undefined) payload.google_maps_url = updates.googleMapsUrl;
+  if (updates.websiteUrl !== undefined) payload.website_url = updates.websiteUrl;
+  if (updates.phone !== undefined) payload.phone = updates.phone;
+
+  const { data, error } = await supabaseAdmin
+    .from('venue_invites')
+    .update(payload)
+    .eq('id', id)
+    .select('*')
+    .maybeSingle();
+  throwIfError(error, 'updateVenueInvite');
+  return mapVenueInviteRow(data);
+}
+
+export async function createVenueInviteEvent(inviteId, type, meta = {}) {
+  const { data, error } = await supabaseAdmin
+    .from('venue_invite_events')
+    .insert({ invite_id: inviteId, type, meta })
+    .select('*')
+    .maybeSingle();
+  throwIfError(error, 'createVenueInviteEvent');
+  return data || null;
+}
+
+export async function countVenueInvitesByArtistSince(artistId, sinceIso) {
+  const { count, error } = await supabaseAdmin
+    .from('venue_invites')
+    .select('id', { count: 'exact', head: true })
+    .eq('artist_id', artistId)
+    .gte('created_at', sinceIso);
+  throwIfError(error, 'countVenueInvitesByArtistSince');
+  return count || 0;
+}
+
+export async function findRecentInviteForPlace(artistId, placeId, sinceIso) {
+  const { data, error } = await supabaseAdmin
+    .from('venue_invites')
+    .select('*')
+    .eq('artist_id', artistId)
+    .eq('place_id', placeId)
+    .gte('created_at', sinceIso)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  throwIfError(error, 'findRecentInviteForPlace');
+  return mapVenueInviteRow(data);
+}
+
 // --- Notifications ---
 function mapNotificationRow(r) {
   if (!r) return null;

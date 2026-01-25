@@ -18,6 +18,7 @@ export function MobileSidebar({ isOpen, onClose, user, onNavigate, onLogout, cur
     { id: 'artist-dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'artist-artworks', label: 'My Artworks', icon: Image },
     { id: 'artist-venues', label: 'Find Venues', icon: Search },
+    { id: 'artist-venue-invites', label: 'Invite a venue', icon: Mail },
     { id: 'artist-applications', label: 'Applications', icon: Send },
     { id: 'artist-invites', label: 'Invitations', icon: Mail },
     { id: 'artist-sales', label: 'Sales & Earnings', icon: ShoppingCart },

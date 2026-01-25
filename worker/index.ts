@@ -12,6 +12,10 @@ type Env = {
   TWILIO_ACCOUNT_SID?: string;
   TWILIO_AUTH_TOKEN?: string;
   TWILIO_FROM_NUMBER?: string;
+  VENUE_INVITE_DAILY_LIMIT?: string;
+  VENUE_INVITE_DUPLICATE_WINDOW_DAYS?: string;
+  VENUE_INVITE_PUBLIC_RATE_LIMIT?: string;
+  ADMIN_EMAILS?: string;
   // Subscription price IDs (either older SUB_* or newer PRICE_ID_* names)
   STRIPE_SUB_PRICE_STARTER?: string;
   STRIPE_SUB_PRICE_GROWTH?: string;
@@ -122,6 +126,56 @@ export default {
         svg += `</svg>`;
         return svg;
       }
+    }
+
+    const VENUE_INVITE_DAILY_LIMIT = Number(env.VENUE_INVITE_DAILY_LIMIT || 10);
+    const VENUE_INVITE_DUPLICATE_WINDOW_DAYS = Number(env.VENUE_INVITE_DUPLICATE_WINDOW_DAYS || 30);
+    const VENUE_INVITE_PUBLIC_RATE_LIMIT = Number(env.VENUE_INVITE_PUBLIC_RATE_LIMIT || 60);
+    const inviteRateLimitMap = new Map<string, { count: number; resetAt: number }>();
+
+    function rateLimitByIp(ip: string, limit: number, windowMs: number) {
+      if (!ip) return { ok: true, remaining: limit };
+      const now = Date.now();
+      const entry = inviteRateLimitMap.get(ip) || { count: 0, resetAt: now + windowMs };
+      if (now > entry.resetAt) {
+        entry.count = 0;
+        entry.resetAt = now + windowMs;
+      }
+      entry.count += 1;
+      inviteRateLimitMap.set(ip, entry);
+      return { ok: entry.count <= limit, remaining: Math.max(limit - entry.count, 0), resetAt: entry.resetAt };
+    }
+
+    function getClientIp(req: Request): string {
+      const forwarded = req.headers.get('x-forwarded-for') || '';
+      const cf = req.headers.get('cf-connecting-ip') || '';
+      return (forwarded.split(',')[0] || cf || '').trim();
+    }
+
+    function generateInviteToken(): string {
+      return crypto.randomUUID().replace(/-/g, '');
+    }
+
+    function isValidInviteToken(token: string): boolean {
+      return /^[a-f0-9]{16,64}$/i.test(token || '');
+    }
+
+    function statusAfterOpen(current: string): string {
+      if (current === 'DRAFT' || current === 'SENT') return 'CLICKED';
+      return current;
+    }
+
+    function isStatusTransitionAllowed(current: string, next: string): boolean {
+      if (current === next) return true;
+      const allowed: Record<string, string[]> = {
+        DRAFT: ['SENT', 'CLICKED', 'DECLINED', 'EXPIRED'],
+        SENT: ['CLICKED', 'ACCEPTED', 'DECLINED', 'EXPIRED'],
+        CLICKED: ['ACCEPTED', 'DECLINED', 'EXPIRED'],
+        ACCEPTED: [],
+        DECLINED: [],
+        EXPIRED: [],
+      };
+      return allowed[current]?.includes(next) || false;
     }
 
     // Clean and validate Supabase config
@@ -969,6 +1023,16 @@ export default {
       return user;
     }
 
+    async function requireAdmin(req: Request): Promise<any | null> {
+      const user = await getSupabaseUserFromRequest(req);
+      if (!user) return null;
+      const role = user.user_metadata?.role;
+      if (role === 'admin' || user.user_metadata?.isAdmin === true) return user;
+      const allowlist = (env.ADMIN_EMAILS || '').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
+      if (user.email && allowlist.includes(user.email.toLowerCase())) return user;
+      return null;
+    }
+
     // Billing Portal: manage subscription and payment methods
     if (url.pathname === '/api/stripe/billing/create-portal-session' && method === 'POST') {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
@@ -1568,6 +1632,386 @@ export default {
       return json({ sales });
     }
 
+    // Venue Invites (Warm Intro)
+    if (url.pathname === '/api/venue-invites' && method === 'POST') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const user = await requireArtist(request);
+      if (!user) return json({ error: 'Missing or invalid Authorization bearer token (artist required)' }, { status: 401 });
+
+      const emailVerified = !!(user?.email_confirmed_at || user?.confirmed_at);
+      if (!emailVerified) return json({ error: 'Email verification required to send invites.' }, { status: 403 });
+
+      const payload = await request.json().catch(() => ({}));
+      const placeId = String(payload?.placeId || '').trim();
+      const venueName = String(payload?.venueName || '').trim();
+      if (!placeId) return json({ error: 'Missing placeId' }, { status: 400 });
+      if (!venueName) return json({ error: 'Missing venueName' }, { status: 400 });
+
+      const startOfDay = new Date();
+      startOfDay.setUTCHours(0, 0, 0, 0);
+      const { count: invitesToday, error: countErr } = await supabaseAdmin
+        .from('venue_invites')
+        .select('id', { count: 'exact', head: true })
+        .eq('artist_id', user.id)
+        .gte('created_at', startOfDay.toISOString());
+      if (countErr) return json({ error: countErr.message }, { status: 500 });
+      if ((invitesToday || 0) >= VENUE_INVITE_DAILY_LIMIT) {
+        return json({ error: `Daily invite limit reached (${VENUE_INVITE_DAILY_LIMIT}/day).` }, { status: 429 });
+      }
+
+      const cutoff = new Date(Date.now() - VENUE_INVITE_DUPLICATE_WINDOW_DAYS * 24 * 60 * 60 * 1000).toISOString();
+      const { data: recent, error: recentErr } = await supabaseAdmin
+        .from('venue_invites')
+        .select('id,created_at')
+        .eq('artist_id', user.id)
+        .eq('place_id', placeId)
+        .gte('created_at', cutoff)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (recentErr) return json({ error: recentErr.message }, { status: 500 });
+      if (recent?.created_at) {
+        return json({ error: 'You recently invited this venue. Try again later.' }, { status: 409 });
+      }
+
+      const nowIso = new Date().toISOString();
+      const insert = {
+        id: crypto.randomUUID(),
+        token: generateInviteToken(),
+        artist_id: user.id,
+        place_id: placeId,
+        venue_name: venueName,
+        venue_address: payload?.venueAddress || null,
+        google_maps_url: payload?.googleMapsUrl || null,
+        website_url: payload?.websiteUrl || null,
+        phone: payload?.phone || null,
+        venue_email: payload?.venueEmail || null,
+        personal_line: payload?.personalLine || null,
+        subject: payload?.subject || `Artwalls invite for ${venueName}`,
+        body_template_version: payload?.bodyTemplateVersion || 'v1',
+        status: 'DRAFT',
+        created_at: nowIso,
+        updated_at: nowIso,
+      };
+      const { data: invite, error } = await supabaseAdmin
+        .from('venue_invites')
+        .insert(insert)
+        .select('*')
+        .single();
+      if (error) return json({ error: error.message }, { status: 500 });
+
+      await supabaseAdmin.from('venue_invite_events').insert({ invite_id: invite.id, type: 'CREATED', meta: { at: nowIso } });
+      return json({ invite });
+    }
+
+    if (url.pathname === '/api/venue-invites' && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const user = await requireArtist(request);
+      if (!user) return json({ error: 'Missing or invalid Authorization bearer token (artist required)' }, { status: 401 });
+      const { data, error } = await supabaseAdmin
+        .from('venue_invites')
+        .select('*')
+        .eq('artist_id', user.id)
+        .order('created_at', { ascending: false });
+      if (error) return json({ error: error.message }, { status: 500 });
+      return json({ invites: data || [] });
+    }
+
+    if (url.pathname.startsWith('/api/venue-invites/') && url.pathname.endsWith('/send') && method === 'POST') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const user = await requireArtist(request);
+      if (!user) return json({ error: 'Missing or invalid Authorization bearer token (artist required)' }, { status: 401 });
+      const parts = url.pathname.split('/');
+      const id = parts[3];
+      const payload = await request.json().catch(() => ({}));
+
+      const { data: invite, error: findErr } = await supabaseAdmin
+        .from('venue_invites')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+      if (findErr) return json({ error: findErr.message }, { status: 500 });
+      if (!invite) return json({ error: 'Invite not found' }, { status: 404 });
+      if (invite.artist_id !== user.id) return json({ error: 'Forbidden' }, { status: 403 });
+
+      const personalLine = String(payload?.personalLine || '').trim();
+      if (personalLine.length < 12) return json({ error: 'Personal line must be at least 12 characters.' }, { status: 400 });
+      const venueEmail = payload?.venueEmail ? String(payload?.venueEmail).trim() : null;
+      if (venueEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(venueEmail)) {
+        return json({ error: 'Invalid venue email.' }, { status: 400 });
+      }
+
+      const nextStatus = invite.status === 'CLICKED' ? 'CLICKED' : 'SENT';
+      if (!isStatusTransitionAllowed(invite.status, nextStatus)) {
+        return json({ error: `Invite status cannot transition from ${invite.status} to ${nextStatus}.` }, { status: 409 });
+      }
+
+      const nowIso = new Date().toISOString();
+      const { data: updated, error: updateErr } = await supabaseAdmin
+        .from('venue_invites')
+        .update({
+          personal_line: personalLine,
+          venue_email: venueEmail,
+          subject: payload?.subject || invite.subject,
+          body_template_version: payload?.bodyTemplateVersion || invite.body_template_version,
+          status: nextStatus,
+          sent_at: invite.sent_at || nowIso,
+          updated_at: nowIso,
+        })
+        .eq('id', invite.id)
+        .select('*')
+        .single();
+      if (updateErr) return json({ error: updateErr.message }, { status: 500 });
+
+      if (!invite.sent_at) {
+        await supabaseAdmin.from('venue_invite_events').insert({ invite_id: invite.id, type: 'SENT', meta: { method: payload?.sendMethod || 'unknown', at: nowIso } });
+      }
+      return json({ invite: updated });
+    }
+
+    if (url.pathname.startsWith('/api/venue-invites/token/') && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const token = url.pathname.split('/')[4] || '';
+      if (!isValidInviteToken(token)) return json({ error: 'Invalid invite token' }, { status: 400 });
+      const rate = rateLimitByIp(`invite:${getClientIp(request)}`, VENUE_INVITE_PUBLIC_RATE_LIMIT, 60 * 60 * 1000);
+      if (!rate.ok) return json({ error: 'Too many requests. Please try again shortly.' }, { status: 429 });
+
+      const { data: invite, error } = await supabaseAdmin
+        .from('venue_invites')
+        .select('*')
+        .eq('token', token)
+        .maybeSingle();
+      if (error) return json({ error: error.message }, { status: 500 });
+      if (!invite) return json({ error: 'Invite not found' }, { status: 404 });
+
+      const { data: artist } = await supabaseAdmin
+        .from('artists')
+        .select('id,name,bio,portfolio_url,profile_photo_url')
+        .eq('id', invite.artist_id)
+        .maybeSingle();
+      const { data: arts } = await supabaseAdmin
+        .from('artworks')
+        .select('id,title,image_url,price_cents,currency')
+        .eq('artist_id', invite.artist_id)
+        .order('created_at', { ascending: false })
+        .limit(3);
+      const artworks = (arts || []).map((a: any) => ({ id: a.id, title: a.title, imageUrl: a.image_url, price: a.price_cents ? a.price_cents / 100 : null, currency: a.currency || 'usd' }));
+      return json({ invite, artist, artworks });
+    }
+
+    if (url.pathname.startsWith('/api/venue-invites/token/') && url.pathname.endsWith('/open') && method === 'POST') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const token = url.pathname.split('/')[4] || '';
+      if (!isValidInviteToken(token)) return json({ error: 'Invalid invite token' }, { status: 400 });
+      const rate = rateLimitByIp(`invite:${getClientIp(request)}`, VENUE_INVITE_PUBLIC_RATE_LIMIT, 60 * 60 * 1000);
+      if (!rate.ok) return json({ error: 'Too many requests. Please try again shortly.' }, { status: 429 });
+
+      const { data: invite, error } = await supabaseAdmin
+        .from('venue_invites')
+        .select('*')
+        .eq('token', token)
+        .maybeSingle();
+      if (error) return json({ error: error.message }, { status: 500 });
+      if (!invite) return json({ error: 'Invite not found' }, { status: 404 });
+
+      const nowIso = new Date().toISOString();
+      const nextStatus = statusAfterOpen(invite.status);
+      const { data: updated, error: updateErr } = await supabaseAdmin
+        .from('venue_invites')
+        .update({
+          status: nextStatus,
+          click_count: (invite.click_count || 0) + 1,
+          first_clicked_at: invite.first_clicked_at || nowIso,
+          updated_at: nowIso,
+        })
+        .eq('id', invite.id)
+        .select('*')
+        .single();
+      if (updateErr) return json({ error: updateErr.message }, { status: 500 });
+
+      if (!invite.first_clicked_at) {
+        await supabaseAdmin.from('venue_invite_events').insert({ invite_id: invite.id, type: 'OPENED', meta: { at: nowIso } });
+        await supabaseAdmin.from('notifications').insert({ user_id: invite.artist_id, type: 'venue_invite', title: 'Venue viewed your invite', message: `${invite.venue_name} opened your invite link.` });
+      }
+      return json({ invite: updated });
+    }
+
+    if (url.pathname.startsWith('/api/venue-invites/token/') && url.pathname.endsWith('/accept') && method === 'POST') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const token = url.pathname.split('/')[4] || '';
+      if (!isValidInviteToken(token)) return json({ error: 'Invalid invite token' }, { status: 400 });
+      const { data: invite, error } = await supabaseAdmin
+        .from('venue_invites')
+        .select('*')
+        .eq('token', token)
+        .maybeSingle();
+      if (error) return json({ error: error.message }, { status: 500 });
+      if (!invite) return json({ error: 'Invite not found' }, { status: 404 });
+      if (!isStatusTransitionAllowed(invite.status, 'ACCEPTED')) {
+        return json({ error: `Invite status cannot transition from ${invite.status} to ACCEPTED.` }, { status: 409 });
+      }
+
+      const nowIso = new Date().toISOString();
+      const { data: updated, error: updateErr } = await supabaseAdmin
+        .from('venue_invites')
+        .update({ status: 'ACCEPTED', accepted_at: nowIso, first_clicked_at: invite.first_clicked_at || nowIso, updated_at: nowIso })
+        .eq('id', invite.id)
+        .select('*')
+        .single();
+      if (updateErr) return json({ error: updateErr.message }, { status: 500 });
+
+      await supabaseAdmin.from('venue_invite_events').insert({ invite_id: invite.id, type: 'ACCEPTED', meta: { at: nowIso } });
+      await supabaseAdmin.from('notifications').insert({ user_id: invite.artist_id, type: 'venue_invite', title: 'Venue accepted your invite', message: `${invite.venue_name} accepted your invite.` });
+      return json({ invite: updated });
+    }
+
+    if (url.pathname.startsWith('/api/venue-invites/token/') && url.pathname.endsWith('/decline') && method === 'POST') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const token = url.pathname.split('/')[4] || '';
+      if (!isValidInviteToken(token)) return json({ error: 'Invalid invite token' }, { status: 400 });
+      const { data: invite, error } = await supabaseAdmin
+        .from('venue_invites')
+        .select('*')
+        .eq('token', token)
+        .maybeSingle();
+      if (error) return json({ error: error.message }, { status: 500 });
+      if (!invite) return json({ error: 'Invite not found' }, { status: 404 });
+      if (!isStatusTransitionAllowed(invite.status, 'DECLINED')) {
+        return json({ error: `Invite status cannot transition from ${invite.status} to DECLINED.` }, { status: 409 });
+      }
+
+      const nowIso = new Date().toISOString();
+      const { data: updated, error: updateErr } = await supabaseAdmin
+        .from('venue_invites')
+        .update({ status: 'DECLINED', declined_at: nowIso, first_clicked_at: invite.first_clicked_at || nowIso, updated_at: nowIso })
+        .eq('id', invite.id)
+        .select('*')
+        .single();
+      if (updateErr) return json({ error: updateErr.message }, { status: 500 });
+
+      await supabaseAdmin.from('venue_invite_events').insert({ invite_id: invite.id, type: 'DECLINED', meta: { at: nowIso } });
+      return json({ invite: updated });
+    }
+
+    if (url.pathname.startsWith('/api/venue-invites/token/') && url.pathname.endsWith('/question') && method === 'POST') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const token = url.pathname.split('/')[4] || '';
+      if (!isValidInviteToken(token)) return json({ error: 'Invalid invite token' }, { status: 400 });
+      const payload = await request.json().catch(() => ({}));
+      const message = String(payload?.message || '').trim();
+      if (message.length < 10) return json({ error: 'Message must be at least 10 characters.' }, { status: 400 });
+      const email = payload?.email ? String(payload?.email).trim() : '';
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return json({ error: 'Invalid email.' }, { status: 400 });
+      }
+
+      const { data: invite, error } = await supabaseAdmin
+        .from('venue_invites')
+        .select('*')
+        .eq('token', token)
+        .maybeSingle();
+      if (error) return json({ error: error.message }, { status: 500 });
+      if (!invite) return json({ error: 'Invite not found' }, { status: 404 });
+
+      await supabaseAdmin.from('notifications').insert({
+        user_id: invite.artist_id,
+        type: 'venue_invite_question',
+        title: 'Venue asked a question',
+        message: `${invite.venue_name}: ${message}${email ? ` (Reply: ${email})` : ''}`,
+      });
+      await supabaseAdmin.from('venue_invite_events').insert({ invite_id: invite.id, type: 'OPENED', meta: { question: true, email: email || null } });
+      return json({ ok: true });
+    }
+
+    if (url.pathname === '/api/admin/venue-invites/summary' && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const admin = await requireAdmin(request);
+      if (!admin) return json({ error: 'Admin access required' }, { status: 403 });
+      const days = Number(url.searchParams.get('days') || 30);
+      const rangeDays = Number.isFinite(days) && days > 0 ? Math.min(days, 90) : 30;
+      const since = new Date(Date.now() - rangeDays * 24 * 60 * 60 * 1000).toISOString();
+
+      const { data, error } = await supabaseAdmin
+        .from('venue_invites')
+        .select('id,artist_id,status,created_at,sent_at,first_clicked_at,accepted_at,declined_at')
+        .gte('created_at', since);
+      if (error) return json({ error: error.message }, { status: 500 });
+
+      const byDayMap = new Map<string, any>();
+      const artistMap = new Map<string, { artistId: string; created: number; accepted: number }>();
+      const totals = { created: 0, sent: 0, clicked: 0, accepted: 0, declined: 0 };
+
+      (data || []).forEach((row: any) => {
+        const createdDay = row.created_at?.slice(0, 10);
+        const sentDay = row.sent_at?.slice(0, 10);
+        const clickedDay = row.first_clicked_at?.slice(0, 10);
+        const acceptedDay = row.accepted_at?.slice(0, 10);
+        const declinedDay = row.declined_at?.slice(0, 10);
+
+        if (createdDay) {
+          const entry = byDayMap.get(createdDay) || { date: createdDay, created: 0, sent: 0, clicked: 0, accepted: 0, declined: 0 };
+          entry.created += 1;
+          byDayMap.set(createdDay, entry);
+          totals.created += 1;
+        }
+        if (sentDay) {
+          const entry = byDayMap.get(sentDay) || { date: sentDay, created: 0, sent: 0, clicked: 0, accepted: 0, declined: 0 };
+          entry.sent += 1;
+          byDayMap.set(sentDay, entry);
+          totals.sent += 1;
+        }
+        if (clickedDay) {
+          const entry = byDayMap.get(clickedDay) || { date: clickedDay, created: 0, sent: 0, clicked: 0, accepted: 0, declined: 0 };
+          entry.clicked += 1;
+          byDayMap.set(clickedDay, entry);
+          totals.clicked += 1;
+        }
+        if (acceptedDay) {
+          const entry = byDayMap.get(acceptedDay) || { date: acceptedDay, created: 0, sent: 0, clicked: 0, accepted: 0, declined: 0 };
+          entry.accepted += 1;
+          byDayMap.set(acceptedDay, entry);
+          totals.accepted += 1;
+        }
+        if (declinedDay) {
+          const entry = byDayMap.get(declinedDay) || { date: declinedDay, created: 0, sent: 0, clicked: 0, accepted: 0, declined: 0 };
+          entry.declined += 1;
+          byDayMap.set(declinedDay, entry);
+          totals.declined += 1;
+        }
+
+        if (row.artist_id) {
+          const stat = artistMap.get(row.artist_id) || { artistId: row.artist_id, created: 0, accepted: 0 };
+          stat.created += 1;
+          if (row.accepted_at) stat.accepted += 1;
+          artistMap.set(row.artist_id, stat);
+        }
+      });
+
+      const artistIds = Array.from(artistMap.keys());
+      const artistNames = new Map<string, string>();
+      if (artistIds.length) {
+        const { data: artistsData } = await supabaseAdmin
+          .from('artists')
+          .select('id,name')
+          .in('id', artistIds);
+        (artistsData || []).forEach((a: any) => artistNames.set(a.id, a.name));
+      }
+
+      const topArtists = Array.from(artistMap.values())
+        .map((a) => ({
+          artistId: a.artistId,
+          artistName: artistNames.get(a.artistId) || 'Artist',
+          created: a.created,
+          accepted: a.accepted,
+          conversionRate: a.created ? Math.round((a.accepted / a.created) * 100) : 0,
+        }))
+        .sort((a, b) => b.accepted - a.accepted)
+        .slice(0, 10);
+
+      const byDay = Array.from(byDayMap.values()).sort((a, b) => a.date.localeCompare(b.date));
+      return json({ rangeDays, totals, byDay, topArtists });
+    }
+
     // Notifications: fetch latest for a user/role (or platform)
     if (url.pathname === '/api/notifications' && method === 'GET') {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
@@ -1751,7 +2195,6 @@ export default {
       }
     }
 
-<<<<<<< HEAD
     // Student Verification Endpoints
     // POST /api/students/verify - Create verification record for student
     if (url.pathname === '/api/students/verify' && method === 'POST') {
@@ -1936,7 +2379,8 @@ export default {
         console.error('[POST /api/students/discount] Error:', err?.message);
         return json({ error: err?.message || 'Internal server error' }, { status: 500 });
       }
-=======
+    }
+
     // Billing: Create subscription session
     if (url.pathname === '/api/stripe/billing/create-subscription-session' && method === 'POST') {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
@@ -2033,7 +2477,6 @@ export default {
       const session = await pResp.json();
       if (!pResp.ok) return json(session, { status: pResp.status });
       return json({ url: session.url });
->>>>>>> 2d6a269 (feat: add stripe subscription checkout endpoints and configuration)
     }
 
     return new Response('Not found', { status: 404 });

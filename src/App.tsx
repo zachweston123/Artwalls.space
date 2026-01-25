@@ -14,6 +14,7 @@ import { ArtistProfileView } from './components/artist/ArtistProfileView';
 import { PasswordSecurity } from './components/artist/PasswordSecurity';
 import { NotificationPreferences } from './components/artist/NotificationPreferences';
 import { ArtistInvites } from './components/artist/ArtistInvites';
+import { ArtistVenueInvites } from './components/artist/ArtistVenueInvites';
 import { VenueDashboard } from './components/venue/VenueDashboard';
 import { VenueWalls } from './components/venue/VenueWalls';
 import { VenueCurrentArtWithScheduling } from './components/venue/VenueCurrentArtWithScheduling';
@@ -65,6 +66,7 @@ import { StripePaymentSetup } from './components/admin/StripePaymentSetup';
 import { SupportInbox } from './components/admin/SupportInbox';
 import { SupportMessageDetail } from './components/admin/SupportMessageDetail';
 import VerifyEmail from './pages/VerifyEmail';
+import VenueInviteLanding from './pages/VenueInviteLanding';
 
 export type UserRole = 'artist' | 'venue' | 'admin' | null;
 
@@ -97,6 +99,11 @@ export default function App() {
   // Direct-route override for email verification page
   if (typeof window !== 'undefined' && window.location.pathname === '/verify-email') {
     return <VerifyEmail />;
+  }
+
+  // Direct-route override for venue invite landing page
+  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/v/invite/')) {
+    return <VenueInviteLanding />;
   }
 
   const userFromSupabase = (supaUser: any): User | null => {
@@ -309,7 +316,7 @@ export default function App() {
   useEffect(() => {
     if (!currentUser) return;
 
-    const artistOnlyPages = ['artist-venues'];
+    const artistOnlyPages = ['artist-venues', 'artist-venue-invites'];
     const venueOnlyPages = ['find-art', 'venue-find-artists'];
 
     // If artist tries to access venue-only pages, redirect to artist dashboard
@@ -753,6 +760,9 @@ export default function App() {
                 }}
                 onNavigate={handleNavigate}
               />
+            )}
+            {currentPage === 'artist-venue-invites' && (
+              <ArtistVenueInvites artistId={currentUser.id} onNavigate={handleNavigate} />
             )}
             {currentPage === 'artist-sales' && <ArtistSales user={currentUser} onNavigate={handleNavigate} />}
             {currentPage === 'artist-profile' && <ArtistProfile onNavigate={handleNavigate} />}

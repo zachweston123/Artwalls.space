@@ -37,6 +37,14 @@ import {
   listBookingsByVenueBetween,
   createBooking,
   getBookingById,
+  createVenueInvite,
+  listVenueInvitesByArtist,
+  getVenueInviteById,
+  getVenueInviteByToken,
+  updateVenueInvite,
+  createVenueInviteEvent,
+  countVenueInvitesByArtistSince,
+  findRecentInviteForPlace,
   createNotification,
   listNotificationsForUser,
   markNotificationRead,
@@ -47,6 +55,13 @@ import {
   getRecentMessageCountByIp,
 } from './db.js';
 import { sendIcsEmail } from './mail.js';
+import {
+  generateInviteToken,
+  isValidInviteToken,
+  isStatusTransitionAllowed,
+  statusAfterOpen,
+  shouldBlockDuplicateInvite,
+} from './venueInviteUtils.js';
 
 const app = express();
 
@@ -67,6 +82,24 @@ const CANCEL_URL = process.env.CHECKOUT_CANCEL_URL || `${APP_URL}/#/purchase-can
 
 const SUB_SUCCESS_URL = process.env.SUB_SUCCESS_URL || `${APP_URL}/#/artist-dashboard?sub=success`;
 const SUB_CANCEL_URL = process.env.SUB_CANCEL_URL || `${APP_URL}/#/artist-dashboard?sub=cancel`;
+
+const VENUE_INVITE_DAILY_LIMIT = Number(process.env.VENUE_INVITE_DAILY_LIMIT || 10);
+const VENUE_INVITE_DUPLICATE_WINDOW_DAYS = Number(process.env.VENUE_INVITE_DUPLICATE_WINDOW_DAYS || 30);
+const VENUE_INVITE_PUBLIC_RATE_LIMIT = Number(process.env.VENUE_INVITE_PUBLIC_RATE_LIMIT || 60);
+
+const inviteRateLimitMap = new Map();
+function rateLimitByIp(ip, limit, windowMs) {
+  if (!ip) return { ok: true, remaining: limit };
+  const now = Date.now();
+  const entry = inviteRateLimitMap.get(ip) || { count: 0, resetAt: now + windowMs };
+  if (now > entry.resetAt) {
+    entry.count = 0;
+    entry.resetAt = now + windowMs;
+  }
+  entry.count += 1;
+  inviteRateLimitMap.set(ip, entry);
+  return { ok: entry.count <= limit, remaining: Math.max(limit - entry.count, 0), resetAt: entry.resetAt };
+}
 
 // Use self-signed certificate for local development
 const options = {
@@ -695,6 +728,384 @@ app.post('/api/notifications/:id/read', async (req, res) => {
     return res.json({ notification: updated });
   } catch (e) {
     return res.status(500).json({ error: e?.message || 'Failed to mark read' });
+  }
+});
+
+// -----------------------------
+// Venue Invites (Warm Intro)
+// -----------------------------
+app.post('/api/venue-invites', async (req, res) => {
+  try {
+    const artist = await requireArtist(req, res);
+    if (!artist) return;
+
+    const authUser = await getSupabaseUserFromRequest(req);
+    const emailVerified = !!(authUser?.email_confirmed_at || authUser?.confirmed_at);
+    if (!emailVerified) {
+      return res.status(403).json({ error: 'Email verification required to send invites.' });
+    }
+
+    const {
+      placeId,
+      venueName,
+      venueAddress,
+      googleMapsUrl,
+      websiteUrl,
+      phone,
+      venueEmail,
+      personalLine,
+      subject,
+      bodyTemplateVersion,
+    } = req.body || {};
+
+    const cleanPlaceId = String(placeId || '').trim();
+    const cleanName = String(venueName || '').trim();
+    if (!cleanPlaceId) return res.status(400).json({ error: 'Missing placeId' });
+    if (!cleanName) return res.status(400).json({ error: 'Missing venueName' });
+
+    const nowIso = new Date().toISOString();
+    const startOfDay = new Date();
+    startOfDay.setUTCHours(0, 0, 0, 0);
+
+    const invitesToday = await countVenueInvitesByArtistSince(artist.id, startOfDay.toISOString());
+    if (invitesToday >= VENUE_INVITE_DAILY_LIMIT) {
+      return res.status(429).json({ error: `Daily invite limit reached (${VENUE_INVITE_DAILY_LIMIT}/day).` });
+    }
+
+    const adminOverride = String(req.query?.adminOverride || '').toLowerCase() === 'true' || String(req.query?.adminOverride || '') === '1';
+    if (!adminOverride) {
+      const cutoff = new Date(Date.now() - VENUE_INVITE_DUPLICATE_WINDOW_DAYS * 24 * 60 * 60 * 1000).toISOString();
+      const recent = await findRecentInviteForPlace(artist.id, cleanPlaceId, cutoff);
+      if (recent && shouldBlockDuplicateInvite(recent.createdAt, nowIso, VENUE_INVITE_DUPLICATE_WINDOW_DAYS)) {
+        return res.status(409).json({ error: 'You recently invited this venue. Try again later.' });
+      }
+    } else {
+      const adminUser = await requireAdmin(req, res);
+      if (!adminUser) return;
+    }
+
+    const invite = await createVenueInvite({
+      token: generateInviteToken(),
+      artistId: artist.id,
+      placeId: cleanPlaceId,
+      venueName: cleanName,
+      venueAddress: venueAddress ? String(venueAddress) : null,
+      googleMapsUrl: googleMapsUrl ? String(googleMapsUrl) : null,
+      websiteUrl: websiteUrl ? String(websiteUrl) : null,
+      phone: phone ? String(phone) : null,
+      venueEmail: venueEmail ? String(venueEmail) : null,
+      personalLine: personalLine ? String(personalLine) : null,
+      subject: subject ? String(subject) : `Artwalls invite for ${cleanName}`,
+      bodyTemplateVersion: bodyTemplateVersion ? String(bodyTemplateVersion) : 'v1',
+      status: 'DRAFT',
+    });
+
+    await createVenueInviteEvent(invite.id, 'CREATED', { source: 'artist', at: nowIso });
+    return res.json({ invite });
+  } catch (err) {
+    console.error('[POST /api/venue-invites] Error:', err);
+    return res.status(500).json({ error: err?.message || 'Failed to create invite' });
+  }
+});
+
+app.get('/api/venue-invites', async (req, res) => {
+  try {
+    const artist = await requireArtist(req, res);
+    if (!artist) return;
+    const limit = Number(req.query?.limit || 100);
+    const invites = await listVenueInvitesByArtist(artist.id, Number.isFinite(limit) ? limit : 100);
+    return res.json({ invites });
+  } catch (err) {
+    console.error('[GET /api/venue-invites] Error:', err);
+    return res.status(500).json({ error: err?.message || 'Failed to list invites' });
+  }
+});
+
+app.post('/api/venue-invites/:id/send', async (req, res) => {
+  try {
+    const artist = await requireArtist(req, res);
+    if (!artist) return;
+    const inviteId = req.params.id;
+    const invite = await getVenueInviteById(inviteId);
+    if (!invite) return res.status(404).json({ error: 'Invite not found' });
+    if (invite.artistId !== artist.id) return res.status(403).json({ error: 'Forbidden' });
+
+    const { personalLine, venueEmail, subject, bodyTemplateVersion, sendMethod } = req.body || {};
+    const line = String(personalLine || '').trim();
+    if (line.length < 12) return res.status(400).json({ error: 'Personal line must be at least 12 characters.' });
+    const email = venueEmail ? String(venueEmail).trim() : null;
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: 'Invalid venue email.' });
+    }
+
+    const nextStatus = invite.status === 'CLICKED' ? 'CLICKED' : 'SENT';
+    if (!isStatusTransitionAllowed(invite.status, nextStatus)) {
+      return res.status(409).json({ error: `Invite status cannot transition from ${invite.status} to ${nextStatus}.` });
+    }
+
+    const nowIso = new Date().toISOString();
+    const updated = await updateVenueInvite(invite.id, {
+      personalLine: line,
+      venueEmail: email,
+      subject: subject ? String(subject) : invite.subject,
+      bodyTemplateVersion: bodyTemplateVersion ? String(bodyTemplateVersion) : invite.bodyTemplateVersion,
+      status: nextStatus,
+      sentAt: invite.sentAt || nowIso,
+    });
+
+    if (!invite.sentAt) {
+      await createVenueInviteEvent(invite.id, 'SENT', { method: sendMethod || 'unknown', at: nowIso });
+    }
+
+    return res.json({ invite: updated });
+  } catch (err) {
+    console.error('[POST /api/venue-invites/:id/send] Error:', err);
+    return res.status(500).json({ error: err?.message || 'Failed to mark sent' });
+  }
+});
+
+app.get('/api/venue-invites/token/:token', async (req, res) => {
+  try {
+    const token = String(req.params.token || '').trim();
+    if (!isValidInviteToken(token)) return res.status(400).json({ error: 'Invalid invite token' });
+
+    const ip = (req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '').toString().split(',')[0].trim();
+    const rate = rateLimitByIp(`invite:${ip}`, VENUE_INVITE_PUBLIC_RATE_LIMIT, 60 * 60 * 1000);
+    if (!rate.ok) return res.status(429).json({ error: 'Too many requests. Please try again shortly.' });
+
+    const invite = await getVenueInviteByToken(token);
+    if (!invite) return res.status(404).json({ error: 'Invite not found' });
+    const artist = await getArtist(invite.artistId);
+    const artworks = await listArtworksByArtist(invite.artistId);
+    const featured = (artworks || []).slice(0, 3).map(a => ({
+      id: a.id,
+      title: a.title,
+      imageUrl: a.imageUrl,
+      price: a.price,
+      currency: a.currency,
+    }));
+
+    return res.json({ invite, artist, artworks: featured });
+  } catch (err) {
+    console.error('[GET /api/venue-invites/token/:token] Error:', err);
+    return res.status(500).json({ error: err?.message || 'Failed to load invite' });
+  }
+});
+
+app.post('/api/venue-invites/token/:token/open', async (req, res) => {
+  try {
+    const token = String(req.params.token || '').trim();
+    if (!isValidInviteToken(token)) return res.status(400).json({ error: 'Invalid invite token' });
+
+    const ip = (req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '').toString().split(',')[0].trim();
+    const rate = rateLimitByIp(`invite:${ip}`, VENUE_INVITE_PUBLIC_RATE_LIMIT, 60 * 60 * 1000);
+    if (!rate.ok) return res.status(429).json({ error: 'Too many requests. Please try again shortly.' });
+
+    const invite = await getVenueInviteByToken(token);
+    if (!invite) return res.status(404).json({ error: 'Invite not found' });
+
+    const nowIso = new Date().toISOString();
+    const nextStatus = statusAfterOpen(invite.status);
+    const updated = await updateVenueInvite(invite.id, {
+      status: nextStatus,
+      clickCount: (invite.clickCount || 0) + 1,
+      firstClickedAt: invite.firstClickedAt || nowIso,
+    });
+
+    if (!invite.firstClickedAt) {
+      await createVenueInviteEvent(invite.id, 'OPENED', { at: nowIso });
+      await createNotification({
+        userId: invite.artistId,
+        type: 'venue_invite',
+        title: 'Venue viewed your invite',
+        message: `${invite.venueName} opened your invite link.`,
+      });
+    }
+
+    return res.json({ invite: updated });
+  } catch (err) {
+    console.error('[POST /api/venue-invites/token/:token/open] Error:', err);
+    return res.status(500).json({ error: err?.message || 'Failed to track invite open' });
+  }
+});
+
+app.post('/api/venue-invites/token/:token/accept', async (req, res) => {
+  try {
+    const token = String(req.params.token || '').trim();
+    if (!isValidInviteToken(token)) return res.status(400).json({ error: 'Invalid invite token' });
+    const invite = await getVenueInviteByToken(token);
+    if (!invite) return res.status(404).json({ error: 'Invite not found' });
+    if (!isStatusTransitionAllowed(invite.status, 'ACCEPTED')) {
+      return res.status(409).json({ error: `Invite status cannot transition from ${invite.status} to ACCEPTED.` });
+    }
+
+    const nowIso = new Date().toISOString();
+    const updated = await updateVenueInvite(invite.id, {
+      status: 'ACCEPTED',
+      acceptedAt: nowIso,
+      firstClickedAt: invite.firstClickedAt || nowIso,
+    });
+    await createVenueInviteEvent(invite.id, 'ACCEPTED', { at: nowIso });
+    await createNotification({
+      userId: invite.artistId,
+      type: 'venue_invite',
+      title: 'Venue accepted your invite',
+      message: `${invite.venueName} accepted your invite.`,
+    });
+
+    return res.json({ invite: updated });
+  } catch (err) {
+    console.error('[POST /api/venue-invites/token/:token/accept] Error:', err);
+    return res.status(500).json({ error: err?.message || 'Failed to accept invite' });
+  }
+});
+
+app.post('/api/venue-invites/token/:token/decline', async (req, res) => {
+  try {
+    const token = String(req.params.token || '').trim();
+    if (!isValidInviteToken(token)) return res.status(400).json({ error: 'Invalid invite token' });
+    const invite = await getVenueInviteByToken(token);
+    if (!invite) return res.status(404).json({ error: 'Invite not found' });
+    if (!isStatusTransitionAllowed(invite.status, 'DECLINED')) {
+      return res.status(409).json({ error: `Invite status cannot transition from ${invite.status} to DECLINED.` });
+    }
+
+    const nowIso = new Date().toISOString();
+    const updated = await updateVenueInvite(invite.id, {
+      status: 'DECLINED',
+      declinedAt: nowIso,
+      firstClickedAt: invite.firstClickedAt || nowIso,
+    });
+    await createVenueInviteEvent(invite.id, 'DECLINED', { at: nowIso });
+    return res.json({ invite: updated });
+  } catch (err) {
+    console.error('[POST /api/venue-invites/token/:token/decline] Error:', err);
+    return res.status(500).json({ error: err?.message || 'Failed to decline invite' });
+  }
+});
+
+app.post('/api/venue-invites/token/:token/question', async (req, res) => {
+  try {
+    const token = String(req.params.token || '').trim();
+    if (!isValidInviteToken(token)) return res.status(400).json({ error: 'Invalid invite token' });
+    const invite = await getVenueInviteByToken(token);
+    if (!invite) return res.status(404).json({ error: 'Invite not found' });
+
+    const { message, email } = req.body || {};
+    const cleanMessage = String(message || '').trim();
+    if (cleanMessage.length < 10) return res.status(400).json({ error: 'Message must be at least 10 characters.' });
+    const cleanEmail = email ? String(email).trim() : '';
+    if (cleanEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      return res.status(400).json({ error: 'Invalid email.' });
+    }
+
+    await createNotification({
+      userId: invite.artistId,
+      type: 'venue_invite_question',
+      title: 'Venue asked a question',
+      message: `${invite.venueName}: ${cleanMessage}${cleanEmail ? ` (Reply: ${cleanEmail})` : ''}`,
+    });
+    await createVenueInviteEvent(invite.id, 'OPENED', { question: true, email: cleanEmail || null });
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error('[POST /api/venue-invites/token/:token/question] Error:', err);
+    return res.status(500).json({ error: err?.message || 'Failed to send question' });
+  }
+});
+
+app.get('/api/admin/venue-invites/summary', async (req, res) => {
+  try {
+    const admin = await requireAdmin(req, res);
+    if (!admin) return;
+    if (!supabaseAdmin) return res.status(500).json({ error: 'Supabase not configured' });
+
+    const days = Number(req.query?.days || 30);
+    const rangeDays = Number.isFinite(days) && days > 0 ? Math.min(days, 90) : 30;
+    const since = new Date(Date.now() - rangeDays * 24 * 60 * 60 * 1000).toISOString();
+
+    const { data, error } = await supabaseAdmin
+      .from('venue_invites')
+      .select('id,artist_id,status,created_at,sent_at,first_clicked_at,accepted_at,declined_at')
+      .gte('created_at', since);
+    if (error) return res.status(500).json({ error: error.message });
+
+    const byDayMap = new Map();
+    const artistMap = new Map();
+    const totals = { created: 0, sent: 0, clicked: 0, accepted: 0, declined: 0 };
+
+    (data || []).forEach((row) => {
+      const createdDay = row.created_at?.slice(0, 10);
+      const sentDay = row.sent_at?.slice(0, 10);
+      const clickedDay = row.first_clicked_at?.slice(0, 10);
+      const acceptedDay = row.accepted_at?.slice(0, 10);
+      const declinedDay = row.declined_at?.slice(0, 10);
+
+      if (createdDay) {
+        const entry = byDayMap.get(createdDay) || { date: createdDay, created: 0, sent: 0, clicked: 0, accepted: 0, declined: 0 };
+        entry.created += 1;
+        byDayMap.set(createdDay, entry);
+        totals.created += 1;
+      }
+      if (sentDay) {
+        const entry = byDayMap.get(sentDay) || { date: sentDay, created: 0, sent: 0, clicked: 0, accepted: 0, declined: 0 };
+        entry.sent += 1;
+        byDayMap.set(sentDay, entry);
+        totals.sent += 1;
+      }
+      if (clickedDay) {
+        const entry = byDayMap.get(clickedDay) || { date: clickedDay, created: 0, sent: 0, clicked: 0, accepted: 0, declined: 0 };
+        entry.clicked += 1;
+        byDayMap.set(clickedDay, entry);
+        totals.clicked += 1;
+      }
+      if (acceptedDay) {
+        const entry = byDayMap.get(acceptedDay) || { date: acceptedDay, created: 0, sent: 0, clicked: 0, accepted: 0, declined: 0 };
+        entry.accepted += 1;
+        byDayMap.set(acceptedDay, entry);
+        totals.accepted += 1;
+      }
+      if (declinedDay) {
+        const entry = byDayMap.get(declinedDay) || { date: declinedDay, created: 0, sent: 0, clicked: 0, accepted: 0, declined: 0 };
+        entry.declined += 1;
+        byDayMap.set(declinedDay, entry);
+        totals.declined += 1;
+      }
+
+      const artistId = row.artist_id;
+      if (artistId) {
+        const artistStats = artistMap.get(artistId) || { artistId, created: 0, accepted: 0 };
+        artistStats.created += 1;
+        if (row.accepted_at) artistStats.accepted += 1;
+        artistMap.set(artistId, artistStats);
+      }
+    });
+
+    const artistIds = Array.from(artistMap.keys());
+    const artistNames = new Map();
+    if (artistIds.length) {
+      const { data: artistsData } = await supabaseAdmin
+        .from('artists')
+        .select('id,name')
+        .in('id', artistIds);
+      (artistsData || []).forEach((a) => artistNames.set(a.id, a.name));
+    }
+
+    const topArtists = Array.from(artistMap.values())
+      .map((a) => ({
+        artistId: a.artistId,
+        artistName: artistNames.get(a.artistId) || 'Artist',
+        created: a.created,
+        accepted: a.accepted,
+        conversionRate: a.created ? Math.round((a.accepted / a.created) * 100) : 0,
+      }))
+      .sort((a, b) => b.accepted - a.accepted)
+      .slice(0, 10);
+
+    const byDay = Array.from(byDayMap.values()).sort((a, b) => a.date.localeCompare(b.date));
+    return res.json({ rangeDays, totals, byDay, topArtists });
+  } catch (err) {
+    console.error('[GET /api/admin/venue-invites/summary] Error:', err);
+    return res.status(500).json({ error: err?.message || 'Failed to load invite summary' });
   }
 });
 // -----------------------------
