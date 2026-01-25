@@ -187,9 +187,20 @@ export function VenuePartnerKitEmbedded({ onNavigate }: VenuePartnerKitEmbeddedP
   };
 
   const handleDownloadPDF = () => {
-    // In production, this would generate and download a PDF
-    console.log('Downloading Partner Kit PDF...');
-    alert('PDF download would be generated here with all content below');
+    // Expand all sections for the PDF
+    setExpandedSections({
+      estimator: true,
+      economics: true,
+      checklist: true,
+      qr: true,
+      hosting: true,
+      staffTalking: true,
+    });
+
+    // Allow render cycle to complete then print
+    setTimeout(() => {
+      window.print();
+    }, 500);
   };
 
   const handleContactFormScroll = () => {
@@ -205,6 +216,51 @@ export function VenuePartnerKitEmbedded({ onNavigate }: VenuePartnerKitEmbeddedP
 
   return (
     <div className="min-h-screen bg-[var(--bg)] py-12 px-4">
+      <style>{`
+        @media print {
+          @page { margin: 1.5cm; }
+          body { 
+            background: white !important; 
+            color: black !important; 
+            -webkit-print-color-adjust: exact !important; 
+            print-color-adjust: exact !important;
+          }
+          
+          /* Hide App Shell UI */
+          nav, .dashboard-header, .dashboard-tabs, .alert, .quick-actions, .mobile-sidebar { 
+            display: none !important; 
+          }
+
+          /* Hide Interactive Elements inside Component */
+          button, #contact-form-section { 
+            display: none !important; 
+          }
+
+          /* Content Styling */
+          h1, h2, h3, p, span, div { 
+            color: #000 !important; 
+          }
+          
+          /* Ensure backgrounds print lightly */
+          [class*="bg-"] {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+
+          /* Reset Layout */
+          .min-h-screen { 
+            min-height: 0 !important; 
+            padding: 0 !important; 
+            background: white !important;
+          }
+          .max-w-3xl { 
+            max-width: none !important; 
+            margin: 0 !important;
+          }
+          
+          /* Hide URL footprints if browser settings allow, otherwise css can't force it */
+        }
+      `}</style>
       <div className="max-w-3xl mx-auto">
         {/* Header */}
         <div className="mb-12">
