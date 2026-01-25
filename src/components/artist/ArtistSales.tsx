@@ -295,26 +295,26 @@ export function ArtistSales({ user, onNavigate }: ArtistSalesProps) {
             </thead>
             <tbody className="divide-y divide-[var(--border)]">
               {[
-                { id: 'free', name: 'Free', platform: 15 },
-                { id: 'starter', name: 'Starter', platform: 10 },
-                { id: 'growth', name: 'Growth', platform: 8 },
-                { id: 'pro', name: 'Pro', platform: 6 },
+                { id: 'free', name: 'Free', artist: 60 },
+                { id: 'starter', name: 'Starter', artist: 80 },
+                { id: 'growth', name: 'Growth', artist: 83 },
+                { id: 'pro', name: 'Pro', artist: 85 },
               ].map((plan) => {
-                const venue = 10;
-                const artist = Math.max(0, 100 - venue - plan.platform);
+                const venue = 15;
+                const platform = Math.max(0, 100 - venue - plan.artist);
                 return (
                   <tr key={plan.id}>
                     <td className="px-4 py-3 text-[var(--text)]">{plan.name}</td>
-                    <td className="px-4 py-3 text-[var(--green)]">{artist}%</td>
+                    <td className="px-4 py-3 text-[var(--green)]">{plan.artist}%</td>
                     <td className="px-4 py-3 text-[var(--text)]">{venue}%</td>
-                    <td className="px-4 py-3 text-[var(--text-muted)]">{plan.platform}%</td>
+                    <td className="px-4 py-3 text-[var(--text-muted)]">{platform}%</td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
         </div>
-        <p className="text-xs text-[var(--text-muted)] mt-3">Actual payout amounts are calculated per sale. Example sales shown above use a simplified 80/10/10 split.</p>
+        <p className="text-xs text-[var(--text-muted)] mt-3">Actual payout amounts are calculated per sale and can vary with fees. Venue commission is 15% by default.</p>
       </div>
     </div>
   );
