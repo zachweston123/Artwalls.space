@@ -1,14 +1,20 @@
-const API_BASE =
-  (import.meta as any).env?.VITE_API_BASE_URL ||
-  (typeof window !== 'undefined' ? window.location.origin : '');
+const DEFAULT_API_BASE = (() => {
+  if (typeof window === 'undefined') return 'https://api.artwalls.space';
+  const host = window.location.hostname;
+  if (host === 'localhost' || host === '127.0.0.1') return 'http://localhost:4242';
+  return 'https://api.artwalls.space';
+})();
 
+const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || DEFAULT_API_BASE;
 const SAME_ORIGIN_BASE = typeof window !== 'undefined' ? window.location.origin : '';
 
 async function fetchWithFallback(input: string, init: RequestInit) {
   try {
     return await fetch(input, init);
   } catch (err) {
+    const host = typeof window !== 'undefined' ? window.location.hostname : '';
     const shouldFallback =
+      (host === 'localhost' || host === '127.0.0.1') &&
       SAME_ORIGIN_BASE &&
       API_BASE &&
       API_BASE !== SAME_ORIGIN_BASE &&
@@ -52,6 +58,11 @@ export async function apiGet<T>(path: string): Promise<T> {
     const text = await res.text().catch(() => '');
     console.error('[apiGet] Server error:', res.status, text);
     throw new Error(text || `Request failed: ${res.status}`);
+  }
+  const contentType = res.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    const text = await res.text().catch(() => '');
+    throw new Error(text || 'Unexpected response from server.');
   }
   return (await res.json()) as T;
 }
@@ -98,6 +109,11 @@ export async function apiPost<T>(path: string, body: unknown, headers?: Record<s
     throw new Error(errorMsg);
   }
   
+  const contentType = res.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    const text = await res.text().catch(() => '');
+    throw new Error(text || 'Unexpected response from server.');
+  }
   return (await res.json()) as T;
 }
 
