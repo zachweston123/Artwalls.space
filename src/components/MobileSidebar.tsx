@@ -1,4 +1,4 @@
-import { X, Palette, Store, LogOut, LayoutDashboard, Image, Search, Send, FileText, Bell, User, CreditCard, Shield, Mail, ShoppingCart, Frame, Users } from 'lucide-react';
+import { X, Palette, Store, LogOut, LayoutDashboard, Image, Search, Send, FileText, Bell, User, CreditCard, Shield, Mail, ShoppingCart, Frame, Users, BookOpen } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import type { User as UserType } from '../App';
 
@@ -35,6 +35,7 @@ export function MobileSidebar({ isOpen, onClose, user, onNavigate, onLogout, cur
     { id: 'venue-find-artists', label: 'Find Artists', icon: Users },
     { id: 'venue-current', label: 'Current Art', icon: Image },
     { id: 'venue-sales', label: 'Sales', icon: ShoppingCart },
+    { id: 'venue-partner-kit', label: 'Partner Kit', icon: BookOpen },
     { id: 'venue-notifications', label: 'Notifications', icon: Bell },
     { id: 'policies', label: 'Policies & Agreements', icon: Shield },
   ];
