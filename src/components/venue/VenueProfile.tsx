@@ -73,19 +73,31 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
       const userId = userData.user?.id;
       if (!userId) throw new Error('Not signed in');
 
-      await apiPost('/api/venues', {
-        venueId: userId,
+      try {
+        await apiPost('/api/venues', {
+          venueId: userId,
+          name: data.name,
+          type: data.type,
+          labels: data.labels,
+          phoneNumber: data.phoneNumber,
+          email: data.email,
+          city: data.city,
+          bio: data.bio,
+        });
+      } catch (apiErr) {
+        console.warn('API update failed, falling back to direct database update:', apiErr);
+      }
+
+      // Save fields to database directly (fallback + redundancy)
+      const updateData: any = {
         name: data.name,
         type: data.type,
-        labels: data.labels,
-        phoneNumber: data.phoneNumber,
         email: data.email,
-        city: data.city,
-        bio: data.bio,
-      });
+        phone_number: data.phoneNumber,
+        labels: data.labels,
+        updated_at: new Date().toISOString()
+      };
 
-      // Save city and cover photo URL to database
-      const updateData: any = {};
       if (data.coverPhoto) {
         updateData.cover_photo_url = data.coverPhoto;
       }

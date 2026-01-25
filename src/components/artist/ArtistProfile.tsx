@@ -221,25 +221,57 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
       const user = sessionData.session?.user;
       if (!user) throw new Error('Not signed in');
 
-      // Update via API (server/worker) to avoid client-side schema/permission issues
-      const { apiPost } = await import('../../lib/api');
-      await apiPost('/api/artists', {
-        name,
-        email,
-        phoneNumber: phone,
-        cityPrimary: cityPrimary || null,
-        citySecondary: citySecondary || null,
-        subscriptionTier: currentPlan,
-        bio: bio || null,
-        artTypes: artTypes.length > 0 ? artTypes : null,
-        instagramHandle: instagramHandle || null,
-        portfolioUrl: portfolioUrl || null,
-        profilePhotoUrl: avatar || null,
-        isStudent,
-        pronouns: pronouns || null,
-        schoolId: schoolId || null,
-        schoolName: schoolName || null,
-      });
+      // Update via API (server/worker)
+      // We wrap this in a try/catch to fallback to direct database update if the API is blocked (e.g. by CORS/browser security)
+      try {
+        const { apiPost } = await import('../../lib/api');
+        await apiPost('/api/artists', {
+          name,
+          email,
+          phoneNumber: phone,
+          cityPrimary: cityPrimary || null,
+          citySecondary: citySecondary || null,
+          subscriptionTier: currentPlan,
+          bio: bio || null,
+          artTypes: artTypes.length > 0 ? artTypes : null,
+          instagramHandle: instagramHandle || null,
+          portfolioUrl: portfolioUrl || null,
+          profilePhotoUrl: avatar || null,
+          isStudent,
+          pronouns: pronouns || null,
+          schoolId: schoolId || null,
+          schoolName: schoolName || null,
+        });
+      } catch (apiErr: any) {
+        console.warn('API update failed, falling back to direct database update:', apiErr);
+        // If it's the specific browser security error, we definitely want to proceed with direct update
+        // But we'll fallback for any error to ensure data persistence
+        
+        // Direct Supabase update as fallback
+        const { error: dbError } = await supabase
+          .from('artists')
+          .update({
+            name,
+            email,
+            phone_number: phone,
+            city_primary: cityPrimary || null,
+            city_secondary: citySecondary || null,
+            // subscription_tier: currentPlan, // controlled by Stripe/billing usually, risking overwrite if we do this manually
+            bio: bio || null,
+            art_types: artTypes.length > 0 ? artTypes : null,
+            instagram_handle: instagramHandle || null,
+            portfolio_url: portfolioUrl || null,
+            profile_photo_url: avatar || null,
+            is_student: isStudent,
+            pronouns: pronouns || null,
+            school_id: schoolId || null,
+            school_name: schoolName || null,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', user.id);
+          
+        if (dbError) throw dbError;
+      }
 
       // Update metadata and email in auth (keep this for auth session consistency and fallback)
       const { error: metaErr } = await supabase.auth.updateUser({ 
