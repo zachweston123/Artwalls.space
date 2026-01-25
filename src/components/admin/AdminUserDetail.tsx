@@ -25,6 +25,23 @@ interface AdminUserDetailProps {
 
 type SubscriptionTier = 'free' | 'starter' | 'growth' | 'pro';
 
+type AdminUser = {
+  id: string;
+  name: string;
+  email: string | null;
+  role: 'artist' | 'venue';
+  subscriptionTier?: SubscriptionTier | string;
+  subscriptionStatus?: string;
+  city?: string | null;
+  createdAt?: string | null;
+  lastActive?: string | null;
+  agreementAccepted?: boolean;
+  agreementDate?: string | null;
+  artworksCount?: number;
+  activeDisplays?: number;
+  protectionPlanActive?: number;
+};
+
 // Simple role badge component for admin use
 function RoleBadge({ role }: { role: 'artist' | 'venue' }) {
   const baseClasses = 'border border-[var(--border)]';
@@ -46,15 +63,15 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
   const [isSavingTier, setIsSavingTier] = useState(false);
   const [selectedTier, setSelectedTier] = useState<SubscriptionTier>('free');
   const [isEditingTier, setIsEditingTier] = useState(false);
+  const [user, setUser] = useState<AdminUser | null>(null);
 
-  // Mock user data
-  let user = {
+  const defaultUser: AdminUser = {
     id: userId,
     name: 'User',
-    email: 'user@example.com',
-    role: 'artist' as const,
-    plan: '—',
-    status: 'Active',
+    email: null,
+    role: 'artist',
+    subscriptionTier: selectedTier,
+    subscriptionStatus: 'active',
     city: '—',
     createdAt: '—',
     lastActive: '—',
@@ -65,20 +82,81 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
     protectionPlanActive: 0,
   };
 
+  const normalizeTier = (tier?: string): SubscriptionTier => {
+    const normalized = String(tier || 'free').toLowerCase();
+    if (normalized === 'starter' || normalized === 'growth' || normalized === 'pro') return normalized;
+    return 'free';
+  };
+
+  const planLabel = (tier?: string) => {
+    if (!tier) return '—';
+    const normalized = String(tier).toLowerCase();
+    return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+  };
+
+  const statusLabel = (status?: string) => {
+    if (!status) return 'Active';
+    const normalized = String(status).toLowerCase();
+    return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+  };
+
+  const normalizeUser = (detail: any): AdminUser => {
+    if (!detail) return defaultUser;
+    const tier = normalizeTier(detail.subscriptionTier || detail.tier);
+    return {
+      id: detail.id || userId,
+      name: detail.name || detail.displayName || 'User',
+      email: detail.email || null,
+      role: detail.role === 'venue' ? 'venue' : 'artist',
+      subscriptionTier: tier,
+      subscriptionStatus: detail.subscriptionStatus || 'active',
+      city: detail.city || detail.city_primary || '—',
+      createdAt: detail.createdAt || detail.created_at || '—',
+      lastActive: detail.lastActive || '—',
+      agreementAccepted: detail.agreementAccepted ?? true,
+      agreementDate: detail.agreementDate || '—',
+      artworksCount: detail.artworksCount ?? 0,
+      activeDisplays: detail.activeDisplays ?? 0,
+      protectionPlanActive: detail.protectionPlanActive ?? 0,
+    };
+  };
+
   // Load user data
   useEffect(() => {
     async function loadUser() {
+      setIsLoading(true);
       try {
-        const artist = await apiGet<any>(`/api/artists/${userId}`);
+        // Prefer admin detail endpoint when available
+        const adminDetail = await apiGet<any>(`/api/admin/users/${userId}`).catch(() => null);
+        if (adminDetail) {
+          const normalized = normalizeUser(adminDetail);
+          setUser(normalized);
+          setSelectedTier(normalizeTier(normalized.subscriptionTier as string));
+          return;
+        }
+
+        // Fallback to artist profile
+        const artist = await apiGet<any>(`/api/artists/${userId}`).catch(() => null);
         if (artist) {
-          user = {
-            ...user,
+          const tier = normalizeTier(artist.subscriptionTier);
+          setUser({
+            id: artist.id || userId,
             name: artist.name || 'Artist',
             email: artist.email || null,
-            plan: (artist.subscriptionTier || 'free').toString().replace(/^(.)/, (m: string) => m.toUpperCase()),
-            status: (artist.subscriptionStatus === 'suspended') ? 'Suspended' : 'Active',
-          };
-          setSelectedTier((artist.subscriptionTier || 'free').toLowerCase() as SubscriptionTier);
+            role: 'artist',
+            subscriptionTier: tier,
+            subscriptionStatus: artist.subscriptionStatus || 'active',
+            city: artist.city || artist.city_primary || '—',
+            createdAt: artist.createdAt || artist.created_at || '—',
+            lastActive: artist.lastActive || '—',
+            agreementAccepted: artist.agreementAccepted ?? true,
+            agreementDate: artist.agreementDate || '—',
+            artworksCount: artist.artworksCount ?? 0,
+            activeDisplays: artist.activeDisplays ?? 0,
+            protectionPlanActive: artist.protectionPlanActive ?? 0,
+          });
+          setSelectedTier(tier);
+          return;
         }
       } catch (e) {
         console.error('Failed to load user:', e);
@@ -90,15 +168,18 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
   }, [userId]);
 
   async function handleTierChange() {
-    if (selectedTier === (user.plan.toLowerCase() === '—' ? 'free' : user.plan.toLowerCase())) {
+    const currentTier = normalizeTier((user?.subscriptionTier as string) || 'free');
+    if (selectedTier === currentTier) {
       setIsEditingTier(false);
       return;
     }
     
     setIsSavingTier(true);
     try {
-      await apiPost(`/api/admin/users/${userId}/tier`, { tier: selectedTier });
-      user.plan = selectedTier.replace(/^(.)/, (m: string) => m.toUpperCase());
+      const response = await apiPost(`/api/admin/users/${userId}/tier`, { tier: selectedTier });
+      const updated = normalizeUser(response?.user || { ...(user || defaultUser), subscriptionTier: selectedTier, subscriptionStatus: 'active' });
+      setUser(updated);
+      setSelectedTier(normalizeTier(updated.subscriptionTier as string));
       setToast(`Tier updated to ${selectedTier}`);
       setIsEditingTier(false);
       setTimeout(() => setToast(null), 2000);
@@ -146,6 +227,8 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
     }
   };
 
+  const displayUser = user || defaultUser;
+
   return (
     <div className="bg-[var(--bg)]">
       {/* Header */}
@@ -159,9 +242,9 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
         </button>
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-3xl mb-2 text-[var(--text)]">{user.name}</h1>
+            <h1 className="text-3xl mb-2 text-[var(--text)]">{displayUser.name}</h1>
             <div className="flex items-center gap-3 flex-wrap">
-              <RoleBadge role={user.role} />
+              <RoleBadge role={displayUser.role} />
               
               {/* Tier Badge/Selector */}
               {!isEditingTier ? (
@@ -176,7 +259,8 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
                   </span>
                   <button
                     onClick={() => setIsEditingTier(true)}
-                    className="px-2 py-1 text-xs text-[var(--blue)] hover:text-[var(--blue-hover)] transition-colors"
+                    disabled={isLoading}
+                    className="px-2 py-1 text-xs text-[var(--blue)] hover:text-[var(--blue-hover)] transition-colors disabled:opacity-60"
                   >
                     Change
                   </button>
@@ -186,7 +270,8 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
                   <select
                     value={selectedTier}
                     onChange={(e) => setSelectedTier(e.target.value as SubscriptionTier)}
-                    className="px-2 py-1 rounded border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--blue)]"
+                    disabled={isSavingTier || isLoading}
+                    className="px-2 py-1 rounded border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--blue)] disabled:opacity-60"
                   >
                     <option value="free">Free</option>
                     <option value="starter">Starter</option>
@@ -195,7 +280,7 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
                   </select>
                   <button
                     onClick={handleTierChange}
-                    disabled={isSavingTier}
+                    disabled={isSavingTier || isLoading}
                     className="px-3 py-1 bg-[var(--blue)] text-[var(--on-blue)] rounded text-xs font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
                   >
                     {isSavingTier ? 'Saving...' : 'Save'}
@@ -210,7 +295,7 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
               )}
               
               <span className="px-2 py-1 bg-[var(--green-muted)] text-[var(--green)] border border-[var(--border)] rounded-full text-xs">
-                {user.status}
+                {statusLabel(displayUser.subscriptionStatus)}
               </span>
             </div>
           </div>
@@ -232,6 +317,12 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
           </div>
         </div>
       </div>
+
+      {isLoading && (
+        <div className="mb-6 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 text-sm text-[var(--text-muted)]">
+          Loading user details...
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="border-b border-[var(--border)] mb-6">
@@ -272,32 +363,32 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
                 <User className="w-5 h-5 text-[var(--text-muted)] mt-0.5" />
                 <div>
                   <p className="text-sm text-[var(--text-muted)]">Name</p>
-                  <p className="text-[var(--text)]">{user.name}</p>
+                  <p className="text-[var(--text)]">{displayUser.name}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <Mail className="w-5 h-5 text-[var(--text-muted)] mt-0.5" />
                 <div>
                   <p className="text-sm text-[var(--text-muted)]">Email</p>
-                  <p className="text-[var(--text)]">{user.email}</p>
+                  <p className="text-[var(--text)]">{displayUser.email || '—'}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-[var(--text-muted)] mt-0.5" />
                 <div>
                   <p className="text-sm text-[var(--text-muted)]">City</p>
-                  <p className="text-[var(--text)]">{user.city}</p>
+                  <p className="text-[var(--text)]">{displayUser.city || '—'}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <Calendar className="w-5 h-5 text-[var(--text-muted)] mt-0.5" />
                 <div>
                   <p className="text-sm text-[var(--text-muted)]">Member Since</p>
-                  <p className="text-[var(--text)]">{user.createdAt}</p>
+                  <p className="text-[var(--text)]">{displayUser.createdAt || '—'}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                {user.agreementAccepted ? (
+                {displayUser.agreementAccepted ? (
                   <CheckCircle className="w-5 h-5 text-[var(--green)] mt-0.5" />
                 ) : (
                   <XCircle className="w-5 h-5 text-[var(--danger)] mt-0.5" />
@@ -305,7 +396,7 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
                 <div>
                   <p className="text-sm text-[var(--text-muted)]">Agreement</p>
                   <p className="text-[var(--text)]">
-                    {user.agreementAccepted ? `Accepted ${user.agreementDate}` : 'Not accepted'}
+                    {displayUser.agreementAccepted ? `Accepted ${displayUser.agreementDate}` : 'Not accepted'}
                   </p>
                 </div>
               </div>
@@ -318,15 +409,15 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               <div>
                 <p className="text-sm text-[var(--text-muted)] mb-1">Artworks</p>
-                <p className="text-2xl text-[var(--text)]">{user.artworksCount}</p>
+                <p className="text-2xl text-[var(--text)]">{displayUser.artworksCount ?? 0}</p>
               </div>
               <div>
                 <p className="text-sm text-[var(--text-muted)] mb-1">Active Displays</p>
-                <p className="text-2xl text-[var(--text)]">{user.activeDisplays}</p>
+                <p className="text-2xl text-[var(--text)]">{displayUser.activeDisplays ?? 0}</p>
               </div>
               <div>
                 <p className="text-sm text-[var(--text-muted)] mb-1">Protected Artworks</p>
-                <p className="text-2xl text-[var(--text)]">{user.protectionPlanActive}</p>
+                <p className="text-2xl text-[var(--text)]">{displayUser.protectionPlanActive ?? 0}</p>
               </div>
             </div>
           </div>
@@ -430,12 +521,12 @@ export function AdminUserDetail({ userId, onBack }: AdminUserDetailProps) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
               <div>
                 <p className="text-sm text-[var(--text-muted)] mb-1">Tier</p>
-                <p className="text-2xl text-[var(--text)]">{user.plan}</p>
+                <p className="text-2xl text-[var(--text)]">{planLabel(displayUser.subscriptionTier)}</p>
               </div>
               <div>
                 <p className="text-sm text-[var(--text-muted)] mb-1">Stripe Status</p>
                 <span className="px-2 py-1 bg-[var(--green-muted)] text-[var(--green)] border border-[var(--border)] rounded-full text-sm">
-                  Active
+                  {statusLabel(displayUser.subscriptionStatus)}
                 </span>
               </div>
             </div>

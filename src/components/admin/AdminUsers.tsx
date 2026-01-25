@@ -30,6 +30,7 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
     city: 'all',
     agreementAccepted: 'all',
   });
+  const [roleTab, setRoleTab] = useState<'all' | 'artist' | 'venue'>('all');
 
   // Mock users data (fallback)
   const mockUsers: any[] = [];
@@ -172,6 +173,7 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
         String(user.plan || '').toLowerCase().includes(query);
       if (!matchesSearch) return false;
     }
+    if (roleTab !== 'all' && user.role !== roleTab) return false;
     if (filters.role !== 'all' && user.role !== filters.role) return false;
     if (filters.plan !== 'all' && user.plan !== filters.plan) return false;
     if (filters.status !== 'all' && user.status !== filters.status) return false;
@@ -201,6 +203,12 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
     filters.city !== 'all' ||
     filters.agreementAccepted !== 'all' ||
     searchQuery !== '';
+
+  const roleCounts = {
+    all: users.length,
+    artist: users.filter((u) => u.role === 'artist').length,
+    venue: users.filter((u) => u.role === 'venue').length,
+  };
 
   return (
     <div className="bg-[var(--bg)]">
@@ -369,6 +377,38 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
             )}
           </div>
         )}
+      </div>
+
+      {/* Role Segments */}
+      <div className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] px-4 py-3 mb-4 flex flex-wrap gap-2">
+        {(
+          [
+            { id: 'all' as const, label: 'All', count: roleCounts.all },
+            { id: 'artist' as const, label: 'Artists', count: roleCounts.artist },
+            { id: 'venue' as const, label: 'Venues', count: roleCounts.venue },
+          ]
+        ).map((tab) => {
+          const isActive = roleTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => {
+                setRoleTab(tab.id);
+                setFilters((f) => ({ ...f, role: 'all' }));
+              }}
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors text-sm ${
+                isActive
+                  ? 'border-[var(--blue)] bg-[var(--blue)] text-[var(--on-blue)]'
+                  : 'border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] hover:bg-[var(--surface-3)]'
+              }`}
+            >
+              <span>{tab.label}</span>
+              <span className={`text-xs px-2 py-0.5 rounded-full ${isActive ? 'bg-[var(--surface-2)] text-[var(--on-blue)]' : 'bg-[var(--surface-2)] text-[var(--text-muted)]'}`}>
+                {tab.count}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Results Count */}
