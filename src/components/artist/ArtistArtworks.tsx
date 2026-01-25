@@ -40,13 +40,43 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
     try {
       setLoading(true);
       setError(null);
-      const res = await apiGet<any>(`/api/artworks?artistId=${encodeURIComponent(user.id)}`);
-      const items = Array.isArray(res) ? res : res?.artworks;
-      if (Array.isArray(items)) {
-        setArtworks(items as Artwork[]);
+      // Try API first
+      try {
+        const res = await apiGet<any>(`/api/artworks?artistId=${encodeURIComponent(user.id)}`);
+        const items = Array.isArray(res) ? res : res?.artworks;
+        if (Array.isArray(items)) {
+          setArtworks(items as Artwork[]);
+          return; // Success
+        }
+      } catch (apiErr) {
+        console.warn('API fetch failed, falling back to Supabase:', apiErr);
       }
-    } catch {
-      // Backend not available -> keep mock data
+
+      // Fallback to direct Supabase query
+      const { data, error } = await supabase
+        .from('artworks')
+        .select('*')
+        .eq('artist_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      const mappedArtworks: Artwork[] = (data || []).map((row: any) => ({
+        id: row.id,
+        title: row.title,
+        description: row.description,
+        price: (row.price_cents || 0) / 100, // Convert cents to dollars for display
+        imageUrl: row.image_url,
+        status: row.status,
+        artistName: row.artist_name,
+        venueName: row.venue_name,
+        stripePriceId: row.stripe_price_id
+      }));
+      setArtworks(mappedArtworks);
+
+    } catch (err: any) {
+      console.error('Failed to load artworks:', err);
+      // Backend not available and DB failed -> keep empty or mock
     } finally {
       setLoading(false);
     }
@@ -56,12 +86,27 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
     refresh();
     // Fetch artist plan info for gating
     (async () => {
+      // Try API first
       try {
         const me = await apiGet<any>(`/api/profile/me`);
         const tier = String(me?.profile?.subscription_tier || 'free').toLowerCase() as any;
         const status = String(me?.profile?.subscription_status || 'inactive');
         setArtistPlan({ tier, status });
-      } catch {}
+      } catch (apiErr) {
+        // Fallback to Supabase
+        const { data } = await supabase
+          .from('artists')
+          .select('subscription_tier, subscription_status')
+          .eq('id', user.id)
+          .single();
+          
+        if (data) {
+           setArtistPlan({ 
+             tier: String(data.subscription_tier || 'free').toLowerCase() as any,
+             status: String(data.subscription_status || 'inactive')
+           });
+        }
+      }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user.id]);
@@ -96,18 +141,55 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
         return;
       }
 
-      const created = await apiPost<any>('/api/artworks', {
-        artistId: user.id,
-        email: user.email,
-        name: user.name,
-        title: newArtwork.title,
-        description: newArtwork.description,
-        price: priceNumber,
-        currency: 'usd',
-        imageUrl: newArtwork.imageUrl || undefined,
-      });
+      let createdItem: Artwork;
 
-      setArtworks([created as Artwork, ...artworks]);
+      // Try API first
+      try {
+        const res = await apiPost<any>('/api/artworks', {
+          artistId: user.id,
+          email: user.email,
+          name: user.name,
+          title: newArtwork.title,
+          description: newArtwork.description,
+          price: priceNumber,
+          currency: 'usd',
+          imageUrl: newArtwork.imageUrl || undefined,
+        });
+        createdItem = res as Artwork;
+      } catch (apiErr) {
+         console.warn('API creation failed, falling back to Supabase:', apiErr);
+         
+         // Fallback to direct DB insert
+         const { data, error: dbError } = await supabase
+           .from('artworks')
+           .insert({
+             artist_id: user.id,
+             artist_name: user.name,
+             title: newArtwork.title,
+             description: newArtwork.description,
+             price_cents: Math.round(priceNumber * 100),
+             currency: 'usd',
+             image_url: newArtwork.imageUrl || null,
+             status: 'available'
+           })
+           .select()
+           .single();
+           
+         if (dbError) throw dbError;
+         
+         createdItem = {
+           id: data.id,
+           title: data.title,
+           description: data.description,
+           price: (data.price_cents || 0) / 100,
+           imageUrl: data.image_url,
+           status: data.status,
+           artistName: data.artist_name,
+           venueName: data.venue_name
+         };
+      }
+
+      setArtworks([createdItem, ...artworks]);
       setNewArtwork({ title: '', description: '', price: '', imageUrl: '' });
       setShowAddForm(false);
     } catch (e: any) {
