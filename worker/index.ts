@@ -661,6 +661,30 @@ export default {
       return json({ artists });
     }
 
+    // Public: single artist
+    if (url.pathname.startsWith('/api/artists/') && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const parts = url.pathname.split('/');
+      const id = parts[3];
+      if (!id) return json({ error: 'Missing artist id' }, { status: 400 });
+      const { data, error } = await supabaseAdmin
+        .from('artists')
+        .select('id,name,bio,profile_photo_url,portfolio_url,city_primary,city_secondary')
+        .eq('id', id)
+        .maybeSingle();
+      if (error) return json({ error: error.message }, { status: 500 });
+      if (!data) return json({ error: 'Not found' }, { status: 404 });
+      return json({
+        id: data.id,
+        name: data.name,
+        bio: data.bio || null,
+        profilePhotoUrl: (data as any).profile_photo_url || null,
+        portfolioUrl: (data as any).portfolio_url || null,
+        cityPrimary: (data as any).city_primary || null,
+        citySecondary: (data as any).city_secondary || null,
+      });
+    }
+
     // Public: single venue
     if (url.pathname.startsWith('/api/venues/') && method === 'GET') {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
@@ -831,7 +855,7 @@ export default {
       if (!id) return json({ error: 'Missing artwork id' }, { status: 400 });
       const { data, error } = await supabaseAdmin
         .from('artworks')
-        .select('id,title,status,price_cents,currency,image_url,artist_name,venue_name,description,purchase_url,qr_svg')
+        .select('id,title,status,price_cents,currency,image_url,artist_id,artist_name,venue_name,description,purchase_url,qr_svg')
         .eq('id', id)
         .maybeSingle();
       if (error) return json({ error: error.message }, { status: 500 });
@@ -843,6 +867,7 @@ export default {
         price: Math.round((data.price_cents || 0) / 100),
         currency: data.currency,
         imageUrl: data.image_url,
+        artistId: (data as any).artist_id || null,
         artistName: data.artist_name,
         venueName: data.venue_name,
         description: data.description,

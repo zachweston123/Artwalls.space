@@ -7,6 +7,7 @@ type Artwork = {
   price: number; // dollars
   currency?: string;
   imageUrl?: string;
+  artistId?: string;
   status: 'available' | 'pending' | 'active' | 'sold';
   artistName?: string;
   venueName?: string;
@@ -21,6 +22,7 @@ interface PurchasePageProps {
 
 export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
   const [artwork, setArtwork] = useState<Artwork | null>(null);
+  const [artistProfile, setArtistProfile] = useState<{ name?: string; bio?: string | null; profilePhotoUrl?: string | null; portfolioUrl?: string | null; cityPrimary?: string | null } | null>(null);
   const [loading, setLoading] = useState(true);
   const [buying, setBuying] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,6 +37,23 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
   }, [artworkId]);
 
   // After success/cancel, refresh artwork and retrieve receipt
+  const normalizeArtwork = (raw: any): Artwork => {
+    const price = raw?.price ?? (typeof raw?.price_cents === 'number' ? raw.price_cents / 100 : 0);
+    return {
+      id: raw?.id,
+      title: raw?.title || 'Artwork',
+      description: raw?.description || undefined,
+      price: Number(price || 0),
+      currency: raw?.currency || 'usd',
+      imageUrl: raw?.imageUrl || raw?.image_url || undefined,
+      status: raw?.status || 'available',
+      artistName: raw?.artistName || raw?.artist_name || undefined,
+      artistId: raw?.artistId || raw?.artist_id || undefined,
+      venueName: raw?.venueName || raw?.venue_name || undefined,
+      checkoutUrl: raw?.checkoutUrl || raw?.checkout_url || undefined,
+    };
+  };
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -43,8 +62,8 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
           const data = await apiGet<{ order: { receiptUrl: string | null } | null }>(`/api/orders/by-artwork?artworkId=${encodeURIComponent(artworkId)}`);
           if (!cancelled) setReceiptUrl(data.order?.receiptUrl || null);
           // Refresh artwork to reflect sold status
-          const art = await apiGet<Artwork>(`/api/artworks/${encodeURIComponent(artworkId)}`);
-          if (!cancelled) setArtwork(art);
+          const art = await apiGet<any>(`/api/artworks/${encodeURIComponent(artworkId)}`);
+          if (!cancelled) setArtwork(normalizeArtwork(art));
         } catch {}
       }
     })();
@@ -57,8 +76,19 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
       try {
         setLoading(true);
         setError(null);
-        const data = await apiGet<Artwork>(`/api/artworks/${encodeURIComponent(artworkId)}`);
-        if (!cancelled) setArtwork(data);
+        const data = await apiGet<any>(`/api/artworks/${encodeURIComponent(artworkId)}`);
+        if (!cancelled) {
+          const normalized = normalizeArtwork(data);
+          setArtwork(normalized);
+          if (normalized.artistId) {
+            try {
+              const artist = await apiGet<any>(`/api/artists/${encodeURIComponent(normalized.artistId)}`);
+              if (!cancelled) setArtistProfile(artist || null);
+            } catch {
+              if (!cancelled) setArtistProfile(null);
+            }
+          }
+        }
       } catch (e: any) {
         if (!cancelled) setArtwork(null);
       } finally {
@@ -146,8 +176,40 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
               </div>
             </div>
 
-            <div className="mb-8">
+            <div className="mb-6">
               <p className="text-[var(--text)] leading-relaxed">{artwork?.description || 'No description provided.'}</p>
+            </div>
+
+            <div className="bg-[var(--surface-3)] rounded-xl p-4 sm:p-6 mb-6 border border-[var(--border)]">
+              <h2 className="text-lg font-semibold text-[var(--text)] mb-2">About the artist</h2>
+              <div className="flex items-start gap-4">
+                <div className="w-14 h-14 rounded-full overflow-hidden border border-[var(--border)] bg-[var(--surface-2)] flex-shrink-0">
+                  {artistProfile?.profilePhotoUrl ? (
+                    <img src={artistProfile.profilePhotoUrl} alt={artistProfile?.name || 'Artist'} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-xs text-[var(--text-muted)]">Artist</div>
+                  )}
+                </div>
+                <div>
+                  <p className="text-sm text-[var(--text)] font-semibold">{artistProfile?.name || artwork?.artistName || 'Artist'}</p>
+                  {artistProfile?.cityPrimary && (
+                    <p className="text-xs text-[var(--text-muted)]">Based in {artistProfile.cityPrimary}</p>
+                  )}
+                  <p className="text-sm text-[var(--text-muted)] mt-2">
+                    {artistProfile?.bio || 'Learn more about the artist behind this piece.'}
+                  </p>
+                  {artistProfile?.portfolioUrl && (
+                    <a
+                      href={artistProfile.portfolioUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs text-[var(--accent)] underline mt-2 inline-block"
+                    >
+                      View portfolio
+                    </a>
+                  )}
+                </div>
+              </div>
             </div>
 
             <div className="bg-[var(--surface-3)] rounded-xl p-4 sm:p-6 mb-6 border border-[var(--border)]">
