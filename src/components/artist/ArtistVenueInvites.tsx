@@ -204,9 +204,9 @@ export function ArtistVenueInvites({ artistId, onNavigate, embedded = false }: A
     <div className={embedded ? 'bg-[var(--surface-1)] border border-[var(--border)] rounded-xl p-6' : 'bg-[var(--bg)] text-[var(--text)] min-h-screen'}>
       {!embedded && (
         <div className="mb-8">
-          <h1 className="text-3xl mb-2">Invite a venue</h1>
+          <h1 className="text-3xl mb-2">Venue Invitations</h1>
           <p className="text-[var(--text-muted)]">
-            Discover venues and send a warm, personal intro from your own email.
+            Manage your outreach and connect with new spaces.
           </p>
         </div>
       )}
@@ -226,6 +226,7 @@ export function ArtistVenueInvites({ artistId, onNavigate, embedded = false }: A
       )}
 
       <div className={embedded ? 'bg-[var(--surface-2)] border border-[var(--border)] rounded-xl p-6 mb-6' : 'bg-[var(--surface-1)] border border-[var(--border)] rounded-xl p-6 mb-8'}>
+        <h2 className="text-lg font-semibold mb-4">Invite a new venue</h2>
         <div className="flex items-center gap-2 text-sm text-[var(--text-muted)] mb-3">
           <Mail className="w-4 h-4" />
           Make it personal—venues reply more when it’s clearly from you.
