@@ -13,8 +13,6 @@ interface NavigationProps {
 }
 
 export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClick, unreadCount = 2 }: NavigationProps) {
-  const isLoggedIn = !!user;
-  const isArtist = user?.role === 'artist';
   const [showNotifications, setShowNotifications] = useState(false);
   const [loadingNotifications, setLoadingNotifications] = useState(false);
   const [notifications, setNotifications] = useState<Array<{ id: string; title: string; message?: string; createdAt: string; isRead?: boolean }>>([]);
@@ -62,37 +60,13 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
     };
   }, [showNotifications]);
 
-  const artistLinks = [
-    { id: 'artist-dashboard', label: 'Dashboard' },
-    { id: 'artist-profile', label: 'Profile' },
-    { id: 'artist-artworks', label: 'My Artworks' },
-    { id: 'artist-venues', label: 'Find Venues' },
-    { id: 'artist-applications', label: 'Applications' },
-    { id: 'artist-invites', label: 'Invitations' },
-    { id: 'artist-sales', label: 'Sales & Earnings' },
-  ];
+  if (!user) {
+    const learnLinks = [
+      { id: 'why-artwalls-artist', label: 'Why Artwalls (Artists)' },
+      { id: 'venues', label: 'Why Artwalls (Venues)' },
+      { id: 'plans-pricing', label: 'Plans & Pricing' },
+    ];
 
-  const venueLinks = [
-    { id: 'venue-dashboard', label: 'Dashboard' },
-    { id: 'venue-profile', label: 'My Venue' },
-    { id: 'venue-walls', label: 'My Walls' },
-    { id: 'venue-applications', label: 'Applications' },
-    { id: 'find-art', label: 'Find Art' },
-    { id: 'venue-find-artists', label: 'Find Artists' },
-    { id: 'venue-current', label: 'Current Art' },
-    { id: 'venue-sales', label: 'Sales' },
-    { id: 'venues-partner-kit', label: 'Partner Kit' },
-  ];
-
-  const links = isArtist ? artistLinks : venueLinks;
-
-  const learnLinks = [
-    { id: 'why-artwalls-artist', label: 'Why Artwalls (Artists)' },
-    { id: 'venues', label: 'Why Artwalls (Venues)' },
-    { id: 'plans-pricing', label: 'Plans & Pricing' },
-  ];
-
-  if (!isLoggedIn) {
     return (
       <nav className="bg-[var(--surface-2)] border-b border-[var(--border)]">
         <div className="max-w-7xl mx-auto px-6">
@@ -151,6 +125,39 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
       </nav>
     );
   }
+
+  const isArtist = user.role === 'artist';
+
+  const artistLinks = [
+    { id: 'artist-dashboard', label: 'Dashboard' },
+    { id: 'artist-profile', label: 'Profile' },
+    { id: 'artist-artworks', label: 'My Artworks' },
+    { id: 'artist-venues', label: 'Find Venues' },
+    { id: 'artist-applications', label: 'Applications' },
+    { id: 'artist-invites', label: 'Invitations' },
+    { id: 'artist-sales', label: 'Sales & Earnings' },
+  ];
+
+  const venueLinks = [
+    { id: 'venue-dashboard', label: 'Dashboard' },
+    { id: 'venue-profile', label: 'My Venue' },
+    { id: 'venue-walls', label: 'My Walls' },
+    { id: 'venue-applications', label: 'Applications' },
+    { id: 'find-art', label: 'Find Art' },
+    { id: 'venue-find-artists', label: 'Find Artists' },
+    { id: 'venue-current', label: 'Current Art' },
+    { id: 'venue-sales', label: 'Sales' },
+    { id: 'venues-partner-kit', label: 'Partner Kit' },
+  ];
+
+  const links = isArtist ? artistLinks : venueLinks;
+
+  const learnLinks = [
+    ...(isArtist
+      ? [{ id: 'why-artwalls-artist', label: 'Why Artwalls (Artists)' }]
+      : [{ id: 'venues', label: 'Why Artwalls (Venues)' }]),
+    { id: 'plans-pricing', label: 'Plans & Pricing' },
+  ];
 
   return (
     <nav className="bg-[var(--surface-2)] border-b border-[var(--border)]">

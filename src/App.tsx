@@ -226,6 +226,16 @@ export default function App() {
     checkAgreementStatus();
   }, [currentUser]);
 
+  useEffect(() => {
+    if (!currentUser) return;
+    if (currentUser.role === 'artist' && (currentPage === 'venues' || currentPage === 'why-artwalls-venue')) {
+      setCurrentPage('why-artwalls-artist');
+    }
+    if (currentUser.role === 'venue' && currentPage === 'why-artwalls-artist') {
+      setCurrentPage('venues');
+    }
+  }, [currentUser, currentPage]);
+
   const handleAgreementAccept = async () => {
     if (!currentUser) return;
     
@@ -564,8 +574,10 @@ export default function App() {
           />
 
           <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-            {showArtistsPage && <WhyArtwallsArtistsPage onNavigate={handleNavigate} />}
-            {showVenuesPage && <VenuesLandingPage onNavigate={handleNavigate} onLogin={handleLogin} />}
+            {showArtistsPage && <WhyArtwallsArtistsPage onNavigate={handleNavigate} viewerRole={null} />}
+            {showVenuesPage && (
+              <VenuesLandingPage onNavigate={handleNavigate} onLogin={handleLogin} viewerRole={null} />
+            )}
           </main>
           <Footer onNavigate={handleNavigate} />
         </div>
@@ -748,10 +760,10 @@ export default function App() {
         {currentPage === 'terms-of-service' && <TermsOfService onNavigate={handleNavigate} />}
         {currentPage === 'plans-pricing' && <PricingPage onNavigate={handleNavigate} currentPlan="free" />}
         {currentPage === 'why-artwalls-artist' && (
-          <WhyArtwallsArtistsPage onNavigate={handleNavigate} />
+          <WhyArtwallsArtistsPage onNavigate={handleNavigate} viewerRole={currentUser.role} />
         )}
         {(currentPage === 'why-artwalls-venue' || currentPage === 'venues') && (
-          <VenuesLandingPage onNavigate={handleNavigate} />
+          <VenuesLandingPage onNavigate={handleNavigate} viewerRole={currentUser.role} />
         )}
 
         {/* Venue Growth & Exposure Pages */}

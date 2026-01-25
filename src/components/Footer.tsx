@@ -85,26 +85,32 @@ export function Footer({ onNavigate }: FooterProps) {
           <div>
             <h3 className="text-sm mb-3 text-[var(--text)]">Learn</h3>
             <ul className="space-y-2 text-sm text-[var(--text-muted)]">
-              <li>
-                <button onClick={() => onNavigate('why-artwalls-artist')} className="hover:text-[var(--text)] transition-colors">
-                  Why Artwalls (Artists)
-                </button>
-              </li>
-              <li>
-                <button onClick={() => onNavigate('venues')} className="hover:text-[var(--text)] transition-colors">
-                  Why Artwalls (Venues)
-                </button>
-              </li>
+              {(!userRole || userRole === 'artist') && (
+                <li>
+                  <button onClick={() => onNavigate('why-artwalls-artist')} className="hover:text-[var(--text)] transition-colors">
+                    Why Artwalls (Artists)
+                  </button>
+                </li>
+              )}
+              {(!userRole || userRole === 'venue') && (
+                <li>
+                  <button onClick={() => onNavigate('venues')} className="hover:text-[var(--text)] transition-colors">
+                    Why Artwalls (Venues)
+                  </button>
+                </li>
+              )}
               <li>
                 <button onClick={() => onNavigate('plans-pricing')} className="hover:text-[var(--text)] transition-colors">
                   Plans & Pricing
                 </button>
               </li>
-              <li>
-                <button onClick={() => onNavigate('venues')} className="hover:text-[var(--text)] transition-colors">
-                  Venues
-                </button>
-              </li>
+              {!userRole && (
+                <li>
+                  <button onClick={() => onNavigate('venues')} className="hover:text-[var(--text)] transition-colors">
+                    Venues
+                  </button>
+                </li>
+              )}
             </ul>
           </div>
 

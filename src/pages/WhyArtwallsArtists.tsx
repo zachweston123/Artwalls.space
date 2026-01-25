@@ -2,9 +2,13 @@ import { SEO } from '../components/SEO';
 
 interface WhyArtwallsArtistsPageProps {
   onNavigate?: (page: string) => void;
+  viewerRole?: 'artist' | 'venue' | null;
 }
 
-export function WhyArtwallsArtistsPage({ onNavigate }: WhyArtwallsArtistsPageProps) {
+export function WhyArtwallsArtistsPage({ onNavigate, viewerRole = null }: WhyArtwallsArtistsPageProps) {
+  const isSignedIn = !!viewerRole;
+  const showSignupCta = !isSignedIn;
+  const showArtistActions = viewerRole === 'artist';
   const planHighlights = [
     {
       name: 'Free',
@@ -70,50 +74,70 @@ export function WhyArtwallsArtistsPage({ onNavigate }: WhyArtwallsArtistsPagePro
           <p className="text-lg sm:text-xl text-[var(--text-muted)] mb-8 max-w-3xl mx-auto">
             Artwalls helps you get placed in local venues, track everything, and actually sell with a clean QR + listing flow.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button
-              onClick={() => onNavigate?.('login')}
-              className="px-6 py-3 rounded-lg bg-[var(--blue)] text-[var(--on-blue)] font-semibold hover:brightness-95 transition"
-            >
-              Create Artist Account
-            </button>
-            <button
-              onClick={() => onNavigate?.('plans-pricing')}
-              className="px-6 py-3 rounded-lg border border-[var(--border)] text-[var(--text)] hover:bg-[var(--surface-2)] transition"
-            >
-              View Plans
-            </button>
-          </div>
+          {(showSignupCta || showArtistActions) && (
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              {showSignupCta && (
+                <button
+                  onClick={() => onNavigate?.('login')}
+                  className="px-6 py-3 rounded-lg bg-[var(--blue)] text-[var(--on-blue)] font-semibold hover:brightness-95 transition"
+                >
+                  Create Artist Account
+                </button>
+              )}
+              <button
+                onClick={() => onNavigate?.(showArtistActions ? 'artist-dashboard' : 'plans-pricing')}
+                className={
+                  showArtistActions
+                    ? 'px-6 py-3 rounded-lg bg-[var(--surface-1)] border border-[var(--border)] text-[var(--text)] hover:bg-[var(--surface-2)] transition'
+                    : 'px-6 py-3 rounded-lg border border-[var(--border)] text-[var(--text)] hover:bg-[var(--surface-2)] transition'
+                }
+              >
+                {showArtistActions ? 'Go to Dashboard' : 'View Plans'}
+              </button>
+              {showArtistActions && (
+                <button
+                  onClick={() => onNavigate?.('artist-venues')}
+                  className="px-6 py-3 rounded-lg border border-[var(--border)] text-[var(--text)] hover:bg-[var(--surface-2)] transition"
+                >
+                  Find Venues
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </section>
 
       {/* Doing it solo problem */}
       <section className="py-12 sm:py-16 px-4">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-[var(--text)]">The problem with doing it solo</h2>
-          <ul className="list-disc pl-6 space-y-3 text-[var(--text-muted)]">
-            <li>awkward walk-ins + DMs + “email my manager”</li>
-            <li>no way to track who you talked to / when to follow up</li>
-            <li>messy pricing + labels + “how do people buy this?”</li>
-            <li>starting from scratch every time you want a new wall</li>
-          </ul>
+          <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-2xl p-6 sm:p-8">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-[var(--text)]">The problem with doing it solo</h2>
+            <ul className="list-disc pl-6 space-y-3 text-[var(--text-muted)]">
+              <li>awkward walk-ins + DMs + “email my manager”</li>
+              <li>no way to track who you talked to / when to follow up</li>
+              <li>messy pricing + labels + “how do people buy this?”</li>
+              <li>starting from scratch every time you want a new wall</li>
+            </ul>
+          </div>
         </div>
       </section>
 
       {/* What Artwalls does */}
       <section className="py-12 sm:py-16 px-4 bg-[var(--surface)] border-y border-[var(--border)]">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-3 text-[var(--text)]">What Artwalls does for you</h2>
-          <p className="text-[var(--text-muted)] mb-6">Artwalls is the system behind your venue placements.</p>
-          <ul className="list-disc pl-6 space-y-3 text-[var(--text-muted)]">
-            <li>Venue discovery + applications (so you’re not guessing who’s open to art)</li>
-            <li>Simple “display” tracking (where your art is up, dates, rotations, notes)</li>
-            <li>QR labels that actually convert (scan → artwork page → inquiry / purchase flow)</li>
-            <li>Payouts built in (so sales don’t turn into Venmo chaos)</li>
-            <li>Analytics (see what’s getting scanned and selling on higher tiers)</li>
-            <li>Optional damage protection (peace of mind when work is on public walls)</li>
-          </ul>
-          <p className="text-xs text-[var(--text-muted)] mt-4">“Display” = an active venue placement / wall spot you’re using.</p>
+          <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-2xl p-6 sm:p-8">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-3 text-[var(--text)]">What Artwalls does for you</h2>
+            <p className="text-[var(--text-muted)] mb-6">Artwalls is the system behind your venue placements.</p>
+            <ul className="list-disc pl-6 space-y-3 text-[var(--text-muted)]">
+              <li>Venue discovery + applications (so you’re not guessing who’s open to art)</li>
+              <li>Simple “display” tracking (where your art is up, dates, rotations, notes)</li>
+              <li>QR labels that actually convert (scan → artwork page → inquiry / purchase flow)</li>
+              <li>Payouts built in (so sales don’t turn into Venmo chaos)</li>
+              <li>Analytics (see what’s getting scanned and selling on higher tiers)</li>
+              <li>Optional damage protection (peace of mind when work is on public walls)</li>
+            </ul>
+            <p className="text-xs text-[var(--text-muted)] mt-4">“Display” = an active venue placement / wall spot you’re using.</p>
+          </div>
         </div>
       </section>
 
@@ -157,10 +181,12 @@ export function WhyArtwallsArtistsPage({ onNavigate }: WhyArtwallsArtistsPagePro
       {/* Optional damage protection */}
       <section className="py-12 sm:py-16 px-4 bg-[var(--surface)] border-y border-[var(--border)]">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-3 text-[var(--text)]">Optional damage protection</h2>
-          <p className="text-[var(--text-muted)]">
-            If you’re placing physical art in public spaces, protection helps you sleep. Coverage scales by plan (ex: $100 → $150 → $200 max coverage per claim as tiers go up)
-          </p>
+          <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-2xl p-6 sm:p-8">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-3 text-[var(--text)]">Optional damage protection</h2>
+            <p className="text-[var(--text-muted)]">
+              If you’re placing physical art in public spaces, protection helps you sleep. Coverage scales by plan (ex: $100 → $150 → $200 max coverage per claim as tiers go up)
+            </p>
+          </div>
         </div>
       </section>
 
