@@ -1,8 +1,8 @@
 const DEFAULT_API_BASE = (() => {
-  if (typeof window === 'undefined') return 'https://api.artwalls.space';
+  if (typeof window === 'undefined') return 'https://artwalls.space';
   const host = window.location.hostname;
   if (host === 'localhost' || host === '127.0.0.1') return 'http://localhost:4242';
-  return 'https://api.artwalls.space';
+  return 'https://artwalls.space';
 })();
 
 const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || DEFAULT_API_BASE;
