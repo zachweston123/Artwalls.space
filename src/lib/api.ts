@@ -1,4 +1,6 @@
-const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || 'https://api.artwalls.space';
+const API_BASE =
+  (import.meta as any).env?.VITE_API_BASE_URL ||
+  (typeof window !== 'undefined' ? window.location.origin : '');
 
 async function getAuthHeader(): Promise<Record<string, string>> {
   try {
