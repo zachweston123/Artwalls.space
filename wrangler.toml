@@ -27,8 +27,3 @@ STRIPE_SUB_PRICE_PRO = "price_1SrsrdE1V7i70KPhorOqhCge"
 # wrangler secret put TWILIO_ACCOUNT_SID
 # wrangler secret put TWILIO_AUTH_TOKEN
 # wrangler secret put TWILIO_FROM_NUMBER
-
-[env.production]
-routes = [
-	{ pattern = "artwalls.space/api/*", zone_name = "artwalls.space" }
-]
