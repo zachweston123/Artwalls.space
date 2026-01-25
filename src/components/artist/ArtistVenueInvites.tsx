@@ -5,7 +5,8 @@ import { VenuePlacesSearch, VenuePlaceDetails } from '../shared/VenuePlacesSearc
 
 interface ArtistVenueInvitesProps {
   artistId: string;
-  onNavigate: (page: string) => void;
+  onNavigate?: (page: string) => void;
+  embedded?: boolean;
 }
 
 type InviteStatus = 'DRAFT' | 'SENT' | 'CLICKED' | 'ACCEPTED' | 'DECLINED' | 'EXPIRED';
@@ -51,7 +52,7 @@ interface ArtworkPreview {
 const DEFAULT_SUBJECT = (venueName: string) => `Artwalls invite for ${venueName}`;
 const DEFAULT_TEMPLATE = `Hi {VENUE_NAME} team,\n\n{PERSONAL_LINE}\n\nI'm {ARTIST_NAME}, a local artist in {CITY}. I'd love to share a rotating selection of my work at {VENUE_NAME}. You can view my portfolio here: {ARTIST_PORTFOLIO_URL}.\n\nFeatured pieces: {FEATURED_ARTWORKS}\n\nIf you're open to it, here’s a quick link to learn more and accept: {INVITE_LINK}\n\nThanks,\n{ARTIST_NAME}`;
 
-export function ArtistVenueInvites({ artistId, onNavigate }: ArtistVenueInvitesProps) {
+export function ArtistVenueInvites({ artistId, onNavigate, embedded = false }: ArtistVenueInvitesProps) {
   const [invites, setInvites] = useState<VenueInvite[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -200,13 +201,15 @@ export function ArtistVenueInvites({ artistId, onNavigate }: ArtistVenueInvitesP
   };
 
   return (
-    <div className="bg-[var(--bg)] text-[var(--text)] min-h-screen">
-      <div className="mb-8">
-        <h1 className="text-3xl mb-2">Invite a venue</h1>
-        <p className="text-[var(--text-muted)]">
-          Discover venues and send a warm, personal intro from your own email.
-        </p>
-      </div>
+    <div className={embedded ? 'bg-[var(--surface-1)] border border-[var(--border)] rounded-xl p-6' : 'bg-[var(--bg)] text-[var(--text)] min-h-screen'}>
+      {!embedded && (
+        <div className="mb-8">
+          <h1 className="text-3xl mb-2">Invite a venue</h1>
+          <p className="text-[var(--text-muted)]">
+            Discover venues and send a warm, personal intro from your own email.
+          </p>
+        </div>
+      )}
 
       {toast && (
         <div className="mb-4 bg-[var(--green-muted)] border border-[var(--border)] rounded-lg p-3 text-sm text-[var(--green)] flex items-center gap-2">
@@ -222,7 +225,7 @@ export function ArtistVenueInvites({ artistId, onNavigate }: ArtistVenueInvitesP
         </div>
       )}
 
-      <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-xl p-6 mb-8">
+      <div className={embedded ? 'bg-[var(--surface-2)] border border-[var(--border)] rounded-xl p-6 mb-6' : 'bg-[var(--surface-1)] border border-[var(--border)] rounded-xl p-6 mb-8'}>
         <div className="flex items-center gap-2 text-sm text-[var(--text-muted)] mb-3">
           <Mail className="w-4 h-4" />
           Make it personal—venues reply more when it’s clearly from you.
@@ -230,15 +233,17 @@ export function ArtistVenueInvites({ artistId, onNavigate }: ArtistVenueInvitesP
         <VenuePlacesSearch onPlaceSelect={handlePlaceSelect} />
       </div>
 
-      <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-xl p-6">
+      <div className={embedded ? 'bg-[var(--surface-2)] border border-[var(--border)] rounded-xl p-6' : 'bg-[var(--surface-1)] border border-[var(--border)] rounded-xl p-6'}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">Your invites</h2>
-          <button
-            onClick={() => onNavigate('artist-dashboard')}
-            className="text-xs text-[var(--text-muted)] hover:text-[var(--text)]"
-          >
-            Back to dashboard
-          </button>
+          {!embedded && onNavigate && (
+            <button
+              onClick={() => onNavigate('artist-dashboard')}
+              className="text-xs text-[var(--text-muted)] hover:text-[var(--text)]"
+            >
+              Back to dashboard
+            </button>
+          )}
         </div>
 
         {loading ? (

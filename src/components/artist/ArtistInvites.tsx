@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Mail, MapPin, Calendar, CheckCircle, X as XIcon } from 'lucide-react';
+import { ArtistVenueInvites } from './ArtistVenueInvites';
 
 interface ArtistInvitesProps {
   onApply: (inviteId: string) => void;
   onDecline: (inviteId: string) => void;
   onNavigate: (page: string) => void;
+  artistId: string;
 }
 
 interface Invite {
@@ -20,7 +22,7 @@ interface Invite {
   status: 'pending' | 'accepted' | 'declined';
 }
 
-export function ArtistInvites({ onApply, onDecline, onNavigate }: ArtistInvitesProps) {
+export function ArtistInvites({ onApply, onDecline, onNavigate, artistId }: ArtistInvitesProps) {
   const [selectedInvite, setSelectedInvite] = useState<string | null>(null);
 
   // Mock invites data
@@ -70,8 +72,13 @@ export function ArtistInvites({ onApply, onDecline, onNavigate }: ArtistInvitesP
       <div className="mb-8">
         <h1 className="text-3xl mb-2">Invitations</h1>
         <p className="text-[var(--text-muted)]">
-          Venues have invited you to display your artwork
+          Invite venues and track incoming invitations in one place.
         </p>
+      </div>
+
+      <div className="mb-10">
+        <h2 className="text-xl mb-4">Invite a venue</h2>
+        <ArtistVenueInvites artistId={artistId} embedded />
       </div>
 
       {/* Pending Invites */}

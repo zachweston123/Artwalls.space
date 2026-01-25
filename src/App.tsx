@@ -14,7 +14,6 @@ import { ArtistProfileView } from './components/artist/ArtistProfileView';
 import { PasswordSecurity } from './components/artist/PasswordSecurity';
 import { NotificationPreferences } from './components/artist/NotificationPreferences';
 import { ArtistInvites } from './components/artist/ArtistInvites';
-import { ArtistVenueInvites } from './components/artist/ArtistVenueInvites';
 import { VenueDashboard } from './components/venue/VenueDashboard';
 import { VenueWalls } from './components/venue/VenueWalls';
 import { VenueCurrentArtWithScheduling } from './components/venue/VenueCurrentArtWithScheduling';
@@ -316,7 +315,7 @@ export default function App() {
   useEffect(() => {
     if (!currentUser) return;
 
-    const artistOnlyPages = ['artist-venues', 'artist-venue-invites'];
+    const artistOnlyPages = ['artist-venues'];
     const venueOnlyPages = ['find-art', 'venue-find-artists'];
 
     // If artist tries to access venue-only pages, redirect to artist dashboard
@@ -759,10 +758,8 @@ export default function App() {
                   }
                 }}
                 onNavigate={handleNavigate}
+                artistId={currentUser.id}
               />
-            )}
-            {currentPage === 'artist-venue-invites' && (
-              <ArtistVenueInvites artistId={currentUser.id} onNavigate={handleNavigate} />
             )}
             {currentPage === 'artist-sales' && <ArtistSales user={currentUser} onNavigate={handleNavigate} />}
             {currentPage === 'artist-profile' && <ArtistProfile onNavigate={handleNavigate} />}

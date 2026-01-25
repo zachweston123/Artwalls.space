@@ -376,7 +376,7 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
               Upload New Artwork
             </button>
             <button
-              onClick={() => onNavigate('artist-venue-invites')}
+              onClick={() => onNavigate('artist-invites')}
               className="w-full px-4 py-3 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] text-[var(--text)] font-semibold text-sm rounded-lg border border-[var(--border)] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]"
             >
               Invite a venue
