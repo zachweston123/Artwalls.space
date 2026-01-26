@@ -105,26 +105,59 @@ export function Login({ onLogin, onNavigate }: LoginProps) {
           setIsLoading(false);
           return;
         }
+
+        const trimmedEmail = email.trim();
+        const { data, error } = await supabase.auth.signUp({
+          email: trimmedEmail,
+          password,
+          options: {
+            data: {
+              role: selectedRole,
+              name: safeName || null,
+              phone: phoneTrim,
+            },
+            emailRedirectTo: `${window.location.origin}/verify-email`,
+          },
+        });
+
+        if (error) throw error;
+
+        let infoCopy: string | null = null;
         try {
           const { apiPost } = await import('../lib/api');
-          const payload = {
-            email: email.trim(),
-            password,
-            role: selectedRole,
-            name: safeName || null,
-            phone: phoneTrim,
-          };
-          const result = await apiPost('/api/auth/signup', payload);
-          if (result?.emailSkipped && result?.verificationUrl) {
-            setInfoMessage(`Account created. Email delivery is not configured; copy this link to verify: ${result.verificationUrl}`);
-          } else {
-            setInfoMessage(result?.message || 'Account created. Check your email to confirm, then sign in.');
+          const verifyResult = await apiPost('/api/auth/send-verification', { email: trimmedEmail });
+          if (verifyResult?.emailSkipped && verifyResult?.verificationUrl) {
+            infoCopy = `Account created. Email delivery is not configured; copy this link to verify: ${verifyResult.verificationUrl}`;
+          } else if (verifyResult?.emailSent) {
+            infoCopy = 'Account created. Check your inbox for the Artwalls verification email.';
           }
+        } catch (verifyErr) {
+          console.warn('Custom verification email failed', verifyErr);
+        }
+
+        if (!data.session) {
+          setInfoMessage(infoCopy || 'Account created. Check your email to confirm, then sign in.');
           setIsSignup(false);
           setPassword('');
-        } catch (signupErr: any) {
-          setErrorMessage(signupErr?.message || 'Account creation failed.');
+          return;
         }
+
+        const supaUser = data.user;
+        if (!supaUser) throw new Error('Sign up succeeded but no user returned.');
+
+        try {
+          const { apiPost } = await import('../lib/api');
+          await apiPost('/api/profile/provision', { phoneNumber: phoneTrim });
+        } catch (e) {
+          console.warn('Profile provision failed', e);
+        }
+
+        onLogin({
+          id: supaUser.id,
+          name: (supaUser.user_metadata?.name as string | undefined) || safeName || 'User',
+          email: supaUser.email || trimmedEmail,
+          role: (supaUser.user_metadata?.role as UserRole) || selectedRole,
+        });
         return;
       }
 

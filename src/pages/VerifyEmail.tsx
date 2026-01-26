@@ -113,8 +113,15 @@ export default function VerifyEmail() {
         toast.success('Verification email sent. Check your inbox.');
       }
     } catch (err: any) {
-      console.error('Resend failed', err);
-      toast.error(err?.message || 'Unable to resend right now.');
+      console.warn('Custom verification resend failed, falling back to Supabase', err);
+      try {
+        const { error } = await supabase.auth.resend({ type: 'signup', email: email.trim() });
+        if (error) throw error;
+        toast.success('Verification email sent. Check your inbox.');
+      } catch (fallbackErr: any) {
+        console.error('Resend failed', fallbackErr);
+        toast.error(fallbackErr?.message || 'Unable to resend right now.');
+      }
     } finally {
       setIsResending(false);
     }
