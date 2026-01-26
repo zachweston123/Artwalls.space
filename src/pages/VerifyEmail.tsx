@@ -105,9 +105,13 @@ export default function VerifyEmail() {
 
     setIsResending(true);
     try {
-      const { error } = await supabase.auth.resend({ type: 'signup', email: email.trim() });
-      if (error) throw error;
-      toast.success('Verification email sent. Check your inbox.');
+      const { apiPost } = await import('../lib/api');
+      const result = await apiPost('/api/auth/send-verification', { email: email.trim() });
+      if (result?.emailSkipped && result?.verificationUrl) {
+        toast(`Email sending is not configured. Copy this link to verify: ${result.verificationUrl}`);
+      } else {
+        toast.success('Verification email sent. Check your inbox.');
+      }
     } catch (err: any) {
       console.error('Resend failed', err);
       toast.error(err?.message || 'Unable to resend right now.');

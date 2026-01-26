@@ -105,45 +105,26 @@ export function Login({ onLogin, onNavigate }: LoginProps) {
           setIsLoading(false);
           return;
         }
-        const { data, error } = await supabase.auth.signUp({
-          email: email.trim(),
-          password,
-          options: {
-            data: {
-              role: selectedRole,
-              name: safeName || null,
-              phone: phoneTrim,
-            },
-          },
-        });
-
-        if (error) throw error;
-
-        // If email confirmations are enabled, there may be no session.
-        if (!data.session) {
-          setInfoMessage('Account created. Check your email to confirm, then sign in.');
-          setIsSignup(false);
-          return;
-        }
-
-        const supaUser = data.user;
-        if (!supaUser) throw new Error('Sign up succeeded but no user returned.');
-
-        // Provision a profile in Supabase (artist/venue)
         try {
           const { apiPost } = await import('../lib/api');
-          await apiPost('/api/profile/provision', { phoneNumber: phoneTrim });
-        } catch (e) {
-          // non-blocking: log and continue
-          console.warn('Profile provision failed', e);
+          const payload = {
+            email: email.trim(),
+            password,
+            role: selectedRole,
+            name: safeName || null,
+            phone: phoneTrim,
+          };
+          const result = await apiPost('/api/auth/signup', payload);
+          if (result?.emailSkipped && result?.verificationUrl) {
+            setInfoMessage(`Account created. Email delivery is not configured; copy this link to verify: ${result.verificationUrl}`);
+          } else {
+            setInfoMessage(result?.message || 'Account created. Check your email to confirm, then sign in.');
+          }
+          setIsSignup(false);
+          setPassword('');
+        } catch (signupErr: any) {
+          setErrorMessage(signupErr?.message || 'Account creation failed.');
         }
-
-        onLogin({
-          id: supaUser.id,
-          name: (supaUser.user_metadata?.name as string | undefined) || safeName || 'User',
-          email: supaUser.email || email.trim(),
-          role: (supaUser.user_metadata?.role as UserRole) || selectedRole,
-        });
         return;
       }
 

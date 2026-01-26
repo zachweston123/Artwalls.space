@@ -54,7 +54,8 @@ import {
   updateSupportMessageStatus,
   getRecentMessageCountByIp,
 } from './db.js';
-import { sendIcsEmail } from './mail.js';
+import { sendIcsEmail, sendEmail } from './mail.js';
+import { buildVerificationEmail } from './emails/verificationEmail.js';
 import {
   generateInviteToken,
   isValidInviteToken,
@@ -76,6 +77,9 @@ const stripe = new Stripe(stripeSecretKey, { apiVersion: '2024-06-20' });
 
 const PORT = process.env.PORT || 4242;
 const APP_URL = process.env.APP_URL || 'http://localhost:3000';
+const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || 'support@artwalls.space';
+const EMAIL_VERIFICATION_REDIRECT = process.env.EMAIL_VERIFICATION_REDIRECT || `${APP_URL}/verify-email`;
+const isProduction = (process.env.NODE_ENV || '').toLowerCase() === 'production';
 
 const SUCCESS_URL = process.env.CHECKOUT_SUCCESS_URL || `${APP_URL}/#/purchase-success`;
 const CANCEL_URL = process.env.CHECKOUT_CANCEL_URL || `${APP_URL}/#/purchase-cancel`;
@@ -357,6 +361,199 @@ app.get('/api/debug/supabase', async (_req, res) => {
       error: e?.message || 'Supabase test error',
       stack: process.env.NODE_ENV !== 'production' ? e?.stack : undefined,
     });
+  }
+});
+
+// Email verification sign-up flow (custom template)
+app.post('/api/auth/signup', async (req, res) => {
+  try {
+    const { email, password, role, name, phone } = req.body || {};
+    const trimmedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
+    const trimmedPassword = typeof password === 'string' ? password : '';
+    const requestedRole = role === 'venue' ? 'venue' : role === 'artist' ? 'artist' : null;
+
+    if (!trimmedEmail || !trimmedPassword) {
+      return res.status(400).json({ error: 'Email and password are required.' });
+    }
+    if (!requestedRole) {
+      return res.status(400).json({ error: 'A valid role is required.' });
+    }
+
+    const safeName = typeof name === 'string' ? name.trim() : '';
+    const safePhone = typeof phone === 'string' ? phone.trim() : '';
+
+    const metadata = {
+      role: requestedRole,
+      ...(safeName ? { name: safeName } : {}),
+      ...(safePhone ? { phone: safePhone } : {}),
+    };
+
+    const { data: created, error: createErr } = await supabaseAdmin.auth.admin.createUser({
+      email: trimmedEmail,
+      password: trimmedPassword,
+      email_confirm: false,
+      user_metadata: metadata,
+    });
+
+    if (createErr) {
+      const message = createErr.message || 'Unable to create user.';
+      const normalized = message.toLowerCase();
+      if (normalized.includes('already') && normalized.includes('registered')) {
+        return res.status(409).json({ error: 'An account with this email already exists.' });
+      }
+      if (createErr.status === 422 || normalized.includes('password')) {
+        return res.status(400).json({ error: message });
+      }
+      console.error('[POST /api/auth/signup] createUser error:', createErr);
+      return res.status(500).json({ error: 'Unable to create user account.' });
+    }
+
+    const userId = created?.user?.id;
+    if (!userId) {
+      return res.status(500).json({ error: 'Supabase did not return a user ID.' });
+    }
+
+    const { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
+      type: 'email_confirmation',
+      email: trimmedEmail,
+      options: {
+        emailRedirectTo: EMAIL_VERIFICATION_REDIRECT,
+      },
+    });
+
+    if (linkErr || !linkData?.action_link) {
+      console.error('[POST /api/auth/signup] generateLink error:', linkErr || 'missing action_link');
+      await supabaseAdmin.auth.admin.deleteUser(userId).catch(() => {});
+      return res.status(500).json({ error: 'Unable to generate verification link.' });
+    }
+
+    const template = buildVerificationEmail({
+      verifyUrl: linkData.action_link,
+      email: trimmedEmail,
+      name: safeName || created.user?.user_metadata?.name,
+      role: requestedRole,
+      supportEmail: SUPPORT_EMAIL,
+    });
+
+    const sendResult = await sendEmail({
+      to: trimmedEmail,
+      subject: template.subject,
+      html: template.html,
+      text: template.text,
+      headers: {
+        'X-Artwalls-Template': 'verification',
+        'X-Artwalls-User': userId,
+      },
+    });
+
+    if (sendResult.skipped) {
+      if (isProduction) {
+        await supabaseAdmin.auth.admin.deleteUser(userId).catch(() => {});
+        return res.status(503).json({ error: 'Email delivery is not configured. Please try again later.' });
+      }
+      return res.status(202).json({
+        ok: true,
+        emailSent: false,
+        emailSkipped: true,
+        verificationUrl: linkData.action_link,
+        message: 'Email sending is not configured. Use the link to verify your account while testing.',
+      });
+    }
+
+    if (!sendResult.ok) {
+      console.error('[POST /api/auth/signup] sendEmail error:', sendResult.error || sendResult.reason || 'unknown error');
+      await supabaseAdmin.auth.admin.deleteUser(userId).catch(() => {});
+      return res.status(500).json({ error: 'Unable to send verification email.' });
+    }
+
+    return res.status(201).json({
+      ok: true,
+      emailSent: true,
+      message: 'Account created. Check your inbox for the verification email.',
+    });
+  } catch (err) {
+    console.error('[POST /api/auth/signup] unexpected error:', err);
+    return res.status(500).json({ error: 'Unexpected error creating account.' });
+  }
+});
+
+// Resend verification email with branding
+app.post('/api/auth/send-verification', async (req, res) => {
+  try {
+    const { email } = req.body || {};
+    const trimmedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
+    if (!trimmedEmail) {
+      return res.status(400).json({ error: 'Email is required.' });
+    }
+
+    const { data: userData, error: listErr } = await supabaseAdmin.auth.admin.listUsers({
+      page: 1,
+      perPage: 1,
+      email: trimmedEmail,
+    });
+    if (listErr) {
+      console.error('[POST /api/auth/send-verification] listUsers error:', listErr);
+    }
+
+    const user = userData?.users?.[0];
+    if (!user) {
+      // Avoid leaking existence of accounts
+      return res.json({ ok: true, emailSent: false });
+    }
+
+    const { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
+      type: 'email_confirmation',
+      email: trimmedEmail,
+      options: {
+        emailRedirectTo: EMAIL_VERIFICATION_REDIRECT,
+      },
+    });
+
+    if (linkErr || !linkData?.action_link) {
+      console.error('[POST /api/auth/send-verification] generateLink error:', linkErr || 'missing action_link');
+      return res.status(500).json({ error: 'Unable to generate verification link.' });
+    }
+
+    const template = buildVerificationEmail({
+      verifyUrl: linkData.action_link,
+      email: trimmedEmail,
+      name: user.user_metadata?.name,
+      role: user.user_metadata?.role,
+      supportEmail: SUPPORT_EMAIL,
+    });
+
+    const sendResult = await sendEmail({
+      to: trimmedEmail,
+      subject: template.subject,
+      html: template.html,
+      text: template.text,
+      headers: {
+        'X-Artwalls-Template': 'verification',
+        'X-Artwalls-User': user.id,
+      },
+    });
+
+    if (sendResult.skipped) {
+      return res.status(isProduction ? 503 : 202).json({
+        ok: !isProduction,
+        emailSent: false,
+        emailSkipped: true,
+        verificationUrl: isProduction ? undefined : linkData.action_link,
+        message: isProduction
+          ? 'Email delivery is not available right now.'
+          : 'Email sending is not configured. Use the link to verify while testing.',
+      });
+    }
+
+    if (!sendResult.ok) {
+      console.error('[POST /api/auth/send-verification] sendEmail error:', sendResult.error || sendResult.reason || 'unknown error');
+      return res.status(500).json({ error: 'Unable to send verification email.' });
+    }
+
+    return res.json({ ok: true, emailSent: true });
+  } catch (err) {
+    console.error('[POST /api/auth/send-verification] unexpected error:', err);
+    return res.status(500).json({ error: 'Unexpected error resending verification email.' });
   }
 });
 
