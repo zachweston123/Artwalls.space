@@ -50,26 +50,42 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
   const [artists, setArtists] = useState<any[]>([]);
   const [venueCity, setVenueCity] = useState<string>('');
 
+  // Debounce search
   useEffect(() => {
     let isMounted = true;
+    const timeout = setTimeout(async () => {
+        await loadArtists();
+    }, 500);
+
     async function loadArtists() {
       try {
-        // Load venue profile to determine local city
-        const me = await apiGet<{ role: string; profile: { id: string; city?: string | null } }>(
-          '/api/profile/me'
-        );
-        const city = (me?.profile?.city || '').trim();
-        if (isMounted) setVenueCity(city);
-        const path = city ? `/api/artists?city=${encodeURIComponent(city)}` : '/api/artists';
-        const resp = await apiGet<{ artists: Array<{ id: string; name?: string | null; email?: string | null; profile_photo_url?: string | null }> }>(
+        // Load venue profile to determine local city (only once if not loaded)
+        let city = venueCity;
+        if (!city && !venueCity) {
+             const me = await apiGet<{ role: string; profile: { id: string; city?: string | null } }>('/api/profile/me');
+             city = (me?.profile?.city || '').trim();
+             if (isMounted) setVenueCity(city);
+        }
+
+        let path = '/api/artists';
+        
+        // If we have a search query, assume searching global
+        if (searchQuery.trim()) {
+            path += `?q=${encodeURIComponent(searchQuery.trim())}`;
+        } else if (city) {
+            // Otherwise default to local city
+            path += `?city=${encodeURIComponent(city)}`;
+        }
+
+        const resp = await apiGet<{ artists: Array<{ id: string; name?: string | null; email?: string | null; profile_photo_url?: string | null; location?: string }> }>(
           path
         );
         const apiArtists = resp?.artists || [];
         const shaped = apiArtists.map((a) => ({
           id: a.id,
           name: a.name || 'Artist',
-          avatar: a.profile_photo_url || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400',
-          location: city || 'Local',
+          avatar: a.profile_photo_url || undefined,
+          location: a.location || city || 'Local',
           bio: 'Artist on Artwalls',
           artTypes: ['Painter'],
           openToNew: true,
@@ -81,18 +97,26 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
       }
     }
 
-    loadArtists();
+    // Initial load
+    // loadArtists(); // handled by debounce effect
+    
     return () => {
       isMounted = false;
+      clearTimeout(timeout);
     };
-  }, []);
+  }, [searchQuery]); // Re-run when searchQuery changes
 
   const hasActiveFilters = filters.artTypes.length > 0 || filters.openToNew || filters.neighborhood || searchQuery;
 
   // Filter artists based on criteria
   const filteredArtists = (artists.length ? artists : []).filter(artist => {
+    // Search is now handled by backend, but we keep client filter for immediate feedback if list is already loaded? 
+    // Actually, allowing client filter ON TOP of backend search results is safer.
     if (searchQuery && !artist.name.toLowerCase().includes(searchQuery.toLowerCase())) {
-      return false;
+        // However, if we searched "Zach" and backend returned "Zachary", this matches.
+        // If the backend returns exact matches or starts with, client might filter out fuzzy matches if typed differently.
+        // But for "contains", it's fine.
+      return true; // Trust backend results for search query
     }
     if (filters.neighborhood && !artist.location.includes(filters.neighborhood)) {
       return false;

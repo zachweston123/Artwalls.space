@@ -245,6 +245,7 @@ export default {
         platform_fee_bps: artist.platformFeeBps ?? null,
         city_primary: artist.cityPrimary ?? null,
         city_secondary: artist.citySecondary ?? null,
+        is_live: true, // Ensure new artists are live by default
         updated_at: new Date().toISOString(),
       };
       const { data, error } = await supabaseAdmin.from('artists').upsert(payload, { onConflict: 'id' }).select('*').single();
@@ -672,19 +673,32 @@ export default {
     if (url.pathname === '/api/artists' && method === 'GET') {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
       const city = (url.searchParams.get('city') || '').trim();
+      const q = (url.searchParams.get('q') || '').trim();
+      
       let query = supabaseAdmin
         .from('artists')
-        .select('id,name,email')
+        .select('id,name,email,city_primary,city_secondary,profile_photo_url')
         .eq('is_live', true)
         .order('name', { ascending: true })
         .limit(50);
-      if (city) {
+      
+      if (q) {
+        // Search by name (case insensitive)
+        query = query.ilike('name', `%${q}%`);
+      } else if (city) {
         // Match either primary or secondary city
         query = query.or(`city_primary.eq.${city},city_secondary.eq.${city}`);
       }
+      
       const { data, error } = await query;
       if (error) return json({ error: error.message }, { status: 500 });
-      const artists = (data || []).map(a => ({ id: a.id, name: a.name, email: a.email }));
+      const artists = (data || []).map(a => ({ 
+        id: a.id, 
+        name: a.name, 
+        email: a.email,
+        profile_photo_url: a.profile_photo_url,
+        location: a.city_primary || 'Local'
+      }));
       return json({ artists });
     }
 
