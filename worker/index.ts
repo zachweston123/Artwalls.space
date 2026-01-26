@@ -1587,7 +1587,7 @@ export default {
           (async () => {
             // Forward the verified event to the backend for processing
             try {
-              const base = env.API_BASE_URL || 'https://api.artwalls.space';
+              const base = env.SUPABASE_URL || env.API_BASE_URL || 'https://api.artwalls.space';
               const resp = await fetch(`${base}/api/stripe/webhook/forwarded`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

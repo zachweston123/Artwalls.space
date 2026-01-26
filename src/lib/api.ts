@@ -1,8 +1,11 @@
 const DEFAULT_API_BASE = (() => {
   if (typeof window === 'undefined') return 'https://artwalls.space';
-  const host = window.location.hostname;
-  if (host === 'localhost' || host === '127.0.0.1') return 'http://localhost:4242';
-  return 'https://artwalls.space';
+  const { origin, hostname } = window.location;
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return 'http://localhost:4242';
+  }
+  // Use current origin in production/staging so CORS stays aligned with the hosting domain
+  return origin || 'https://artwalls.space';
 })();
 
 const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || DEFAULT_API_BASE;
