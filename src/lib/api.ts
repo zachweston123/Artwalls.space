@@ -175,3 +175,48 @@ export async function getMyNotifications() {
 export async function markNotificationRead(id: string) {
   return apiPost<{ notification: any }>(`/api/notifications/${id}/read`, {});
 }
+
+// -------- Venue Invites --------
+export type VenueInviteStatus = 'DRAFT' | 'SENT' | 'CLICKED' | 'ACCEPTED' | 'DECLINED' | 'EXPIRED';
+
+export interface VenueInviteSummary {
+  id: string;
+  token: string;
+  artistId: string;
+  placeId: string;
+  venueName: string;
+  venueAddress?: string | null;
+  googleMapsUrl?: string | null;
+  websiteUrl?: string | null;
+  phone?: string | null;
+  venueEmail?: string | null;
+  personalLine?: string | null;
+  subject?: string | null;
+  bodyTemplateVersion?: string | null;
+  status: VenueInviteStatus;
+  sentAt?: string | null;
+  firstClickedAt?: string | null;
+  clickCount?: number | null;
+  acceptedAt?: string | null;
+  declinedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function listMyVenueInvites(limit = 100): Promise<VenueInviteSummary[]> {
+  const qs = Number.isFinite(limit) ? `?limit=${encodeURIComponent(String(limit))}` : '';
+  const { invites } = await apiGet<{ invites: VenueInviteSummary[] }>(`/api/venue-invites${qs}`);
+  return invites || [];
+}
+
+export async function acceptVenueInvite(token: string) {
+  const safeToken = String(token || '').trim();
+  if (!safeToken) throw new Error('Invite token is required.');
+  return apiPost<{ invite: VenueInviteSummary }>(`/api/venue-invites/token/${encodeURIComponent(safeToken)}/accept`, {});
+}
+
+export async function declineVenueInvite(token: string) {
+  const safeToken = String(token || '').trim();
+  if (!safeToken) throw new Error('Invite token is required.');
+  return apiPost<{ invite: VenueInviteSummary }>(`/api/venue-invites/token/${encodeURIComponent(safeToken)}/decline`, {});
+}
