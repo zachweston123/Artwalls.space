@@ -689,12 +689,14 @@ export default {
         .order('name', { ascending: true })
         .limit(50);
       
-      if (q) {
-        // Search by name (case insensitive)
-        query = query.ilike('name', `%${q}%`);
-      } else if (city) {
-        // Match either primary or secondary city
+      // Match either primary or secondary city if a city is provided
+      if (city) {
         query = query.or(`city_primary.eq.${city},city_secondary.eq.${city}`);
+      }
+      
+      // Search by name if a query is provided
+      if (q) {
+        query = query.ilike('name', `%${q}%`);
       }
       
       const { data, error } = await query;

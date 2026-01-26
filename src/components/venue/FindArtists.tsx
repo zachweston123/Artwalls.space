@@ -14,20 +14,12 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
   const [filters, setFilters] = useState({
     artTypes: [] as string[],
     openToNew: false,
-    neighborhood: '',
   });
 
   const artTypes = [
     'Painter', 'Photographer', 'Illustrator', 'Digital', 
     'Mixed Media', 'Printmaker', 'Collage', 'Sculptor'
   ];
-
-  const neighborhoods = [
-    'Downtown', 'Pearl District', 'Alberta Arts', 'Hawthorne',
-    'Division', 'Sellwood', 'St. Johns', 'Hollywood'
-  ];
-
-  // Live artists data
 
   const toggleArtType = (type: string) => {
     setFilters(prev => ({
@@ -42,7 +34,6 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
     setFilters({
       artTypes: [],
       openToNew: false,
-      neighborhood: '',
     });
     setSearchQuery('');
   };
@@ -68,13 +59,12 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
         }
 
         let path = '/api/artists';
-        
-        // If we have a search query, assume searching global
-        if (searchQuery.trim()) {
-            path += `?q=${encodeURIComponent(searchQuery.trim())}`;
-        } else if (city) {
-            // Otherwise default to local city
-            path += `?city=${encodeURIComponent(city)}`;
+        const params = new URLSearchParams();
+        if (city) params.append('city', city);
+        if (searchQuery.trim()) params.append('q', searchQuery.trim());
+
+        if (Array.from(params).length > 0) {
+           path += `?${params.toString()}`;
         }
 
         const resp = await apiGet<{ artists: Array<{ id: string; name?: string | null; email?: string | null; profile_photo_url?: string | null; location?: string }> }>(
@@ -106,20 +96,14 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
     };
   }, [searchQuery]); // Re-run when searchQuery changes
 
-  const hasActiveFilters = filters.artTypes.length > 0 || filters.openToNew || filters.neighborhood || searchQuery;
+  const hasActiveFilters = filters.artTypes.length > 0 || filters.openToNew || searchQuery;
 
   // Filter artists based on criteria
   const filteredArtists = (artists.length ? artists : []).filter(artist => {
-    // Search is now handled by backend, but we keep client filter for immediate feedback if list is already loaded? 
-    // Actually, allowing client filter ON TOP of backend search results is safer.
+    // Search is now handled by backend, but we keep client filter for immediate feedback if list is already loaded.
     if (searchQuery && !artist.name.toLowerCase().includes(searchQuery.toLowerCase())) {
-        // However, if we searched "Zach" and backend returned "Zachary", this matches.
-        // If the backend returns exact matches or starts with, client might filter out fuzzy matches if typed differently.
-        // But for "contains", it's fine.
-      return true; // Trust backend results for search query
-    }
-    if (filters.neighborhood && !artist.location.includes(filters.neighborhood)) {
-      return false;
+      // Trust backend results for search query
+      return true;
     }
     if (filters.openToNew && !artist.openToNew) {
       return false;
@@ -167,7 +151,7 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
             <span className={hasActiveFilters ? 'inline' : 'hidden sm:inline'}>Filters</span>
             {hasActiveFilters && (
               <span className="ml-1 px-2 py-0.5 bg-[var(--green)] text-[var(--accent-contrast)] text-xs rounded-full min-w-[20px] text-center">
-                {(filters.artTypes.length + (filters.openToNew ? 1 : 0) + (filters.neighborhood ? 1 : 0))}
+                {(filters.artTypes.length + (filters.openToNew ? 1 : 0))}
               </span>
             )}
           </button>
@@ -176,25 +160,6 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
         {/* Filter Panel */}
         {showFilters && (
           <div className="pt-4 border-t border-[var(--border)] space-y-4">
-            {/* Neighborhood */}
-            <div>
-              <label className="block text-sm text-[var(--text-muted)] mb-2">
-                Neighborhood
-              </label>
-              <select
-                value={filters.neighborhood}
-                onChange={(e) => setFilters({ ...filters, neighborhood: e.target.value })}
-                className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
-              >
-                <option value="">All neighborhoods</option>
-                {neighborhoods.map((neighborhood) => (
-                  <option key={neighborhood} value={neighborhood}>
-                    {neighborhood}
-                  </option>
-                ))}
-              </select>
-            </div>
-
             {/* Art Types */}
             <div>
               <label className="block text-sm text-[var(--text-muted)] mb-2">
