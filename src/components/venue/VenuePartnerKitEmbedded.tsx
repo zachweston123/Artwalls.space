@@ -319,7 +319,7 @@ export function VenuePartnerKitEmbedded({ onNavigate }: VenuePartnerKitEmbeddedP
                 { step: 2, title: 'Showcase Your Space', desc: 'Upload 5+ photos showing entrance, walls, and ambiance' },
                 { step: 3, title: 'Define Your Gallery', desc: 'Set display spots, dimensions, and rotation style' },
                 { step: 4, title: 'Set Your Vibe', desc: 'Select categories that match your venue (e.g. Modern, Cozy)' },
-                { step: 5, title: 'Get Discovery Assets', desc: 'Download your custom QR posters and table tents' },
+                { step: 5, title: 'Get Discovery Assets', desc: 'Download your custom QR posters' },
                 { step: 6, title: 'Activate Discovery', desc: 'Place QR codes in high-visibility spots to start conversations' },
                 { step: 7, title: 'Empower Your Team', desc: 'Give your staff the "Local Art Ambassador" one-pager' },
                 { step: 8, title: 'Go Live', desc: 'Publish your profile to start connecting with local artists' },
@@ -370,12 +370,6 @@ export function VenuePartnerKitEmbedded({ onNavigate }: VenuePartnerKitEmbeddedP
                   why: 'Sets the tone immediately: "This is a creative space."',
                   placement: 'Entrance or high-traffic wall',
                   format: 'Poster (8.5x11")',
-                },
-                {
-                  location: '💬 Conversation Starter',
-                  why: 'Natural pause point to discuss the art during service.',
-                  placement: 'Counter, tables, or waiting area',
-                  format: 'Table Tent (4x6")',
                 },
                 {
                   location: '🎨 The Storyteller',

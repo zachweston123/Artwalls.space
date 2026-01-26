@@ -499,7 +499,7 @@ const VenueQRSettings: React.FC = () => {
         <h3>QR Code Best Practices</h3>
         <ul>
           <li>Place QR codes in high-traffic areas</li>
-          <li>Use as posters, table tents, or staff badges</li>
+          <li>Use as posters or staff badges</li>
           <li>Include a call-to-action like "Scan to explore art!"</li>
           <li>Test QR code with multiple devices</li>
           <li>Track scans in your dashboard analytics</li>

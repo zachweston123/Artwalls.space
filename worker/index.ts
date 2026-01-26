@@ -874,6 +874,139 @@ export default {
       return json({ artworks });
     }
 
+    // Get reactions
+    if (url.pathname.startsWith('/api/artworks/') && url.pathname.endsWith('/reactions') && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const parts = url.pathname.split('/');
+      const id = parts[3]; // artworkId
+
+      let userId = null;
+      let sessionId = url.searchParams.get('sessionId') || request.headers.get('x-session-id');
+
+      const user = await getSupabaseUserFromRequest(request);
+      if (user) userId = user.id;
+
+      const { count: likeCount, error: likeError } = await supabaseAdmin
+        .from('artwork_reactions')
+        .select('*', { count: 'exact', head: true })
+        .eq('artwork_id', id)
+        .eq('reaction_type', 'like');
+
+      const { count: fireCount, error: fireError } = await supabaseAdmin
+        .from('artwork_reactions')
+        .select('*', { count: 'exact', head: true })
+        .eq('artwork_id', id)
+        .eq('reaction_type', 'fire');
+
+      if (likeError || fireError) return json({ error: 'Failed to fetch counts' }, { status: 500 });
+
+      // Check viewer status
+      let liked = false;
+      let fired = false;
+
+      if (userId || sessionId) {
+        let query = supabaseAdmin.from('artwork_reactions').select('reaction_type').eq('artwork_id', id);
+
+        if (userId) {
+          query = query.eq('user_id', userId);
+        } else {
+          query = query.eq('session_id', sessionId!);
+        }
+
+        const { data: userReactions } = await query;
+        if (userReactions) {
+          liked = userReactions.some((r: any) => r.reaction_type === 'like');
+          fired = userReactions.some((r: any) => r.reaction_type === 'fire');
+        }
+      }
+
+      return json({
+        likeCount: likeCount || 0,
+        fireCount: fireCount || 0,
+        viewer: { liked, fired }
+      });
+    }
+
+    // Toggle reaction
+    if (url.pathname.startsWith('/api/artworks/') && url.pathname.endsWith('/reactions') && method === 'POST') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const parts = url.pathname.split('/');
+      const id = parts[3]; // artworkId
+
+      let body: any = {};
+      try { body = await request.json(); } catch (e) { }
+      const { type, action } = body;
+
+      if (!['like', 'fire'].includes(type as string)) return json({ error: 'Invalid type' }, { status: 400 });
+      
+      let userId = null;
+      let sessionId = body.sessionId || request.headers.get('x-session-id');
+
+      const user = await getSupabaseUserFromRequest(request);
+      if (user) userId = user.id;
+
+      if (!userId && !sessionId) return json({ error: 'Session ID required for anonymous reactions' }, { status: 400 });
+
+      // Rate limit
+      const ip = getClientIp(request);
+      const { ok } = rateLimitByIp(ip, 60, 60000); // 60/min
+      if (!ok) return json({ error: 'Rate limit exceeded' }, { status: 429 });
+
+      // Find existing
+      let query = supabaseAdmin.from('artwork_reactions')
+        .select('id')
+        .eq('artwork_id', id)
+        .eq('reaction_type', type);
+
+      if (userId) {
+        query = query.eq('user_id', userId);
+      } else {
+        query = query.eq('session_id', sessionId);
+      }
+
+      const { data: existing, error: findError } = await query.maybeSingle();
+
+      if (findError) return json({ error: findError.message }, { status: 500 });
+
+      if (existing) {
+        // Delete
+        await supabaseAdmin.from('artwork_reactions').delete().eq('id', existing.id);
+      } else {
+        // Insert
+        const row: any = {
+          artwork_id: id,
+          reaction_type: type
+        };
+        if (userId) row.user_id = userId;
+        else row.session_id = sessionId;
+
+        await supabaseAdmin.from('artwork_reactions').insert(row);
+      }
+
+      // Return updated counts
+      const { count: likeCount } = await supabaseAdmin.from('artwork_reactions').select('*', { count: 'exact', head: true }).eq('artwork_id', id).eq('reaction_type', 'like');
+      const { count: fireCount } = await supabaseAdmin.from('artwork_reactions').select('*', { count: 'exact', head: true }).eq('artwork_id', id).eq('reaction_type', 'fire');
+
+      let viewerLiked = false;
+      let viewerFired = false;
+      if (userId || sessionId) {
+        let q = supabaseAdmin.from('artwork_reactions').select('reaction_type').eq('artwork_id', id);
+        if (userId) q = q.eq('user_id', userId);
+        else q = q.eq('session_id', sessionId);
+        const { data: userReactions } = await q;
+        if (userReactions) {
+          viewerLiked = userReactions.some((r: any) => r.reaction_type === 'like');
+          viewerFired = userReactions.some((r: any) => r.reaction_type === 'fire');
+        }
+      }
+
+      return json({
+        likeCount: likeCount || 0,
+        fireCount: fireCount || 0,
+        viewer: { liked: viewerLiked, fired: viewerFired }
+      });
+    }
+
     // Public: single artwork
     if (url.pathname.startsWith('/api/artworks/') && method === 'GET') {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });

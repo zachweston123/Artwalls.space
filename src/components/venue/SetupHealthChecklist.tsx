@@ -50,7 +50,7 @@ export function SetupHealthChecklist({
       completed: qrDownloaded,
       icon: '📥',
       link: 'venue-settings',
-      description: 'Get poster and table tent versions',
+      description: 'Get poster version',
     },
     {
       id: 'qr-placement',

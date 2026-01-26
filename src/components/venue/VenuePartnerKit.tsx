@@ -54,7 +54,7 @@ export function VenuePartnerKit({ onNavigate }: VenuePartnerKitProps) {
     {
       number: 4,
       title: 'Download QR Assets',
-      description: 'Get ready-to-print posters, table tents, and cards.',
+      description: 'Get ready-to-print posters and cards.',
       time: '~1 min',
       icon: Download,
     },
@@ -389,15 +389,6 @@ export function VenuePartnerKit({ onNavigate }: VenuePartnerKitProps) {
               </ul>
             </div>
 
-            <div className="bg-[var(--surface)] p-6 rounded-lg border border-[var(--border)]">
-              <h3 className="font-semibold text-[var(--text)] mb-3">Table Tent QR Code</h3>
-              <p className="text-sm text-[var(--text-muted)] mb-4">Place on tables for customers to scan during dining or browsing.</p>
-              <ul className="text-sm space-y-2 text-[var(--text-muted)]">
-                <li>✓ Use 4x6" or 5x7" tent cards</li>
-                <li>✓ Place at table center or corner</li>
-                <li>✓ Rotate regularly for visibility</li>
-              </ul>
-            </div>
 
             <div className="bg-[var(--surface)] p-6 rounded-lg border border-[var(--border)]">
               <h3 className="font-semibold text-[var(--text)] mb-3">Staff Handout Cards</h3>

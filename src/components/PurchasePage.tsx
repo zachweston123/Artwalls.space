@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ShoppingCart, MapPin, User, ArrowLeft, Loader2 } from 'lucide-react';
+import { ArtworkReactions } from './ArtworkReactions';
+
 type Artwork = {
   id: string;
   title: string;
@@ -170,6 +172,11 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
                 <User className="w-5 h-5" />
                 <span className="text-base sm:text-lg">by {artwork?.artistName || 'Artist'}</span>
               </div>
+              
+              <div className="mb-4">
+                <ArtworkReactions artworkId={artworkId} />
+              </div>
+
                 <div className="flex items-start gap-2 text-[var(--text-muted)] mb-6">
                 <MapPin className="w-5 h-5 flex-shrink-0 mt-0.5" />
                 <span className="text-sm sm:text-base">Currently on display at {artwork?.venueName || 'Local Venue'}</span>

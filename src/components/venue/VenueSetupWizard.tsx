@@ -686,7 +686,7 @@ function Step5Signage({
           <p className="text-sm font-medium text-[var(--text)]">Next: Download & Print</p>
         </div>
         <p className="text-xs text-[var(--text-muted)]">
-          After completing setup, you'll download print-ready QR codes (poster & table tent versions) and placement guide.
+          After completing setup, you'll download print-ready QR codes and placement guide.
         </p>
       </div>
 
