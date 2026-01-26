@@ -2279,28 +2279,84 @@ export default {
     // Admin: platform metrics and recent activity
     if (url.pathname === '/api/admin/metrics' && method === 'GET') {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const admin = await requireAdmin(request);
+      if (!admin) return json({ error: 'Admin access required' }, { status: 403 });
 
       const now = new Date();
-      const past30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      const past30Date = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      const past60Date = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+      const past30 = past30Date.toISOString();
+      const past60 = past60Date.toISOString();
 
-      const [artistsAgg, venuesAgg, activeAgg] = await Promise.all([
+      const pendingInviteStatuses = ['DRAFT', 'SENT', 'CLICKED'];
+      const openSupportStatuses = ['new', 'open', 'pending'];
+
+      const [
+        artistsAgg,
+        venuesAgg,
+        activeAgg,
+        newArtistsAgg,
+        prevArtistsAgg,
+        newVenuesAgg,
+        prevVenuesAgg,
+        pendingInvitesAgg,
+        supportQueueAgg,
+      ] = await Promise.all([
         supabaseAdmin.from('artists').select('id', { count: 'exact', head: true }),
         supabaseAdmin.from('venues').select('id', { count: 'exact', head: true }),
         supabaseAdmin.from('artworks').select('id', { count: 'exact', head: true }).eq('status', 'active'),
+        supabaseAdmin.from('artists').select('id', { count: 'exact', head: true }).gte('created_at', past30),
+        supabaseAdmin.from('artists').select('id', { count: 'exact', head: true }).gte('created_at', past60).lt('created_at', past30),
+        supabaseAdmin.from('venues').select('id', { count: 'exact', head: true }).gte('created_at', past30),
+        supabaseAdmin.from('venues').select('id', { count: 'exact', head: true }).gte('created_at', past60).lt('created_at', past30),
+        supabaseAdmin.from('venue_invites').select('id', { count: 'exact', head: true }).in('status', pendingInviteStatuses),
+        supabaseAdmin.from('support_messages').select('id', { count: 'exact', head: true }).in('status', openSupportStatuses),
       ]);
 
-      const { data: ordersMonth, error: ordersErr } = await supabaseAdmin
-        .from('orders')
-        .select('amount_cents,platform_fee_cents,created_at,artist_id,venue_id,artwork_id')
-        .gte('created_at', past30)
-        .order('created_at', { ascending: false })
-        .limit(1000);
-      if (ordersErr) return json({ error: ordersErr.message }, { status: 500 });
-      const gmvCents = (ordersMonth || []).reduce((sum: number, o: any) => sum + (o.amount_cents || 0), 0);
-      const platformFeeCents = (ordersMonth || []).reduce((sum: number, o: any) => sum + (o.platform_fee_cents || 0), 0);
+      const countOrZero = (res: any) => {
+        if (res?.error) {
+          console.warn('[admin.metrics] count query failed', res.error.message);
+          return 0;
+        }
+        return res?.count || 0;
+      };
 
-      // Recent activity from orders
-      const recentActivity = (ordersMonth || []).slice(0, 10).map((o: any) => ({
+      const [ordersMonthRes, ordersPrevRes] = await Promise.all([
+        supabaseAdmin
+          .from('orders')
+          .select('amount_cents,platform_fee_cents,created_at,artist_id,venue_id,artwork_id')
+          .gte('created_at', past30)
+          .order('created_at', { ascending: false })
+          .limit(1000),
+        supabaseAdmin
+          .from('orders')
+          .select('amount_cents,platform_fee_cents')
+          .gte('created_at', past60)
+          .lt('created_at', past30)
+          .order('created_at', { ascending: false })
+          .limit(1000),
+      ]);
+
+      if (ordersMonthRes.error) return json({ error: ordersMonthRes.error.message }, { status: 500 });
+      if (ordersPrevRes.error) return json({ error: ordersPrevRes.error.message }, { status: 500 });
+
+      const ordersMonth = ordersMonthRes.data || [];
+      const ordersPrev = ordersPrevRes.data || [];
+
+      const gmvCents = ordersMonth.reduce((sum: number, o: any) => sum + (o.amount_cents || 0), 0);
+      const platformFeeCents = ordersMonth.reduce((sum: number, o: any) => sum + (o.platform_fee_cents || 0), 0);
+      const prevGmvCents = ordersPrev.reduce((sum: number, o: any) => sum + (o.amount_cents || 0), 0);
+
+      const gmvDelta = prevGmvCents > 0
+        ? Math.round(((gmvCents - prevGmvCents) / prevGmvCents) * 100)
+        : (gmvCents > 0 ? 100 : 0);
+
+      const newArtists = countOrZero(newArtistsAgg);
+      const prevArtists = countOrZero(prevArtistsAgg);
+      const newVenues = countOrZero(newVenuesAgg);
+      const prevVenues = countOrZero(prevVenuesAgg);
+
+      const recentActivity = ordersMonth.slice(0, 10).map((o: any) => ({
         type: 'payment',
         timestamp: o.created_at,
         amount_cents: o.amount_cents || 0,
@@ -2311,14 +2367,19 @@ export default {
 
       return json({
         totals: {
-          artists: (artistsAgg as any)?.count || 0,
-          venues: (venuesAgg as any)?.count || 0,
-          activeDisplays: (activeAgg as any)?.count || 0,
+          artists: countOrZero(artistsAgg),
+          venues: countOrZero(venuesAgg),
+          activeDisplays: countOrZero(activeAgg),
         },
         month: {
-          gmv: Math.round(gmvCents / 100),
-          platformRevenue: Math.round(platformFeeCents / 100),
+          gmv: gmvCents,
+          platformRevenue: platformFeeCents,
+          gvmDelta: gmvDelta,
         },
+        monthlyArtistsDelta: newArtists - prevArtists,
+        monthlyVenuesDelta: newVenues - prevVenues,
+        pendingInvites: countOrZero(pendingInvitesAgg),
+        supportQueue: countOrZero(supportQueueAgg),
         recentActivity,
       });
     }
