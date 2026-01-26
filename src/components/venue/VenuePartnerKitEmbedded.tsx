@@ -321,7 +321,7 @@ export function VenuePartnerKitEmbedded({ onNavigate }: VenuePartnerKitEmbeddedP
                 { step: 4, title: 'Set Your Vibe', desc: 'Select categories that match your venue (e.g. Modern, Cozy)' },
                 { step: 5, title: 'Get Discovery Assets', desc: 'Download your custom QR posters and table tents' },
                 { step: 6, title: 'Activate Discovery', desc: 'Place QR codes in high-visibility spots to start conversations' },
-                { step: 7, title: 'Empower Your Team', desc: 'Brief staff on how to be local art ambassadors' },
+                { step: 7, title: 'Empower Your Team', desc: 'Give your staff the "Local Art Ambassador" one-pager' },
                 { step: 8, title: 'Go Live', desc: 'Publish your profile to start connecting with local artists' },
               ].map((item) => (
                 <div key={item.step} className="flex gap-4 p-4 bg-[var(--surface-2)] rounded-lg border border-[var(--border)]">
@@ -366,41 +366,32 @@ export function VenuePartnerKitEmbedded({ onNavigate }: VenuePartnerKitEmbeddedP
             <div className="space-y-4">
               {[
                 {
-                  location: '📍 The Welcome Moment (ID: Entrance)',
+                  location: '📍 The Welcome Moment',
                   why: 'Sets the tone immediately: "This is a creative space."',
-                  placement: 'Eye level, 3-5 feet from entrance',
-                  format: 'Large poster version (8.5x11")',
-                  impact: 'Highest traffic - 60% of scans',
+                  placement: 'Entrance or high-traffic wall',
+                  format: 'Poster (8.5x11")',
                 },
                 {
-                  location: '💼 Conversation Starters (ID: Counter)',
+                  location: '💬 Conversation Starter',
                   why: 'Natural pause point to discuss the art during service.',
-                  placement: 'Standing easel or laminated card',
-                  format: 'Table tent version (4x6")',
-                  impact: 'Deepest engagement - 25% of scans',
+                  placement: 'Counter, tables, or waiting area',
+                  format: 'Table Tent (4x6")',
                 },
                 {
-                  location: '️ The Storyteller (ID: Near Art)',
+                  location: '🎨 The Storyteller',
                   why: 'Connects the viewer directly to the creator\'s story.',
-                  placement: 'Below or beside the artwork',
-                  format: 'Table tent or sticker version',
-                  impact: 'Drives purchase intent',
-                },
-                {
-                  location: '🚪 The Send-off (ID: Exit)',
-                  why: 'Last chance to take the experience home.',
-                  placement: 'Eye level near door',
-                  format: 'Small poster or sticker',
-                  impact: 'Follow-up engagement',
+                  placement: 'Next to the artwork',
+                  format: 'Label or Sticker',
                 },
               ].map((item, idx) => (
                 <div key={idx} className="p-4 bg-[var(--surface-2)] rounded-lg border border-[var(--border)] space-y-2">
-                  <p className="font-bold text-[var(--text)]">{item.location}</p>
+                  <div className="flex justify-between items-start">
+                    <p className="font-bold text-[var(--text)]">{item.location}</p>
+                    <span className="text-xs font-mono bg-[var(--surface)] px-2 py-1 rounded border border-[var(--border)]">{item.format}</span>
+                  </div>
                   <div className="space-y-1 text-sm">
                     <p><span className="font-semibold text-[var(--text)]">Why:</span> <span className="text-[var(--text-muted)]">{item.why}</span></p>
                     <p><span className="font-semibold text-[var(--text)]">Placement:</span> <span className="text-[var(--text-muted)]">{item.placement}</span></p>
-                    <p><span className="font-semibold text-[var(--text)]">Format:</span> <span className="text-[var(--text-muted)]">{item.format}</span></p>
-                    <p><span className="font-semibold text-[var(--text)]">Impact:</span> <span className="text-[var(--text-muted)]">{item.impact}</span></p>
                   </div>
                 </div>
               ))}
@@ -536,7 +527,7 @@ export function VenuePartnerKitEmbedded({ onNavigate }: VenuePartnerKitEmbeddedP
               {[
                 {
                   title: 'Fresh Perspectives',
-                  content: 'Rotate artworks every 30-60 days to keep your walls alive. New art = new reasons for customers to return.',
+                  content: 'Rotate artworks every 30-90 days to keep your walls alive. New art = new reasons for customers to return.',
                 },
                 {
                   title: 'Showcase Standards',
@@ -545,10 +536,6 @@ export function VenuePartnerKitEmbedded({ onNavigate }: VenuePartnerKitEmbeddedP
                 {
                   title: 'Artist Connection',
                   content: 'You share this space. Keep communication open with your artists about how their work is being received.',
-                },
-                {
-                  title: 'Care for the Tools',
-                  content: 'Keep QR codes clean and visible. They are the bridge between your customers and the artists.',
                 },
                 {
                   title: 'Community Connection',
