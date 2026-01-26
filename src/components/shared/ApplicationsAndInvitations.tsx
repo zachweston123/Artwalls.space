@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
-import { CheckCircle, XCircle, Clock, Calendar, MapPin, Check, X, QrCode, Download, Eye, EyeOff, Copy } from 'lucide-react';
+import { Clock, Calendar, Check, X, QrCode, Download, Eye, EyeOff, Copy, Mail, ArrowUpRight } from 'lucide-react';
 import { mockApplications } from '../../data/mockData';
 import type { Application } from '../../data/mockData';
 import { TimeSlotPicker } from '../scheduling/TimeSlotPicker';
-import { InstallRules } from '../scheduling/InstallRules';
 import { DurationBadge } from '../scheduling/DisplayDurationSelector';
 import { DisplayDurationSelector } from '../scheduling/DisplayDurationSelector';
 import { createVenueBooking } from '../../lib/api';
@@ -26,11 +25,50 @@ interface Artwork {
   created_at: string;
 }
 
+interface ArtistInvite {
+  id: string;
+  venueName: string;
+  venueLocation: string;
+  venuePhoto: string;
+  message: string;
+  requestedDuration: number;
+  wallspaceName?: string;
+  wallspaceSize?: string;
+  receivedAt: string;
+  status: 'pending' | 'accepted' | 'declined';
+}
+
 export function ApplicationsAndInvitations({ userRole, onBack, defaultTab = 'applications' }: ApplicationsAndInvitationsProps) {
   const [applications, setApplications] = useState<Application[]>(mockApplications);
   const [approvedArtworks, setApprovedArtworks] = useState<Artwork[]>([]);
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
-  const [activeTab, setActiveTab] = useState<'applications' | 'approved'>(defaultTab);
+  const mappedDefaultTab: 'pipeline' | 'active' = defaultTab === 'approved' ? 'active' : 'pipeline';
+  const [artistTab, setArtistTab] = useState<'pipeline' | 'active'>(mappedDefaultTab);
+  const [pipelineFilter, setPipelineFilter] = useState<'needs-action' | 'all' | 'applications' | 'invitations'>('needs-action');
+  const [invites, setInvites] = useState<ArtistInvite[]>([
+    {
+      id: 'invite-oakroom',
+      venueName: 'Oakroom Collective',
+      venueLocation: 'Downtown | 215 Market St.',
+      venuePhoto: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=640&q=80',
+      message: 'We are hosting a spring tasting series and would love to feature your botanicals collection on our feature wall through May.',
+      requestedDuration: 60,
+      wallspaceName: 'Atrium Feature Wall',
+      wallspaceSize: '12ft x 8ft',
+      receivedAt: new Date().toISOString(),
+      status: 'pending',
+    },
+    {
+      id: 'invite-greenhouse',
+      venueName: 'Greenhouse Cafe',
+      venueLocation: 'Mission | 134 Valencia St.',
+      venuePhoto: 'https://images.unsplash.com/photo-1529429617124-aee711fa0ca3?auto=format&fit=crop&w=640&q=80',
+      message: 'Thanks for sharing your portfolio last quarter! We have an opening for June-July and think your abstract series would be a fit.',
+      requestedDuration: 45,
+      receivedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 6).toISOString(),
+      status: 'accepted',
+    },
+  ]);
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [showSchedulePicker, setShowSchedulePicker] = useState(false);
   const [showApprovalModal, setShowApprovalModal] = useState(false);
@@ -129,9 +167,63 @@ export function ApplicationsAndInvitations({ userRole, onBack, defaultTab = 'app
     }
   };
 
+  const handleInviteResponse = (inviteId: string, status: 'accepted' | 'declined') => {
+    setInvites(prev => prev.map(invite =>
+      invite.id === inviteId ? { ...invite, status } : invite
+    ));
+  };
+
+  const formatRelativeDate = (iso: string) => {
+    if (!iso) return 'Recently';
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return 'Recently';
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const dayMs = 1000 * 60 * 60 * 24;
+
+    if (diffMs < dayMs) return 'Today';
+    if (diffMs < dayMs * 2) return 'Yesterday';
+    if (diffMs < dayMs * 7) return `${Math.floor(diffMs / dayMs)}d ago`;
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
   const filteredApplications = applications.filter(
     app => filter === 'all' || app.status === filter
   );
+
+  const pipelineItems = [...invites.map(invite => ({
+    id: invite.id,
+    kind: 'invite' as const,
+    status: invite.status,
+    sortDate: new Date(invite.receivedAt).getTime(),
+    needsAction: invite.status === 'pending',
+    invite,
+  })),
+  ...applications.map(application => ({
+    id: application.id,
+    kind: 'application' as const,
+    status: application.status,
+    sortDate: new Date(application.appliedDate).getTime(),
+    needsAction: application.status === 'pending',
+    application,
+  }))].sort((a, b) => b.sortDate - a.sortDate);
+
+  const filteredPipelineItems = pipelineItems.filter(item => {
+    if (pipelineFilter === 'needs-action') return item.needsAction;
+    if (pipelineFilter === 'applications') return item.kind === 'application';
+    if (pipelineFilter === 'invitations') return item.kind === 'invite';
+    return true;
+  });
+
+  const pipelineNeedsActionCount = pipelineItems.filter(item => item.needsAction).length;
+  const pipelineInviteCount = invites.length;
+  const pipelineApplicationCount = applications.length;
+  const pipelineFilterOptions: Array<{ key: typeof pipelineFilter; label: string; count: number }> = [
+    { key: 'needs-action', label: 'Needs action', count: pipelineNeedsActionCount },
+    { key: 'all', label: 'All items', count: pipelineItems.length },
+    { key: 'applications', label: 'Applications', count: pipelineApplicationCount },
+    { key: 'invitations', label: 'Invitations', count: pipelineInviteCount },
+  ];
 
   // Artist actions
   const handleScheduleInstall = (app: Application) => {
@@ -236,7 +328,6 @@ export function ApplicationsAndInvitations({ userRole, onBack, defaultTab = 'app
   };
 
   const pendingCount = applications.filter(a => a.status === 'pending').length;
-  const approvedCount = applications.filter(a => a.status === 'approved').length;
 
   const selectedApplication = selectedApp;
 
@@ -251,153 +342,273 @@ export function ApplicationsAndInvitations({ userRole, onBack, defaultTab = 'app
       </button>
 
       {userRole === 'artist' ? (
-        // ========== ARTIST VIEW: My Applications ==========
         <>
-          <div className="mb-8">
-            <h1 className="text-3xl mb-4">My Applications</h1>
-            
-            {/* Tab Navigation */}
-            <div className="flex gap-2 border-b border-[var(--border)]">
-              <button
-                onClick={() => setActiveTab('applications')}
-                className={`px-4 py-3 font-medium transition-colors ${
-                  activeTab === 'applications'
-                    ? 'text-[var(--green)] border-b-2 border-[var(--green)]'
-                    : 'text-[var(--text-muted)] hover:text-[var(--text)]'
-                }`}
-              >
-                Applications ({pendingCount + approvedCount})
-              </button>
-              <button
-                onClick={() => setActiveTab('approved')}
-                className={`px-4 py-3 font-medium transition-colors ${
-                  activeTab === 'approved'
-                    ? 'text-[var(--green)] border-b-2 border-[var(--green)]'
-                    : 'text-[var(--text-muted)] hover:text-[var(--text)]'
-                }`}
-              >
-                Approved & QR ({approvedArtworks.length})
-              </button>
-            </div>
+          <div className="mb-6">
+            <h1 className="text-3xl font-semibold text-[var(--text)] mb-2">My Artwalls Pipeline</h1>
+            <p className="text-[var(--text-muted)]">
+              {pipelineNeedsActionCount} {pipelineNeedsActionCount === 1 ? 'item needs' : 'items need'} your attention - {pipelineApplicationCount} applications - {pipelineInviteCount} invitations
+            </p>
           </div>
 
-          {activeTab === 'applications' && (
+          <div className="flex flex-wrap gap-2 mb-8">
+            <button
+              onClick={() => setArtistTab('pipeline')}
+              className={`px-4 py-2 rounded-full border transition-colors ${
+                artistTab === 'pipeline'
+                  ? 'bg-[var(--surface-1)] border-[var(--blue)] text-[var(--blue)] shadow-sm'
+                  : 'bg-[var(--surface-2)] border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text)]'
+              }`}
+            >
+              Pipeline
+            </button>
+            <button
+              onClick={() => setArtistTab('active')}
+              className={`px-4 py-2 rounded-full border transition-colors ${
+                artistTab === 'active'
+                  ? 'bg-[var(--surface-1)] border-[var(--green)] text-[var(--green)] shadow-sm'
+                  : 'bg-[var(--surface-2)] border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text)]'
+              }`}
+            >
+              Active displays & QR
+            </button>
+          </div>
+
+          {artistTab === 'pipeline' ? (
             <>
-              <p className="text-[var(--text-muted)] mb-6">
-                {pendingCount} pending • {approvedCount} approved
-              </p>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {filteredApplications.map((application) => (
-                  <div
-                    key={application.id}
-                    className="bg-[var(--surface-1)] rounded-xl border border-[var(--border)] overflow-hidden hover:shadow-lg transition-shadow"
-                  >
-                    <div className="h-48 bg-[var(--surface-2)] overflow-hidden">
-                      <img
-                        src={application.artworkImage}
-                        alt={application.artworkTitle}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="p-6">
-                      <div className="flex items-start justify-between mb-4">
-                        <div>
-                          <h3 className="text-lg mb-1 text-[var(--text)]">{application.artworkTitle}</h3>
-                          <p className="text-sm text-[var(--text-muted)]">{application.venueName}</p>
-                        </div>
-                        {getStatusBadge(application.status)}
-                      </div>
-
-                      <div className="flex items-center gap-2 text-sm text-[var(--text-muted)] mb-4">
-                        <Calendar className="w-4 h-4" />
-                        Applied {new Date(application.appliedDate).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                        })}
-                      </div>
-
-                      {/* Approved - Schedule Install Flow */}
-                      {application.status === 'approved' && (
-                        <div>
-                          {(application as any).approvedDuration && (
-                            <div className="mb-4 p-4 bg-[var(--green-muted)] rounded-lg border border-[var(--border)]">
-                              <div className="flex flex-wrap items-center gap-3 mb-2">
-                                <span className="text-sm text-[var(--text)]">Display term:</span>
-                                <DurationBadge duration={(application as any).approvedDuration} size="md" />
-                              </div>
-                              <p className="text-xs text-[var(--text)]">
-                                You'll rotate or pick up the artwork during the venue's weekly window after the end date.
-                              </p>
-                            </div>
-                          )}
-
-                          {!scheduledInstalls[application.id] ? (
-                            <div className="bg-[var(--green-muted)] rounded-lg p-4 mb-4 border border-[var(--border)]">
-                              <div className="flex items-start gap-3 mb-3">
-                                <CheckCircle className="w-5 h-5 text-[var(--green)] flex-shrink-0 mt-0.5" />
-                                <div>
-                                  <h4 className="text-sm text-[var(--text)] mb-1">Application Approved!</h4>
-                                  <p className="text-xs text-[var(--text)]">Use the picker to see available times.</p>
-                                </div>
-                              </div>
-                              <button
-                                onClick={() => handleScheduleInstall(application)}
-                                className="w-full px-4 py-2 bg-[var(--blue)] text-[var(--on-blue)] rounded-lg hover:bg-[var(--blue-hover)] transition-colors text-sm"
-                              >
-                                Choose an Install Time
-                              </button>
-                            </div>
-                          ) : (
-                            <div className="bg-[var(--surface-2)] rounded-lg p-4 mb-4 border border-[var(--border)]">
-                              <div className="flex items-start gap-3 mb-3">
-                                <Clock className="w-5 h-5 text-[var(--blue)] flex-shrink-0 mt-0.5" />
-                                <div>
-                                  <h4 className="text-sm text-[var(--text)] mb-1">Install Scheduled</h4>
-                                  <p className="text-[var(--text)]"><strong>{scheduledInstalls[application.id].label}</strong></p>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Pending - Awaiting Approval */}
-                      {application.status === 'pending' && (
-                        <div className="bg-[var(--surface-2)] rounded-lg p-4">
-                          <p className="text-sm text-[var(--text-muted)]">
-                            The venue is reviewing your application. You'll be notified when they make a decision.
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Rejected */}
-                      {application.status === 'rejected' && (
-                        <div className="bg-[var(--surface-2)] rounded-lg p-4 border border-[var(--border)]">
-                          <div className="flex items-start gap-3">
-                            <XCircle className="w-5 h-5 text-[var(--danger)] flex-shrink-0 mt-0.5" />
-                            <div>
-                              <h4 className="text-sm text-[var(--text)] mb-1">Application Not Selected</h4>
-                              <p className="text-xs text-[var(--text-muted)]">
-                                The venue chose other artworks for this wall space. You can apply again!
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+              <div className="mb-6">
+                <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-2xl p-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)] mb-2">Keep momentum</div>
+                    <h2 className="text-xl text-[var(--text)] mb-1">Bring in new venues and respond to invites</h2>
+                    <p className="text-sm text-[var(--text-muted)]">Follow up with venues that reach out and keep your applications moving.</p>
                   </div>
+                  <button
+                    onClick={() => {
+                      if (typeof window !== 'undefined') {
+                        window.location.hash = '#/find-venues';
+                      }
+                    }}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--blue)] text-[var(--on-blue)] hover:bg-[var(--blue-hover)] transition-colors"
+                  >
+                    Explore venues
+                    <ArrowUpRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-2 mb-6">
+                {pipelineFilterOptions.map(option => (
+                  <button
+                    key={option.key}
+                    onClick={() => setPipelineFilter(option.key)}
+                    className={`px-3 py-1.5 rounded-full text-sm transition-colors border ${
+                      pipelineFilter === option.key
+                        ? 'bg-[var(--blue-muted)] text-[var(--blue)] border-[var(--blue)]'
+                        : 'bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)] hover:text-[var(--text)]'
+                    }`}
+                  >
+                    {option.label} ({option.count})
+                  </button>
                 ))}
               </div>
 
-              {filteredApplications.length === 0 && (
-                <div className="text-center py-12">
-                  <p className="text-[var(--text-muted)]">No applications yet</p>
+              {filteredPipelineItems.length > 0 ? (
+                <div className="space-y-5">
+                  {filteredPipelineItems.map(item => {
+                    const isInvite = item.kind === 'invite';
+                    const invite = item.invite;
+                    const application = item.application;
+                    const imageUrl = isInvite ? invite?.venuePhoto : application?.artworkImage;
+                    const title = isInvite ? invite?.venueName : application?.artworkTitle;
+                    const subtitle = isInvite ? invite?.venueLocation : application?.venueName;
+                    const timestamp = isInvite ? invite?.receivedAt || '' : application?.appliedDate || '';
+                    const statusBadge = isInvite && invite
+                      ? (() => {
+                          const map = {
+                            pending: 'bg-[var(--surface-2)] text-[var(--warning)] border border-[var(--border)]',
+                            accepted: 'bg-[var(--green-muted)] text-[var(--green)]',
+                            declined: 'bg-[var(--surface-2)] text-[var(--text-muted)] border border-[var(--border)]',
+                          } as const;
+                          const labelMap = {
+                            pending: 'Pending response',
+                            accepted: 'Accepted',
+                            declined: 'Declined',
+                          } as const;
+                          return <span className={`px-3 py-1 rounded-full text-xs ${map[invite.status]}`}>{labelMap[invite.status]}</span>;
+                        })()
+                      : getStatusBadge(application?.status || 'pending');
+
+                    return (
+                      <div key={item.id} className="bg-[var(--surface-1)] border border-[var(--border)] rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow">
+                        <div className="grid md:grid-cols-[220px_minmax(0,1fr)]">
+                          <div className="relative h-48 md:h-full bg-[var(--surface-2)]">
+                            {imageUrl ? (
+                              <img
+                                src={imageUrl}
+                                alt={title || (isInvite ? 'Venue invitation' : 'Artwork application')}
+                                className="absolute inset-0 w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="absolute inset-0 flex items-center justify-center text-sm text-[var(--text-muted)]">
+                                No image
+                              </div>
+                            )}
+                          </div>
+                          <div className="p-6 space-y-4">
+                            <div className="flex items-start justify-between gap-4">
+                              <div>
+                                <div className="flex items-center gap-2 mb-2">
+                                  <span className={`px-3 py-1 rounded-full text-xs font-medium border ${
+                                    isInvite
+                                      ? 'bg-[var(--surface-2)] text-[var(--blue)] border-[var(--border)]'
+                                      : 'bg-[var(--surface-2)] text-[var(--green)] border-[var(--border)]'
+                                  }`}>
+                                    {isInvite ? 'Invitation' : 'Application'}
+                                  </span>
+                                  <span className="text-xs text-[var(--text-muted)]">{formatRelativeDate(timestamp)}</span>
+                                </div>
+                                <h3 className="text-lg text-[var(--text)] mb-1">{title}</h3>
+                                {subtitle && <p className="text-sm text-[var(--text-muted)]">{subtitle}</p>}
+                              </div>
+                              <div>{statusBadge}</div>
+                            </div>
+
+                            {isInvite && invite ? (
+                              <>
+                                {invite.message && (
+                                  <p className="text-sm text-[var(--text-muted)] leading-relaxed">{invite.message}</p>
+                                )}
+                                <div className="flex flex-wrap gap-2 text-xs">
+                                  {invite.wallspaceName && (
+                                    <span className="px-3 py-1 rounded-full bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text)]">
+                                      {invite.wallspaceName}{invite.wallspaceSize ? ` - ${invite.wallspaceSize}` : ''}
+                                    </span>
+                                  )}
+                                  <span className="px-3 py-1 rounded-full bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text)]">
+                                    {invite.requestedDuration} day display
+                                  </span>
+                                </div>
+                                {invite.status === 'pending' ? (
+                                  <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center">
+                                    <button
+                                      onClick={() => handleInviteResponse(invite.id, 'declined')}
+                                      className="w-full sm:w-auto px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)] hover:bg-[var(--surface-3)] transition-colors text-sm"
+                                    >
+                                      Decline
+                                    </button>
+                                    <button
+                                      onClick={() => handleInviteResponse(invite.id, 'accepted')}
+                                      className="w-full sm:w-auto px-4 py-2 rounded-lg bg-[var(--blue)] text-[var(--on-blue)] hover:bg-[var(--blue-hover)] transition-colors text-sm"
+                                    >
+                                      Accept & start application
+                                    </button>
+                                  </div>
+                                ) : invite.status === 'accepted' ? (
+                                  <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 text-sm text-[var(--text)]">
+                                    Invitation accepted. Add artwork from the Venues tab to complete your submission.
+                                  </div>
+                                ) : (
+                                  <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 text-sm text-[var(--text-muted)]">
+                                    You declined this invitation. It will stay here for reference.
+                                  </div>
+                                )}
+                              </>
+                            ) : application ? (
+                              <>
+                                <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
+                                  <Calendar className="w-4 h-4" />
+                                  Applied {new Date(application.appliedDate).toLocaleDateString('en-US', {
+                                    month: 'short',
+                                    day: 'numeric',
+                                    year: 'numeric',
+                                  })}
+                                </div>
+
+                                {application.status === 'approved' && (
+                                  <div className="rounded-lg border border-[var(--border)] bg-[var(--green-muted)] px-4 py-4 space-y-3">
+                                    <div className="flex flex-wrap items-center gap-3">
+                                      <span className="text-sm font-medium text-[var(--text)]">Display term</span>
+                                      {(application as any).approvedDuration && (
+                                        <DurationBadge duration={(application as any).approvedDuration} size="md" />
+                                      )}
+                                    </div>
+                                    {!scheduledInstalls[application.id] ? (
+                                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                                        <button
+                                          onClick={() => handleScheduleInstall(application)}
+                                          className="w-full sm:w-auto px-4 py-2 bg-[var(--blue)] text-[var(--on-blue)] rounded-lg hover:bg-[var(--blue-hover)] transition-colors text-sm"
+                                        >
+                                          Schedule install
+                                        </button>
+                                        <p className="text-xs text-[var(--text)] max-w-sm">
+                                          Choose a time from the venue's availability so they can prepare to host your work.
+                                        </p>
+                                      </div>
+                                    ) : (
+                                      <div className="flex flex-col gap-2 text-sm text-[var(--text)]">
+                                        <strong>{scheduledInstalls[application.id].label}</strong>
+                                        <p className="text-xs text-[var(--text)]">
+                                          Calendar links:
+                                          {scheduledInstalls[application.id].links?.google && (
+                                            <>
+                                              {' '}<a className="text-[var(--blue)] hover:underline" href={scheduledInstalls[application.id].links?.google}>Google</a>
+                                            </>
+                                          )}
+                                          {scheduledInstalls[application.id].links?.ics && (
+                                            <>
+                                              {' '}
+                                              |{' '}
+                                              <a className="text-[var(--blue)] hover:underline" href={scheduledInstalls[application.id].links?.ics}>ICS</a>
+                                            </>
+                                          )}
+                                        </p>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+
+                                {application.status === 'pending' && (
+                                  <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 text-sm text-[var(--text-muted)]">
+                                    The venue is reviewing your submission. We'll email you as soon as they respond.
+                                  </div>
+                                )}
+
+                                {application.status === 'rejected' && (
+                                  <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 text-sm text-[var(--text-muted)]">
+                                    This wall is full right now. Reapply later or explore other venues nearby.
+                                  </div>
+                                )}
+                              </>
+                            ) : null}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-2xl p-12 text-center space-y-4">
+                  <div className="w-16 h-16 mx-auto rounded-full bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center">
+                    <Mail className="w-7 h-7 text-[var(--text-muted)]" />
+                  </div>
+                  <h3 className="text-xl text-[var(--text)]">Nothing in your pipeline yet</h3>
+                  <p className="text-[var(--text-muted)] max-w-md mx-auto">
+                    Apply to venues in the marketplace or share your invite link to start receiving invitations.
+                  </p>
+                  <button
+                    onClick={() => {
+                      if (typeof window !== 'undefined') {
+                        window.location.hash = '#/find-venues';
+                      }
+                    }}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--blue)] text-[var(--on-blue)] hover:bg-[var(--blue-hover)] transition-colors"
+                  >
+                    Discover venues
+                    <ArrowUpRight className="w-4 h-4" />
+                  </button>
                 </div>
               )}
 
-              {/* Time Picker Modal */}
               {showSchedulePicker && selectedApp && (
                 <TimeSlotPicker
                   onConfirm={handleTimeConfirm}
@@ -405,9 +616,7 @@ export function ApplicationsAndInvitations({ userRole, onBack, defaultTab = 'app
                 />
               )}
             </>
-          )}
-
-          {activeTab === 'approved' && (
+          ) : (
             <>
               {approvedArtworks.length === 0 ? (
                 <div className="text-center py-12">
@@ -428,14 +637,14 @@ export function ApplicationsAndInvitations({ userRole, onBack, defaultTab = 'app
                           className="w-full h-full object-cover"
                         />
                       </div>
-                      <div className="p-6">
-                        <div className="mb-4">
+                      <div className="p-6 space-y-4">
+                        <div>
                           <h3 className="text-lg mb-1 text-[var(--text)]">{artwork.title}</h3>
                           <p className="text-sm text-[var(--text-muted)]">{artwork.venue_name}</p>
                         </div>
 
                         {artwork.install_time_option && (
-                          <div className="mb-4 text-sm">
+                          <div className="text-sm">
                             <span className="text-[var(--text-muted)]">Install option:</span>
                             <span className="ml-2 px-2 py-1 bg-[var(--surface-2)] rounded text-[var(--text)]">
                               {artwork.install_time_option === 'quick' ? 'Quick (1-2 hours)' :
@@ -445,7 +654,6 @@ export function ApplicationsAndInvitations({ userRole, onBack, defaultTab = 'app
                           </div>
                         )}
 
-                        {/* QR Code Section */}
                         <div className="bg-[var(--surface-2)] rounded-lg p-4 border border-[var(--border)]">
                           <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2">
