@@ -438,12 +438,21 @@ export default function App() {
   };
 
   const handleLogout = async () => {
-    if (currentUser?.role === 'admin') {
-      setCurrentUser(null);
-      setCurrentPage('login');
-      return;
+    const isAdmin = currentUser?.role === 'admin';
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem('currentPage');
+        if (isAdmin) {
+          localStorage.removeItem('adminPassword');
+          sessionStorage.removeItem('adminPassword');
+        }
+      } catch {}
     }
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.warn('Sign out failed', err);
+    }
     setCurrentUser(null);
     setCurrentPage('login');
   };
@@ -624,7 +633,13 @@ export default function App() {
   if (currentUser.role === 'admin') {
     return (
       <div className="flex min-h-screen">
-        <AdminSidebar currentPage={currentPage} onNavigate={handleNavigate} />
+        <AdminSidebar
+          currentPage={currentPage}
+          onNavigate={handleNavigate}
+          onLogout={handleLogout}
+          userName={currentUser.name}
+          userEmail={currentUser.email}
+        />
         <div className="flex-1 flex flex-col">
           <main className="flex-1 p-8 overflow-y-auto">
             {currentPage === 'admin-dashboard' && <AdminDashboard onNavigate={handleNavigate} />}
