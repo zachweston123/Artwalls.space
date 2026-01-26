@@ -23,6 +23,16 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
     venueType: '',
   });
 
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  // Debounce search query
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
+
   const venueLabels = VENUE_HIGHLIGHTS;
 
   const neighborhoods = [
@@ -42,76 +52,86 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
     'Other',
   ];
 
-  // Mock venue details (used as a UI fallback / enrichment layer)
-  const mockVenues: any[] = [];
   const [artistCities, setArtistCities] = useState<{ primary: string; secondary: string }>({ primary: '', secondary: '' });
 
+  // Initial load of user profile and cities
   useEffect(() => {
     let isMounted = true;
-
-    async function loadVenues() {
+    async function loadUser() {
       try {
-        // Load user tier for priority visibility
         const me = await apiGet<{ profile?: { subscription_tier?: string } }>('/api/me');
         if (isMounted) {
           const tier = (me?.profile?.subscription_tier || 'free').toLowerCase() as SubscriptionTier;
           setUserTier(tier);
         }
 
-        // Load artist profile to get their cities
         const meProfile = await apiGet<{ role: string; profile: { city_primary?: string | null; city_secondary?: string | null } }>(
           '/api/profile/me'
         );
-        const primary = (meProfile?.profile?.city_primary || '').trim();
-        const secondary = (meProfile?.profile?.city_secondary || '').trim();
-        if (isMounted) setArtistCities({ primary, secondary });
+        if (isMounted) {
+          const primary = (meProfile?.profile?.city_primary || '').trim();
+          const secondary = (meProfile?.profile?.city_secondary || '').trim();
+          setArtistCities({ primary, secondary });
+        }
+      } catch (err) {
+        console.error('Failed to load user profile', err);
+      }
+    }
+    loadUser();
+    return () => { isMounted = false; };
+  }, []);
 
-        // Build query params for city-based filtering
+  // Load venues when search or cities change
+  useEffect(() => {
+    let isMounted = true;
+
+    async function fetchVenues() {
+      try {
         const params = new URLSearchParams();
-        if (primary) params.append('artistPrimaryCity', primary);
-        if (secondary) params.append('artistSecondaryCity', secondary);
+        
+        // If searching, prioritize the search term (global search)
+        if (debouncedSearch) {
+          params.append('q', debouncedSearch);
+        } else {
+          // Otherwise fall back to city-based discovery
+          if (artistCities.primary) params.append('artistPrimaryCity', artistCities.primary);
+          if (artistCities.secondary) params.append('artistSecondaryCity', artistCities.secondary);
+        }
 
         const path = params.toString() ? `/api/venues?${params.toString()}` : '/api/venues';
         
-        const apiVenues = await apiGet<Array<{ id: string; name?: string | null; email?: string | null; type?: string | null }>>(
+        const resp = await apiGet<{ venues: Array<{ id: string; name?: string | null; email?: string | null; type?: string | null; default_venue_fee_bps?: number; labels?: string[]; city: string | null }> }>(
           path
         );
 
-          const merged = (apiVenues || []).map((v) => {
-          const fallback = mockVenues.find((m) => m.name === v.name) || null;
-
-          // Preserve the existing UI shape, but prefer API values when present.
-            return {
+        if (isMounted) {
+          // Verify we have an array
+          const validVenues = Array.isArray(resp?.venues) ? resp.venues : [];
+          
+          setVenues(validVenues.map(v => ({
             id: v.id,
-            name: v.name || fallback?.name || 'Venue',
-            type: v.type || fallback?.type || 'Other',
-            coverPhoto:
-              fallback?.coverPhoto ||
-              'https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=800',
-            location: fallback?.location || '',
-            bio: fallback?.bio || '',
-              labels: (v as any).labels || fallback?.labels || [],
-            foundedYear: fallback?.foundedYear || new Date().getFullYear(),
-            wallSpaces: fallback?.wallSpaces || 0,
-            availableSpaces: fallback?.availableSpaces || 0,
-            verified: fallback?.verified || false,
-          };
-        });
-
-        // If API has no venues yet (fresh DB), keep the current mock list so the page isn't empty.
-        const next = merged.length > 0 ? merged : mockVenues;
-        if (isMounted) setVenues(next);
-      } catch {
-        if (isMounted) setVenues(mockVenues);
+            name: v.name || 'Venue',
+            type: v.type || 'Other',
+            coverPhoto: 'https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=800', // Placeholder or real if available
+            location: (v as any).city || 'Unknown Location', // API needs to return city
+            bio: (v as any).description || '',
+            labels: v.labels || [],
+            foundedYear: new Date().getFullYear(), // Placeholder
+            wallSpaces: 0, // Placeholder
+            availableSpaces: 0, // Placeholder
+            verified: false // Placeholder
+          })));
+        }
+      } catch (err) {
+        console.error('Error loading venues:', err);
+        if (isMounted) setVenues([]);
       }
     }
 
-    loadVenues();
-    return () => {
-      isMounted = false;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    fetchVenues();
+
+    return () => { isMounted = false; };
+  }, [debouncedSearch, artistCities]);
 
   const toggleLabel = (label: string) => {
     setFilters(prev => ({
@@ -140,7 +160,7 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
     searchQuery;
 
   // Filter venues based on criteria
-  const filteredVenues = (venues.length ? venues : mockVenues).filter(venue => {
+  const filteredVenues = venues.filter(venue => {
     if (searchQuery && !venue.name.toLowerCase().includes(searchQuery.toLowerCase())) {
       return false;
     }

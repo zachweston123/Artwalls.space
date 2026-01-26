@@ -634,6 +634,8 @@ export default {
       // Optional filters: by artistId (use artist's preferred cities) or by cities query
       const artistId = url.searchParams.get('artistId');
       const citiesParam = url.searchParams.get('cities');
+      const q = url.searchParams.get('q');
+
       let cities: string[] | null = null;
       if (citiesParam) {
         cities = citiesParam.split(',').map(c => c.trim()).filter(Boolean);
@@ -651,9 +653,14 @@ export default {
       let query = supabaseAdmin
         .from('venues')
         .select('id,name,type,labels,default_venue_fee_bps,city')
+        .eq('suspended', false)
         .order('name', { ascending: true })
         .limit(50);
-      if (cities && cities.length > 0) {
+
+      // If search query is present, search by name globally. Otherwise, filter by city (local discovery).
+      if (q) {
+        query = query.ilike('name', `%${q}%`);
+      } else if (cities && cities.length > 0) {
         query = query.in('city', cities);
       }
       const { data, error } = await query;
