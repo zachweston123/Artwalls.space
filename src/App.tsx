@@ -61,7 +61,6 @@ import { AdminInvites } from './components/admin/AdminInvites';
 import { AdminSales as AdminSalesPage } from './components/admin/AdminSales';
 import { AdminCurrentDisplays } from './components/admin/AdminCurrentDisplays';
 import { AdminSupport } from './components/admin/AdminSupport';
-import { AdminPasswordPrompt } from './components/admin/AdminPasswordPrompt';
 import { StripePaymentSetup } from './components/admin/StripePaymentSetup';
 import { SupportInbox } from './components/admin/SupportInbox';
 import { SupportMessageDetail } from './components/admin/SupportMessageDetail';
@@ -88,9 +87,6 @@ export default function App() {
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [hasAcceptedAgreement, setHasAcceptedAgreement] = useState<boolean | null>(null);
-  const [showAdminPasswordPrompt, setShowAdminPasswordPrompt] = useState(false);
-  const [adminPasswordVerified, setAdminPasswordVerified] = useState(false);
-  const [pendingAdminAccess, setPendingAdminAccess] = useState(false);
   const [showGoogleRoleSelection, setShowGoogleRoleSelection] = useState(false);
   const [googleUser, setGoogleUser] = useState<any>(null);
   const [showProfileCompletion, setShowProfileCompletion] = useState(false);
@@ -284,44 +280,10 @@ export default function App() {
     }
   }, [currentUser?.role]);
 
-  // Listen for keyboard shortcut to access admin login (Ctrl+Shift+A)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Check for Ctrl+Shift+A (Windows/Linux) or Cmd+Shift+A (Mac)
-      const isCtrlOrCmd = e.ctrlKey || e.metaKey;
-      const isShift = e.shiftKey;
-      const isKeyA = e.key === 'A' || e.key === 'a';
-      
-      if (isCtrlOrCmd && isShift && isKeyA) {
-        e.preventDefault();
-        if (!currentUser) {
-          setShowAdminPasswordPrompt(true);
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentUser]);
-
   const handleLogin = (user: User) => {
-    // If trying to login as admin, require password verification
-    if (user.role === 'admin') {
-      if (!adminPasswordVerified) {
-        setPendingAdminAccess(true);
-        setShowAdminPasswordPrompt(true);
-        return;
-      }
-      // Password verified, proceed
-      setCurrentUser(user);
-      setCurrentPage('admin-dashboard');
-      setAdminPasswordVerified(false);
-      setPendingAdminAccess(false);
-    } else {
-      // Non-admin login, proceed normally
-      setCurrentUser(user);
-      setCurrentPage(user.role === 'artist' ? 'artist-dashboard' : 'venue-dashboard');
-    }
+    // Standard login flow
+    setCurrentUser(user);
+    setCurrentPage(user.role === 'artist' ? 'artist-dashboard' : user.role === 'venue' ? 'venue-dashboard' : 'admin-dashboard');
   };
 
   // Ensure the user has a corresponding DB record immediately (discoverable in searches)
@@ -358,25 +320,6 @@ export default function App() {
       return;
     }
   }, [currentUser, currentPage]);
-
-  const handleAdminPasswordVerified = () => {
-    setShowAdminPasswordPrompt(false);
-    setAdminPasswordVerified(true);
-    setCurrentUser({
-      id: 'admin-1',
-      name: 'Admin User',
-      email: 'admin@artwalls.com',
-      role: 'admin'
-    });
-    setCurrentPage('admin-dashboard');
-    setPendingAdminAccess(false);
-  };
-
-  const handleCancelAdminPassword = () => {
-    setShowAdminPasswordPrompt(false);
-    setAdminPasswordVerified(false);
-    setPendingAdminAccess(false);
-  };
 
   const handleGoogleRoleSelection = async (role: UserRole) => {
     if (!googleUser || !role) return;
@@ -673,13 +616,6 @@ export default function App() {
     return (
       <div>
         <Login onLogin={handleLogin} onNavigate={handleNavigate} />
-        {/* Password Prompt Modal */}
-        {showAdminPasswordPrompt && (
-          <AdminPasswordPrompt
-            onVerify={handleAdminPasswordVerified}
-            onCancel={handleCancelAdminPassword}
-          />
-        )}
       </div>
     );
   }

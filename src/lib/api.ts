@@ -45,10 +45,6 @@ async function getAuthHeader(): Promise<Record<string, string>> {
     const token = data.session?.access_token;
     const headers: Record<string, string> = {};
     if (token) headers.Authorization = `Bearer ${token}`;
-    try {
-      const adminPass = typeof window !== 'undefined' ? window.localStorage.getItem('adminPassword') : null;
-      if (adminPass) headers['x-admin-password'] = adminPass;
-    } catch {}
     return headers;
   } catch {
     return {};

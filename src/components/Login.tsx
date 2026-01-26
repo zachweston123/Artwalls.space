@@ -158,7 +158,8 @@ export function Login({ onLogin, onNavigate }: LoginProps) {
       const currentRole = (data.user.user_metadata?.role as UserRole) || null;
 
       // If the user selected a role and it differs/missing, backfill metadata.
-      if (selectedRole && selectedRole !== currentRole) {
+      // BUT if the user is already an admin, do not overwrite their role with 'artist'/'venue'
+      if (currentRole !== 'admin' && selectedRole && selectedRole !== currentRole) {
         await supabase.auth.updateUser({
           data: {
             role: selectedRole,
@@ -180,9 +181,9 @@ export function Login({ onLogin, onNavigate }: LoginProps) {
         name:
           safeName ||
           (data.user.user_metadata?.name as string | undefined) ||
-          (selectedRole === 'artist' ? 'Artist' : 'Venue'),
+          (currentRole === 'admin' ? 'Admin' : selectedRole === 'artist' ? 'Artist' : 'Venue'),
         email: data.user.email || email.trim(),
-        role: selectedRole || currentRole,
+        role: currentRole === 'admin' ? 'admin' : (selectedRole || currentRole),
       });
     } catch (err: any) {
       setErrorMessage(err?.message || 'Authentication failed.');
