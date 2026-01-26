@@ -7,7 +7,7 @@ export function buildVerificationEmail({ verifyUrl, email, name, role, supportEm
   const contactEmail = supportEmail || 'support@artwalls.space';
 
   const subject = 'Confirm your Artwalls email';
-  const preview = 'Verify your email to unlock your Artwalls account.';
+  const preview = 'Finish setting up your Artwalls account and start exploring new walls.';
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -17,90 +17,92 @@ export function buildVerificationEmail({ verifyUrl, email, name, role, supportEm
     <meta name="x-apple-disable-message-reformatting" />
     <title>${subject}</title>
   </head>
-  <body style="margin:0;padding:0;background-color:#f5f5f3;color:#1a1a18;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
-    <div style="display:none;font-size:1px;color:#f5f5f3;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">${preview}</div>
-    <table role="presentation" width="100%" border="0" cellPadding="0" cellSpacing="0" style="background-color:#f5f5f3;">
+  <body style="margin:0;padding:0;background-color:#f4f1ea;color:#1a1a18;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+    <div style="display:none;font-size:1px;color:#f4f1ea;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">${preview}</div>
+    <table role="presentation" width="100%" border="0" cellPadding="0" cellSpacing="0" style="background-color:#f4f1ea;">
       <tr>
-        <td align="center" style="padding:32px 16px;">
-          <table role="presentation" width="100%" border="0" cellPadding="0" cellSpacing="0" style="max-width:600px;background-color:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 18px 48px rgba(15,18,34,0.12);border:1px solid #e5e7eb;">
+        <td align="center" style="padding:40px 20px;">
+          <table role="presentation" width="100%" border="0" cellPadding="0" cellSpacing="0" style="max-width:640px;border-radius:28px;overflow:hidden;background-color:#ffffff;border:1px solid #e0ddd6;box-shadow:0 24px 60px rgba(24,26,32,0.14);">
             <tr>
-              <td style="background:radial-gradient(circle at 10% 10%, rgba(37,99,235,0.16), transparent 55%), radial-gradient(circle at 80% 0%, rgba(16,185,129,0.16), transparent 45%),#0f172a;padding:40px 32px;color:#f8fafc;">
-                <table role="presentation" width="100%" border="0" cellPadding="0" cellSpacing="0">
+              <td style="position:relative;padding:48px 40px;background:linear-gradient(145deg, rgba(37,99,235,0.88), rgba(16,185,129,0.82));color:#f8fafc;">
+                <div style="position:absolute;top:-120px;right:-110px;width:320px;height:320px;background:radial-gradient(circle at 30% 30%, rgba(248,250,252,0.25), transparent 58%);filter:blur(0px);"></div>
+                <div style="position:absolute;bottom:-140px;left:-100px;width:280px;height:280px;background:radial-gradient(circle at 70% 70%, rgba(251,191,36,0.16), transparent 60%);"></div>
+                <table role="presentation" width="100%" style="position:relative;z-index:2;">
                   <tr>
-                    <td style="font-size:18px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:#cbd5f5;">Artwalls</td>
+                    <td style="font-size:20px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:rgba(248,250,252,0.88);">Artwalls</td>
                   </tr>
                   <tr>
-                    <td style="padding-top:12px;font-size:28px;font-weight:600;line-height:1.3;color:#f8fafc;">Verify your email, ${displayName}</td>
+                    <td style="padding-top:14px;font-size:34px;font-weight:600;line-height:1.25;color:#ffffff;">Confirm your email, ${displayName}</td>
                   </tr>
                   <tr>
-                    <td style="padding-top:16px;font-size:16px;line-height:1.6;color:#e2e8f0;">Welcome to Artwalls &mdash; where local artists connect with inspiring venues. Confirm your email so we can finish setting up your ${accountRole} account.</td>
+                    <td style="padding-top:18px;font-size:17px;line-height:1.7;color:rgba(248,250,252,0.9);">You are moments away from showcasing local art. Confirm your email so we can finish setting up your ${accountRole} space on Artwalls.</td>
                   </tr>
                 </table>
               </td>
             </tr>
             <tr>
-              <td style="padding:40px 32px 32px 32px;color:#1e293b;">
-                <table role="presentation" width="100%" border="0" cellPadding="0" cellSpacing="0">
+              <td style="padding:48px 40px 36px 40px;background-color:#ffffff;">
+                <table role="presentation" width="100%" border="0" cellPadding="0" cellSpacing="0" style="background-color:#fdfcf9;border-radius:20px;padding:32px;border:1px solid #ece7de;">
                   <tr>
-                    <td style="font-size:16px;line-height:1.6;color:#1a1a18;">Hi ${displayName},</td>
+                    <td style="font-size:16px;line-height:1.7;color:#1f2a37;">Hi ${displayName},</td>
                   </tr>
                   <tr>
-                    <td style="padding-top:12px;font-size:16px;line-height:1.6;color:#1a1a18;">Thanks for joining Artwalls. Click the button below within the next 24 hours to confirm your email address and start exploring the opportunities waiting for you.</td>
+                    <td style="padding-top:12px;font-size:16px;line-height:1.7;color:#1f2a37;">Tap the button below within the next 24 hours to verify your email. This keeps your account secure and unlocks access to venues, artwork submissions, and scheduling tools.</td>
                   </tr>
                   <tr>
-                    <td align="center" style="padding-top:28px;padding-bottom:12px;">
-                      <a href="${safeUrl}" style="display:inline-block;padding:14px 32px;border-radius:999px;background-color:#2563eb;color:#ffffff;font-size:16px;font-weight:600;text-decoration:none;">Verify email</a>
+                    <td align="center" style="padding-top:32px;padding-bottom:16px;">
+                      <a href="${safeUrl}" style="display:inline-block;padding:16px 38px;border-radius:999px;background:linear-gradient(135deg,#2563eb,#4338ca);color:#ffffff;font-size:18px;font-weight:600;text-decoration:none;box-shadow:0 18px 35px rgba(67,56,202,0.28);">Verify email</a>
                     </td>
                   </tr>
                   <tr>
-                    <td style="padding-top:8px;font-size:13px;line-height:1.6;color:#64748b;text-align:center;">Button not working? Copy and paste this link into your browser:</td>
+                    <td style="font-size:13px;line-height:1.6;color:#64758b;text-align:center;">Button not working? Copy and paste this link into your browser:</td>
                   </tr>
                   <tr>
                     <td style="padding-top:6px;word-break:break-all;font-size:13px;color:#2563eb;text-align:center;"><a href="${safeUrl}" style="color:#2563eb;text-decoration:none;">${safeUrl}</a></td>
                   </tr>
+                </table>
+
+                <table role="presentation" width="100%" border="0" cellPadding="0" cellSpacing="0" style="margin-top:36px;">
                   <tr>
-                    <td style="padding-top:28px;border-top:1px solid #e2e8f0;font-size:14px;line-height:1.6;color:#475569;">What comes next?</td>
+                    <td style="font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:0.18em;color:#64758b;padding-bottom:18px;">What happens next</td>
                   </tr>
                   <tr>
-                    <td style="padding-top:12px;">
+                    <td>
                       <table role="presentation" width="100%" border="0" cellPadding="0" cellSpacing="0">
                         <tr>
-                          <td style="padding-bottom:16px;">
-                            <div style="display:flex;">
-                              <div style="min-width:40px;height:40px;border-radius:12px;background-color:rgba(37,99,235,0.12);color:#2563eb;font-weight:600;font-size:16px;line-height:40px;text-align:center;margin-right:12px;">1</div>
-                              <div style="font-size:15px;line-height:1.6;color:#1a1a18;">Confirm your email to activate your secure Artwalls account.</div>
-                            </div>
+                          <td style="vertical-align:top;width:32px;">
+                            <div style="width:32px;height:32px;border-radius:999px;background-color:rgba(37,99,235,0.12);color:#2563eb;font-size:16px;font-weight:600;line-height:32px;text-align:center;">1</div>
                           </td>
+                          <td style="padding-left:18px;padding-bottom:20px;font-size:15px;line-height:1.6;color:#1f2a37;border-left:2px solid #e3e8ef;">Confirm your email to activate your Artwalls dashboard and keep your account secure.</td>
                         </tr>
                         <tr>
-                          <td style="padding-bottom:16px;">
-                            <div style="display:flex;">
-                              <div style="min-width:40px;height:40px;border-radius:12px;background-color:rgba(16,185,129,0.12);color:#0f766e;font-weight:600;font-size:16px;line-height:40px;text-align:center;margin-right:12px;">2</div>
-                              <div style="font-size:15px;line-height:1.6;color:#1a1a18;">Complete your profile so venues and artists know who you are.</div>
-                            </div>
+                          <td style="vertical-align:top;width:32px;">
+                            <div style="width:32px;height:32px;border-radius:999px;background-color:rgba(16,185,129,0.12);color:#0f766e;font-size:16px;font-weight:600;line-height:32px;text-align:center;">2</div>
                           </td>
+                          <td style="padding-left:18px;padding-bottom:20px;font-size:15px;line-height:1.6;color:#1f2a37;border-left:2px solid #e3e8ef;">Complete your profile so venues or artists can get to know you at a glance.</td>
                         </tr>
                         <tr>
-                          <td>
-                            <div style="display:flex;">
-                              <div style="min-width:40px;height:40px;border-radius:12px;background-color:rgba(79,70,229,0.12);color:#4338ca;font-weight:600;font-size:16px;line-height:40px;text-align:center;margin-right:12px;">3</div>
-                              <div style="font-size:15px;line-height:1.6;color:#1a1a18;">Start discovering new walls to show art or curating fresh local talent.</div>
-                            </div>
+                          <td style="vertical-align:top;width:32px;">
+                            <div style="width:32px;height:32px;border-radius:999px;background-color:rgba(79,70,229,0.12);color:#4338ca;font-size:16px;font-weight:600;line-height:32px;text-align:center;">3</div>
                           </td>
+                          <td style="padding-left:18px;font-size:15px;line-height:1.6;color:#1f2a37;border-left:2px solid #e3e8ef;">Start booking walls, uploading artwork, and sharing new pieces with the Artwalls community.</td>
                         </tr>
                       </table>
                     </td>
                   </tr>
+                </table>
+
+                <table role="presentation" width="100%" border="0" cellPadding="0" cellSpacing="0" style="margin-top:32px;background-color:#fbfaf6;border:1px solid #ede8de;border-radius:16px;padding:20px;">
                   <tr>
-                    <td style="padding-top:28px;font-size:15px;line-height:1.6;color:#1a1a18;">You are receiving this email because you signed up for an Artwalls account with ${email}. If this was not you, ignore this message and the link will expire automatically.</td>
+                    <td style="font-size:14px;line-height:1.6;color:#4b5565;">You are receiving this message because someone signed up for Artwalls using ${email}. If this was not you, you can safely ignore it and the link will expire.</td>
                   </tr>
                 </table>
               </td>
             </tr>
             <tr>
-              <td style="background-color:#0f172a;padding:24px 32px;color:#94a3b8;font-size:13px;line-height:1.6;text-align:center;">
-                Need help? Email us at <a href="mailto:${contactEmail}" style="color:#bfdbfe;text-decoration:none;">${contactEmail}</a>.
-                <div style="padding-top:12px;color:#475569;font-size:12px;">&copy; ${new Date().getFullYear()} Artwalls. All rights reserved.</div>
+              <td style="background-color:#101623;padding:26px 20px;color:rgba(248,250,252,0.72);font-size:13px;line-height:1.6;text-align:center;">
+                Need help? Email <a href="mailto:${contactEmail}" style="color:#93c5fd;text-decoration:none;">${contactEmail}</a> or visit <a href="https://artwalls.space/support" style="color:#93c5fd;text-decoration:none;">artwalls.space/support</a>.<br />
+                <span style="display:inline-block;margin-top:10px;color:rgba(148,163,184,0.7);font-size:12px;">&copy; ${new Date().getFullYear()} Artwalls. All rights reserved.</span>
               </td>
             </tr>
           </table>
@@ -110,7 +112,7 @@ export function buildVerificationEmail({ verifyUrl, email, name, role, supportEm
   </body>
 </html>`;
 
-  const text = `Confirm your Artwalls email\n\nHi ${displayName},\n\nThanks for joining Artwalls. Visit the link below within 24 hours to confirm your email and activate your ${accountRole} account.\n\nVerify email: ${safeUrl}\n\nYou received this message because an Artwalls account was created with ${email}. If this was not you, ignore this email and the link will expire on its own.\n\nNeed help? Email ${contactEmail}.\n\nArtwalls`;
+  const text = `Confirm your Artwalls email\n\nHi ${displayName},\n\nYou are almost ready to explore Artwalls. Visit the link below within 24 hours to confirm your email and activate your ${accountRole} account.\n\nVerify email: ${safeUrl}\n\nAfter confirming you can:\n1. Secure your dashboard access.\n2. Complete your profile so the community knows who you are.\n3. Start discovering new wall opportunities and sharing artwork.\n\nIf you did not sign up with ${email}, you can ignore this message and the link will expire automatically.\n\nNeed help? Email ${contactEmail} or visit artwalls.space/support.\n\nArtwalls`;
 
   return { subject, html, text, preview };
 }
