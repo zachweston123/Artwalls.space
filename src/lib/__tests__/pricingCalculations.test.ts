@@ -1,4 +1,12 @@
-import { calculatePricingBreakdown, estimateMonthlyEarnings, formatCentsAsDollars } from '../pricingCalculations';
+import {
+  calculateApplicationFeeCents,
+  calculatePlatformFeeBps,
+  calculatePricingBreakdown,
+  calculateVenueFeeBps,
+  estimateMonthlyEarnings,
+  formatCentsAsDollars,
+  normalizeArtistTier,
+} from '../pricingCalculations';
 
 /**
  * Test suite for pricing calculations
@@ -132,6 +140,42 @@ describe('Pricing Calculations', () => {
       expect(formatCentsAsDollars(100)).toBe('$1.00');
       expect(formatCentsAsDollars(1)).toBe('$0.01');
       expect(formatCentsAsDollars(0)).toBe('$0.00');
+    });
+  });
+
+  describe('normalizeArtistTier', () => {
+    test('Normalizes common string aliases', () => {
+      expect(normalizeArtistTier('Starter')).toBe('starter');
+      expect(normalizeArtistTier('Premium')).toBe('pro');
+      expect(normalizeArtistTier('Tier1')).toBe('free');
+    });
+
+    test('Normalizes numeric representations', () => {
+      expect(normalizeArtistTier(2500)).toBe('free');
+      expect(normalizeArtistTier('500bps')).toBe('starter');
+      expect(normalizeArtistTier(83)).toBe('growth');
+      expect(normalizeArtistTier(0.85)).toBe('pro');
+    });
+
+    test('Falls back when value cannot be determined', () => {
+      expect(normalizeArtistTier('unknown-level', 'starter')).toBe('starter');
+    });
+  });
+
+  describe('application and fee helpers', () => {
+    test('Calculates application fee from breakdown', () => {
+      const breakdown = calculatePricingBreakdown(200, 'starter');
+      expect(calculateApplicationFeeCents(breakdown)).toBe(
+        breakdown.venueCents + breakdown.platformRemainderCents,
+      );
+    });
+
+    test('Calculates platform and venue bps', () => {
+      const breakdown = calculatePricingBreakdown(200, 'growth');
+      expect(calculateVenueFeeBps(breakdown)).toBe(1500);
+      expect(calculatePlatformFeeBps(breakdown)).toBe(
+        Math.round((breakdown.platformRemainderCents / breakdown.listPriceCents) * 10000),
+      );
     });
   });
 });

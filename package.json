@@ -57,7 +57,7 @@
             "@vitejs/plugin-react-swc": "^3.10.2",
             "cspell": "^8.13.2",
             "vite": "6.3.5",
-            "vitest": "^1.6.0",
+                  "vitest": "^1.6.1",
             "wrangler": "^4.54.0"
       },
       "scripts": {
