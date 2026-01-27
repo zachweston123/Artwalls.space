@@ -41,7 +41,9 @@ export function ArtistProfileEdit({ onSave, onCancel }: ArtistProfileEditProps) 
       ...prev,
       artTypes: prev.artTypes.includes(type)
         ? prev.artTypes.filter(t => t !== type)
-        : [...prev.artTypes, type]
+        : prev.artTypes.length < 2
+        ? [...prev.artTypes, type]
+        : prev.artTypes
     }));
   };
 
@@ -202,7 +204,7 @@ export function ArtistProfileEdit({ onSave, onCancel }: ArtistProfileEditProps) 
           {/* Art Types */}
           <div>
             <label className="block text-sm text-[var(--text-muted)] mb-3">
-              Art Types <span className="text-[var(--text-muted)]">(Select all that apply)</span>
+              Art Types <span className="text-[var(--text-muted)]">(Select up to 2)</span>
             </label>
             <div className="flex flex-wrap gap-2">
               {allArtTypes.map((type) => (
@@ -216,7 +218,7 @@ export function ArtistProfileEdit({ onSave, onCancel }: ArtistProfileEditProps) 
               ))}
             </div>
             <p className="text-xs text-[var(--text-muted)] mt-2">
-              {formData.artTypes.length} selected
+              {formData.artTypes.length}/2 selected
             </p>
           </div>
 

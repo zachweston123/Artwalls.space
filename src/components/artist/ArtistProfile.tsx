@@ -643,7 +643,7 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
                 </div>
                 <div>
                   <label className="block text-sm text-[var(--text-muted)] mb-3">Art Types</label>
-                  <p className="text-xs text-[var(--text-muted)] mb-3">Select your art types so venues can find you more easily</p>
+                  <p className="text-xs text-[var(--text-muted)] mb-3">Select up to 2 art types so venues can find you more easily ({artTypes.length}/2)</p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {allArtTypes.map((type) => (
                       <button
@@ -653,14 +653,19 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
                           setArtTypes(prev =>
                             prev.includes(type)
                               ? prev.filter(t => t !== type)
-                              : [...prev, type]
+                              : prev.length < 2
+                              ? [...prev, type]
+                              : prev
                           );
                         }}
                         className={`px-3 py-2 rounded-lg border-2 transition-all text-sm font-medium ${
                           artTypes.includes(type)
                             ? 'border-[var(--blue)] bg-[var(--blue-muted)] text-[var(--blue)]'
+                            : !artTypes.includes(type) && artTypes.length >= 2
+                            ? 'border-[var(--border)] bg-[var(--surface-3)] text-[var(--text-muted)] opacity-50 cursor-not-allowed'
                             : 'border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-muted)] hover:border-[var(--blue)]'
                         }`}
+                        disabled={!artTypes.includes(type) && artTypes.length >= 2}
                       >
                         {type}
                       </button>
