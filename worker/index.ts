@@ -1,4 +1,5 @@
 import { verifyAndParseStripeEvent } from './stripeWebhook';
+import { calculateOrderFinancials, mergeTransferRecords, coerceBps } from './orderSettlement';
 import { createClient } from '@supabase/supabase-js';
 import QRCode from 'qrcode';
 
@@ -1382,45 +1383,75 @@ export default {
       const payload = await request.json().catch(() => ({}));
       const artworkId = String(payload?.artworkId || '').trim();
       if (!artworkId) return json({ error: 'Missing artworkId' }, { status: 400 });
+
       const { data: art, error: artErr } = await supabaseAdmin
         .from('artworks')
-        .select('id,title,price_cents,currency,status')
+        .select('id,title,price_cents,currency,status,artist_id,venue_id')
         .eq('id', artworkId)
         .maybeSingle();
       if (artErr) return json({ error: artErr.message }, { status: 500 });
       if (!art) return json({ error: 'Artwork not found' }, { status: 404 });
       if (art.status === 'sold') return json({ error: 'Artwork already sold' }, { status: 400 });
+
       const amount = Number(art.price_cents || 0);
+      if (!Number.isFinite(amount) || amount <= 0) {
+        return json({ error: 'Invalid artwork price' }, { status: 400 });
+      }
       const currency = art.currency || 'usd';
       const success_url = `${allowOrigin}/#/purchase-${artworkId}?status=success`;
       const cancel_url = `${allowOrigin}/#/purchase-${artworkId}?status=cancel`;
 
-      // Attempt to include Connect split logic if artist account exists; otherwise fallback
-      let paymentIntentExtras: Record<string, string> = {};
-      try {
-        const { data: artRelations } = await supabaseAdmin
-          .from('artworks')
-          .select('artist_id,venue_id')
-          .eq('id', artworkId)
-          .maybeSingle();
-        const artistId = artRelations?.artist_id || null;
-        const venueId = artRelations?.venue_id || null;
-        const { data: artist } = artistId ? await supabaseAdmin.from('artists').select('stripe_account_id,subscription_tier,platform_fee_bps').eq('id', artistId).maybeSingle() : { data: null };
-        const { data: venue } = venueId ? await supabaseAdmin.from('venues').select('default_venue_fee_bps').eq('id', venueId).maybeSingle() : { data: null };
-        const venueFeeBps = typeof venue?.default_venue_fee_bps === 'number' ? venue.default_venue_fee_bps : 1000;
-        const platformFeeBps = typeof artist?.platform_fee_bps === 'number' ? artist.platform_fee_bps : 1500; // fallback by plan
-        const platformFeeCents = Math.floor((amount * platformFeeBps) / 10000);
-        if (artist?.stripe_account_id) {
-          paymentIntentExtras = {
-            'payment_intent_data[application_fee_amount]': String(platformFeeCents),
-            'payment_intent_data[transfer_data][destination]': artist.stripe_account_id,
-            'metadata[platform_fee_bps]': String(platformFeeBps),
-            'metadata[venue_fee_bps]': String(venueFeeBps),
-          };
-        }
-      } catch {}
+      const { data: artist, error: artistErr } = art.artist_id
+        ? await supabaseAdmin
+            .from('artists')
+            .select('id,stripe_account_id,platform_fee_bps')
+            .eq('id', art.artist_id)
+            .maybeSingle()
+        : { data: null, error: null };
+      if (artistErr) return json({ error: artistErr.message }, { status: 500 });
 
-      const body = toForm({
+      const { data: venue, error: venueErr } = art.venue_id
+        ? await supabaseAdmin
+            .from('venues')
+            .select('id,stripe_account_id,default_venue_fee_bps')
+            .eq('id', art.venue_id)
+            .maybeSingle()
+        : { data: null, error: null };
+      if (venueErr) return json({ error: venueErr.message }, { status: 500 });
+
+      const platformFeeBps = coerceBps(artist?.platform_fee_bps, 1500);
+      const venueFeeBps = coerceBps(venue?.default_venue_fee_bps, 1000);
+      const { platformFeeCents, venuePayoutCents, artistPayoutCents } = calculateOrderFinancials(amount, platformFeeBps, venueFeeBps);
+
+      const orderId = crypto.randomUUID();
+      const nowIso = new Date().toISOString();
+      const { error: reserveErr } = await supabaseAdmin.from('orders').insert({
+        id: orderId,
+        artwork_id: art.id,
+        artist_id: art.artist_id,
+        venue_id: art.venue_id ?? null,
+        amount_cents: amount,
+        currency,
+        platform_fee_bps: platformFeeBps,
+        venue_fee_bps: venueFeeBps,
+        platform_fee_cents: platformFeeCents,
+        artist_payout_cents: artistPayoutCents,
+        venue_payout_cents: venuePayoutCents,
+        status: 'pending',
+        stripe_checkout_session_id: null,
+        stripe_payment_intent_id: null,
+        stripe_charge_id: null,
+        transfer_ids: [],
+        stripe_receipt_url: null,
+        created_at: nowIso,
+        updated_at: nowIso,
+      });
+      if (reserveErr) {
+        console.error('Failed to reserve order', reserveErr.message);
+        return json({ error: 'Unable to reserve order' }, { status: 500 });
+      }
+
+      const sessionForm: Record<string, string> = {
         mode: 'payment',
         success_url,
         cancel_url,
@@ -1429,12 +1460,50 @@ export default {
         'line_items[0][price_data][unit_amount]': String(amount),
         'line_items[0][price_data][product_data][name]': art.title || 'Artwork',
         'line_items[0][quantity]': '1',
+        'metadata[orderId]': orderId,
         'metadata[artworkId]': artworkId,
-        ...paymentIntentExtras,
-      });
-      const resp = await stripeFetch('/v1/checkout/sessions', { method: 'POST', body });
+        'metadata[artistId]': art.artist_id || '',
+        'metadata[platform_fee_bps]': String(platformFeeBps),
+        'metadata[venue_fee_bps]': String(venueFeeBps),
+        'payment_intent_data[metadata][orderId]': orderId,
+        'payment_intent_data[metadata][artworkId]': artworkId,
+        'payment_intent_data[metadata][artistId]': art.artist_id || '',
+        'payment_intent_data[metadata][platform_fee_bps]': String(platformFeeBps),
+        'payment_intent_data[metadata][venue_fee_bps]': String(venueFeeBps),
+      };
+      if (art.venue_id) {
+        sessionForm['metadata[venueId]'] = art.venue_id;
+        sessionForm['payment_intent_data[metadata][venueId]'] = art.venue_id;
+      }
+
+      if (artist?.stripe_account_id) {
+        sessionForm['payment_intent_data[application_fee_amount]'] = String(platformFeeCents);
+        sessionForm['payment_intent_data[transfer_data][destination]'] = artist.stripe_account_id;
+      }
+
+      const resp = await stripeFetch('/v1/checkout/sessions', { method: 'POST', body: toForm(sessionForm) });
       const session = await resp.json();
-      if (!resp.ok) return json(session, { status: resp.status });
+      if (!resp.ok) {
+        await supabaseAdmin.from('orders').delete().eq('id', orderId);
+        return json(session, { status: resp.status });
+      }
+
+      const paymentIntentId = typeof session.payment_intent === 'string'
+        ? session.payment_intent
+        : session.payment_intent?.id || null;
+      const updatePayload: Record<string, any> = {
+        stripe_checkout_session_id: session.id,
+        updated_at: new Date().toISOString(),
+      };
+      if (paymentIntentId) updatePayload.stripe_payment_intent_id = paymentIntentId;
+      const { error: attachErr } = await supabaseAdmin
+        .from('orders')
+        .update(updatePayload)
+        .eq('id', orderId);
+      if (attachErr) {
+        console.error('Failed to attach Stripe session to order', attachErr.message);
+      }
+
       return json({ url: session.url });
     }
 
@@ -1570,6 +1639,245 @@ export default {
       });
     }
 
+    type ProcessResult = { status: 'ok' | 'noop' | 'failed'; message?: string };
+
+    async function processCheckoutSessionCompleted(event: any): Promise<ProcessResult> {
+      if (!supabaseAdmin) return { status: 'noop', message: 'supabase-disabled' };
+
+      const sessionObj = event?.data?.object;
+      const sessionId = sessionObj?.id;
+      if (!sessionId) return { status: 'noop', message: 'missing-session-id' };
+
+      const metadata = sessionObj?.metadata || {};
+      const orderIdFromMetadata = metadata.orderId || metadata.order_id || null;
+
+      let orderRow: any = null;
+      if (orderIdFromMetadata) {
+        const { data, error } = await supabaseAdmin
+          .from('orders')
+          .select('*')
+          .eq('id', orderIdFromMetadata)
+          .maybeSingle();
+        if (error) return { status: 'failed', message: `order-fetch:${error.message}` };
+        orderRow = data;
+      }
+
+      if (!orderRow) {
+        const { data, error } = await supabaseAdmin
+          .from('orders')
+          .select('*')
+          .eq('stripe_checkout_session_id', sessionId)
+          .maybeSingle();
+        if (error) return { status: 'failed', message: `order-fetch:${error.message}` };
+        orderRow = data;
+      }
+
+      const sessionResp = await stripeFetch(`/v1/checkout/sessions/${sessionId}?expand[]=payment_intent.charges`);
+      const session = await sessionResp.json();
+      if (!sessionResp.ok) {
+        console.error('Failed to re-fetch checkout session', sessionResp.status, session);
+        return { status: 'failed', message: `session-fetch:${sessionResp.status}` };
+      }
+
+      const paymentIntentRaw = session.payment_intent ?? sessionObj?.payment_intent ?? null;
+      const paymentIntentId = typeof paymentIntentRaw === 'string' ? paymentIntentRaw : paymentIntentRaw?.id || null;
+
+      if (!orderRow && paymentIntentId) {
+        const { data, error } = await supabaseAdmin
+          .from('orders')
+          .select('*')
+          .eq('stripe_payment_intent_id', paymentIntentId)
+          .maybeSingle();
+        if (error) return { status: 'failed', message: `order-fetch:${error.message}` };
+        orderRow = data;
+      }
+
+      if (!orderRow) {
+        console.error('Checkout session completed without reserved order', { sessionId, orderIdFromMetadata, paymentIntentId });
+        return { status: 'failed', message: 'order-missing' };
+      }
+
+      if (orderRow.status === 'paid') {
+        return { status: 'noop', message: 'already-paid' };
+      }
+
+      const paymentIntentObj = typeof paymentIntentRaw === 'object' && paymentIntentRaw !== null ? paymentIntentRaw : null;
+      const charge = paymentIntentObj?.charges?.data?.[0] || null;
+      const chargeId = charge?.id || orderRow.stripe_charge_id || null;
+      const receiptUrl = charge?.receipt_url || orderRow.stripe_receipt_url || null;
+      const buyerEmail = session.customer_details?.email || charge?.billing_details?.email || orderRow.buyer_email || null;
+      const transferDest = paymentIntentObj?.transfer_data?.destination || null;
+      const transferGroup = paymentIntentObj?.transfer_group || sessionObj?.payment_intent?.transfer_group || (orderRow.artwork_id ? `artwork_${orderRow.artwork_id}` : undefined);
+
+      const amountCents = Number(orderRow.amount_cents ?? session.amount_total ?? 0);
+      const orderPlatformBps = coerceBps(orderRow.platform_fee_bps ?? metadata.platform_fee_bps, 1500);
+      const orderVenueBps = coerceBps(orderRow.venue_fee_bps ?? metadata.venue_fee_bps, 1000);
+      const { platformFeeCents, venuePayoutCents, artistPayoutCents } = calculateOrderFinancials(amountCents, orderPlatformBps, orderVenueBps);
+      const currency = session.currency || orderRow.currency || 'usd';
+
+      const { data: artwork, error: artworkErr } = orderRow.artwork_id
+        ? await supabaseAdmin
+            .from('artworks')
+            .select('id,title,status')
+            .eq('id', orderRow.artwork_id)
+            .maybeSingle()
+        : { data: null, error: null };
+      if (artworkErr) return { status: 'failed', message: `art-fetch:${artworkErr.message}` };
+
+      const { data: artist, error: artistErr } = orderRow.artist_id
+        ? await supabaseAdmin
+            .from('artists')
+            .select('id,name,email,phone_number,stripe_account_id,platform_fee_bps')
+            .eq('id', orderRow.artist_id)
+            .maybeSingle()
+        : { data: null, error: null };
+      if (artistErr) return { status: 'failed', message: `artist-fetch:${artistErr.message}` };
+
+      const { data: venue, error: venueErr } = orderRow.venue_id
+        ? await supabaseAdmin
+            .from('venues')
+            .select('id,name,phone_number,stripe_account_id,default_venue_fee_bps')
+            .eq('id', orderRow.venue_id)
+            .maybeSingle()
+        : { data: null, error: null };
+      if (venueErr) return { status: 'failed', message: `venue-fetch:${venueErr.message}` };
+
+      const existingTransfersArray = mergeTransferRecords(orderRow.transfer_ids, []);
+      const transferRecord = existingTransfersArray.length > 0 ? { ...existingTransfersArray[0] } : {};
+      let venueTransferId = typeof transferRecord.venue_transfer_id === 'string' ? transferRecord.venue_transfer_id : null;
+      let artistTransferId = typeof transferRecord.artist_transfer_id === 'string' ? transferRecord.artist_transfer_id : null;
+
+      if (!venueTransferId && venue?.stripe_account_id && venuePayoutCents > 0) {
+        const transferPayload: Record<string, string> = {
+          amount: String(venuePayoutCents),
+          currency,
+          destination: venue.stripe_account_id,
+        };
+        if (chargeId) transferPayload.source_transaction = chargeId;
+        else if (transferGroup) transferPayload.transfer_group = transferGroup;
+        const venueTransferResp = await stripeFetch('/v1/transfers', { method: 'POST', body: toForm(transferPayload) });
+        const venueTransfer = await venueTransferResp.json();
+        if (venueTransferResp.ok) {
+          venueTransferId = venueTransfer.id;
+          transferRecord.venue_transfer_id = venueTransferId;
+        } else {
+          console.error('Venue transfer failed', venueTransferResp.status, venueTransfer);
+        }
+      }
+
+      if (!transferDest && !artistTransferId && artist?.stripe_account_id && artistPayoutCents > 0) {
+        const transferPayload: Record<string, string> = {
+          amount: String(artistPayoutCents),
+          currency,
+          destination: artist.stripe_account_id,
+        };
+        if (chargeId) transferPayload.source_transaction = chargeId;
+        else if (transferGroup) transferPayload.transfer_group = transferGroup;
+        const artistTransferResp = await stripeFetch('/v1/transfers', { method: 'POST', body: toForm(transferPayload) });
+        const artistTransfer = await artistTransferResp.json();
+        if (artistTransferResp.ok) {
+          artistTransferId = artistTransfer.id;
+          transferRecord.artist_transfer_id = artistTransferId;
+        } else {
+          console.error('Artist transfer failed', artistTransferResp.status, artistTransfer);
+        }
+      }
+
+      const transferArray = Object.keys(transferRecord).length ? [transferRecord] : [];
+
+      const orderUpdate: Record<string, any> = {
+        status: 'paid',
+        stripe_checkout_session_id: sessionId,
+        stripe_payment_intent_id: paymentIntentId ?? orderRow.stripe_payment_intent_id ?? null,
+        stripe_charge_id: chargeId ?? orderRow.stripe_charge_id ?? null,
+        stripe_receipt_url: receiptUrl ?? orderRow.stripe_receipt_url ?? null,
+        buyer_email: buyerEmail ?? orderRow.buyer_email ?? null,
+        currency,
+        platform_fee_bps: orderPlatformBps,
+        venue_fee_bps: orderVenueBps,
+        platform_fee_cents: platformFeeCents,
+        artist_payout_cents: artistPayoutCents,
+        venue_payout_cents: venuePayoutCents,
+        transfer_ids: transferArray,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { error: orderUpdateErr } = await supabaseAdmin
+        .from('orders')
+        .update(orderUpdate)
+        .eq('id', orderRow.id);
+      if (orderUpdateErr) {
+        return { status: 'failed', message: `order-update:${orderUpdateErr.message}` };
+      }
+
+      if (artwork?.id && artwork.status !== 'sold') {
+        const { error: markSoldErr } = await supabaseAdmin
+          .from('artworks')
+          .update({ status: 'sold', updated_at: new Date().toISOString() })
+          .eq('id', artwork.id);
+        if (markSoldErr) {
+          console.error('Failed to mark artwork sold', markSoldErr.message);
+        }
+      }
+
+      try {
+        const saleAmount = (amountCents / 100).toFixed(2);
+        const createdAt = new Date().toISOString();
+        const messages: any[] = [];
+        if (orderRow.artist_id) {
+          messages.push({
+            id: crypto.randomUUID(),
+            user_id: orderRow.artist_id,
+            role: 'artist',
+            title: 'Artwork sold',
+            message: `Your artwork "${artwork?.title || 'Artwork'}" sold for $${saleAmount}.`,
+            artwork_id: orderRow.artwork_id,
+            order_id: orderRow.id,
+            created_at: createdAt,
+          });
+        }
+        if (orderRow.venue_id) {
+          messages.push({
+            id: crypto.randomUUID(),
+            user_id: orderRow.venue_id,
+            role: 'venue',
+            title: 'Artwork sold',
+            message: `Artwork "${artwork?.title || 'Artwork'}" sold for $${saleAmount}.`,
+            artwork_id: orderRow.artwork_id,
+            order_id: orderRow.id,
+            created_at: createdAt,
+          });
+        }
+        messages.push({
+          id: crypto.randomUUID(),
+          user_id: null,
+          role: 'platform',
+          title: 'Sale completed',
+          message: `"${artwork?.title || 'Artwork'}" sold. Platform fee: $${(platformFeeCents / 100).toFixed(2)}.`,
+          artwork_id: orderRow.artwork_id,
+          order_id: orderRow.id,
+          created_at: createdAt,
+        });
+        await supabaseAdmin.from('notifications').insert(messages);
+      } catch (notifyErr) {
+        console.error('Notifications insert failed', notifyErr instanceof Error ? notifyErr.message : notifyErr);
+      }
+
+      try {
+        const saleAmount = (amountCents / 100).toFixed(2);
+        if (artist?.phone_number) {
+          await sendSms(artist.phone_number, `Artwalls: Your artwork "${artwork?.title || 'Artwork'}" sold for $${saleAmount}.`);
+        }
+        if (venue?.phone_number) {
+          await sendSms(venue.phone_number, `Artwalls: Artwork "${artwork?.title || 'Artwork'}" sold for $${saleAmount} at your venue.`);
+        }
+      } catch (smsErr) {
+        console.error('SMS send failed', smsErr instanceof Error ? smsErr.message : smsErr);
+      }
+
+      return { status: 'ok' };
+    }
+
     if (url.pathname === '/api/stripe/webhook') {
       if (request.method !== 'POST') {
         return new Response('Method not allowed', { status: 405 });
@@ -1582,10 +1890,11 @@ export default {
       try {
         const event = await verifyAndParseStripeEvent(request, env.STRIPE_WEBHOOK_SECRET);
 
-        // Do work async so Stripe gets a fast 200.
         ctx.waitUntil(
           (async () => {
-            // Forward the verified event to the backend for processing
+            const eventId = (event as any)?.id || null;
+            const eventType = (event as any)?.type || 'unknown';
+
             try {
               const base = env.SUPABASE_URL || env.API_BASE_URL || 'https://api.artwalls.space';
               const resp = await fetch(`${base}/api/stripe/webhook/forwarded`, {
@@ -1597,213 +1906,55 @@ export default {
                 const text = await resp.text();
                 console.error('Forwarded webhook failed', resp.status, text);
               } else {
-                console.log('Forwarded webhook processed', { id: event.id, type: event.type });
+                console.log('Forwarded webhook processed', { id: eventId, type: eventType });
               }
-            } catch (e) {
-              console.error('Error forwarding webhook', e instanceof Error ? e.message : e);
+            } catch (forwardErr) {
+              console.error('Error forwarding webhook', forwardErr instanceof Error ? forwardErr.message : forwardErr);
             }
 
-            // Process venue/artist transfers and record order
-            try {
-              if ((event as any).type === 'checkout.session.completed' && supabaseAdmin) {
-                const sessionObj = (event as any).data?.object;
-                const sessionId = sessionObj?.id;
-                if (!sessionId) return;
-                const sResp = await stripeFetch(`/v1/checkout/sessions/${sessionId}?expand[]=payment_intent.charges`);
-                const s = await sResp.json();
-                if (!sResp.ok) {
-                  console.error('Failed to retrieve session', sResp.status, s);
-                  return;
-                }
+            if (!supabaseAdmin || !eventId) {
+              return;
+            }
 
-                const amountTotal = Number(s.amount_total || 0);
-                const currency = s.currency || 'usd';
-                const artworkId = s.metadata?.artworkId || null;
-                const paymentIntent = s.payment_intent || null;
-                const chargeId = paymentIntent?.charges?.data?.[0]?.id || null;
-                const transferDest = paymentIntent?.transfer_data?.destination || null;
-                const transferGroup = paymentIntent?.transfer_group || (artworkId ? `artwork_${artworkId}` : undefined);
-                if (!artworkId) return;
-
-                const { data: art } = await supabaseAdmin
-                  .from('artworks')
-                  .select('id,title,artist_id,venue_id')
-                  .eq('id', artworkId)
-                  .maybeSingle();
-                if (!art) return;
-
-                const { data: artist } = await supabaseAdmin
-                  .from('artists')
-                  .select('stripe_account_id,platform_fee_bps,phone_number')
-                  .eq('id', art.artist_id)
-                  .maybeSingle();
-
-                const { data: venue } = await supabaseAdmin
-                  .from('venues')
-                  .select('stripe_account_id,default_venue_fee_bps,phone_number')
-                  .eq('id', art.venue_id)
-                  .maybeSingle();
-
-                const venueFeeBps = typeof venue?.default_venue_fee_bps === 'number' ? venue.default_venue_fee_bps : 1000;
-                const platformFeeBps = typeof artist?.platform_fee_bps === 'number' ? artist.platform_fee_bps : 1500;
-                const platformFeeCents = Math.floor((amountTotal * platformFeeBps) / 10000);
-                const venuePayoutCents = Math.floor((amountTotal * venueFeeBps) / 10000);
-                const artistPayoutCents = Math.max(0, amountTotal - platformFeeCents - venuePayoutCents);
-
-                // Insert order record and capture id
-                try {
-                  const orderId = crypto.randomUUID();
-                  await supabaseAdmin.from('orders').insert({
-                    id: orderId,
-                    artwork_id: art.id,
-                    artist_id: art.artist_id,
-                    venue_id: art.venue_id,
-                    amount_cents: amountTotal,
-                    currency,
-                    platform_fee_bps: platformFeeBps,
-                    venue_fee_bps: venueFeeBps,
-                    platform_fee_cents: platformFeeCents,
-                    artist_payout_cents: artistPayoutCents,
-                    venue_payout_cents: venuePayoutCents,
-                    status: 'paid',
-                    stripe_checkout_session_id: sessionId,
-                    stripe_payment_intent_id: paymentIntent?.id || null,
-                    stripe_charge_id: chargeId,
-                    transfer_ids: [],
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString(),
-                  });
-                  // Save Stripe receipt URL if available
-                  try {
-                    const receiptUrl = paymentIntent?.charges?.data?.[0]?.receipt_url || null;
-                    if (receiptUrl) {
-                      await supabaseAdmin
-                        .from('orders')
-                        .update({ stripe_receipt_url: receiptUrl, updated_at: new Date().toISOString() })
-                        .eq('id', orderId);
-                    }
-                  } catch (e) {
-                    console.error('Failed to save receipt URL', e instanceof Error ? e.message : e);
-                  }
-                  // Notifications: artist, venue, platform
-                  try {
-                    const msgs = [
-                      {
-                        id: crypto.randomUUID(),
-                        user_id: art.artist_id,
-                        role: 'artist',
-                        title: 'Artwork sold',
-                        message: `Your artwork "${art.title}" sold for $${Math.round(amountTotal / 100)}.`,
-                        artwork_id: art.id,
-                        order_id: orderId,
-                        created_at: new Date().toISOString(),
-                      },
-                      {
-                        id: crypto.randomUUID(),
-                        user_id: art.venue_id,
-                        role: 'venue',
-                        title: 'Artwork sold',
-                        message: `Artwork "${art.title}" sold for $${Math.round(amountTotal / 100)}.`,
-                        artwork_id: art.id,
-                        order_id: orderId,
-                        created_at: new Date().toISOString(),
-                      },
-                      {
-                        id: crypto.randomUUID(),
-                        user_id: null,
-                        role: 'platform',
-                        title: 'Sale completed',
-                        message: `"${art.title}" sold. Platform fee: $${Math.round(platformFeeCents / 100)}.`,
-                        artwork_id: art.id,
-                        order_id: orderId,
-                        created_at: new Date().toISOString(),
-                      },
-                    ];
-                    await supabaseAdmin.from('notifications').insert(msgs);
-                  } catch (e) {
-                    console.error('Notifications insert failed', e instanceof Error ? e.message : e);
-                  }
-                  // SMS alerts (best-effort)
-                  try {
-                    const priceStr = `$${Math.round(amountTotal / 100)}`;
-                    if (artist?.phone_number) {
-                      await sendSms(artist.phone_number, `Artwalls: Your artwork "${art.title}" sold for ${priceStr}.`);
-                    }
-                    if (venue?.phone_number) {
-                      await sendSms(venue.phone_number, `Artwalls: Artwork "${art.title}" sold for ${priceStr} at your venue.`);
-                    }
-                  } catch (e) {
-                    console.error('SMS send failed', e instanceof Error ? e.message : e);
-                  }
-                  // Mark artwork as sold
-                  try {
-                    await supabaseAdmin
-                      .from('artworks')
-                      .update({ status: 'sold', updated_at: new Date().toISOString() })
-                      .eq('id', art.id);
-                  } catch (e) {
-                    console.error('Failed to mark artwork sold', e instanceof Error ? e.message : e);
-                  }
-                } catch (e) {
-                  console.error('Order insert failed', e instanceof Error ? e.message : e);
-                }
-
-                // Venue transfer (best-effort)
-                try {
-                  if (venue?.stripe_account_id && venuePayoutCents > 0) {
-                    const tBody = toForm({
-                      amount: String(venuePayoutCents),
-                      currency,
-                      destination: venue.stripe_account_id,
-                      ...(chargeId ? { source_transaction: chargeId } : transferGroup ? { transfer_group: transferGroup } : {}),
-                    });
-                    const tResp = await stripeFetch('/v1/transfers', { method: 'POST', body: tBody });
-                    const t = await tResp.json();
-                    if (!tResp.ok) {
-                      console.error('Venue transfer failed', tResp.status, t);
-                    } else {
-                      console.log('Venue transfer created', t.id);
-                      try {
-                        await supabaseAdmin
-                          .from('orders')
-                          .update({ transfer_ids: [{ venue_transfer_id: t.id }] })
-                          .eq('stripe_checkout_session_id', sessionId);
-                      } catch {}
-                    }
-                  }
-                } catch (e) {
-                  console.error('Venue transfer error', e instanceof Error ? e.message : e);
-                }
-
-                // Artist transfer (only if not destination charge)
-                try {
-                  if (!transferDest && artist?.stripe_account_id && artistPayoutCents > 0) {
-                    const aBody = toForm({
-                      amount: String(artistPayoutCents),
-                      currency,
-                      destination: artist.stripe_account_id,
-                      ...(chargeId ? { source_transaction: chargeId } : transferGroup ? { transfer_group: transferGroup } : {}),
-                    });
-                    const aResp = await stripeFetch('/v1/transfers', { method: 'POST', body: aBody });
-                    const a = await aResp.json();
-                    if (!aResp.ok) {
-                      console.error('Artist transfer failed', aResp.status, a);
-                    } else {
-                      console.log('Artist transfer created', a.id);
-                      try {
-                        await supabaseAdmin
-                          .from('orders')
-                          .update({ transfer_ids: [{ artist_transfer_id: a.id }] })
-                          .eq('stripe_checkout_session_id', sessionId);
-                      } catch {}
-                    }
-                  }
-                } catch (e) {
-                  console.error('Artist transfer error', e instanceof Error ? e.message : e);
-                }
+            let insertedEvent = false;
+            let canProcess = true;
+            const { error: insertErr } = await supabaseAdmin
+              .from('webhook_events')
+              .insert({ id: eventId, type: eventType, note: 'pending' });
+            if (insertErr) {
+              const duplicate = (insertErr as any)?.code === '23505';
+              if (duplicate) {
+                console.log('Stripe event already processed', { eventId, eventType });
+              } else {
+                console.error('Failed to record webhook event', insertErr.message);
               }
-            } catch (e) {
-              console.error('Webhook processing error', e instanceof Error ? e.message : e);
+              canProcess = false;
+            } else {
+              insertedEvent = true;
+            }
+
+            let note = 'ignored';
+
+            if (canProcess && eventType === 'checkout.session.completed') {
+              try {
+                const result = await processCheckoutSessionCompleted(event);
+                if (result.status === 'ok') note = 'ok';
+                else if (result.status === 'noop') note = result.message || 'noop';
+                else note = `error:${result.message || 'unknown'}`;
+              } catch (processErr) {
+                note = `error:${processErr instanceof Error ? processErr.message : 'unknown'}`;
+                console.error('Unhandled webhook processing error', processErr);
+              }
+            }
+
+            if (insertedEvent) {
+              const { error: updateErr } = await supabaseAdmin
+                .from('webhook_events')
+                .update({ note, processed_at: new Date().toISOString() })
+                .eq('id', eventId);
+              if (updateErr) {
+                console.error('Failed to update webhook event note', updateErr.message);
+              }
             }
           })(),
         );
