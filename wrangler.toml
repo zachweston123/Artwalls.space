@@ -7,7 +7,7 @@ account_id = "940b4ccc48653a5ea5bdf7c01279d832"
 
 # Bind the Worker to the main domain /api/* path
 routes = [
-	{ pattern = "artwalls.space/api/*", zone_name = "artwalls.space" }
+	{ pattern = "api.artwalls.space/*", zone_name = "artwalls.space" }
 ]
 
 [vars]

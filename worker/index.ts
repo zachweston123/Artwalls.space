@@ -3457,6 +3457,214 @@ export default {
       });
     }
 
+    // Admin: list auth users
+    if (url.pathname === '/api/admin/users' && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const admin = await requireAdmin(request);
+      if (!admin) return json({ error: 'Admin access required' }, { status: 403 });
+
+      const perPage = Math.min(Math.max(Number(url.searchParams.get('perPage') || 1000), 1), 1000);
+      const page = Math.max(Number(url.searchParams.get('page') || 1), 1);
+      const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage });
+      if (error) return json({ error: error.message }, { status: 500 });
+      const users = (data?.users || []).map((u: any) => ({
+        id: u.id,
+        email: u.email || null,
+        name: u.user_metadata?.name || null,
+        role: (u.user_metadata?.role || 'artist') as string,
+        createdAt: u.created_at || null,
+        lastSignInAt: (u as any).last_sign_in_at || null,
+      }));
+      return json({ users, page, perPage, total: data?.total || users.length });
+    }
+
+    // Admin: sync auth users into artists/venues tables
+    if (url.pathname === '/api/admin/sync-users' && method === 'POST') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const admin = await requireAdmin(request);
+      if (!admin) return json({ error: 'Admin access required' }, { status: 403 });
+
+      const perPage = 1000;
+      let page = 1;
+      let artists = 0;
+      let venues = 0;
+      let total = 0;
+      const nowIso = new Date().toISOString();
+
+      while (true) {
+        const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage });
+        if (error) return json({ error: error.message }, { status: 500 });
+        const users = data?.users || [];
+        total += users.length;
+
+        for (const u of users) {
+          const role = String(u.user_metadata?.role || '').toLowerCase();
+          const name = u.user_metadata?.name || null;
+          const email = u.email || null;
+          if (role === 'venue') {
+            const venuePayload: Record<string, any> = {
+              id: u.id,
+              email,
+              name,
+              type: u.user_metadata?.type ?? null,
+              phone_number: (u.user_metadata?.phone as string | undefined) || null,
+              default_venue_fee_bps: 1000,
+              suspended: false,
+              updated_at: nowIso,
+            };
+            const { error: upsertErr } = await supabaseAdmin.from('venues').upsert(venuePayload, { onConflict: 'id' });
+            if (!upsertErr) venues += 1;
+          } else {
+            const artistPayload: Record<string, any> = {
+              id: u.id,
+              email,
+              name,
+              role: 'artist',
+              phone_number: (u.user_metadata?.phone as string | undefined) || null,
+              is_live: true,
+              updated_at: nowIso,
+            };
+            const { error: upsertErr } = await supabaseAdmin.from('artists').upsert(artistPayload, { onConflict: 'id' });
+            if (!upsertErr) artists += 1;
+          }
+        }
+
+        if (users.length < perPage) break;
+        page += 1;
+      }
+
+      return json({ artists, venues, total });
+    }
+
+    // Admin: user detail
+    if (url.pathname.startsWith('/api/admin/users/') && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const admin = await requireAdmin(request);
+      if (!admin) return json({ error: 'Admin access required' }, { status: 403 });
+
+      const parts = url.pathname.split('/');
+      const userId = parts[4];
+      if (!userId) return json({ error: 'Missing user id' }, { status: 400 });
+
+      const { data: authData, error: authErr } = await supabaseAdmin.auth.admin.getUserById(userId);
+      if (authErr) return json({ error: authErr.message }, { status: 500 });
+      const authUser = authData?.user;
+      if (!authUser) return json({ error: 'User not found' }, { status: 404 });
+
+      const role = (authUser.user_metadata?.role || 'artist') as string;
+      let profile: any = null;
+      if (role === 'venue') {
+        const { data } = await supabaseAdmin
+          .from('venues')
+          .select('id,name,email,city,created_at,suspended')
+          .eq('id', userId)
+          .maybeSingle();
+        profile = data || null;
+      } else {
+        const { data } = await supabaseAdmin
+          .from('artists')
+          .select('id,name,email,city_primary,city_secondary,subscription_tier,subscription_status,created_at')
+          .eq('id', userId)
+          .maybeSingle();
+        profile = data || null;
+      }
+
+      let artworksCount = 0;
+      if (role !== 'venue') {
+        const { count } = await supabaseAdmin
+          .from('artworks')
+          .select('id', { count: 'exact', head: true })
+          .eq('artist_id', userId);
+        artworksCount = count || 0;
+      }
+
+      return json({
+        id: authUser.id,
+        email: authUser.email || null,
+        name: authUser.user_metadata?.name || profile?.name || null,
+        role: role === 'venue' ? 'venue' : 'artist',
+        subscriptionTier: profile?.subscription_tier || null,
+        subscriptionStatus: profile?.subscription_status || (role === 'venue' ? (profile?.suspended ? 'suspended' : 'active') : null),
+        city: profile?.city || profile?.city_primary || null,
+        createdAt: authUser.created_at || profile?.created_at || null,
+        lastActive: (authUser as any).last_sign_in_at || null,
+        artworksCount,
+      });
+    }
+
+    // Admin: suspend user
+    if (url.pathname.match(/^\/api\/admin\/users\/[^/]+\/suspend$/) && method === 'POST') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const admin = await requireAdmin(request);
+      if (!admin) return json({ error: 'Admin access required' }, { status: 403 });
+
+      const parts = url.pathname.split('/');
+      const userId = parts[4];
+      if (!userId) return json({ error: 'Missing user id' }, { status: 400 });
+
+      const { data: authData } = await supabaseAdmin.auth.admin.getUserById(userId);
+      const role = (authData?.user?.user_metadata?.role || 'artist') as string;
+      if (role === 'venue') {
+        const { error } = await supabaseAdmin.from('venues').update({ suspended: true }).eq('id', userId);
+        if (error) return json({ error: error.message }, { status: 500 });
+      } else {
+        const { error } = await supabaseAdmin.from('artists').update({ subscription_status: 'suspended' }).eq('id', userId);
+        if (error) return json({ error: error.message }, { status: 500 });
+      }
+      return json({ ok: true });
+    }
+
+    // Admin: activate user
+    if (url.pathname.match(/^\/api\/admin\/users\/[^/]+\/activate$/) && method === 'POST') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const admin = await requireAdmin(request);
+      if (!admin) return json({ error: 'Admin access required' }, { status: 403 });
+
+      const parts = url.pathname.split('/');
+      const userId = parts[4];
+      if (!userId) return json({ error: 'Missing user id' }, { status: 400 });
+
+      const { data: authData } = await supabaseAdmin.auth.admin.getUserById(userId);
+      const role = (authData?.user?.user_metadata?.role || 'artist') as string;
+      if (role === 'venue') {
+        const { error } = await supabaseAdmin.from('venues').update({ suspended: false }).eq('id', userId);
+        if (error) return json({ error: error.message }, { status: 500 });
+      } else {
+        const { error } = await supabaseAdmin.from('artists').update({ subscription_status: 'active' }).eq('id', userId);
+        if (error) return json({ error: error.message }, { status: 500 });
+      }
+      return json({ ok: true });
+    }
+
+    // Admin: update user tier
+    if (url.pathname.match(/^\/api\/admin\/users\/[^/]+\/tier$/) && method === 'POST') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const admin = await requireAdmin(request);
+      if (!admin) return json({ error: 'Admin access required' }, { status: 403 });
+
+      const parts = url.pathname.split('/');
+      const userId = parts[4];
+      if (!userId) return json({ error: 'Missing user id' }, { status: 400 });
+
+      const body = await request.json().catch(() => ({}));
+      const tier = String(body?.tier || '').toLowerCase();
+      const allowed = ['free', 'starter', 'growth', 'pro'];
+      if (!allowed.includes(tier)) return json({ error: 'Invalid tier' }, { status: 400 });
+
+      const { data: authData } = await supabaseAdmin.auth.admin.getUserById(userId);
+      const role = (authData?.user?.user_metadata?.role || 'artist') as string;
+      if (role === 'venue') return json({ error: 'Tier updates apply to artists only' }, { status: 400 });
+
+      const { data, error } = await supabaseAdmin
+        .from('artists')
+        .update({ subscription_tier: tier, subscription_status: 'active' })
+        .eq('id', userId)
+        .select('id,name,email,subscription_tier,subscription_status')
+        .single();
+      if (error) return json({ error: error.message }, { status: 500 });
+      return json({ user: data });
+    }
+
     // Admin: send test SMS (requires auth; uses user's phone if 'to' not provided)
     if (url.pathname === '/api/admin/test-sms' && method === 'POST') {
       const user = await getSupabaseUserFromRequest(request);
