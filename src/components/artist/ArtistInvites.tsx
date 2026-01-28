@@ -77,7 +77,7 @@ export function ArtistInvites({ onApply, onDecline, onNavigate, artistId }: Arti
       </div>
 
       <div className="mb-10">
-        <h2 className="text-xl mb-4">Invite a venue</h2>
+        <h2 className="text-xl mb-4">Invite a venue to display art</h2>
         <ArtistVenueInvites artistId={artistId} embedded />
       </div>
 

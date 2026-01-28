@@ -135,6 +135,8 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
     { id: 'artist-venues', label: 'Find Venues' },
     { id: 'artist-applications', label: 'Applications' },
     { id: 'artist-invites', label: 'Invitations' },
+    { id: 'artist-invite-venue', label: 'Invite a Venue' },
+    { id: 'artist-referrals', label: 'Referrals' },
     { id: 'artist-sales', label: 'Sales & Earnings' },
   ];
 

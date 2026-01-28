@@ -8,6 +8,7 @@ import {
   Shield,
   CreditCard,
   Mail,
+  Gift,
   LogOut,
 } from 'lucide-react';
 
@@ -28,6 +29,7 @@ export function AdminSidebar({ currentPage, onNavigate, onLogout, userName, user
     { id: 'admin-announcements', label: 'Announcements', icon: Megaphone },
     { id: 'admin-promo-codes', label: 'Promo Codes', icon: Tag },
     { id: 'admin-support-messages', label: 'Support Messages', icon: Mail },
+    { id: 'admin-referrals', label: 'Referrals', icon: Gift },
     { id: 'admin-activity-log', label: 'Activity Log', icon: Activity },
     // { id: 'admin-settings', label: 'Settings', icon: Settings },
   ];

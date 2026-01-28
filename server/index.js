@@ -90,6 +90,7 @@ const SUB_CANCEL_URL = process.env.SUB_CANCEL_URL || `${APP_URL}/#/artist-dashbo
 const VENUE_INVITE_DAILY_LIMIT = Number(process.env.VENUE_INVITE_DAILY_LIMIT || 10);
 const VENUE_INVITE_DUPLICATE_WINDOW_DAYS = Number(process.env.VENUE_INVITE_DUPLICATE_WINDOW_DAYS || 30);
 const VENUE_INVITE_PUBLIC_RATE_LIMIT = Number(process.env.VENUE_INVITE_PUBLIC_RATE_LIMIT || 60);
+const REFERRAL_DAILY_LIMIT = Number(process.env.REFERRAL_DAILY_LIMIT || 5);
 
 const inviteRateLimitMap = new Map();
 function rateLimitByIp(ip, limit, windowMs) {
@@ -103,6 +104,45 @@ function rateLimitByIp(ip, limit, windowMs) {
   entry.count += 1;
   inviteRateLimitMap.set(ip, entry);
   return { ok: entry.count <= limit, remaining: Math.max(limit - entry.count, 0), resetAt: entry.resetAt };
+}
+
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || '').trim());
+}
+
+function generateReferralToken() {
+  return crypto.randomBytes(32).toString('base64url');
+}
+
+function buildReferralInviteEmail({ artistName, venueName, note, inviteLink }) {
+  const safeArtist = artistName || 'An artist on Artwalls';
+  const safeVenue = venueName || 'your venue';
+  const safeNote = note ? `<p style="margin:0 0 12px;">${note}</p>` : '';
+  const bullets = `
+    <ul style="padding-left:18px;margin:12px 0;">
+      <li>Feature rotating local art with zero inventory risk</li>
+      <li>Attract new guests with fresh, curated artwork</li>
+      <li>Set your commission and approve placements</li>
+    </ul>
+  `;
+  const html = `
+    <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111">
+      <p style="margin:0 0 12px;">${safeArtist} invited ${safeVenue} to join Artwalls.</p>
+      ${safeNote}
+      <p style="margin:0 0 12px;">Artwalls helps venues host local art and connect with nearby artists.</p>
+      ${bullets}
+      <p style="margin:18px 0;">
+        <a href="${inviteLink}" style="display:inline-block;padding:10px 16px;border-radius:6px;background:#2563eb;color:#fff;text-decoration:none;">Create Venue Account</a>
+      </p>
+      <p style="margin:0;color:#666;font-size:12px;">If you weren’t expecting this, you can ignore this email.</p>
+    </div>
+  `;
+  const text = `${safeArtist} invited ${safeVenue} to join Artwalls.\n\n${note ? `${note}\n\n` : ''}Artwalls helps venues host local art and connect with nearby artists.\n\n- Feature rotating local art with zero inventory risk\n- Attract new guests with fresh, curated artwork\n- Set your commission and approve placements\n\nCreate Venue Account: ${inviteLink}\n\nIf you weren’t expecting this, you can ignore this email.`;
+  return { html, text };
+}
+
+function isUuid(value) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || ''));
 }
 
 // Use self-signed certificate for local development
@@ -129,8 +169,10 @@ function purchaseUrlForArtwork(artworkId) {
 
 // Plan limits per tier (refer to Pricing page)
 function getPlanLimitsForArtist(artist) {
-  const tier = String(artist?.subscriptionTier || 'free').toLowerCase();
-  const isActive = String(artist?.subscriptionStatus || '').toLowerCase() === 'active';
+  const proUntil = artist?.proUntil || artist?.pro_until || null;
+  const hasProOverride = proUntil ? new Date(proUntil).getTime() > Date.now() : false;
+  const tier = hasProOverride ? 'pro' : String(artist?.subscriptionTier || 'free').toLowerCase();
+  const isActive = hasProOverride ? true : String(artist?.subscriptionStatus || '').toLowerCase() === 'active';
   const limits = {
     free: { artworks: 1, activeDisplays: 1 },
     starter: { artworks: 10, activeDisplays: 4 },
@@ -566,11 +608,35 @@ app.post('/api/profile/provision', async (req, res) => {
     const role = (user.user_metadata?.role || 'artist').toLowerCase();
     const name = user.user_metadata?.name || null;
     const email = user.email || null;
+    const referralToken = String(req.body?.referralToken || '').trim();
 
     if (role === 'venue') {
       const type = user.user_metadata?.type || null;
       const defaultVenueFeeBps = 1000;
       const venue = await upsertVenue({ id: user.id, email, name, type, defaultVenueFeeBps });
+
+      if (referralToken) {
+        const { data: referral } = await supabaseAdmin
+          .from('venue_referrals')
+          .select('id,status,venue_id')
+          .eq('token', referralToken)
+          .maybeSingle();
+
+        if (referral && !referral.venue_id) {
+          const nowIso = new Date().toISOString();
+          await supabaseAdmin
+            .from('venues')
+            .update({ referral_id: referral.id, updated_at: nowIso })
+            .eq('id', user.id);
+
+          const nextStatus = ['sent', 'opened'].includes(referral.status) ? 'venue_signed_up' : referral.status;
+          await supabaseAdmin
+            .from('venue_referrals')
+            .update({ venue_id: user.id, status: nextStatus, updated_at: nowIso })
+            .eq('id', referral.id);
+        }
+      }
+
       return res.json(venue);
     }
 
@@ -579,6 +645,294 @@ app.post('/api/profile/provision', async (req, res) => {
   } catch (e) {
     console.error('profile provision error', e);
     return res.status(500).json({ error: e?.message || 'Provision failed' });
+  }
+});
+
+// Profile: get current user profile (artist or venue)
+app.get('/api/profile/me', async (req, res) => {
+  try {
+    const user = await getSupabaseUserFromRequest(req);
+    if (!user) return res.status(401).json({ error: 'Missing or invalid Authorization bearer token' });
+    const role = (user.user_metadata?.role || 'artist').toLowerCase();
+
+    if (role === 'venue') {
+      const { data, error } = await supabaseAdmin.from('venues').select('*').eq('id', user.id).maybeSingle();
+      if (error) return res.status(500).json({ error: error.message });
+      return res.json({ role: 'venue', profile: data });
+    }
+
+    const { data, error } = await supabaseAdmin.from('artists').select('*').eq('id', user.id).maybeSingle();
+    if (error) return res.status(500).json({ error: error.message });
+
+    const proUntil = data?.pro_until ? new Date(data.pro_until).getTime() : 0;
+    const hasProOverride = proUntil && proUntil > Date.now();
+    const profile = hasProOverride
+      ? { ...data, subscription_tier: 'pro', subscription_status: 'active' }
+      : data;
+
+    return res.json({ role: 'artist', profile, proOverride: hasProOverride });
+  } catch (e) {
+    return res.status(500).json({ error: e?.message || 'Failed to load profile' });
+  }
+});
+
+// Legacy profile endpoint used by some pages
+app.get('/api/me', async (req, res) => {
+  try {
+    const user = await getSupabaseUserFromRequest(req);
+    if (!user) return res.status(401).json({ error: 'Missing or invalid Authorization bearer token' });
+    const role = (user.user_metadata?.role || 'artist').toLowerCase();
+
+    if (role === 'venue') {
+      const { data, error } = await supabaseAdmin.from('venues').select('*').eq('id', user.id).maybeSingle();
+      if (error) return res.status(500).json({ error: error.message });
+      return res.json({ role: 'venue', profile: data });
+    }
+
+    const { data, error } = await supabaseAdmin.from('artists').select('*').eq('id', user.id).maybeSingle();
+    if (error) return res.status(500).json({ error: error.message });
+
+    const proUntil = data?.pro_until ? new Date(data.pro_until).getTime() : 0;
+    const hasProOverride = proUntil && proUntil > Date.now();
+    const profile = hasProOverride
+      ? { ...data, subscription_tier: 'pro', subscription_status: 'active' }
+      : data;
+
+    return res.json({ role: 'artist', profile, proOverride: hasProOverride });
+  } catch (e) {
+    return res.status(500).json({ error: e?.message || 'Failed to load profile' });
+  }
+});
+
+// Artist → Venue Referrals (V1)
+app.post('/api/referrals/create', async (req, res) => {
+  try {
+    const artist = await requireArtist(req, res);
+    if (!artist) return;
+    if (!supabaseAdmin) return res.status(500).json({ error: 'Supabase not configured' });
+
+    const venueName = String(req.body?.venueName || '').trim();
+    const venueEmail = String(req.body?.venueEmail || '').trim();
+    const venueWebsite = req.body?.venueWebsite ? String(req.body.venueWebsite).trim() : null;
+    const venueLocationText = req.body?.venueLocationText ? String(req.body.venueLocationText).trim() : null;
+    const note = req.body?.note ? String(req.body.note).trim() : null;
+
+    if (!venueName) return res.status(400).json({ error: 'Venue name is required.' });
+    if (!venueEmail || !isValidEmail(venueEmail)) return res.status(400).json({ error: 'Valid venue email is required.' });
+
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { count, error: countErr } = await supabaseAdmin
+      .from('venue_referrals')
+      .select('id', { count: 'exact', head: true })
+      .eq('artist_user_id', artist.id)
+      .gte('created_at', since);
+    if (countErr) return res.status(500).json({ error: countErr.message });
+    if ((count || 0) >= REFERRAL_DAILY_LIMIT) {
+      return res.status(429).json({ error: `Daily invite limit reached (${REFERRAL_DAILY_LIMIT}/day).` });
+    }
+
+    const token = generateReferralToken();
+    const nowIso = new Date().toISOString();
+    const { data: referral, error } = await supabaseAdmin
+      .from('venue_referrals')
+      .insert({
+        artist_user_id: artist.id,
+        venue_name: venueName,
+        venue_email: venueEmail,
+        venue_website: venueWebsite,
+        venue_location_text: venueLocationText,
+        note,
+        token,
+        status: 'sent',
+        created_at: nowIso,
+        updated_at: nowIso,
+      })
+      .select('*')
+      .single();
+    if (error) return res.status(500).json({ error: error.message });
+
+    const inviteLink = `${APP_URL}/venue/signup?ref=${encodeURIComponent(token)}`;
+    const subject = `${artist.name || 'An artist'} invited you to host local art on Artwalls`;
+    const email = buildReferralInviteEmail({
+      artistName: artist.name || 'An artist on Artwalls',
+      venueName,
+      note,
+      inviteLink,
+    });
+
+    const sendResult = await sendEmail({
+      to: venueEmail,
+      subject,
+      html: email.html,
+      text: email.text,
+      headers: {
+        'X-Artwalls-Template': 'artist-referral',
+        'X-Artwalls-Referral': referral.id,
+      },
+    });
+
+    if (sendResult?.skipped) {
+      console.warn('[referrals] Email skipped - SMTP not configured');
+    } else if (!sendResult?.ok) {
+      console.error('[referrals] Email failed:', sendResult?.error || sendResult?.reason || 'unknown error');
+    }
+
+    return res.json({ referral, emailSent: !!sendResult?.ok, emailSkipped: !!sendResult?.skipped });
+  } catch (err) {
+    console.error('[POST /api/referrals/create] Error:', err);
+    return res.status(500).json({ error: err?.message || 'Failed to create referral' });
+  }
+});
+
+app.get('/api/referrals', async (req, res) => {
+  try {
+    const artist = await requireArtist(req, res);
+    if (!artist) return;
+    if (!supabaseAdmin) return res.status(500).json({ error: 'Supabase not configured' });
+
+    const { data, error } = await supabaseAdmin
+      .from('venue_referrals')
+      .select('*')
+      .eq('artist_user_id', artist.id)
+      .order('created_at', { ascending: false });
+    if (error) return res.status(500).json({ error: error.message });
+
+    return res.json({ referrals: data || [] });
+  } catch (err) {
+    console.error('[GET /api/referrals] Error:', err);
+    return res.status(500).json({ error: err?.message || 'Failed to load referrals' });
+  }
+});
+
+app.get('/api/referrals/token/:token', async (req, res) => {
+  try {
+    const token = String(req.params?.token || '').trim();
+    if (!token) return res.status(400).json({ error: 'Missing referral token' });
+    if (!supabaseAdmin) return res.status(500).json({ error: 'Supabase not configured' });
+
+    const { data: referral, error } = await supabaseAdmin
+      .from('venue_referrals')
+      .select('*')
+      .eq('token', token)
+      .maybeSingle();
+    if (error) return res.status(500).json({ error: error.message });
+    if (!referral || referral.status === 'invalid') return res.status(404).json({ error: 'Referral not found' });
+
+    const { data: artist } = await supabaseAdmin
+      .from('artists')
+      .select('id,name')
+      .eq('id', referral.artist_user_id)
+      .maybeSingle();
+
+    return res.json({ referral, artist });
+  } catch (err) {
+    console.error('[GET /api/referrals/token] Error:', err);
+    return res.status(500).json({ error: err?.message || 'Failed to load referral' });
+  }
+});
+
+app.get('/api/admin/referrals', async (req, res) => {
+  try {
+    const admin = await requireAdmin(req, res);
+    if (!admin) return;
+    if (!supabaseAdmin) return res.status(500).json({ error: 'Supabase not configured' });
+
+    const status = req.query?.status ? String(req.query.status) : null;
+    let query = supabaseAdmin
+      .from('venue_referrals')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (status) query = query.eq('status', status);
+
+    const { data: referrals, error } = await query;
+    if (error) return res.status(500).json({ error: error.message });
+
+    const artistIds = Array.from(new Set((referrals || []).map((r) => r.artist_user_id).filter(Boolean)));
+    const venueIds = Array.from(new Set((referrals || []).map((r) => r.venue_id).filter(Boolean)));
+
+    const [{ data: artists }, { data: venues }] = await Promise.all([
+      artistIds.length
+        ? supabaseAdmin.from('artists').select('id,name,email,pro_until').in('id', artistIds)
+        : Promise.resolve({ data: [] }),
+      venueIds.length
+        ? supabaseAdmin.from('venues').select('id,name,email').in('id', venueIds)
+        : Promise.resolve({ data: [] }),
+    ]);
+
+    const artistMap = new Map((artists || []).map((a) => [a.id, a]));
+    const venueMap = new Map((venues || []).map((v) => [v.id, v]));
+
+    const enriched = (referrals || []).map((r) => ({
+      ...r,
+      artist: artistMap.get(r.artist_user_id) || null,
+      venue: r.venue_id ? venueMap.get(r.venue_id) || null : null,
+    }));
+
+    return res.json({ referrals: enriched });
+  } catch (err) {
+    console.error('[GET /api/admin/referrals] Error:', err);
+    return res.status(500).json({ error: err?.message || 'Failed to load referrals' });
+  }
+});
+
+app.post('/api/admin/referrals/grant', async (req, res) => {
+  try {
+    const admin = await requireAdmin(req, res);
+    if (!admin) return;
+    if (!supabaseAdmin) return res.status(500).json({ error: 'Supabase not configured' });
+
+    const referralId = String(req.body?.referralId || '').trim();
+    if (!referralId) return res.status(400).json({ error: 'Missing referralId' });
+
+    const { data: referral, error } = await supabaseAdmin
+      .from('venue_referrals')
+      .select('*')
+      .eq('id', referralId)
+      .maybeSingle();
+    if (error) return res.status(500).json({ error: error.message });
+    if (!referral) return res.status(404).json({ error: 'Referral not found' });
+
+    if (referral.status !== 'qualified') {
+      return res.status(400).json({ error: 'Referral must be qualified before granting reward.' });
+    }
+
+    const { data: artist, error: artistErr } = await supabaseAdmin
+      .from('artists')
+      .select('id,pro_until')
+      .eq('id', referral.artist_user_id)
+      .maybeSingle();
+    if (artistErr) return res.status(500).json({ error: artistErr.message });
+    if (!artist) return res.status(404).json({ error: 'Artist not found' });
+
+    const now = new Date();
+    const base = artist.pro_until && new Date(artist.pro_until) > now ? new Date(artist.pro_until) : now;
+    const newProUntil = new Date(base.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const nowIso = now.toISOString();
+
+    await supabaseAdmin
+      .from('artists')
+      .update({ pro_until: newProUntil.toISOString(), updated_at: nowIso })
+      .eq('id', artist.id);
+
+    await supabaseAdmin
+      .from('venue_referrals')
+      .update({ status: 'reward_granted', updated_at: nowIso })
+      .eq('id', referral.id);
+
+    await supabaseAdmin
+      .from('referral_rewards')
+      .insert({
+        referral_id: referral.id,
+        artist_user_id: referral.artist_user_id,
+        reward_type: 'ONE_MONTH_PRO',
+        granted_by_admin_id: isUuid(admin.id) ? admin.id : null,
+        granted_at: nowIso,
+      });
+
+    return res.json({ ok: true, pro_until: newProUntil.toISOString() });
+  } catch (err) {
+    console.error('[POST /api/admin/referrals/grant] Error:', err);
+    return res.status(500).json({ error: err?.message || 'Failed to grant reward' });
   }
 });
 
@@ -2213,13 +2567,15 @@ app.get('/api/stats/artist', async (req, res) => {
     if (!artist) return res.status(404).json({ error: 'Artist not found' });
 
     // Get subscription info and plan limits
-    const tier = (artist.subscriptionTier || 'free').toLowerCase();
-    const isActive = artist.subscriptionStatus === 'active';
+    const proUntil = artist.proUntil || artist.pro_until || null;
+    const hasProOverride = proUntil ? new Date(proUntil).getTime() > Date.now() : false;
+    const tier = (hasProOverride ? 'pro' : (artist.subscriptionTier || 'free')).toLowerCase();
+    const isActive = hasProOverride ? true : artist.subscriptionStatus === 'active';
     const limits = getPlanLimitsForArtist(artist);
 
     const subscription = {
       tier,
-      status: artist.subscriptionStatus || 'inactive',
+      status: hasProOverride ? 'active' : (artist.subscriptionStatus || 'inactive'),
       isActive,
       limits: {
         artworks: limits.artworks,

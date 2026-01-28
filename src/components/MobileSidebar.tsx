@@ -20,6 +20,8 @@ export function MobileSidebar({ isOpen, onClose, user, onNavigate, onLogout, cur
     { id: 'artist-venues', label: 'Find Venues', icon: Search },
     { id: 'artist-applications', label: 'Applications', icon: Send },
     { id: 'artist-invites', label: 'Invitations', icon: Mail },
+    { id: 'artist-invite-venue', label: 'Invite a Venue', icon: Mail },
+    { id: 'artist-referrals', label: 'Referrals', icon: FileText },
     { id: 'artist-sales', label: 'Sales & Earnings', icon: ShoppingCart },
     { id: 'artist-notifications', label: 'Notifications', icon: Bell },
     { id: 'artist-profile', label: 'Profile', icon: User },

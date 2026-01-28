@@ -13,6 +13,7 @@ type Artwork = {
 import type { User } from '../../App';
 import { apiGet, apiPost, API_BASE } from '../../lib/api';
 import { entitlementsFor } from '../../lib/entitlements';
+import { resolveArtistSubscription } from '../../lib/subscription';
 import { supabase } from '../../lib/supabase';
 import { uploadArtworkImage } from '../../lib/storage';
 
@@ -103,22 +104,19 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
       // Try API first
       try {
         const me = await apiGet<any>(`/api/profile/me`);
-        const tier = String(me?.profile?.subscription_tier || 'free').toLowerCase() as any;
-        const status = String(me?.profile?.subscription_status || 'inactive');
-        setArtistPlan({ tier, status });
+        const resolved = resolveArtistSubscription(me?.profile || {});
+        setArtistPlan({ tier: resolved.tier, status: resolved.status });
       } catch (apiErr) {
         // Fallback to Supabase
         const { data } = await supabase
           .from('artists')
-          .select('subscription_tier, subscription_status')
+          .select('subscription_tier, subscription_status, pro_until')
           .eq('id', user.id)
           .single();
           
         if (data) {
-           setArtistPlan({ 
-             tier: String(data.subscription_tier || 'free').toLowerCase() as any,
-             status: String(data.subscription_status || 'inactive')
-           });
+           const resolved = resolveArtistSubscription(data);
+           setArtistPlan({ tier: resolved.tier, status: resolved.status });
         }
       }
     })();

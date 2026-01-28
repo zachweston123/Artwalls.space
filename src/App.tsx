@@ -14,6 +14,8 @@ import { ArtistProfileView } from './components/artist/ArtistProfileView';
 import { PasswordSecurity } from './components/artist/PasswordSecurity';
 import { NotificationPreferences } from './components/artist/NotificationPreferences';
 import { ArtistInvites } from './components/artist/ArtistInvites';
+import { ArtistInviteVenue } from './components/artist/ArtistInviteVenue';
+import { ArtistReferrals } from './components/artist/ArtistReferrals';
 import { VenueDashboard } from './components/venue/VenueDashboard';
 import { VenueWalls } from './components/venue/VenueWalls';
 import { VenueCurrentArtWithScheduling } from './components/venue/VenueCurrentArtWithScheduling';
@@ -58,6 +60,7 @@ import { AdminAnnouncements } from './components/admin/AdminAnnouncements';
 import { AdminPromoCodes } from './components/admin/AdminPromoCodes';
 import { AdminActivityLog } from './components/admin/AdminActivityLog';
 import { AdminInvites } from './components/admin/AdminInvites';
+import { AdminReferrals } from './components/admin/AdminReferrals';
 import { AdminSales as AdminSalesPage } from './components/admin/AdminSales';
 import { AdminCurrentDisplays } from './components/admin/AdminCurrentDisplays';
 import { AdminSupport } from './components/admin/AdminSupport';
@@ -66,6 +69,7 @@ import { SupportInbox } from './components/admin/SupportInbox';
 import { SupportMessageDetail } from './components/admin/SupportMessageDetail';
 import VerifyEmail from './pages/VerifyEmail';
 import VenueInviteLanding from './pages/VenueInviteLanding';
+import VenueSignup from './pages/VenueSignup';
 import { VenueCalls } from './components/venue/VenueCalls';
 import { VenueCallDetail } from './components/venue/VenueCallDetail';
 import { ArtistAnalytics } from './components/artist/ArtistAnalytics';
@@ -124,6 +128,7 @@ export default function App() {
   if (typeof window !== 'undefined' && window.location.pathname.startsWith('/v/invite/')) {
     return <VenueInviteLanding />;
   }
+
 
   if (typeof window !== 'undefined' && window.location.pathname.startsWith('/calls/')) {
     const parts = window.location.pathname.split('/').filter(Boolean);
@@ -300,6 +305,10 @@ export default function App() {
     setCurrentUser(user);
     setCurrentPage(user.role === 'artist' ? 'artist-dashboard' : user.role === 'venue' ? 'venue-dashboard' : 'admin-dashboard');
   };
+
+  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/venue/signup')) {
+    return <VenueSignup onLogin={handleLogin} onNavigate={handleNavigate} />;
+  }
 
   // Ensure the user has a corresponding DB record immediately (discoverable in searches)
   useEffect(() => {
@@ -800,6 +809,8 @@ export default function App() {
                 artistId={currentUser.id}
               />
             )}
+            {currentPage === 'artist-invite-venue' && <ArtistInviteVenue onNavigate={handleNavigate} />}
+            {currentPage === 'artist-referrals' && <ArtistReferrals />}
             {currentPage === 'artist-sales' && <ArtistSales user={currentUser} onNavigate={handleNavigate} />}
             {currentPage === 'artist-profile' && <ArtistProfile onNavigate={handleNavigate} />}
             {currentPage === 'artist-password-security' && <PasswordSecurity onBack={() => handleNavigate('artist-profile')} />}
@@ -865,6 +876,7 @@ export default function App() {
             {currentPage === 'admin-stripe-payments' && <StripePaymentSetup onNavigate={handleNavigate} />}
             {currentPage === 'admin-activity-log' && <AdminActivityLog />}
             {currentPage === 'admin-invites' && <AdminInvites />}
+            {currentPage === 'admin-referrals' && <AdminReferrals />}
             {currentPage === 'admin-sales' && <AdminSalesPage />}
             {currentPage === 'admin-current-displays' && <AdminCurrentDisplays />}
             {currentPage === 'admin-support' && <AdminSupport />}

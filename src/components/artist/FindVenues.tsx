@@ -3,6 +3,7 @@ import { Search, MapPin, Filter, Frame, CheckCircle, Crown } from 'lucide-react'
 import { LabelChip } from '../LabelChip';
 import { VENUE_HIGHLIGHTS } from '../../data/highlights';
 import { apiGet } from '../../lib/api';
+import { resolveArtistSubscription } from '../../lib/subscription';
 
 interface FindVenuesProps {
   onViewVenue: (venueId: string) => void;
@@ -59,10 +60,10 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
     let isMounted = true;
     async function loadUser() {
       try {
-        const me = await apiGet<{ profile?: { subscription_tier?: string } }>('/api/me');
-        if (isMounted) {
-          const tier = (me?.profile?.subscription_tier || 'free').toLowerCase() as SubscriptionTier;
-          setUserTier(tier);
+        const me = await apiGet<{ profile?: { subscription_tier?: string; subscription_status?: string; pro_until?: string | null } }>('/api/me');
+        if (isMounted && me?.profile) {
+          const resolved = resolveArtistSubscription(me.profile);
+          setUserTier(resolved.tier as SubscriptionTier);
         }
 
         const meProfile = await apiGet<{ role: string; profile: { city_primary?: string | null; city_secondary?: string | null } }>(

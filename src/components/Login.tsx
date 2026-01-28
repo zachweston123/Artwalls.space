@@ -12,10 +12,13 @@ const GoogleIcon = () => (
 interface LoginProps {
   onLogin: (user: User) => void;
   onNavigate?: (page: string) => void;
+  defaultRole?: UserRole;
+  lockRole?: boolean;
+  referralToken?: string;
 }
 
-export function Login({ onLogin, onNavigate }: LoginProps) {
-  const [selectedRole, setSelectedRole] = useState<UserRole>(null);
+export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, referralToken }: LoginProps) {
+  const [selectedRole, setSelectedRole] = useState<UserRole>(defaultRole ?? null);
   const [isSignup, setIsSignup] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -24,6 +27,18 @@ export function Login({ onLogin, onNavigate }: LoginProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (defaultRole && !selectedRole) {
+      setSelectedRole(defaultRole);
+    }
+  }, [defaultRole, selectedRole]);
+
+  useEffect(() => {
+    if (referralToken && typeof window !== 'undefined') {
+      localStorage.setItem('venueReferralToken', referralToken);
+    }
+  }, [referralToken]);
 
   // Load pre-filled data from user metadata on component mount
   useEffect(() => {
@@ -147,7 +162,9 @@ export function Login({ onLogin, onNavigate }: LoginProps) {
 
         try {
           const { apiPost } = await import('../lib/api');
-          await apiPost('/api/profile/provision', { phoneNumber: phoneTrim });
+          const storedReferral = typeof window !== 'undefined' ? localStorage.getItem('venueReferralToken') : null;
+          const token = referralToken || storedReferral;
+          await apiPost('/api/profile/provision', { phoneNumber: phoneTrim, referralToken: token || null });
         } catch (e) {
           console.warn('Profile provision failed', e);
         }
@@ -185,7 +202,9 @@ export function Login({ onLogin, onNavigate }: LoginProps) {
       // Provision a profile in Supabase (artist/venue)
       try {
         const { apiPost } = await import('../lib/api');
-        await apiPost('/api/profile/provision', {});
+        const storedReferral = typeof window !== 'undefined' ? localStorage.getItem('venueReferralToken') : null;
+        const token = referralToken || storedReferral;
+        await apiPost('/api/profile/provision', { referralToken: token || null });
       } catch (e) {
         console.warn('Profile provision failed', e);
       }
@@ -425,14 +444,16 @@ export function Login({ onLogin, onNavigate }: LoginProps) {
             </button>
           </div>
 
-          <div className="mt-4 text-center">
-            <button
-              onClick={() => setSelectedRole(null)}
-              className="text-sm text-[var(--text-muted)] hover:text-[var(--text)]"
-            >
-              ← Choose different role
-            </button>
-          </div>
+          {!lockRole && (
+            <div className="mt-4 text-center">
+              <button
+                onClick={() => setSelectedRole(null)}
+                className="text-sm text-[var(--text-muted)] hover:text-[var(--text)]"
+              >
+                ← Choose different role
+              </button>
+            </div>
+          )}
 
           <div className="mt-3 text-center">
             <button

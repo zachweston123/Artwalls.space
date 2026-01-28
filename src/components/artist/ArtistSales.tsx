@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { DollarSign, TrendingUp, Package, BarChart3, Calendar, Eye } from 'lucide-react';
 import { apiGet } from '../../lib/api';
+import { resolveArtistSubscription } from '../../lib/subscription';
 import type { User } from '../../App';
 
 interface ArtistSalesProps { 
@@ -19,10 +20,10 @@ export function ArtistSales({ user, onNavigate }: ArtistSalesProps) {
     async function loadData() {
       try {
         // Get subscription tier
-        const meResp = await apiGet<{ profile?: { subscription_tier?: string } }>('/api/me');
-        if (isMounted) {
-          const userTier = (meResp?.profile?.subscription_tier || 'free').toLowerCase() as SubscriptionTier;
-          setTier(userTier);
+        const meResp = await apiGet<{ profile?: { subscription_tier?: string; subscription_status?: string; pro_until?: string | null } }>('/api/me');
+        if (isMounted && meResp?.profile) {
+          const resolved = resolveArtistSubscription(meResp.profile);
+          setTier(resolved.tier as SubscriptionTier);
         }
 
         // Get sales data

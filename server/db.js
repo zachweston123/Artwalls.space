@@ -34,6 +34,7 @@ function mapArtistRow(r) {
     instagramHandle: r.instagram_handle,
     portfolioUrl: r.portfolio_url,
     profilePhotoUrl: r.profile_photo_url,
+    proUntil: r.pro_until,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
   };
