@@ -3457,6 +3457,22 @@ export default {
       });
     }
 
+    // Admin: user overview metrics (total users, artists by tier, artists by type)
+    if (url.pathname === '/api/admin/user-metrics' && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const admin = await requireAdmin(request);
+      if (!admin) return json({ error: 'Admin access required' }, { status: 403 });
+
+      // Call the RPC function
+      const { data, error } = await supabaseAdmin.rpc('get_admin_dashboard_metrics');
+      if (error) {
+        console.error('[admin.user-metrics] RPC error:', error);
+        return json({ error: error.message }, { status: 500 });
+      }
+
+      return json(data || {});
+    }
+
     // Admin: list auth users
     if (url.pathname === '/api/admin/users' && method === 'GET') {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });

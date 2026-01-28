@@ -31,21 +31,38 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
     supportQueue: number;
     recentActivity: Array<{ type: string; timestamp: string; amount_cents: number }>;
   } | null>(null);
+  const [userMetrics, setUserMetrics] = useState<{
+    totalUsers: number;
+    totalArtists: number;
+    artistsByTier: Record<string, number>;
+    artistsByType: Record<string, number>;
+  } | null>(null);
 
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
-        const resp = await apiGet<{
-          totals: { artists: number; venues: number; activeDisplays: number };
-          month: { gmv: number; platformRevenue: number; gvmDelta: number };
-          monthlyArtistsDelta: number;
-          monthlyVenuesDelta: number;
-          pendingInvites: number;
-          supportQueue: number;
-          recentActivity: Array<{ type: string; timestamp: string; amount_cents: number }>;
-        }>('/api/admin/metrics');
-        if (mounted) setMetrics(resp);
+        const [metricsResp, userMetricsResp] = await Promise.all([
+          apiGet<{
+            totals: { artists: number; venues: number; activeDisplays: number };
+            month: { gmv: number; platformRevenue: number; gvmDelta: number };
+            monthlyArtistsDelta: number;
+            monthlyVenuesDelta: number;
+            pendingInvites: number;
+            supportQueue: number;
+            recentActivity: Array<{ type: string; timestamp: string; amount_cents: number }>;
+          }>('/api/admin/metrics'),
+          apiGet<{
+            totalUsers: number;
+            totalArtists: number;
+            artistsByTier: Record<string, number>;
+            artistsByType: Record<string, number>;
+          }>('/api/admin/user-metrics'),
+        ]);
+        if (mounted) {
+          setMetrics(metricsResp);
+          setUserMetrics(userMetricsResp);
+        }
       } catch (e: any) {
         if (mounted) setError(e?.message || 'Failed to load metrics');
       } finally {
@@ -56,6 +73,16 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
   }, []);
 
   const kpis = [
+    {
+      label: 'Total Users',
+      value: userMetrics ? String(userMetrics.totalUsers) : '-',
+      delta: 'All registered accounts',
+      deltaType: 'neutral' as const,
+      icon: Users,
+      iconBg: 'bg-[var(--surface-3)] border border-[var(--border)]',
+      iconColor: 'text-[var(--blue)]',
+      onClick: () => onNavigate('admin-users'),
+    },
     {
       label: 'Total Artists',
       value: metrics ? String(metrics.totals.artists) : '-',
@@ -283,6 +310,79 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
           );
         })}
       </div>
+
+      {/* User Overview Section */}
+      {userMetrics && (
+        <div className="mb-8">
+          <h2 className="text-xl mb-4 text-[var(--text)]">User Overview</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Artists by Subscription Tier */}
+            <div className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-6">
+              <h3 className="text-lg mb-4 text-[var(--text)]">Artists by Subscription Tier</h3>
+              <div className="space-y-3">
+                {Object.entries(userMetrics.artistsByTier)
+                  .sort(([, a], [, b]) => b - a)
+                  .map(([tier, count]) => {
+                    const tierLabels: Record<string, string> = {
+                      free: 'Free',
+                      starter: 'Starter',
+                      growth: 'Growth',
+                      pro: 'Pro',
+                      inactive: 'Inactive',
+                      cancelled: 'Cancelled',
+                      unknown: 'Unknown'
+                    };
+                    const tierColors: Record<string, string> = {
+                      free: 'bg-[var(--surface-3)] text-[var(--text-muted)]',
+                      starter: 'bg-blue-500/10 text-blue-500',
+                      growth: 'bg-green-500/10 text-green-500',
+                      pro: 'bg-purple-500/10 text-purple-500',
+                      inactive: 'bg-gray-500/10 text-gray-500',
+                      cancelled: 'bg-red-500/10 text-red-500',
+                      unknown: 'bg-[var(--surface-3)] text-[var(--text-muted)]'
+                    };
+                    return (
+                      <div key={tier} className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${tierColors[tier] || tierColors.unknown}`}>
+                            {tierLabels[tier] || tier}
+                          </span>
+                        </div>
+                        <span className="text-[var(--text)] font-semibold">{count}</span>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+
+            {/* Artists by Type */}
+            <div className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-6">
+              <h3 className="text-lg mb-4 text-[var(--text)]">Artists by Type</h3>
+              <div className="space-y-3">
+                {Object.entries(userMetrics.artistsByType)
+                  .sort(([, a], [, b]) => b - a)
+                  .slice(0, 10)
+                  .map(([type, count]) => (
+                    <div key={type} className="flex items-center justify-between">
+                      <span className="text-sm text-[var(--text)]">{type}</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-24 h-2 bg-[var(--surface-3)] rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-[var(--blue)]"
+                            style={{
+                              width: `${Math.min(100, (count / userMetrics.totalArtists) * 100)}%`,
+                            }}
+                          />
+                        </div>
+                        <span className="text-[var(--text)] font-semibold w-8 text-right">{count}</span>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Quick Actions */}
       <div className="mb-8">
