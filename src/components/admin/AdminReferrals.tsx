@@ -4,8 +4,8 @@ import { Gift, RefreshCw } from 'lucide-react';
 
 interface ReferralRow {
   id: string;
-  venue_name: string;
-  venue_email: string;
+  venue_name: string | null;
+  venue_email: string | null;
   status: string;
   created_at: string;
   artist?: { id: string; name?: string | null; email?: string | null; pro_until?: string | null } | null;
@@ -29,6 +29,12 @@ const statusLabel = (status: string) => {
       return 'Sent';
   }
 };
+
+const getVenueName = (ref: ReferralRow) => 
+  ref.venue?.name || ref.venue_name || 'Unknown venue';
+
+const getVenueEmail = (ref: ReferralRow) => 
+  ref.venue?.email || ref.venue_email || '';
 
 export function AdminReferrals() {
   const [referrals, setReferrals] = useState<ReferralRow[]>([]);
@@ -102,8 +108,8 @@ export function AdminReferrals() {
               return (
                 <div key={ref.id} className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg p-4">
                   <div className="space-y-1">
-                    <p className="text-sm font-semibold text-[var(--text)]">{ref.venue_name}</p>
-                    <p className="text-xs text-[var(--text-muted)]">{ref.venue_email}</p>
+                    <p className="text-sm font-semibold text-[var(--text)]">{getVenueName(ref)}</p>
+                    <p className="text-xs text-[var(--text-muted)]">{getVenueEmail(ref)}</p>
                     <p className="text-xs text-[var(--text-muted)]">Artist: {ref.artist?.name || ref.artist?.email || 'Unknown'}</p>
                     <p className="text-xs text-[var(--text-muted)]">Status: {statusLabel(ref.status)}</p>
                   </div>

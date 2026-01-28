@@ -3473,6 +3473,83 @@ export default {
       return json(data || {});
     }
 
+    // Admin: list all sales/orders
+    if (url.pathname === '/api/admin/sales' && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const admin = await requireAdmin(request);
+      if (!admin) return json({ error: 'Admin access required' }, { status: 403 });
+
+      const limit = Math.min(Math.max(Number(url.searchParams.get('limit') || 100), 1), 500);
+      const offset = Math.max(Number(url.searchParams.get('offset') || 0), 0);
+      const search = url.searchParams.get('search') || '';
+      const status = url.searchParams.get('status') || '';
+
+      let query = supabaseAdmin
+        .from('orders')
+        .select('*', { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (status) {
+        query = query.eq('status', status);
+      }
+
+      if (search) {
+        query = query.or(`buyer_email.ilike.%${search}%,stripe_session_id.ilike.%${search}%`);
+      }
+
+      const { data: orders, error, count } = await query;
+      if (error) return json({ error: error.message }, { status: 500 });
+
+      // Enrich with artist and venue names
+      const artistIds = Array.from(new Set((orders || []).map((o: any) => o.artist_id).filter(Boolean)));
+      const venueIds = Array.from(new Set((orders || []).map((o: any) => o.venue_id).filter(Boolean)));
+      const artworkIds = Array.from(new Set((orders || []).map((o: any) => o.artwork_id).filter(Boolean)));
+
+      const [{ data: artists }, { data: venues }, { data: artworks }] = await Promise.all([
+        artistIds.length
+          ? supabaseAdmin.from('artists').select('id,name,email').in('id', artistIds)
+          : Promise.resolve({ data: [] }),
+        venueIds.length
+          ? supabaseAdmin.from('venues').select('id,name,email').in('id', venueIds)
+          : Promise.resolve({ data: [] }),
+        artworkIds.length
+          ? supabaseAdmin.from('artworks').select('id,title').in('id', artworkIds)
+          : Promise.resolve({ data: [] }),
+      ]);
+
+      const artistMap = new Map((artists || []).map((a: any) => [a.id, a]));
+      const venueMap = new Map((venues || []).map((v: any) => [v.id, v]));
+      const artworkMap = new Map((artworks || []).map((aw: any) => [aw.id, aw]));
+
+      const enrichedOrders = (orders || []).map((o: any) => ({
+        ...o,
+        artist: artistMap.get(o.artist_id) || null,
+        venue: o.venue_id ? venueMap.get(o.venue_id) || null : null,
+        artwork: o.artwork_id ? artworkMap.get(o.artwork_id) || null : null,
+      }));
+
+      // Compute summary stats
+      const totalGmv = (orders || []).reduce((sum: number, o: any) => sum + (o.amount_cents || 0), 0);
+      const totalPlatformFees = (orders || []).reduce((sum: number, o: any) => sum + (o.platform_fee_cents || 0), 0);
+      const totalVenueFees = (orders || []).reduce((sum: number, o: any) => sum + (o.venue_payout_cents || 0), 0);
+      const totalArtistPayouts = (orders || []).reduce((sum: number, o: any) => sum + (o.artist_payout_cents || 0), 0);
+
+      return json({
+        orders: enrichedOrders,
+        total: count || 0,
+        limit,
+        offset,
+        summary: {
+          totalGmv,
+          totalPlatformFees,
+          totalVenueFees,
+          totalArtistPayouts,
+          orderCount: count || 0,
+        },
+      });
+    }
+
     // Admin: list auth users
     if (url.pathname === '/api/admin/users' && method === 'GET') {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
