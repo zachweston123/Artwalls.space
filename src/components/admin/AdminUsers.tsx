@@ -75,10 +75,10 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
       // Ensure local tables are synced from Supabase Auth
       try { await apiPost('/api/admin/sync-users', {}); } catch {}
 
-      const [artists, venues, auth] = await Promise.all([
+      const [artists, venues, authResp] = await Promise.all([
         apiGet<any[]>('/api/artists').catch(() => []),
         apiGet<any[]>('/api/venues').catch(() => []),
-        apiGet<any[]>('/api/admin/users').catch(() => []),
+        apiGet<any>('/api/admin/users').catch(() => []),
       ]);
 
       const mappedArtists = (artists || []).map(a => ({
@@ -106,7 +106,8 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
       }));
 
       // Basic merge of auth users to fill any missing profiles
-      const authMapped = (auth || []).map(u => ({
+      const authUsers = Array.isArray(authResp) ? authResp : (authResp?.users || []);
+      const authMapped = (authUsers || []).map(u => ({
         id: u.id,
         name: u.name || 'User',
         email: u.email || null,
