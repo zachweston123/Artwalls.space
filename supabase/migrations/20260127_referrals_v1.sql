@@ -22,7 +22,17 @@ CREATE TABLE IF NOT EXISTS public.venue_referrals (
 
 -- If the table already existed from a partial run, ensure required columns exist
 ALTER TABLE public.venue_referrals
-  ADD COLUMN IF NOT EXISTS token text;
+  ADD COLUMN IF NOT EXISTS artist_user_id uuid,
+  ADD COLUMN IF NOT EXISTS venue_name text,
+  ADD COLUMN IF NOT EXISTS venue_email text,
+  ADD COLUMN IF NOT EXISTS venue_website text,
+  ADD COLUMN IF NOT EXISTS venue_location_text text,
+  ADD COLUMN IF NOT EXISTS note text,
+  ADD COLUMN IF NOT EXISTS token text,
+  ADD COLUMN IF NOT EXISTS status text DEFAULT 'sent',
+  ADD COLUMN IF NOT EXISTS venue_id uuid,
+  ADD COLUMN IF NOT EXISTS created_at timestamptz DEFAULT now(),
+  ADD COLUMN IF NOT EXISTS updated_at timestamptz DEFAULT now();
 
 CREATE INDEX IF NOT EXISTS idx_venue_referrals_token ON public.venue_referrals(token);
 CREATE INDEX IF NOT EXISTS idx_venue_referrals_artist_user_id ON public.venue_referrals(artist_user_id);
@@ -94,10 +104,23 @@ BEGIN
 END;
 $$;
 
-DROP TRIGGER IF EXISTS trg_referrals_qualify_on_wallspaces ON public.wallspaces;
-CREATE TRIGGER trg_referrals_qualify_on_wallspaces
-AFTER INSERT ON public.wallspaces
-FOR EACH ROW EXECUTE FUNCTION public.referrals_qualify_on_wallspace_insert();
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'wallspaces'
+  ) THEN
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_trigger
+      WHERE tgname = 'trg_referrals_qualify_on_wallspaces'
+    ) THEN
+      EXECUTE 'CREATE TRIGGER trg_referrals_qualify_on_wallspaces '
+           || 'AFTER INSERT ON public.wallspaces '
+           || 'FOR EACH ROW EXECUTE FUNCTION public.referrals_qualify_on_wallspace_insert()';
+    END IF;
+  END IF;
+END;
+$$;
 
 CREATE OR REPLACE FUNCTION public.referrals_qualify_on_call_insert()
 RETURNS trigger
@@ -109,10 +132,23 @@ BEGIN
 END;
 $$;
 
-DROP TRIGGER IF EXISTS trg_referrals_qualify_on_calls ON public.calls_for_art;
-CREATE TRIGGER trg_referrals_qualify_on_calls
-AFTER INSERT ON public.calls_for_art
-FOR EACH ROW EXECUTE FUNCTION public.referrals_qualify_on_call_insert();
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'calls_for_art'
+  ) THEN
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_trigger
+      WHERE tgname = 'trg_referrals_qualify_on_calls'
+    ) THEN
+      EXECUTE 'CREATE TRIGGER trg_referrals_qualify_on_calls '
+           || 'AFTER INSERT ON public.calls_for_art '
+           || 'FOR EACH ROW EXECUTE FUNCTION public.referrals_qualify_on_call_insert()';
+    END IF;
+  END IF;
+END;
+$$;
 
 -- ============================================================
 -- STEP 6: RLS policies
