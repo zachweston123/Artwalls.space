@@ -28,9 +28,8 @@ async function fetchWithFallback(input: string, init: RequestInit, allowSameOrig
     const fallbackUrl = input.replace(API_BASE, SAME_ORIGIN_BASE);
     return await fetch(fallbackUrl, init);
   } catch (err) {
-    const host = typeof window !== 'undefined' ? window.location.hostname : '';
     const shouldFallback =
-      (host === 'localhost' || host === '127.0.0.1') &&
+      allowSameOriginRetry &&
       SAME_ORIGIN_BASE &&
       API_BASE &&
       API_BASE !== SAME_ORIGIN_BASE &&
