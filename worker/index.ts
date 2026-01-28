@@ -1046,7 +1046,7 @@ export default {
       if (!id) return json({ error: 'Missing artwork id' }, { status: 400 });
       const { data, error } = await supabaseAdmin
         .from('artworks')
-        .select('id,title,status,price_cents,currency,image_url,artist_id,artist_name,venue_name,description,purchase_url,qr_svg')
+        .select('id,title,status,price_cents,currency,image_url,artist_id,venue_id,artist_name,venue_name,description,purchase_url,qr_svg')
         .eq('id', id)
         .maybeSingle();
       if (error) return json({ error: error.message }, { status: 500 });
@@ -1059,6 +1059,7 @@ export default {
         currency: data.currency,
         imageUrl: data.image_url,
         artistId: (data as any).artist_id || null,
+        venueId: (data as any).venue_id || null,
         artistName: data.artist_name,
         venueName: data.venue_name,
         description: data.description,
@@ -1091,6 +1092,46 @@ export default {
       const payload = await request.json().catch(() => ({}));
       const priceNumber = Number(payload?.price);
       const price_cents = Number.isFinite(priceNumber) ? Math.round(priceNumber * 100) : 0;
+      const imageUrlsRaw = Array.isArray(payload?.imageUrls) ? payload.imageUrls : [];
+      const imageUrls = imageUrlsRaw.map((u: any) => String(u || '').trim()).filter(Boolean);
+      const primaryImageUrl = String(payload?.imageUrl || imageUrls[0] || '').trim() || null;
+      const normalizedImageUrls = primaryImageUrl
+        ? [primaryImageUrl, ...imageUrls.filter((u: string) => u !== primaryImageUrl)]
+        : imageUrls;
+      const dimensionsWidth = Number(payload?.dimensionsWidth);
+      const dimensionsHeight = Number(payload?.dimensionsHeight);
+      const dimensionsDepth = payload?.dimensionsDepth !== undefined && payload?.dimensionsDepth !== ''
+        ? Number(payload?.dimensionsDepth)
+        : null;
+      const dimensionsUnit = String(payload?.dimensionsUnit || '').trim();
+      const medium = String(payload?.medium || '').trim();
+      const materials = String(payload?.materials || '').trim();
+      const condition = String(payload?.condition || '').trim();
+      const knownFlaws = String(payload?.knownFlaws || '').trim();
+      const editionType = String(payload?.editionType || '').trim();
+      const editionSize = payload?.editionSize !== undefined && payload?.editionSize !== ''
+        ? Number(payload?.editionSize)
+        : null;
+      const shippingTimeEstimate = String(payload?.shippingTimeEstimate || '').trim();
+
+      const allowedConditions = new Set(['new', 'excellent', 'good', 'fair']);
+      const allowedEditionTypes = new Set(['original', 'print']);
+      const isPublishable =
+        price_cents > 0 &&
+        Number.isFinite(dimensionsWidth) && dimensionsWidth > 0 &&
+        Number.isFinite(dimensionsHeight) && dimensionsHeight > 0 &&
+        Boolean(dimensionsUnit) &&
+        Boolean(medium) &&
+        Boolean(knownFlaws) &&
+        Boolean(shippingTimeEstimate) &&
+        allowedConditions.has(condition) &&
+        allowedEditionTypes.has(editionType) &&
+        (editionType !== 'print' || (Number.isFinite(editionSize) && Number(editionSize) > 0)) &&
+        normalizedImageUrls.length >= 3;
+
+      if (!isPublishable) {
+        return json({ error: 'Missing required listing details. Please complete dimensions, medium, condition, flaws, edition info, shipping estimate, and at least 3 photos.' }, { status: 400 });
+      }
       const insert = {
         id: crypto.randomUUID(),
         artist_id: user.id,
@@ -1101,7 +1142,22 @@ export default {
         description: payload?.description || null,
         price_cents,
         currency: String(payload?.currency || 'usd'),
-        image_url: payload?.imageUrl || null,
+        image_url: primaryImageUrl,
+        image_urls: normalizedImageUrls,
+        dimensions_width: Number.isFinite(dimensionsWidth) ? dimensionsWidth : null,
+        dimensions_height: Number.isFinite(dimensionsHeight) ? dimensionsHeight : null,
+        dimensions_depth: Number.isFinite(Number(dimensionsDepth)) ? dimensionsDepth : null,
+        dimensions_unit: dimensionsUnit || null,
+        medium: medium || null,
+        materials: materials || null,
+        condition: condition || null,
+        known_flaws: knownFlaws || null,
+        edition_type: editionType || null,
+        edition_size: Number.isFinite(Number(editionSize)) ? editionSize : null,
+        shipping_time_estimate: shippingTimeEstimate || null,
+        in_space_photo_url: payload?.inSpacePhotoUrl || null,
+        color_accuracy_ack: Boolean(payload?.colorAccuracyAck),
+        is_publishable: true,
         status: 'available',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -1121,6 +1177,38 @@ export default {
       };
       return json(shaped, { status: 201 });
     }
+
+    // Analytics events (append-only)
+    if (url.pathname === '/api/events' && method === 'POST') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const payload = await request.json().catch(() => ({}));
+      const eventType = String(payload?.event_type || '').trim();
+      if (!eventType) return json({ error: 'Missing event_type' }, { status: 400 });
+      const allowed = new Set(['qr_scan', 'view_artwork', 'start_checkout', 'purchase', 'like']);
+      if (!allowed.has(eventType)) return json({ error: 'Invalid event_type' }, { status: 400 });
+
+      const rate = rateLimitByIp(getClientIp(request), 60, 60_000);
+      if (!rate.ok) return json({ error: 'Rate limit exceeded' }, { status: 429 });
+
+      const user = await getSupabaseUserFromRequest(request);
+      const artworkId = payload?.artwork_id || null;
+      const venueId = payload?.venue_id || null;
+      const sessionId = payload?.session_id || null;
+      const ua = request.headers.get('user-agent') || '';
+      const userAgentHash = ua ? String(ua).slice(0, 120) : null;
+
+      const { error } = await supabaseAdmin.from('events').insert({
+        event_type: eventType,
+        user_id: user?.id || null,
+        artwork_id: artworkId,
+        venue_id: venueId,
+        session_id: sessionId,
+        user_agent_hash: userAgentHash,
+      });
+      if (error) return json({ error: error.message }, { status: 500 });
+      return json({ ok: true });
+    }
+
 
     // Approve artwork for display (venue)
     if (url.pathname.startsWith('/api/artworks/') && method === 'POST' && url.pathname.endsWith('/approve')) {
@@ -1253,6 +1341,272 @@ export default {
       const allowlist = (env.ADMIN_EMAILS || '').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
       if (user.email && allowlist.includes(user.email.toLowerCase())) return user;
       return null;
+    }
+
+    // Calls for Art (venue + public)
+    if (url.pathname === '/api/calls' && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const venueId = url.searchParams.get('venueId');
+      const status = url.searchParams.get('status') || 'open';
+      let query = supabaseAdmin.from('calls_for_art').select('*').order('created_at', { ascending: false });
+      if (venueId) query = query.eq('venue_id', venueId);
+      if (!venueId) query = query.eq('status', status);
+      const { data, error } = await query.limit(100);
+      if (error) return json({ error: error.message }, { status: 500 });
+      return json({ calls: data || [] });
+    }
+
+    if (url.pathname === '/api/calls' && method === 'POST') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const venue = await requireVenue(request);
+      if (!venue) return json({ error: 'Venue access required' }, { status: 403 });
+      const payload = await request.json().catch(() => ({}));
+      const nowIso = new Date().toISOString();
+      const insert = {
+        venue_id: venue.id,
+        title: String(payload?.title || '').trim(),
+        description: payload?.description || null,
+        wall_constraints: payload?.wallConstraints || null,
+        max_dimensions: payload?.maxDimensions || null,
+        max_pieces: payload?.maxPieces ? Number(payload.maxPieces) : null,
+        preferred_tags: Array.isArray(payload?.preferredTags) ? payload.preferredTags : [],
+        price_min_cents: payload?.priceMin ? Math.round(Number(payload.priceMin) * 100) : null,
+        price_max_cents: payload?.priceMax ? Math.round(Number(payload.priceMax) * 100) : null,
+        submission_deadline: payload?.submissionDeadline || null,
+        install_window_start: payload?.installWindowStart || null,
+        install_window_end: payload?.installWindowEnd || null,
+        show_start: payload?.showStart || null,
+        show_end: payload?.showEnd || null,
+        submission_fee_cents: payload?.submissionFee ? Math.round(Number(payload.submissionFee) * 100) : 0,
+        max_applications: payload?.maxApplications ? Number(payload.maxApplications) : null,
+        status: payload?.status || 'open',
+        created_at: nowIso,
+        updated_at: nowIso,
+      };
+      if (!insert.title) return json({ error: 'Title is required' }, { status: 400 });
+      const { data, error } = await supabaseAdmin.from('calls_for_art').insert(insert).select('*').single();
+      if (error) return json({ error: error.message }, { status: 500 });
+      return json({ call: data });
+    }
+
+    if (url.pathname.startsWith('/api/calls/') && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const parts = url.pathname.split('/');
+      const callId = parts[3];
+      if (!callId) return json({ error: 'Missing call id' }, { status: 400 });
+      const { data, error } = await supabaseAdmin
+        .from('calls_for_art')
+        .select('*')
+        .eq('id', callId)
+        .maybeSingle();
+      if (error) return json({ error: error.message }, { status: 500 });
+      if (!data) return json({ error: 'Not found' }, { status: 404 });
+      return json({ call: data });
+    }
+
+    if (url.pathname.startsWith('/api/calls/') && url.pathname.endsWith('/applications') && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const venue = await requireVenue(request);
+      if (!venue) return json({ error: 'Venue access required' }, { status: 403 });
+      const parts = url.pathname.split('/');
+      const callId = parts[3];
+      if (!callId) return json({ error: 'Missing call id' }, { status: 400 });
+      const { data: call } = await supabaseAdmin.from('calls_for_art').select('venue_id').eq('id', callId).maybeSingle();
+      if (!call || call.venue_id !== venue.id) return json({ error: 'Not authorized' }, { status: 403 });
+      const { data, error } = await supabaseAdmin
+        .from('call_applications')
+        .select('*')
+        .eq('call_id', callId)
+        .order('created_at', { ascending: false });
+      if (error) return json({ error: error.message }, { status: 500 });
+      return json({ applications: data || [] });
+    }
+
+    if (url.pathname.startsWith('/api/calls/') && url.pathname.endsWith('/apply') && method === 'POST') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const artist = await requireArtist(request);
+      if (!artist) return json({ error: 'Artist access required' }, { status: 403 });
+      const parts = url.pathname.split('/');
+      const callId = parts[3];
+      if (!callId) return json({ error: 'Missing call id' }, { status: 400 });
+      const payload = await request.json().catch(() => ({}));
+
+      const { data: call, error: callErr } = await supabaseAdmin
+        .from('calls_for_art')
+        .select('*')
+        .eq('id', callId)
+        .maybeSingle();
+      if (callErr) return json({ error: callErr.message }, { status: 500 });
+      if (!call) return json({ error: 'Call not found' }, { status: 404 });
+      if (call.status !== 'open') return json({ error: 'Call is not open' }, { status: 400 });
+
+      const applicationId = crypto.randomUUID();
+      const nowIso = new Date().toISOString();
+      const insert = {
+        id: applicationId,
+        call_id: callId,
+        artist_user_id: artist.id,
+        statement: payload?.statement || null,
+        portfolio_url: payload?.portfolioUrl || null,
+        selected_artwork_ids: Array.isArray(payload?.selectedArtworkIds) ? payload.selectedArtworkIds : [],
+        additional_image_urls: Array.isArray(payload?.additionalImageUrls) ? payload.additionalImageUrls : [],
+        status: 'submitted',
+        paid: false,
+        amount_paid_cents: call.submission_fee_cents || 0,
+        created_at: nowIso,
+        updated_at: nowIso,
+      };
+
+      const { error: insertErr } = await supabaseAdmin.from('call_applications').insert(insert);
+      if (insertErr) return json({ error: insertErr.message }, { status: 500 });
+
+      if (call.submission_fee_cents && call.submission_fee_cents > 0) {
+        const successUrl = `${pagesOrigin}/#/calls/${callId}?payment=success&application=${applicationId}`;
+        const cancelUrl = `${pagesOrigin}/#/calls/${callId}?payment=cancel`;
+        const sessionForm = toForm({
+          mode: 'payment',
+          success_url: successUrl,
+          cancel_url: cancelUrl,
+          'line_items[0][price_data][currency]': 'usd',
+          'line_items[0][price_data][unit_amount]': String(call.submission_fee_cents),
+          'line_items[0][price_data][product_data][name]': `Submission Fee: ${call.title}`,
+          'line_items[0][quantity]': '1',
+          'metadata[paymentType]': 'submission_fee',
+          'metadata[applicationId]': applicationId,
+          'metadata[callId]': callId,
+        });
+        const resp = await stripeFetch('/v1/checkout/sessions', {
+          method: 'POST',
+          body: sessionForm,
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        });
+        const session = await resp.json();
+        if (!resp.ok) return json(session, { status: resp.status });
+        await supabaseAdmin.from('call_applications').update({ stripe_checkout_session_id: session.id }).eq('id', applicationId);
+        return json({ url: session.url, applicationId });
+      }
+
+      return json({ applicationId });
+    }
+
+    if (url.pathname.startsWith('/api/calls/') && url.pathname.includes('/applications/') && url.pathname.endsWith('/status') && method === 'POST') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const venue = await requireVenue(request);
+      if (!venue) return json({ error: 'Venue access required' }, { status: 403 });
+      const parts = url.pathname.split('/');
+      const callId = parts[3];
+      const applicationId = parts[5];
+      if (!callId || !applicationId) return json({ error: 'Missing ids' }, { status: 400 });
+      const { data: call } = await supabaseAdmin.from('calls_for_art').select('venue_id').eq('id', callId).maybeSingle();
+      if (!call || call.venue_id !== venue.id) return json({ error: 'Not authorized' }, { status: 403 });
+      const payload = await request.json().catch(() => ({}));
+      const status = String(payload?.status || '').trim();
+      if (!status) return json({ error: 'Missing status' }, { status: 400 });
+      const { error } = await supabaseAdmin
+        .from('call_applications')
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq('id', applicationId);
+      if (error) return json({ error: error.message }, { status: 500 });
+      return json({ ok: true });
+    }
+
+    // Analytics summary endpoints
+    if (url.pathname === '/api/analytics/artist' && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const artistId = url.searchParams.get('artistId');
+      if (!artistId) return json({ error: 'Missing artistId' }, { status: 400 });
+      const user = await getSupabaseUserFromRequest(request);
+      if (!user || (user.user_metadata?.role !== 'admin' && user.id !== artistId)) {
+        return json({ error: 'Unauthorized' }, { status: 403 });
+      }
+
+      const { data: arts } = await supabaseAdmin
+        .from('artworks')
+        .select('id,venue_id,title')
+        .eq('artist_id', artistId);
+      const artworkIds = (arts || []).map((a: any) => a.id);
+
+      const since7 = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const since30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+      const { data: events } = artworkIds.length
+        ? await supabaseAdmin
+            .from('events')
+            .select('event_type,artwork_id,venue_id,created_at')
+            .in('artwork_id', artworkIds)
+        : { data: [] };
+
+      const counts = { week: 0, month: 0, total: 0, checkout: 0, purchase: 0 };
+      const perArtwork: Record<string, { scans: number; views: number; checkouts: number; purchases: number }> = {};
+      const perVenue: Record<string, { scans: number; purchases: number }> = {};
+
+      (events || []).forEach((e: any) => {
+        counts.total += 1;
+        if (e.created_at >= since7) counts.week += 1;
+        if (e.created_at >= since30) counts.month += 1;
+        if (!perArtwork[e.artwork_id]) perArtwork[e.artwork_id] = { scans: 0, views: 0, checkouts: 0, purchases: 0 };
+        if (e.event_type === 'qr_scan') perArtwork[e.artwork_id].scans += 1;
+        if (e.event_type === 'view_artwork') perArtwork[e.artwork_id].views += 1;
+        if (e.event_type === 'start_checkout') perArtwork[e.artwork_id].checkouts += 1;
+        if (e.event_type === 'purchase') perArtwork[e.artwork_id].purchases += 1;
+        if (e.venue_id) {
+          if (!perVenue[e.venue_id]) perVenue[e.venue_id] = { scans: 0, purchases: 0 };
+          if (e.event_type === 'qr_scan') perVenue[e.venue_id].scans += 1;
+          if (e.event_type === 'purchase') perVenue[e.venue_id].purchases += 1;
+        }
+        if (e.event_type === 'start_checkout') counts.checkout += 1;
+        if (e.event_type === 'purchase') counts.purchase += 1;
+      });
+
+      return json({
+        cards: {
+          scansWeek: counts.week,
+          scansMonth: counts.month,
+          conversion: counts.checkout ? Math.round((counts.purchase / counts.checkout) * 100) : 0,
+        },
+        perArtwork,
+        perVenue,
+      });
+    }
+
+    if (url.pathname === '/api/analytics/venue' && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const venueId = url.searchParams.get('venueId');
+      if (!venueId) return json({ error: 'Missing venueId' }, { status: 400 });
+      const user = await getSupabaseUserFromRequest(request);
+      if (!user || (user.user_metadata?.role !== 'admin' && user.id !== venueId)) {
+        return json({ error: 'Unauthorized' }, { status: 403 });
+      }
+
+      const since7 = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const since30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+      const { data: events } = await supabaseAdmin
+        .from('events')
+        .select('event_type,artwork_id,created_at')
+        .eq('venue_id', venueId);
+
+      const counts = { week: 0, month: 0, checkout: 0, purchase: 0 };
+      const perArtwork: Record<string, { scans: number; purchases: number }> = {};
+
+      (events || []).forEach((e: any) => {
+        if (e.created_at >= since7) counts.week += 1;
+        if (e.created_at >= since30) counts.month += 1;
+        if (!perArtwork[e.artwork_id]) perArtwork[e.artwork_id] = { scans: 0, purchases: 0 };
+        if (e.event_type === 'qr_scan') perArtwork[e.artwork_id].scans += 1;
+        if (e.event_type === 'purchase') perArtwork[e.artwork_id].purchases += 1;
+        if (e.event_type === 'start_checkout') counts.checkout += 1;
+        if (e.event_type === 'purchase') counts.purchase += 1;
+      });
+
+      return json({
+        cards: {
+          scansWeek: counts.week,
+          scansMonth: counts.month,
+          conversion: counts.checkout ? Math.round((counts.purchase / counts.checkout) * 100) : 0,
+        },
+        perArtwork,
+      });
     }
 
     // Billing Portal: manage subscription and payment methods
@@ -1528,7 +1882,7 @@ export default {
       if (buyerFeeCents > 0) {
         sessionForm['line_items[1][price_data][currency]'] = currency;
         sessionForm['line_items[1][price_data][unit_amount]'] = String(buyerFeeCents);
-        sessionForm['line_items[1][price_data][product_data][name]'] = 'Buyer Support Fee';
+        sessionForm['line_items[1][price_data][product_data][name]'] = 'Service fee';
         sessionForm['line_items[1][quantity]'] = '1';
       }
 
@@ -1702,7 +2056,7 @@ export default {
       if (buyerFeeCents > 0) {
         sessionForm['line_items[1][price_data][currency]'] = currency;
         sessionForm['line_items[1][price_data][unit_amount]'] = String(buyerFeeCents);
-        sessionForm['line_items[1][price_data][product_data][name]'] = 'Buyer Support Fee';
+        sessionForm['line_items[1][price_data][product_data][name]'] = 'Service fee';
         sessionForm['line_items[1][quantity]'] = '1';
       }
 
@@ -2155,6 +2509,18 @@ export default {
         console.error('SMS send failed', smsErr instanceof Error ? smsErr.message : smsErr);
       }
 
+      try {
+        await supabaseAdmin.from('events').insert({
+          event_type: 'purchase',
+          user_id: null,
+          artwork_id: orderRow.artwork_id || null,
+          venue_id: orderRow.venue_id || null,
+          created_at: new Date().toISOString(),
+        });
+      } catch (eventErr) {
+        console.error('Purchase event insert failed', eventErr instanceof Error ? eventErr.message : eventErr);
+      }
+
       return { status: 'ok' };
     }
 
@@ -2217,10 +2583,38 @@ export default {
 
             if (canProcess && eventType === 'checkout.session.completed') {
               try {
-                const result = await processCheckoutSessionCompleted(event);
-                if (result.status === 'ok') note = 'ok';
-                else if (result.status === 'noop') note = result.message || 'noop';
-                else note = `error:${result.message || 'unknown'}`;
+                const sessionObj = (event as any)?.data?.object;
+                const paymentType = sessionObj?.metadata?.paymentType || null;
+                const applicationId = sessionObj?.metadata?.applicationId || null;
+
+                if (paymentType === 'submission_fee' && applicationId) {
+                  const paymentIntentId = sessionObj?.payment_intent || null;
+                  await supabaseAdmin
+                    .from('call_applications')
+                    .update({
+                      paid: true,
+                      stripe_payment_intent_id: paymentIntentId,
+                      paid_at: new Date().toISOString(),
+                      updated_at: new Date().toISOString(),
+                    })
+                    .eq('id', applicationId);
+
+                  await supabaseAdmin.from('platform_payments').insert({
+                    payment_type: 'submission_fee',
+                    related_id: applicationId,
+                    amount_cents: sessionObj?.amount_total || 0,
+                    currency: sessionObj?.currency || 'usd',
+                    stripe_payment_intent_id: paymentIntentId,
+                    stripe_checkout_session_id: sessionObj?.id || null,
+                    created_at: new Date().toISOString(),
+                  });
+                  note = 'submission_fee_ok';
+                } else {
+                  const result = await processCheckoutSessionCompleted(event);
+                  if (result.status === 'ok') note = 'ok';
+                  else if (result.status === 'noop') note = result.message || 'noop';
+                  else note = `error:${result.message || 'unknown'}`;
+                }
               } catch (processErr) {
                 note = `error:${processErr instanceof Error ? processErr.message : 'unknown'}`;
                 console.error('Unhandled webhook processing error', processErr);
@@ -2706,6 +3100,7 @@ export default {
         createdAt: data.created_at,
       }});
     }
+
 
     // Admin: platform metrics and recent activity
     if (url.pathname === '/api/admin/metrics' && method === 'GET') {

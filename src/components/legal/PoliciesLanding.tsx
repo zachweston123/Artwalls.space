@@ -108,6 +108,7 @@ export function PoliciesLanding({ onNavigate }: PoliciesLandingProps) {
             <span>→</span>
           </div>
         </button>
+
       </div>
 
       {/* Additional Info */}
@@ -120,7 +121,7 @@ export function PoliciesLanding({ onNavigate }: PoliciesLandingProps) {
           </a>
         </p>
         <p className="text-xs text-[var(--text-muted)]">
-          Last updated: December 25, 2024
+          Last updated: January 27, 2026
         </p>
       </div>
     </div>

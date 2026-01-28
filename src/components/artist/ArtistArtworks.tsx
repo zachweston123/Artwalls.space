@@ -28,6 +28,20 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
     description: '',
     price: '',
     imageUrl: '',
+    imageUrls: [] as string[],
+    dimensionsWidth: '',
+    dimensionsHeight: '',
+    dimensionsDepth: '',
+    dimensionsUnit: 'in',
+    medium: '',
+    materials: '',
+    condition: 'new',
+    knownFlaws: 'None',
+    editionType: 'original',
+    editionSize: '',
+    shippingTimeEstimate: '2–5 business days',
+    inSpacePhotoUrl: '',
+    colorAccuracyAck: false,
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -121,7 +135,10 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
       const authedId = data.user?.id;
       const artistId = authedId || user.id;
       const url = await uploadArtworkImage(artistId, file);
-      setNewArtwork({ ...newArtwork, imageUrl: url });
+      setNewArtwork((prev) => {
+        const nextUrls = [...prev.imageUrls, url];
+        return { ...prev, imageUrl: prev.imageUrl || url, imageUrls: nextUrls };
+      });
     } catch (err: any) {
       setUploadError(err?.message || 'Upload failed');
     } finally {
@@ -141,6 +158,39 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
         return;
       }
 
+      const dimensionsWidth = Number(newArtwork.dimensionsWidth);
+      const dimensionsHeight = Number(newArtwork.dimensionsHeight);
+      const dimensionsDepth = newArtwork.dimensionsDepth ? Number(newArtwork.dimensionsDepth) : undefined;
+      const editionSize = newArtwork.editionSize ? Number(newArtwork.editionSize) : undefined;
+
+      if (!Number.isFinite(dimensionsWidth) || !Number.isFinite(dimensionsHeight)) {
+        setError('Please add artwork dimensions (width and height)');
+        return;
+      }
+      if (!newArtwork.medium.trim()) {
+        setError('Please add the medium/materials');
+        return;
+      }
+      if (!newArtwork.knownFlaws.trim()) {
+        setError('Please add known flaws (or enter "None")');
+        return;
+      }
+      if (newArtwork.editionType === 'print' && (!Number.isFinite(editionSize) || (editionSize || 0) <= 0)) {
+        setError('Please add edition size for prints');
+        return;
+      }
+      if (!newArtwork.shippingTimeEstimate.trim()) {
+        setError('Please add a shipping time estimate');
+        return;
+      }
+      const allImages = newArtwork.imageUrl
+        ? [newArtwork.imageUrl, ...newArtwork.imageUrls.filter((u) => u !== newArtwork.imageUrl)]
+        : newArtwork.imageUrls;
+      if (allImages.length < 3) {
+        setError('Please upload at least 3 photos (front, detail, back/signature)');
+        return;
+      }
+
       let createdItem: Artwork;
 
       // Try API first
@@ -154,6 +204,20 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
           price: priceNumber,
           currency: 'usd',
           imageUrl: newArtwork.imageUrl || undefined,
+          imageUrls: allImages,
+          dimensionsWidth,
+          dimensionsHeight,
+          dimensionsDepth,
+          dimensionsUnit: newArtwork.dimensionsUnit,
+          medium: newArtwork.medium,
+          materials: newArtwork.materials,
+          condition: newArtwork.condition,
+          knownFlaws: newArtwork.knownFlaws,
+          editionType: newArtwork.editionType,
+          editionSize,
+          shippingTimeEstimate: newArtwork.shippingTimeEstimate,
+          inSpacePhotoUrl: newArtwork.inSpacePhotoUrl || undefined,
+          colorAccuracyAck: newArtwork.colorAccuracyAck,
         });
         createdItem = res as Artwork;
       } catch (apiErr) {
@@ -170,6 +234,21 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
              price_cents: Math.round(priceNumber * 100),
              currency: 'usd',
              image_url: newArtwork.imageUrl || null,
+             image_urls: allImages,
+             dimensions_width: dimensionsWidth,
+             dimensions_height: dimensionsHeight,
+             dimensions_depth: dimensionsDepth || null,
+             dimensions_unit: newArtwork.dimensionsUnit,
+             medium: newArtwork.medium,
+             materials: newArtwork.materials,
+             condition: newArtwork.condition,
+             known_flaws: newArtwork.knownFlaws,
+             edition_type: newArtwork.editionType,
+             edition_size: editionSize || null,
+             shipping_time_estimate: newArtwork.shippingTimeEstimate,
+             in_space_photo_url: newArtwork.inSpacePhotoUrl || null,
+             color_accuracy_ack: newArtwork.colorAccuracyAck,
+             is_publishable: true,
              status: 'available'
            })
            .select()
@@ -190,7 +269,26 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
       }
 
       setArtworks([createdItem, ...artworks]);
-      setNewArtwork({ title: '', description: '', price: '', imageUrl: '' });
+      setNewArtwork({
+        title: '',
+        description: '',
+        price: '',
+        imageUrl: '',
+        imageUrls: [],
+        dimensionsWidth: '',
+        dimensionsHeight: '',
+        dimensionsDepth: '',
+        dimensionsUnit: 'in',
+        medium: '',
+        materials: '',
+        condition: 'new',
+        knownFlaws: 'None',
+        editionType: 'original',
+        editionSize: '',
+        shippingTimeEstimate: '2–5 business days',
+        inSpacePhotoUrl: '',
+        colorAccuracyAck: false,
+      });
       setShowAddForm(false);
     } catch (e: any) {
       setError(e?.message || 'Unable to create artwork');
@@ -278,15 +376,20 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label className="block text-sm text-[var(--text)] mb-2">Artwork Image</label>
+                <label className="block text-sm text-[var(--text)] mb-2">Artwork Photos (at least 3)</label>
                 <div className="flex gap-3 items-center">
                   <label className="flex items-center justify-center w-12 h-12 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] cursor-pointer">
                     <Upload className="w-5 h-5 text-[var(--text-muted)]" />
                     <input
                       type="file"
                       accept="image/*"
+                      multiple
                       className="hidden"
-                      onChange={(e) => handleFileSelected(e.target.files?.[0])}
+                      onChange={(e) => {
+                        const files = e.target.files;
+                        if (!files) return;
+                        Array.from(files).forEach((file) => handleFileSelected(file));
+                      }}
                     />
                   </label>
                   <input
@@ -297,6 +400,9 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
                     placeholder="Paste an image URL or upload a file"
                   />
                 </div>
+                <p className="text-xs text-[var(--text-muted)] mt-2">
+                  {new Set([...(newArtwork.imageUrls || []), ...(newArtwork.imageUrl ? [newArtwork.imageUrl] : [])]).size} photo(s) added
+                </p>
                 {uploading && (
                   <p className="text-xs text-[var(--text-muted)] mt-2 inline-flex items-center gap-2">
                     <Loader2 className="w-4 h-4 animate-spin" /> Uploading image…
@@ -335,6 +441,148 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
                 </p>
               </div>
 
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-[var(--text)] mb-2">Medium (required)</label>
+                  <input
+                    type="text"
+                    value={newArtwork.medium}
+                    onChange={(e) => setNewArtwork({ ...newArtwork, medium: e.target.value })}
+                    className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)]"
+                    placeholder="Oil on canvas"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-[var(--text)] mb-2">Materials (required)</label>
+                  <input
+                    type="text"
+                    value={newArtwork.materials}
+                    onChange={(e) => setNewArtwork({ ...newArtwork, materials: e.target.value })}
+                    className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)]"
+                    placeholder="Canvas, acrylic paint"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm text-[var(--text)] mb-2">Dimensions (required)</label>
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                  <input
+                    type="number"
+                    value={newArtwork.dimensionsWidth}
+                    onChange={(e) => setNewArtwork({ ...newArtwork, dimensionsWidth: e.target.value })}
+                    className="px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)]"
+                    placeholder="Width"
+                  />
+                  <input
+                    type="number"
+                    value={newArtwork.dimensionsHeight}
+                    onChange={(e) => setNewArtwork({ ...newArtwork, dimensionsHeight: e.target.value })}
+                    className="px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)]"
+                    placeholder="Height"
+                  />
+                  <input
+                    type="number"
+                    value={newArtwork.dimensionsDepth}
+                    onChange={(e) => setNewArtwork({ ...newArtwork, dimensionsDepth: e.target.value })}
+                    className="px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)]"
+                    placeholder="Depth (optional)"
+                  />
+                  <select
+                    value={newArtwork.dimensionsUnit}
+                    onChange={(e) => setNewArtwork({ ...newArtwork, dimensionsUnit: e.target.value })}
+                    className="px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)]"
+                  >
+                    <option value="in">in</option>
+                    <option value="cm">cm</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-[var(--text)] mb-2">Condition (required)</label>
+                  <select
+                    value={newArtwork.condition}
+                    onChange={(e) => setNewArtwork({ ...newArtwork, condition: e.target.value })}
+                    className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)]"
+                  >
+                    <option value="new">New</option>
+                    <option value="excellent">Excellent</option>
+                    <option value="good">Good</option>
+                    <option value="fair">Fair</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm text-[var(--text)] mb-2">Known flaws (required)</label>
+                  <input
+                    type="text"
+                    value={newArtwork.knownFlaws}
+                    onChange={(e) => setNewArtwork({ ...newArtwork, knownFlaws: e.target.value })}
+                    className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)]"
+                    placeholder="None"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-[var(--text)] mb-2">Edition type (required)</label>
+                  <select
+                    value={newArtwork.editionType}
+                    onChange={(e) => setNewArtwork({ ...newArtwork, editionType: e.target.value })}
+                    className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)]"
+                  >
+                    <option value="original">Original</option>
+                    <option value="print">Print</option>
+                  </select>
+                </div>
+                {newArtwork.editionType === 'print' && (
+                  <div>
+                    <label className="block text-sm text-[var(--text)] mb-2">Edition size (required for prints)</label>
+                    <input
+                      type="number"
+                      value={newArtwork.editionSize}
+                      onChange={(e) => setNewArtwork({ ...newArtwork, editionSize: e.target.value })}
+                      className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)]"
+                      placeholder="e.g., 25"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm text-[var(--text)] mb-2">Shipping time estimate (required)</label>
+                <input
+                  type="text"
+                  value={newArtwork.shippingTimeEstimate}
+                  onChange={(e) => setNewArtwork({ ...newArtwork, shippingTimeEstimate: e.target.value })}
+                  className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)]"
+                  placeholder="2–5 business days"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-[var(--text)] mb-2">In-space photo (optional)</label>
+                <input
+                  type="url"
+                  value={newArtwork.inSpacePhotoUrl}
+                  onChange={(e) => setNewArtwork({ ...newArtwork, inSpacePhotoUrl: e.target.value })}
+                  className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)]"
+                  placeholder="Optional photo of artwork in a space"
+                />
+              </div>
+
+              <div className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={newArtwork.colorAccuracyAck}
+                  onChange={(e) => setNewArtwork({ ...newArtwork, colorAccuracyAck: e.target.checked })}
+                  className="h-4 w-4"
+                />
+                <span className="text-[var(--text-muted)]">I understand photos may vary by display and lighting.</span>
+              </div>
+
               <div>
                 <label className="block text-sm text-[var(--text)] mb-2">Price (USD)</label>
                 <div className="relative">
@@ -348,7 +596,7 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
                     placeholder="0.00"
                   />
                 </div>
-                <p className="text-xs text-[var(--text-muted)] mt-1">You'll receive ~80% (before Stripe fees)</p>
+                <p className="text-xs text-[var(--text-muted)] mt-1">Take home up to 85% depending on your plan.</p>
               </div>
 
               <div className="flex gap-3 pt-4">

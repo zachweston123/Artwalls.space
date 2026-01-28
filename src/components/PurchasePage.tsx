@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ShoppingCart, MapPin, User, ArrowLeft, Loader2 } from 'lucide-react';
 import { ArtworkReactions } from './ArtworkReactions';
+import { CHECKOUT_COPY } from '../lib/feeCopy';
 
 type Artwork = {
   id: string;
@@ -10,6 +11,7 @@ type Artwork = {
   currency?: string;
   imageUrl?: string;
   artistId?: string;
+  venueId?: string;
   status: 'available' | 'pending' | 'active' | 'sold';
   artistName?: string;
   venueName?: string;
@@ -51,6 +53,7 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
       status: raw?.status || 'available',
       artistName: raw?.artistName || raw?.artist_name || undefined,
       artistId: raw?.artistId || raw?.artist_id || undefined,
+      venueId: raw?.venueId || raw?.venue_id || undefined,
       venueName: raw?.venueName || raw?.venue_name || undefined,
       checkoutUrl: raw?.checkoutUrl || raw?.checkout_url || undefined,
     };
@@ -71,6 +74,24 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
     })();
     return () => { cancelled = true; };
   }, [purchaseStatus, artworkId]);
+
+  useEffect(() => {
+    if (!artwork?.id) return;
+    (async () => {
+      try {
+        await apiPost('/api/events', {
+          event_type: 'view_artwork',
+          artwork_id: artwork.id,
+          venue_id: (artwork as any).venueId || null,
+        });
+        await apiPost('/api/events', {
+          event_type: 'qr_scan',
+          artwork_id: artwork.id,
+          venue_id: (artwork as any).venueId || null,
+        });
+      } catch {}
+    })();
+  }, [artwork?.id]);
 
   useEffect(() => {
     let cancelled = false;
@@ -107,6 +128,14 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
       setBuying(true);
       setError(null);
 
+      try {
+        await apiPost('/api/events', {
+          event_type: 'start_checkout',
+          artwork_id: artwork?.id,
+          venue_id: (artwork as any)?.venueId || null,
+        });
+      } catch {}
+
       // If the artwork has a Stripe Payment Link, use it directly.
       if (artwork?.checkoutUrl) {
         window.location.href = artwork.checkoutUrl;
@@ -125,6 +154,7 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
       setBuying(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-[var(--bg)]">
@@ -224,9 +254,11 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
                 <span className="text-[var(--text-muted)]">Price</span>
                 <span className="text-3xl sm:text-4xl text-[var(--text)]">${artwork?.price ?? 0}</span>
               </div>
-              <p className="text-sm text-[var(--text-muted)]">
-                Supports the local artist with ~80% of the sale going to the creator (before Stripe fees)
-              </p>
+              <p className="text-sm text-[var(--text-muted)]">{CHECKOUT_COPY.artworkPageHighlight}</p>
+              <div className="mt-3 flex items-center justify-between text-xs text-[var(--text-muted)]">
+                <span>{CHECKOUT_COPY.feeLineLabel} (shown at checkout)</span>
+                <span title={CHECKOUT_COPY.feeTooltip} className="underline decoration-dotted">What is this?</span>
+              </div>
             </div>
 
             {purchaseStatus === 'success' && (
@@ -252,6 +284,7 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
               </div>
             )}
 
+
             <button
               onClick={handlePurchase}
               disabled={buying || artwork?.status === 'sold' || purchaseStatus === 'success' || !artwork}
@@ -270,7 +303,7 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
             {/* All Sales Final Notice */}
             <div className="bg-[var(--surface-3)] rounded-xl p-4 border border-[var(--border)] mb-6">
               <p className="text-sm text-[var(--text)]">
-                <strong>All sales final:</strong> Please view artwork in person before purchasing. No returns or refunds available.
+                <strong>All sales final:</strong> Please review the artwork in person before purchasing.
               </p>
             </div>
 

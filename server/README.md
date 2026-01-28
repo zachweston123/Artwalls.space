@@ -66,6 +66,20 @@ so future purchases use the correct fee even if the default env values change.
 ### Checkout
 - `POST /api/stripe/create-checkout-session` body: `{ artworkId, buyerEmail? }`
 
+### Submission fees (Calls for Art)
+- `POST /api/calls` (venue)
+- `GET /api/calls` (public, open calls)
+- `POST /api/calls/:id/apply` (artist)
+- Webhook: `checkout.session.completed` with metadata `paymentType=submission_fee`
+
+### Returns & Disputes
+- Not supported. All sales are final.
+
+### Analytics
+- `POST /api/events` (qr_scan, view_artwork, start_checkout, purchase)
+- `GET /api/analytics/artist?artistId=...`
+- `GET /api/analytics/venue?venueId=...`
+
 ### Webhook
 - `POST /api/stripe/webhook`
 
@@ -75,3 +89,18 @@ so future purchases use the correct fee even if the default env values change.
 - Implement refund/dispute flows:
   - reverse transfers on refunds
   - pause payouts on disputes
+
+## Env vars (additions)
+- `STRIPE_SECRET_KEY`
+- `STRIPE_WEBHOOK_SECRET`
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `PAGES_ORIGIN`
+
+## Storage buckets
+- `call-applications` (optional application images)
+
+## Manual QA checklist
+- Creating artwork requires dimensions, condition, edition info, shipping estimate, and 3+ photos
+- Venue creates call for art; artist applies (paid and free)
+- Analytics shows scans even without sales

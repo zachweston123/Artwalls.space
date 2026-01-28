@@ -1,6 +1,8 @@
 import { Check, Sparkles, Shield, TrendingUp, Zap, Calculator, Loader2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { apiPost } from '../../lib/api';
+import { PRICING_COPY } from '../../lib/feeCopy';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 
 interface PricingPageProps {
   onNavigate: (page: string) => void;
@@ -327,9 +329,10 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
 
               {/* Artist Take-Home Percentage - Prominent Display */}
               <div className="bg-[var(--surface-3)] border border-[var(--accent)] rounded-lg p-3 mb-4">
-                <div className="text-xs text-[var(--text-muted)] font-semibold">You Take Home</div>
+                <div className="text-xs text-[var(--text-muted)] font-semibold">{PRICING_COPY.takeHomeLabel}</div>
                 <div className="text-2xl font-bold text-[var(--accent)]">{plan.takeHome}%</div>
-                <div className="text-xs text-[var(--text-muted)] mt-1">of each artwork sale</div>
+                <div className="text-xs text-[var(--text-muted)] mt-1">{PRICING_COPY.takeHomeSubtext}</div>
+                <div className="text-[10px] text-[var(--text-muted)] mt-2">{PRICING_COPY.platformSupport}</div>
               </div>
 
               <div className="mb-6">
@@ -383,6 +386,30 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
             </div>
           );
         })}
+      </div>
+
+      <div className="max-w-4xl mx-auto mb-12">
+        <div className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-6">
+          <Accordion type="single" collapsible>
+            <AccordionItem value="payouts">
+              <AccordionTrigger>How payouts work</AccordionTrigger>
+              <AccordionContent>
+                <div className="text-sm text-[var(--text-muted)] space-y-3">
+                  <p>We handle checkout, venue payouts, and artist transfers automatically. Your take-home percentage is based on the artwork list price.</p>
+                  <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-lg p-4">
+                    <p className="text-xs uppercase tracking-wide text-[var(--text-muted)]">Example (Starter, $200 list price)</p>
+                    <ul className="mt-2 space-y-1">
+                      <li className="flex justify-between"><span>Artist take-home (80%)</span><span>$160.00</span></li>
+                      <li className="flex justify-between"><span>Venue commission (15%)</span><span>$30.00</span></li>
+                      <li className="flex justify-between"><span>Platform remainder</span><span>$10.00</span></li>
+                    </ul>
+                    <p className="mt-2 text-xs text-[var(--text-muted)]">Buyer fees appear at checkout and support platform operations.</p>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </div>
       </div>
 
       {/* Upgrade Note */}

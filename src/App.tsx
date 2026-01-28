@@ -66,6 +66,13 @@ import { SupportInbox } from './components/admin/SupportInbox';
 import { SupportMessageDetail } from './components/admin/SupportMessageDetail';
 import VerifyEmail from './pages/VerifyEmail';
 import VenueInviteLanding from './pages/VenueInviteLanding';
+import { VenueCalls } from './components/venue/VenueCalls';
+import { VenueCallDetail } from './components/venue/VenueCallDetail';
+import { ArtistAnalytics } from './components/artist/ArtistAnalytics';
+import { VenueAnalytics } from './components/venue/VenueAnalytics';
+import { VenueWallStats } from './components/venue/VenueWallStats';
+import { CallPublicPage } from './components/calls/CallPublicPage';
+import { CallApplyPage } from './components/calls/CallApplyPage';
 
 export type UserRole = 'artist' | 'venue' | 'admin' | null;
 
@@ -85,6 +92,7 @@ export default function App() {
   const [selectedVenueId, setSelectedVenueId] = useState<string | null>(null);
   const [selectedArtistId, setSelectedArtistId] = useState<string | null>(null);
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
+  const [selectedCallId, setSelectedCallId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [hasAcceptedAgreement, setHasAcceptedAgreement] = useState<boolean | null>(null);
   const [showGoogleRoleSelection, setShowGoogleRoleSelection] = useState(false);
@@ -115,6 +123,13 @@ export default function App() {
   // Direct-route override for venue invite landing page
   if (typeof window !== 'undefined' && window.location.pathname.startsWith('/v/invite/')) {
     return <VenueInviteLanding />;
+  }
+
+  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/calls/')) {
+    const parts = window.location.pathname.split('/').filter(Boolean);
+    const callId = parts[1] || '';
+    const isApply = parts[2] === 'apply';
+    return isApply ? <CallApplyPage callId={callId} /> : <CallPublicPage callId={callId} />;
   }
 
   const userFromSupabase = (supaUser: any): User | null => {
@@ -462,6 +477,7 @@ export default function App() {
     if (params?.userId) setSelectedArtistId(params.userId);
     if (params?.venueId) setSelectedVenueId(params.venueId);
     if (params?.artistId) setSelectedArtistId(params.artistId);
+    if (params?.callId) setSelectedCallId(params.callId);
 
     const nextPath = getPathFromPage(page);
     if (nextPath) {
@@ -744,6 +760,7 @@ export default function App() {
           <>
             {currentPage === 'artist-dashboard' && <ArtistDashboard onNavigate={handleNavigate} user={currentUser} />}
             {currentPage === 'artist-artworks' && <ArtistArtworks user={currentUser} />}
+            {currentPage === 'artist-analytics' && <ArtistAnalytics user={currentUser} />}
             {currentPage === 'artist-approved' && <ApplicationsAndInvitations userRole="artist" defaultTab="approved" onBack={() => handleNavigate('artist-dashboard')} />}
             {currentPage === 'artist-venues' && (
               <FindVenues 
@@ -797,9 +814,13 @@ export default function App() {
             {currentPage === 'venue-setup' && <VenueSetupWizard onNavigate={handleNavigate} onComplete={() => handleNavigate('venue-dashboard')} />}
             {currentPage === 'venue-partner-kit' && <VenuePartnerKitEmbedded onNavigate={handleNavigate} />}
             {currentPage === 'venue-walls' && <VenueWalls />}
+            {currentPage === 'venue-calls' && <VenueCalls user={currentUser} onViewCall={(callId) => handleNavigate('venue-call-detail', { callId })} />}
+            {currentPage === 'venue-call-detail' && selectedCallId && <VenueCallDetail callId={selectedCallId} onBack={() => handleNavigate('venue-calls')} />}
             {currentPage === 'venue-applications' && <ApplicationsAndInvitations userRole="venue" onBack={() => handleNavigate('venue-dashboard')} />}
             {currentPage === 'venue-current' && <VenueCurrentArtWithScheduling />}
             {currentPage === 'venue-sales' && <VenueSales />}
+            {currentPage === 'venue-analytics' && <VenueAnalytics user={currentUser} />}
+            {currentPage === 'venue-wall-stats' && <VenueWallStats user={currentUser} />}
             {currentPage === 'venue-settings' && <VenueSettingsWithEmptyState />}
             {currentPage === 'venue-profile' && <VenueProfile onNavigate={handleNavigate} />}
             {currentPage === 'venue-password-security' && <VenuePasswordSecurity onBack={() => handleNavigate('venue-profile')} />}

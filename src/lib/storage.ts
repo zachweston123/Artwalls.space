@@ -44,3 +44,16 @@ export async function uploadProfilePhoto(userId: string, file: File, userType: '
   const { data } = supabase.storage.from(bucket).getPublicUrl(path);
   return data.publicUrl;
 }
+
+export async function uploadCallApplicationImage(callId: string, file: File): Promise<string> {
+  const filename = `${Date.now()}_${sanitizeFilename(file.name)}`;
+  const path = `${callId}/${filename}`;
+  const { error } = await supabase.storage.from('call-applications').upload(path, file, {
+    cacheControl: '3600',
+    upsert: false,
+    contentType: file.type || 'application/octet-stream',
+  });
+  if (error) throw error;
+  const { data } = supabase.storage.from('call-applications').getPublicUrl(path);
+  return data.publicUrl;
+}
