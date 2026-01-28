@@ -138,6 +138,7 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
     { id: 'artist-invite-venue', label: 'Invite a Venue' },
     { id: 'artist-referrals', label: 'Referrals' },
     { id: 'artist-sales', label: 'Sales & Earnings' },
+    { id: 'artist-settings', label: 'Settings' },
   ];
 
   const venueLinks = [

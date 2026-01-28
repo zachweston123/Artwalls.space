@@ -77,6 +77,7 @@ import { VenueAnalytics } from './components/venue/VenueAnalytics';
 import { VenueWallStats } from './components/venue/VenueWallStats';
 import { CallPublicPage } from './components/calls/CallPublicPage';
 import { CallApplyPage } from './components/calls/CallApplyPage';
+import { Settings } from './components/settings/Settings';
 
 export type UserRole = 'artist' | 'venue' | 'admin' | null;
 
@@ -816,6 +817,7 @@ export default function App() {
             {currentPage === 'artist-password-security' && <PasswordSecurity onBack={() => handleNavigate('artist-profile')} />}
             {currentPage === 'artist-notifications' && <NotificationPreferences onBack={() => handleNavigate('artist-profile')} />}
             {currentPage === 'artist-notifications-legacy' && <NotificationsList />}
+            {currentPage === 'artist-settings' && <Settings onNavigate={handleNavigate} />}
           </>
         )}
         

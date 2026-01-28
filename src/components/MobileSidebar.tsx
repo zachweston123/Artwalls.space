@@ -1,4 +1,4 @@
-import { X, Palette, Store, LogOut, LayoutDashboard, Image, Search, Send, FileText, Bell, User, CreditCard, Shield, Mail, ShoppingCart, Frame, Users, BookOpen } from 'lucide-react';
+import { X, Palette, Store, LogOut, LayoutDashboard, Image, Search, Send, FileText, Bell, User, CreditCard, Shield, Mail, ShoppingCart, Frame, Users, BookOpen, Settings } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import type { User as UserType } from '../App';
 
@@ -25,6 +25,7 @@ export function MobileSidebar({ isOpen, onClose, user, onNavigate, onLogout, cur
     { id: 'artist-sales', label: 'Sales & Earnings', icon: ShoppingCart },
     { id: 'artist-notifications', label: 'Notifications', icon: Bell },
     { id: 'artist-profile', label: 'Profile', icon: User },
+    { id: 'artist-settings', label: 'Settings', icon: Settings },
     { id: 'plans-pricing', label: 'Plans & Pricing', icon: CreditCard },
     { id: 'policies', label: 'Policies & Agreements', icon: Shield },
   ];
