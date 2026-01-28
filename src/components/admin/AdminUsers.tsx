@@ -75,11 +75,18 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
       // Ensure local tables are synced from Supabase Auth
       try { await apiPost('/api/admin/sync-users', {}); } catch {}
 
-      const [artists, venues, authResp] = await Promise.all([
-        apiGet<any[]>('/api/artists').catch(() => []),
-        apiGet<any[]>('/api/venues').catch(() => []),
+      const [artistsResp, venuesResp, authResp] = await Promise.all([
+        apiGet<any>('/api/artists').catch(() => []),
+        apiGet<any>('/api/venues').catch(() => []),
         apiGet<any>('/api/admin/users').catch(() => []),
       ]);
+
+      const artists = Array.isArray(artistsResp)
+        ? artistsResp
+        : (artistsResp?.artists || artistsResp?.data || []);
+      const venues = Array.isArray(venuesResp)
+        ? venuesResp
+        : (venuesResp?.venues || venuesResp?.data || []);
 
       const mappedArtists = (artists || []).map(a => ({
         id: a.id,
@@ -106,7 +113,9 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
       }));
 
       // Basic merge of auth users to fill any missing profiles
-      const authUsers = Array.isArray(authResp) ? authResp : (authResp?.users || []);
+      const authUsers = Array.isArray(authResp)
+        ? authResp
+        : (authResp?.users || authResp?.data?.users || authResp?.data || []);
       const authMapped = (authUsers || []).map(u => ({
         id: u.id,
         name: u.name || 'User',
@@ -168,7 +177,7 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
       const query = searchQuery.toLowerCase();
       const matchesSearch = 
         user.name.toLowerCase().includes(query) ||
-        user.email.toLowerCase().includes(query) ||
+        (user.email || '').toLowerCase().includes(query) ||
         String(user.id).toLowerCase().includes(query) ||
         String(user.role || '').toLowerCase().includes(query) ||
         String(user.plan || '').toLowerCase().includes(query);
