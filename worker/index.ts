@@ -722,9 +722,14 @@ export default {
       return json({ role: 'artist', profile, proOverride: hasProOverride });
     }
 
-    // Public listings: venues
+    // Public listings: venues (restricted from venue accounts)
     if (url.pathname === '/api/venues' && method === 'GET') {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const requester = await getSupabaseUserFromRequest(request);
+      const requesterRole = requester?.user_metadata?.role;
+      if (requesterRole === 'venue') {
+        return json({ error: 'Venue discovery is only available to artists.' }, { status: 403 });
+      }
       // Optional filters: by artistId (use artist's preferred cities) or by cities query
       const artistId = url.searchParams.get('artistId');
       const citiesParam = url.searchParams.get('cities');
@@ -791,19 +796,21 @@ export default {
       
       let query = supabaseAdmin
         .from('artists')
-        .select('id,name,email,city_primary,city_secondary,profile_photo_url')
-        .eq('is_live', true)
+        .select('id,name,email,city_primary,city_secondary,profile_photo_url,is_live')
         .order('name', { ascending: true })
         .limit(50);
+
+      // Allow discovery of active artists; if is_live is null, still include for visibility
+      query = query.or('is_live.eq.true,is_live.is.null');
       
       // Match either primary or secondary city if a city is provided
       if (city) {
         query = query.or(`city_primary.eq.${city},city_secondary.eq.${city}`);
       }
       
-      // Search by name if a query is provided
+      // Search by name or email if a query is provided
       if (q) {
-        query = query.ilike('name', `%${q}%`);
+        query = query.or(`name.ilike.%${q}%,email.ilike.%${q}%`);
       }
       
       const { data, error } = await query;
@@ -813,7 +820,8 @@ export default {
         name: a.name, 
         email: a.email,
         profile_photo_url: a.profile_photo_url,
-        location: a.city_primary || 'Local'
+        location: a.city_primary || a.city_secondary || 'Local',
+        is_live: a.is_live,
       }));
       return json({ artists });
     }
