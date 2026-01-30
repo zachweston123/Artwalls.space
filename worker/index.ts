@@ -773,8 +773,21 @@ export default {
     // Public listings: artists (only show live artists)
     if (url.pathname === '/api/artists' && method === 'GET') {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
-      const city = (url.searchParams.get('city') || '').trim();
+      let city = (url.searchParams.get('city') || '').trim();
       const q = (url.searchParams.get('q') || '').trim();
+      // If no explicit city is provided, try using the requesting venue's city for local matching
+      if (!city) {
+        const requester = await getSupabaseUserFromRequest(request);
+        const requesterRole = requester?.user_metadata?.role;
+        if (requesterRole === 'venue') {
+          const { data: venueRow } = await supabaseAdmin
+            .from('venues')
+            .select('city')
+            .eq('id', requester.id)
+            .maybeSingle();
+          city = (venueRow?.city || '').trim();
+        }
+      }
       
       let query = supabaseAdmin
         .from('artists')
