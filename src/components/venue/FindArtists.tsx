@@ -2,13 +2,16 @@ import { useEffect, useState } from 'react';
 import { Search, MapPin, Filter, Users } from 'lucide-react';
 import { LabelChip } from '../LabelChip';
 import { apiGet } from '../../lib/api';
+import { PageHeader } from '../PageHeader';
+import { EmptyState } from '../EmptyState';
 
 interface FindArtistsProps {
   onInviteArtist: (artistId: string) => void;
   onViewProfile: (artistId: string) => void;
+  onNavigate?: (page: string) => void;
 }
 
-export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps) {
+export function FindArtists({ onInviteArtist, onViewProfile, onNavigate }: FindArtistsProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
@@ -40,6 +43,7 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
 
   const [artists, setArtists] = useState<any[]>([]);
   const [venueCity, setVenueCity] = useState<string>('');
+  const [searchRadius, setSearchRadius] = useState<number>(25);
 
   // Debounce search
   useEffect(() => {
@@ -62,6 +66,7 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
         const params = new URLSearchParams();
         if (city) params.append('city', city);
         if (searchQuery.trim()) params.append('q', searchQuery.trim());
+        if (searchRadius) params.append('radiusMiles', String(searchRadius));
 
         if (Array.from(params).length > 0) {
            path += `?${params.toString()}`;
@@ -94,9 +99,11 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
       isMounted = false;
       clearTimeout(timeout);
     };
-  }, [searchQuery]); // Re-run when searchQuery changes
+  }, [searchQuery, searchRadius]); // Re-run when searchQuery changes
 
   const hasActiveFilters = filters.artTypes.length > 0 || filters.openToNew || searchQuery;
+
+  const radiusLabel = `${searchRadius} mile radius`;
 
   // Filter artists based on criteria
   const filteredArtists = (artists.length ? artists : []).filter(artist => {
@@ -117,13 +124,13 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
 
   return (
     <div className="bg-[var(--bg)] text-[var(--text)]">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl mb-2">Find Artists</h1>
-        <p className="text-[var(--text-muted)]">
-          Discover {venueCity ? `${venueCity} ` : ''}artists and invite them to display at your venue
-        </p>
-      </div>
+      <PageHeader
+        breadcrumb="Discover / Find Artists"
+        title="Find artists"
+        subtitle={`Discover ${venueCity ? `${venueCity} ` : ''}artists and invite them to display at your venue.`}
+        primaryAction={onNavigate ? { label: 'Improve venue profile', onClick: () => onNavigate('venue-profile') } : undefined}
+        className="mb-6"
+      />
 
       {/* Search & Filters */}
       <div className="bg-[var(--surface-1)] rounded-xl p-4 sm:p-6 border border-[var(--border)] mb-6">
@@ -217,7 +224,7 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
       {/* Results Count */}
       <div className="flex items-center justify-between mb-6">
         <p className="text-sm text-[var(--text-muted)]">
-          <span className="text-[var(--text)]">{filteredArtists.length}</span> artists found
+          Showing artists in {venueCity || 'your area'} · {radiusLabel} · {filteredArtists.length} results
         </p>
       </div>
 
@@ -321,25 +328,16 @@ export function FindArtists({ onInviteArtist, onViewProfile }: FindArtistsProps)
           ))}
         </div>
       ) : (
-        <div className="text-center py-16 bg-[var(--surface-1)] rounded-xl border border-[var(--border)]">
-          <div className="w-16 h-16 bg-[var(--surface-2)] rounded-full flex items-center justify-center mx-auto mb-4">
-            <Users className="w-8 h-8 text-[var(--text-muted)]" />
-          </div>
-          <h3 className="text-xl mb-2">No artists found</h3>
-          <p className="text-[var(--text-muted)] mb-6">
-            {hasActiveFilters
-              ? 'Try adjusting your filters to see more results'
-              : 'Check back soon as new artists join the platform'}
-          </p>
-          {hasActiveFilters && (
-            <button
-              onClick={clearFilters}
-              className="px-6 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-opacity"
-            >
-              Clear Filters
-            </button>
-          )}
-        </div>
+        <EmptyState
+          icon={<Users className="w-8 h-8" />}
+          title="No artists found"
+          description={hasActiveFilters ? 'Try adjusting filters or expanding your search radius to see more artists.' : 'Check back soon as new artists join the platform.'}
+          primaryAction={hasActiveFilters
+            ? { label: 'Adjust filters', onClick: () => setShowFilters(true) }
+            : { label: 'Expand search radius', onClick: () => setSearchRadius((r) => r + 10) }
+          }
+          secondaryAction={onNavigate ? { label: 'Improve venue profile', onClick: () => onNavigate('venue-profile') } : undefined}
+        />
       )}
     </div>
   );

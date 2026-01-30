@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Store, Mail, Phone, MapPin, Clock, DollarSign, Edit, Instagram } from 'lucide-react';
+import { Store, Mail, Phone, MapPin, Clock, DollarSign, Instagram } from 'lucide-react';
 import { VenueProfileEdit, type VenueProfileData } from './VenueProfileEdit';
 import { apiPost } from '../../lib/api';
 import { supabase } from '../../lib/supabase';
+import { PageHeader } from '../PageHeader';
+import { formatCurrency } from '../../utils/format';
 
 interface VenueProfileProps {
   onNavigate: (page: string) => void;
@@ -194,10 +196,19 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
 
   return (
     <div className="bg-[var(--bg)] text-[var(--text)]">
-      <div className="mb-8">
-        <h1 className="text-3xl mb-2">Venue Profile</h1>
-        <p className="text-[var(--text-muted)]">Manage your venue information and settings</p>
-      </div>
+      <PageHeader
+        breadcrumb="Manage / Venue Profile"
+        title="Venue profile"
+        subtitle="Manage your venue information and settings"
+        primaryAction={{
+          label: 'Edit profile',
+          onClick: () => {
+            setSaveError(null);
+            setIsEditing(true);
+          },
+        }}
+        className="mb-8"
+      />
 
       {/* Bio Encouragement Banner */}
       <div className="mb-6 p-4 bg-gradient-to-r from-[var(--surface-2)] to-[var(--surface-1)] border border-[var(--border)] rounded-xl">
@@ -208,14 +219,14 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
             <p className="text-sm text-[var(--text-muted)] mb-3">
               A compelling venue bio helps talented artists discover and choose your space. Share what makes your venue special, your support for local artists, and your unique atmosphere.
             </p>
-            <button 
+            <button
               onClick={() => {
                 setSaveError(null);
                 setIsEditing(true);
               }}
-              className="text-sm px-3 py-1 bg-[var(--blue)] hover:bg-[var(--blue-hover)] text-[var(--on-blue)] rounded-lg transition-colors"
+              className="text-sm text-[var(--blue)] hover:underline"
             >
-              Edit Profile
+              Update your bio
             </button>
           </div>
         </div>
@@ -253,16 +264,6 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
                   </span>
                 </div>
               </div>
-              <button
-                onClick={() => {
-                  setSaveError(null);
-                  setIsEditing(true);
-                }}
-                className="flex items-center gap-2 px-4 py-2 bg-[var(--surface-2)] text-[var(--text)] border border-[var(--border)] rounded-lg hover:bg-[var(--surface-3)] transition-colors"
-              >
-                <Edit className="w-4 h-4" />
-                <span>Edit Profile</span>
-              </button>
             </div>
 
             {saveError && (
@@ -380,7 +381,7 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
             <div className="space-y-4">
               <div>
                 <p className="text-sm text-[var(--text-muted)] mb-1">Total Commission (15%)</p>
-                <p className="text-2xl text-[var(--text)]">${profile.totalEarnings.toFixed(2)}</p>
+                <p className="text-2xl text-[var(--text)]">{formatCurrency(profile.totalEarnings)}</p>
               </div>
               
               <div className="pt-4 border-t border-[var(--border)]">
@@ -391,7 +392,7 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
                   </div>
                   <div className="p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)]">
                     <p className="text-2xl text-[var(--green)]">{profile.activeDisplays}</p>
-                    <p className="text-xs text-[var(--text-muted)] mt-1">Active</p>
+                    <p className="text-xs text-[var(--text-muted)] mt-1">Active displays</p>
                   </div>
                 </div>
               </div>

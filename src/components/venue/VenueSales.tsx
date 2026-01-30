@@ -1,17 +1,29 @@
 import { DollarSign, TrendingUp, Package } from 'lucide-react';
 import { mockSales } from '../../data/mockData';
+import { PageHeader } from '../PageHeader';
+import { EmptyState } from '../EmptyState';
+import { formatCurrency, safeDivide } from '../../utils/format';
 
-export function VenueSales() {
+interface VenueSalesProps {
+  onNavigate?: (page: string) => void;
+}
+
+export function VenueSales({ onNavigate }: VenueSalesProps) {
   const totalEarnings = mockSales.reduce((sum, sale) => sum + sale.venueEarnings, 0);
   const totalSales = mockSales.length;
-  const averageCommission = totalEarnings / totalSales;
+  const averageCommission = safeDivide(totalEarnings, totalSales);
+  const averageCommissionDisplay = averageCommission === null ? formatCurrency(0) : formatCurrency(averageCommission);
 
   return (
     <div className="bg-[var(--bg)] text-[var(--text)]">
-      <div className="mb-8">
-        <h1 className="text-3xl mb-2">Sales & Earnings</h1>
-        <p className="text-[var(--text-muted)]">Track artwork sales and your commission (15% of sales)</p>
-      </div>
+      <PageHeader
+        breadcrumb="Performance / Sales & Earnings"
+        title="Sales & earnings"
+        subtitle="Track artwork sales and your 15% commission share"
+        primaryAction={onNavigate ? { label: 'Set up payouts', onClick: () => onNavigate('venue-dashboard') } : undefined}
+        secondaryAction={onNavigate ? { label: 'Add wall space', onClick: () => onNavigate('venue-walls') } : undefined}
+        className="mb-8"
+      />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <div className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)]">
@@ -21,7 +33,7 @@ export function VenueSales() {
             </div>
             <div>
               <div className="text-sm text-[var(--text-muted)]">Total Earnings</div>
-              <div className="text-2xl">${totalEarnings.toFixed(2)}</div>
+              <div className="text-2xl">{formatCurrency(totalEarnings)}</div>
             </div>
           </div>
           <div className="text-xs text-[var(--text-muted)]">15% commission</div>
@@ -47,10 +59,10 @@ export function VenueSales() {
             </div>
             <div>
               <div className="text-sm text-[var(--text-muted)]">Avg. Commission</div>
-              <div className="text-2xl">${averageCommission.toFixed(0)}</div>
+              <div className="text-2xl">{averageCommissionDisplay}</div>
             </div>
           </div>
-          <div className="text-xs text-[var(--text-muted)]">Per sale</div>
+          <div className="text-xs text-[var(--text-muted)]">{averageCommission === null ? 'No sales yet' : 'Per sale'}</div>
         </div>
       </div>
 
@@ -86,10 +98,10 @@ export function VenueSales() {
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm text-[var(--text-muted)]">{sale.artistName}</td>
-                  <td className="px-6 py-4 text-sm">${sale.price.toFixed(2)}</td>
+                  <td className="px-6 py-4 text-sm">{formatCurrency(sale.price)}</td>
                   <td className="px-6 py-4">
                     <div className="text-sm">
-                      <span className="text-[var(--green)]">${sale.venueEarnings.toFixed(2)}</span>
+                      <span className="text-[var(--green)]">{formatCurrency(sale.venueEarnings)}</span>
                       <span className="text-xs text-[var(--text-muted)] ml-1">(15%)</span>
                     </div>
                   </td>
@@ -107,13 +119,14 @@ export function VenueSales() {
         </div>
 
         {mockSales.length === 0 && (
-          <div className="text-center py-16">
-            <div className="w-16 h-16 bg-[var(--surface-3)] rounded-full flex items-center justify-center mx-auto mb-4">
-              <DollarSign className="w-8 h-8 text-[var(--text-muted)]" />
-            </div>
-            <h3 className="text-xl mb-2">No sales yet</h3>
-            <p className="text-[var(--text-muted)]">Sales will appear here once artwork is purchased</p>
-          </div>
+          <EmptyState
+            icon={<DollarSign className="w-8 h-8" />}
+            title="No sales yet"
+            description="Add a wall space and invite artists so sales can appear here."
+            primaryAction={{ label: 'Add a wall space', onClick: () => onNavigate?.('venue-walls') }}
+            secondaryAction={{ label: 'Find artists', onClick: () => onNavigate?.('venue-find-artists') }}
+            className="border-t border-[var(--border)]"
+          />
         )}
       </div>
 

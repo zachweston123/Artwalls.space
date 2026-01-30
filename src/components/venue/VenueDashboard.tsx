@@ -3,13 +3,18 @@ import { useState, useEffect } from 'react';
 import { apiGet } from '../../lib/api';
 import type { User } from '../../App';
 import { VenuePayoutsCard } from './VenuePayoutsCard';
+import { PageHeader } from '../PageHeader';
+import { formatCurrency, formatRatioOrCount } from '../../utils/format';
+import { EmptyState } from '../EmptyState';
+import { VenueSetupChecklist } from '../VenueSetupChecklist';
 
 interface VenueDashboardProps {
   onNavigate: (page: string) => void;
   user?: User;
+  hasAcceptedAgreement?: boolean | null;
 }
 
-export function VenueDashboard({ onNavigate, user }: VenueDashboardProps) {
+export function VenueDashboard({ onNavigate, user, hasAcceptedAgreement }: VenueDashboardProps) {
   const [stats, setStats] = useState<{
     walls: { total: number; occupied: number; available: number };
     applications: { pending: number };
@@ -44,13 +49,16 @@ export function VenueDashboard({ onNavigate, user }: VenueDashboardProps) {
 
   const totalWalls = stats?.walls?.total ?? 0;
   const availableWalls = stats?.walls?.available ?? 0;
+  const occupiedWalls = Math.max(0, totalWalls - availableWalls);
   const pendingApplications = stats?.applications?.pending ?? 0;
   const venueEarnings = stats?.sales?.totalEarnings ?? 0;
+
+  const wallRatioLabel = formatRatioOrCount(occupiedWalls, totalWalls, { zeroLabel: '0 wall spaces' });
 
   const venueStats = [
     {
       label: 'Wall Spaces',
-      value: `${totalWalls - availableWalls}/${totalWalls}`,
+      value: wallRatioLabel,
       subtext: 'Currently occupied',
       icon: Frame,
       color: 'green',
@@ -65,17 +73,17 @@ export function VenueDashboard({ onNavigate, user }: VenueDashboardProps) {
       action: () => onNavigate('venue-applications'),
     },
     {
-      label: 'Active Artists',
-      value: totalWalls - availableWalls,
-      subtext: 'Currently displaying',
+      label: 'Active displays',
+      value: occupiedWalls,
+      subtext: 'Art currently on your walls',
       icon: Users,
       color: 'green',
       action: () => onNavigate('venue-current'),
     },
     {
       label: 'Total Earnings',
-      value: `$${venueEarnings.toFixed(0)}`,
-      subtext: '15% commission',
+      value: formatCurrency(venueEarnings),
+      subtext: '15% commission share',
       icon: DollarSign,
       color: 'green',
       action: () => onNavigate('venue-sales'),
@@ -84,10 +92,20 @@ export function VenueDashboard({ onNavigate, user }: VenueDashboardProps) {
 
   return (
     <div className="bg-[var(--bg)] text-[var(--text)]">
-      <div className="mb-8">
-        <h1 className="text-3xl mb-2 text-[var(--text)]">Welcome back</h1>
-        <p className="text-[var(--text-muted)]">Manage your wall spaces and artist applications</p>
-      </div>
+      <PageHeader
+        breadcrumb="Manage / Dashboard"
+        title="Venue dashboard"
+        subtitle="Track wall spaces, applications, and payouts"
+        primaryAction={{ label: 'Add wall space', onClick: () => onNavigate('venue-walls') }}
+        secondaryAction={{ label: 'Find artists', onClick: () => onNavigate('venue-find-artists') }}
+        className="mb-6"
+      />
+
+      {user && (
+        <div className="mb-8">
+          <VenueSetupChecklist user={user} stats={stats || undefined} onNavigate={onNavigate} hasAcceptedAgreement={hasAcceptedAgreement} />
+        </div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
         {venueStats.map((stat) => {
@@ -114,14 +132,14 @@ export function VenueDashboard({ onNavigate, user }: VenueDashboardProps) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)]">
           <h2 className="text-xl mb-4 text-[var(--text)]">Recent Activity</h2>
-          <div className="space-y-4">
-            <div className="flex items-start gap-3 pb-4 border-b border-[var(--border)]">
-              <div className="w-2 h-2 bg-[var(--green)] rounded-full mt-2"></div>
-              <div className="flex-1">
-                <p className="text-sm text-[var(--text)]">No recent activity</p>
-              </div>
-            </div>
-          </div>
+          <EmptyState
+            title="No recent activity yet"
+            description="Once you review applications or add wall spaces, activity will show up here."
+            icon={<Clock className="w-6 h-6" />}
+            primaryAction={{ label: 'Complete profile', onClick: () => onNavigate('venue-profile') }}
+            secondaryAction={{ label: 'Add wall space', onClick: () => onNavigate('venue-walls') }}
+            className="bg-[var(--surface-2)]"
+          />
         </div>
 
         <div className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)]">
@@ -131,7 +149,7 @@ export function VenueDashboard({ onNavigate, user }: VenueDashboardProps) {
               onClick={() => onNavigate('venue-applications')}
               className="w-full px-4 py-3 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-colors flex items-center justify-between"
             >
-              <span>Review Applications</span>
+              <span>Review applications</span>
               {pendingApplications > 0 && (
                 <span className="px-2 py-1 bg-[var(--surface-1)] text-[var(--green)] rounded-full text-xs">
                   {pendingApplications} new
@@ -140,22 +158,25 @@ export function VenueDashboard({ onNavigate, user }: VenueDashboardProps) {
             </button>
             <button
               onClick={() => onNavigate('venue-walls')}
-              className="w-full px-4 py-3 bg-[var(--green-muted)] text-[var(--green)] rounded-lg hover:opacity-90 transition-colors"
+              className="w-full px-4 py-3 bg-[var(--surface-2)] text-[var(--text)] rounded-lg hover:bg-[var(--surface-3)] transition-colors"
             >
-              Manage Wall Spaces
+              Manage wall spaces
+            </button>
+            <button
+              onClick={() => onNavigate('venue-find-artists')}
+              className="w-full px-4 py-3 bg-[var(--surface-2)] text-[var(--text)] rounded-lg hover:bg-[var(--surface-3)] transition-colors"
+            >
+              Invite artists
             </button>
             <button
               onClick={() => onNavigate('venue-sales')}
               className="w-full px-4 py-3 bg-[var(--surface-2)] text-[var(--text)] rounded-lg hover:bg-[var(--surface-3)] transition-colors"
             >
-              View Sales Report
+              Set up payouts
             </button>
-            <button
-              onClick={() => onNavigate('why-artwalls-venue')}
-              className="w-full px-4 py-3 bg-[var(--surface-2)] text-[var(--text)] rounded-lg hover:bg-[var(--surface-3)] transition-colors"
-            >
-              Why Artwalls?
-            </button>
+          </div>
+          <div className="mt-3 text-xs text-[var(--text-muted)]">
+            Want the story? <button onClick={() => onNavigate('why-artwalls-venue')} className="text-[var(--green)] hover:underline">Why Artwalls</button>
           </div>
         </div>
       </div>

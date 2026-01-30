@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Store } from 'lucide-react';
 import { SEO } from '../components/SEO';
 import type { User, UserRole } from '../App';
+import { PageHeader } from '../components/PageHeader';
 
 interface VenuesLandingPageProps {
   onNavigate?: (page: string) => void;
@@ -107,46 +108,22 @@ export function VenuesLandingPage({ onNavigate, onLogin, viewerRole = null }: Ve
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_.8fr] gap-8 items-center">
             <div>
-              <h1 className="text-4xl sm:text-5xl font-bold mb-4 text-[var(--text)]">
-                Make your space look better. Support local artists. Keep it organized.
-              </h1>
-              <p className="text-lg sm:text-xl text-[var(--text-muted)] mb-8">
-                Artwalls makes it easy to host rotating local art without turning your business into a gallery.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                {!isSignedIn && (
-                  <button
-                    onClick={() => document.getElementById('venue-login')?.scrollIntoView({ behavior: 'smooth' })}
-                    className="px-6 py-3 rounded-lg bg-[var(--green)] text-[var(--accent-contrast)] font-semibold hover:brightness-95 transition"
-                  >
-                    Log In
-                  </button>
-                )}
-                {!isSignedIn && (
-                  <button
-                    onClick={() => onNavigate?.('login')}
-                    className="px-6 py-3 rounded-lg border border-[var(--border)] text-[var(--text)] hover:bg-[var(--surface-2)] transition"
-                  >
-                    Create Venue Account
-                  </button>
-                )}
-                {isVenueViewer && (
-                  <>
-                    <button
-                      onClick={() => onNavigate?.('venue-dashboard')}
-                      className="px-6 py-3 rounded-lg bg-[var(--green)] text-[var(--accent-contrast)] font-semibold hover:brightness-95 transition"
-                    >
-                      Go to Dashboard
-                    </button>
-                    <button
-                      onClick={() => onNavigate?.('venue-find-artists')}
-                      className="px-6 py-3 rounded-lg border border-[var(--border)] text-[var(--text)] hover:bg-[var(--surface-2)] transition"
-                    >
-                      Find Artists
-                    </button>
-                  </>
-                )}
-              </div>
+              <PageHeader
+                breadcrumb="Manage / Venue tools"
+                title="Make your space look better"
+                subtitle="Artwalls makes it easy to host rotating local art without turning your business into a gallery."
+                primaryAction={
+                  isVenueViewer
+                    ? { label: 'Go to Dashboard', onClick: () => onNavigate?.('venue-dashboard') }
+                    : { label: 'Log in', onClick: () => document.getElementById('venue-login')?.scrollIntoView({ behavior: 'smooth' }) }
+                }
+                secondaryAction={
+                  isVenueViewer
+                    ? { label: 'Find artists', onClick: () => onNavigate?.('venue-find-artists') }
+                    : { label: 'Create venue account', onClick: () => onNavigate?.('login') }
+                }
+                className="mb-6"
+              />
             </div>
             {!isSignedIn && (
               <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-2xl p-6 sm:p-8">
@@ -238,7 +215,7 @@ export function VenuesLandingPage({ onNavigate, onLogin, viewerRole = null }: Ve
                     <Store className="w-5 h-5 text-[var(--green)]" />
                   </div>
                   <div>
-                    <p className="text-sm text-[var(--text-muted)]">You’re signed in.</p>
+                    <p className="text-sm text-[var(--text-muted)]">You're signed in.</p>
                     <h2 className="text-xl font-semibold text-[var(--text)]">Venue tools</h2>
                   </div>
                 </div>
@@ -246,24 +223,27 @@ export function VenuesLandingPage({ onNavigate, onLogin, viewerRole = null }: Ve
                   Review artists, manage your wall, and keep displays fresh with a single workflow.
                 </p>
                 <div className="grid gap-3 text-sm">
-                  <button
-                    onClick={() => onNavigate?.('venue-dashboard')}
-                    className="w-full px-4 py-3 rounded-lg border border-[var(--border)] hover:bg-[var(--surface-2)] text-[var(--text)] transition"
-                  >
-                    Go to Dashboard
-                  </button>
-                  <button
-                    onClick={() => onNavigate?.('venue-find-artists')}
-                    className="w-full px-4 py-3 rounded-lg border border-[var(--border)] hover:bg-[var(--surface-2)] text-[var(--text)] transition"
-                  >
-                    Browse Artists
-                  </button>
-                  <button
-                    onClick={() => onNavigate?.('venue-current')}
-                    className="w-full px-4 py-3 rounded-lg border border-[var(--border)] hover:bg-[var(--surface-2)] text-[var(--text)] transition"
-                  >
-                    View Current Art
-                  </button>
+                  <div className="flex items-center justify-between p-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]">
+                    <div>
+                      <p className="font-semibold text-[var(--text)]">Manage wall spaces</p>
+                      <p className="text-xs text-[var(--text-muted)]">Add dimensions, photos, and availability.</p>
+                    </div>
+                    <button onClick={() => onNavigate?.('venue-walls')} className="text-[var(--green)] hover:underline">Open</button>
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]">
+                    <div>
+                      <p className="font-semibold text-[var(--text)]">Browse artists</p>
+                      <p className="text-xs text-[var(--text-muted)]">Invite or approve artists for your walls.</p>
+                    </div>
+                    <button onClick={() => onNavigate?.('venue-find-artists')} className="text-[var(--green)] hover:underline">Open</button>
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]">
+                    <div>
+                      <p className="font-semibold text-[var(--text)]">Review current art</p>
+                      <p className="text-xs text-[var(--text-muted)]">See what’s on display and upcoming rotations.</p>
+                    </div>
+                    <button onClick={() => onNavigate?.('venue-current')} className="text-[var(--green)] hover:underline">Open</button>
+                  </div>
                 </div>
               </div>
             )}

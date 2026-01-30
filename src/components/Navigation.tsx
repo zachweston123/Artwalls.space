@@ -165,7 +165,6 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
       ]
     : [
         { id: 'venue-find-artists', label: 'Find Artists' },
-        { id: 'find-art', label: 'Find Art' },
       ];
 
   const performanceLinks = isArtist
