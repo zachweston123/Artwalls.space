@@ -288,9 +288,9 @@ export default {
       return json(data);
     }
 
-    async function upsertVenue(venue: { id: string; email?: string | null; name?: string | null; type?: string | null; phoneNumber?: string | null; city?: string | null; stripeAccountId?: string | null; defaultVenueFeeBps?: number | null; labels?: any; suspended?: boolean | null; }): Promise<Response> {
+    async function upsertVenue(venue: { id: string; email?: string | null; name?: string | null; type?: string | null; phoneNumber?: string | null; city?: string | null; stripeAccountId?: string | null; defaultVenueFeeBps?: number | null; labels?: any; suspended?: boolean | null; bio?: string | null; coverPhotoUrl?: string | null; }): Promise<Response> {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured - check SUPABASE_SERVICE_ROLE_KEY secret' }, { status: 500 });
-      const payload = {
+      const payload: Record<string, any> = {
         id: venue.id,
         email: venue.email ?? null,
         name: venue.name ?? null,
@@ -303,6 +303,14 @@ export default {
         suspended: venue.suspended ?? null,
         updated_at: new Date().toISOString(),
       };
+      // Only include bio if provided (avoid overwriting with null)
+      if (venue.bio !== undefined && venue.bio !== null) {
+        payload.bio = venue.bio;
+      }
+      // Only include cover_photo_url if provided
+      if (venue.coverPhotoUrl !== undefined && venue.coverPhotoUrl !== null) {
+        payload.cover_photo_url = venue.coverPhotoUrl;
+      }
       const { data, error } = await supabaseAdmin.from('venues').upsert(payload, { onConflict: 'id' }).select('*').single();
       if (error) {
         console.error('[upsertVenue] Error:', error.message, error.code, (error as any).hint);
@@ -1357,6 +1365,10 @@ export default {
         name: payload?.name || null,
         type: payload?.type || null,
         phoneNumber: payload?.phoneNumber || null,
+        city: payload?.city || null,
+        bio: payload?.bio || null,
+        labels: payload?.labels || null,
+        coverPhotoUrl: payload?.coverPhoto || payload?.coverPhotoUrl || null,
         defaultVenueFeeBps: typeof payload?.defaultVenueFeeBps === 'number' ? payload.defaultVenueFeeBps : 1000,
       });
       return resp;

@@ -12,8 +12,23 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  // Mock data - in production this would come from user state
-  const [profile, setProfile] = useState({
+  // Profile data - loaded from database on mount
+  const [profile, setProfile] = useState<{
+    name: string;
+    type: string;
+    email: string;
+    phoneNumber: string;
+    address: string;
+    instagram: string;
+    coverPhoto: string;
+    city?: string;
+    bio: string;
+    labels: string[];
+    totalEarnings: number;
+    wallSpaces: number;
+    activeDisplays: number;
+    installWindow: { day: string; time: string };
+  }>({
     name: '',
     type: '',
     email: '',
@@ -21,6 +36,9 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
     address: '',
     instagram: '',
     coverPhoto: '',
+    city: '',
+    bio: '',
+    labels: [],
     totalEarnings: 0,
     wallSpaces: 0,
     activeDisplays: 0,
@@ -45,11 +63,11 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
         phoneNumber: (user.user_metadata?.phone as string | undefined) || prev.phoneNumber,
       }));
 
-      // Load cover photo and city from database
+      // Load cover photo, city, bio, and labels from database
       try {
         const { data: venueData } = await supabase
           .from('venues')
-          .select('cover_photo_url, city')
+          .select('cover_photo_url, city, bio, labels')
           .eq('id', user.id)
           .single();
         
@@ -58,6 +76,8 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
             ...prev,
             coverPhoto: venueData.cover_photo_url || prev.coverPhoto,
             city: venueData.city || prev.city,
+            bio: venueData.bio || prev.bio,
+            labels: venueData.labels || prev.labels,
           }));
         }
       } catch (err) {
@@ -103,6 +123,9 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
       }
       if (data.city) {
         updateData.city = data.city;
+      }
+      if (data.bio !== undefined) {
+        updateData.bio = data.bio;
       }
       
       if (Object.keys(updateData).length > 0) {
@@ -376,7 +399,16 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
 
       {isEditing && (
         <VenueProfileEdit
-          initialData={{ name: profile.name, type: profile.type, email: profile.email, phoneNumber: profile.phoneNumber, city: profile.city, coverPhoto: profile.coverPhoto }}
+          initialData={{ 
+            name: profile.name, 
+            type: profile.type, 
+            email: profile.email, 
+            phoneNumber: profile.phoneNumber, 
+            city: profile.city, 
+            coverPhoto: profile.coverPhoto,
+            bio: profile.bio,
+            labels: profile.labels,
+          }}
           onSave={handleSave}
           onCancel={() => setIsEditing(false)}
         />
