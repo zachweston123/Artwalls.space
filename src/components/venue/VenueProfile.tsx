@@ -103,13 +103,15 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
           email: data.email,
           city: data.city,
           bio: data.bio,
+          coverPhoto: data.coverPhoto,
         });
       } catch (apiErr) {
         console.warn('API update failed, falling back to direct database update:', apiErr);
       }
 
-      // Save fields to database directly (fallback + redundancy)
+      // Save fields to database directly using upsert (creates row if missing)
       const updateData: any = {
+        id: userId, // Required for upsert
         name: data.name,
         type: data.type,
         email: data.email,
@@ -129,10 +131,14 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
       }
       
       if (Object.keys(updateData).length > 0) {
-        await supabase
+        const { error: updateError } = await supabase
           .from('venues')
-          .update(updateData)
-          .eq('id', userId);
+          .upsert(updateData, { onConflict: 'id' });
+        
+        if (updateError) {
+          console.error('Direct database update failed:', updateError);
+          throw new Error(updateError.message || 'Failed to save to database');
+        }
       }
 
       // Optional: also backfill auth metadata so refreshes keep the same display values.
@@ -146,6 +152,7 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
         email: data.email,
       });
 
+      // Update local state with all saved data
       setProfile((prev) => ({
         ...prev,
         name: data.name,
@@ -153,6 +160,9 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
         email: data.email || prev.email,
         phoneNumber: data.phoneNumber || prev.phoneNumber,
         city: data.city || prev.city,
+        bio: data.bio || prev.bio,
+        labels: data.labels || prev.labels,
+        coverPhoto: data.coverPhoto || prev.coverPhoto,
         address: prev.address, // address remains; city stored separately
       }));
       setIsEditing(false);
