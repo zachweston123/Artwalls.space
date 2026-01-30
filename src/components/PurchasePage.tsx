@@ -43,19 +43,20 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
   // After success/cancel, refresh artwork and retrieve receipt
   const normalizeArtwork = (raw: any): Artwork => {
     const price = raw?.price ?? (typeof raw?.price_cents === 'number' ? raw.price_cents / 100 : 0);
+    const imageUrl = raw?.imageUrl || raw?.image_url || raw?.primary_image || raw?.photo_url || undefined;
     return {
       id: raw?.id,
-      title: raw?.title || 'Artwork',
+      title: raw?.title || raw?.name || 'Artwork',
       description: raw?.description || undefined,
       price: Number(price || 0),
       currency: raw?.currency || 'usd',
-      imageUrl: raw?.imageUrl || raw?.image_url || undefined,
+      imageUrl,
       status: raw?.status || 'available',
-      artistName: raw?.artistName || raw?.artist_name || undefined,
+      artistName: raw?.artistName || raw?.artist_name || raw?.artist || undefined,
       artistId: raw?.artistId || raw?.artist_id || undefined,
       venueId: raw?.venueId || raw?.venue_id || undefined,
       venueName: raw?.venueName || raw?.venue_name || undefined,
-      checkoutUrl: raw?.checkoutUrl || raw?.checkout_url || undefined,
+      checkoutUrl: raw?.checkoutUrl || raw?.checkout_url || raw?.purchaseUrl || raw?.purchase_url || undefined,
     };
   };
 

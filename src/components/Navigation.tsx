@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Palette, Store, LogOut, Menu, Bell, ChevronDown, ChevronRight, Grid, BarChart, Compass, Settings as SettingsIcon, Shield, HelpCircle } from 'lucide-react';
+import { Palette, Store, LogOut, Menu, Bell, ChevronDown, Grid, BarChart, Compass, Settings as SettingsIcon, Shield, HelpCircle, BookOpen } from 'lucide-react';
 import type { User } from '../App';
 import { getMyNotifications } from '../lib/api';
 
@@ -176,13 +176,17 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
         { id: 'venue-wall-stats', label: 'Wall Stats' },
       ];
 
-  const learnLinks = [
-    ...(isArtist
-      ? [{ id: 'why-artwalls-artist', label: 'Why Artwalls (Artists)' }]
-      : [{ id: 'venues', label: 'Why Artwalls (Venues)' }]),
-    ...(isArtist ? [] : [{ id: 'venue-partner-kit', label: 'Success Guide' }]),
-    { id: 'plans-pricing', label: 'Plans & Pricing' },
-  ];
+  const learnLinks = isArtist
+    ? [
+        { id: 'why-artwalls-artist', label: 'Why Artwalls (Artists)' },
+        { id: 'artist-referrals', label: 'Referrals' },
+        { id: 'plans-pricing', label: 'Plans & Pricing' },
+      ]
+    : [
+        { id: 'venues', label: 'Why Artwalls (Venues)' },
+        { id: 'venue-partner-kit', label: 'Success Guide' },
+        { id: 'plans-pricing', label: 'Plans & Pricing' },
+      ];
 
   const homeTarget = isArtist ? 'artist-dashboard' : 'venue-dashboard';
 
@@ -266,7 +270,7 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
               {renderMenu('manage', 'Manage', manageLinks, manageActive, <Grid className="w-4 h-4" />)}
               {renderMenu('discover', 'Discover', discoverLinks, discoverActive, <Compass className="w-4 h-4" />)}
               {renderMenu('performance', 'Performance', performanceLinks, performanceActive, <BarChart className="w-4 h-4" />)}
-              {renderMenu('learn', 'Learn', learnLinks, learnActive, <ChevronRight className="w-4 h-4 rotate-90" />)}
+              {renderMenu('learn', 'Learn', learnLinks, learnActive, <BookOpen className="w-4 h-4" />)}
             </div>
           </div>
 
@@ -281,8 +285,8 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
               >
                 <Bell className="w-5 h-5" />
                 {unreadCount > 0 && (
-                  <span className="absolute top-1 right-1 min-w-[1.1rem] px-1 h-4 text-[var(--accent-contrast)] text-[10px] leading-4 rounded-full flex items-center justify-center bg-[var(--accent)]">
-                    {unreadCount}
+                  <span className="absolute -top-1 -right-1 min-w-[1.35rem] px-1.5 h-5 text-[var(--accent-contrast)] text-[11px] font-semibold leading-5 rounded-full flex items-center justify-center bg-[var(--accent)] border border-[var(--surface-1)] shadow-sm">
+                    {unreadCount > 99 ? '99+' : unreadCount}
                   </span>
                 )}
               </button>
