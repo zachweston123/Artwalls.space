@@ -194,6 +194,8 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
     }
   };
 
+  const hasCompleteBio = (profile.bio || '').trim().length >= 100;
+
   return (
     <div className="bg-[var(--bg)] text-[var(--text)]">
       <PageHeader
@@ -211,26 +213,28 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
       />
 
       {/* Bio Encouragement Banner */}
-      <div className="mb-6 p-4 bg-gradient-to-r from-[var(--surface-2)] to-[var(--surface-1)] border border-[var(--border)] rounded-xl">
-        <div className="flex items-start gap-3">
-          <div className="text-xl">✨</div>
-          <div className="flex-1">
-            <p className="font-semibold text-[var(--text)] mb-1">Tell Artists Your Story</p>
-            <p className="text-sm text-[var(--text-muted)] mb-3">
-              A compelling venue bio helps talented artists discover and choose your space. Share what makes your venue special, your support for local artists, and your unique atmosphere.
-            </p>
-            <button
-              onClick={() => {
-                setSaveError(null);
-                setIsEditing(true);
-              }}
-              className="text-sm text-[var(--blue)] hover:underline"
-            >
-              Update your bio
-            </button>
+      {!hasCompleteBio && (
+        <div className="mb-6 p-4 bg-gradient-to-r from-[var(--surface-2)] to-[var(--surface-1)] border border-[var(--border)] rounded-xl">
+          <div className="flex items-start gap-3">
+            <div className="text-xl">✨</div>
+            <div className="flex-1">
+              <p className="font-semibold text-[var(--text)] mb-1">Tell Artists Your Story</p>
+              <p className="text-sm text-[var(--text-muted)] mb-3">
+                A compelling venue bio helps talented artists discover and choose your space. Share what makes your venue special, your support for local artists, and your unique atmosphere.
+              </p>
+              <button
+                onClick={() => {
+                  setSaveError(null);
+                  setIsEditing(true);
+                }}
+                className="text-sm text-[var(--blue)] hover:underline"
+              >
+                Update your bio
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Profile Information Card */}
@@ -294,6 +298,30 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
                 <div className="flex-1">
                   <label className="block text-sm text-[var(--text-muted)] mb-1">Venue Address</label>
                   <p className="text-[var(--text)]">{profile.address}</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 p-4 bg-[var(--surface-1)] rounded-lg border border-[var(--border)]">
+                <Store className="w-5 h-5 text-[var(--text-muted)] mt-0.5" />
+                <div className="flex-1 space-y-2">
+                  <div>
+                    <label className="block text-sm text-[var(--text-muted)] mb-1">Venue description</label>
+                    <p className="text-[var(--text)] leading-relaxed">
+                      {profile.bio?.trim() ? profile.bio : 'Add a short story about your venue to help artists understand your vibe.'}
+                    </p>
+                  </div>
+                  {!!(profile.labels && profile.labels.length) && (
+                    <div className="space-y-1">
+                      <p className="text-sm text-[var(--text-muted)]">Highlights</p>
+                      <div className="flex flex-wrap gap-2">
+                        {profile.labels.map((label) => (
+                          <span key={label} className="inline-flex px-3 py-1 rounded-full text-xs bg-[var(--surface-3)] text-[var(--text)] border border-[var(--border)]">
+                            {label}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
