@@ -16,6 +16,7 @@ type Artwork = {
   artistName?: string;
   venueName?: string;
   checkoutUrl?: string;
+  otherWorks?: Artwork[];
 };
 import { apiGet, apiPost } from '../lib/api';
 
@@ -57,6 +58,7 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
       venueId: raw?.venueId || raw?.venue_id || undefined,
       venueName: raw?.venueName || raw?.venue_name || undefined,
       checkoutUrl: raw?.checkoutUrl || raw?.checkout_url || raw?.purchaseUrl || raw?.purchase_url || undefined,
+      otherWorks: Array.isArray(raw?.otherWorks) ? raw.otherWorks.map(normalizeArtwork) : undefined,
     };
   };
 
@@ -345,6 +347,41 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
             </div>
           </div>
         </div>
+
+        {artwork?.otherWorks && artwork.otherWorks.length > 0 && (
+          <div className="mt-12">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-[var(--text)]">More from this artist</h3>
+              <span className="text-sm text-[var(--text-muted)]">{artwork.otherWorks.length} pieces</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {artwork.otherWorks.map((piece) => (
+                <button
+                  key={piece.id}
+                  onClick={() => window.location.assign(`/#/purchase-${piece.id}`)}
+                  className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl overflow-hidden text-left hover:shadow-lg transition-all group"
+                >
+                  <div className="aspect-[4/3] bg-[var(--surface-3)] overflow-hidden">
+                    {piece.imageUrl ? (
+                      <img src={piece.imageUrl} alt={piece.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-[var(--text-muted)]">No image</div>
+                    )}
+                  </div>
+                  <div className="p-3 space-y-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <h4 className="font-medium truncate group-hover:text-[var(--text)]">{piece.title}</h4>
+                      <span className="text-xs px-2 py-1 rounded-full border border-[var(--border)] bg-[var(--surface-3)] text-[var(--text-muted)]">
+                        {piece.status === 'sold' ? 'Sold' : 'Available'}
+                      </span>
+                    </div>
+                    <div className="text-sm text-[var(--text-muted)]">${piece.price.toLocaleString()}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
