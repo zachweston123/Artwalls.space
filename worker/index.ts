@@ -3463,14 +3463,68 @@ export default {
       const admin = await requireAdmin(request);
       if (!admin) return json({ error: 'Admin access required' }, { status: 403 });
 
-      // Call the RPC function
-      const { data, error } = await supabaseAdmin.rpc('get_admin_dashboard_metrics');
-      if (error) {
-        console.error('[admin.user-metrics] RPC error:', error);
-        return json({ error: error.message }, { status: 500 });
+      // Try RPC first, fallback to direct queries if RPC doesn't exist
+      const { data: rpcData, error: rpcError } = await supabaseAdmin.rpc('get_admin_dashboard_metrics');
+      
+      if (!rpcError && rpcData) {
+        return json(rpcData);
       }
 
-      return json(data || {});
+      // Fallback: direct queries if RPC is not available
+      console.log('[admin.user-metrics] RPC not available, using fallback queries');
+      
+      // Count total users from auth (requires service role)
+      let totalUsers = 0;
+      try {
+        const { data: authData } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1 });
+        totalUsers = authData?.total || 0;
+      } catch (e) {
+        console.warn('[admin.user-metrics] Could not count auth users');
+      }
+
+      // Count artists
+      const { count: totalArtists } = await supabaseAdmin
+        .from('artists')
+        .select('id', { count: 'exact', head: true });
+
+      // Count by subscription tier
+      const { data: tierData } = await supabaseAdmin
+        .from('artists')
+        .select('subscription_tier');
+      
+      const artistsByTier: Record<string, number> = {};
+      for (const row of tierData || []) {
+        const tier = (row as any).subscription_tier || 'unknown';
+        artistsByTier[tier] = (artistsByTier[tier] || 0) + 1;
+      }
+
+      // Count by art type (from art_types array field)
+      const { data: typeData } = await supabaseAdmin
+        .from('artists')
+        .select('art_types');
+      
+      const artistsByType: Record<string, number> = {};
+      let unspecifiedCount = 0;
+      for (const row of typeData || []) {
+        const types = (row as any).art_types as string[] | null;
+        if (!types || types.length === 0) {
+          unspecifiedCount++;
+        } else {
+          for (const t of types) {
+            artistsByType[t] = (artistsByType[t] || 0) + 1;
+          }
+        }
+      }
+      if (unspecifiedCount > 0) {
+        artistsByType['Unspecified'] = unspecifiedCount;
+      }
+
+      return json({
+        totalUsers,
+        totalArtists: totalArtists || 0,
+        artistsByTier,
+        artistsByType,
+      });
     }
 
     // Admin: list all sales/orders

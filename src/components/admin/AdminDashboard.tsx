@@ -42,26 +42,43 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
     let mounted = true;
     (async () => {
       try {
-        const [metricsResp, userMetricsResp] = await Promise.all([
-          apiGet<{
-            totals: { artists: number; venues: number; activeDisplays: number };
-            month: { gmv: number; platformRevenue: number; gvmDelta: number };
-            monthlyArtistsDelta: number;
-            monthlyVenuesDelta: number;
-            pendingInvites: number;
-            supportQueue: number;
-            recentActivity: Array<{ type: string; timestamp: string; amount_cents: number }>;
-          }>('/api/admin/metrics'),
-          apiGet<{
+        // Fetch main metrics first (required)
+        const metricsResp = await apiGet<{
+          totals: { artists: number; venues: number; activeDisplays: number };
+          month: { gmv: number; platformRevenue: number; gvmDelta: number };
+          monthlyArtistsDelta: number;
+          monthlyVenuesDelta: number;
+          pendingInvites: number;
+          supportQueue: number;
+          recentActivity: Array<{ type: string; timestamp: string; amount_cents: number }>;
+        }>('/api/admin/metrics');
+        
+        if (mounted) {
+          setMetrics(metricsResp);
+        }
+
+        // Fetch user metrics separately (optional, don't fail if unavailable)
+        try {
+          const userMetricsResp = await apiGet<{
             totalUsers: number;
             totalArtists: number;
             artistsByTier: Record<string, number>;
             artistsByType: Record<string, number>;
-          }>('/api/admin/user-metrics'),
-        ]);
-        if (mounted) {
-          setMetrics(metricsResp);
-          setUserMetrics(userMetricsResp);
+          }>('/api/admin/user-metrics');
+          if (mounted) {
+            setUserMetrics(userMetricsResp);
+          }
+        } catch (userMetricsErr: any) {
+          console.warn('User metrics unavailable:', userMetricsErr?.message);
+          // Set default values so UI doesn't break
+          if (mounted) {
+            setUserMetrics({
+              totalUsers: metricsResp.totals.artists + metricsResp.totals.venues,
+              totalArtists: metricsResp.totals.artists,
+              artistsByTier: {},
+              artistsByType: {},
+            });
+          }
         }
       } catch (e: any) {
         if (mounted) setError(e?.message || 'Failed to load metrics');
