@@ -12,6 +12,7 @@ type WallSpace = {
   available: boolean;
   description?: string;
   photos?: string[];
+  currentArtworkId?: string;
 };
 
 export function VenueWalls() {
@@ -28,18 +29,47 @@ export function VenueWalls() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
     async function loadWalls() {
-      const { data } = await supabase.auth.getUser();
-      const user = data.user;
-      const venueId = user?.id;
-      if (!venueId) return;
       try {
+        const { data, error } = await supabase.auth.getUser();
+        if (error) {
+          console.error('Auth error:', error);
+          setAuthError('Authentication error. Please log in again.');
+          return;
+        }
+        const user = data.user;
+        console.log('VenueWalls: user:', user, 'role:', user?.user_metadata?.role);
+        if (!user) {
+          console.warn('VenueWalls: No user found');
+          setAuthError('Please log in to access this page.');
+          return;
+        }
+        if (user.user_metadata?.role !== 'venue') {
+          console.warn('VenueWalls: User is not a venue');
+          setAuthError('This page is only available to venue accounts.');
+          return;
+        }
+        const venueId = user?.id;
+        console.log('VenueWalls: venueId:', venueId);
+        if (!venueId) {
+          console.warn('VenueWalls: No venue ID found');
+          setAuthError('Unable to identify your venue account.');
+          return;
+        }
+        console.log('VenueWalls: Loading wallspaces for venue:', venueId);
         const items = await apiGet<WallSpace[]>(`/api/venues/${venueId}/wallspaces`);
-        if (isMounted) setWallSpaces(items);
-      } catch {
+        console.log('VenueWalls: API response:', items);
+        const wallSpacesArray = Array.isArray(items) ? items : [];
+        console.log('VenueWalls: Setting wallspaces:', wallSpacesArray);
+        if (isMounted) setWallSpaces(wallSpacesArray);
+        setAuthError(null);
+      } catch (err) {
+        console.error('VenueWalls: Failed to load wallspaces:', err);
+        setAuthError('Failed to load wall spaces. Please try again.');
         // Keep empty list if none yet
       }
     }
@@ -146,6 +176,11 @@ export function VenueWalls() {
 
   return (
     <div className="bg-[var(--bg)] text-[var(--text)]">
+      {authError && (
+        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+          <p className="text-red-600 text-center">{authError}</p>
+        </div>
+      )}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-3xl mb-2">My Wall Spaces</h1>
@@ -305,7 +340,7 @@ export function VenueWalls() {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {wallSpaces.map((wall) => (
+        {Array.isArray(wallSpaces) && wallSpaces.map((wall) => (
           <div
             key={wall.id}
             className="bg-[var(--surface-1)] rounded-xl overflow-hidden border border-[var(--border)] hover:shadow-lg transition-shadow"
@@ -336,7 +371,7 @@ export function VenueWalls() {
                   <div>
                     <h3 className="text-lg mb-1">{wall.name}</h3>
                     <p className="text-sm text-[var(--text-muted)]">
-                      {wall.width}" × {wall.height}"
+                      {wall.width && wall.height ? `${wall.width}" × ${wall.height}"` : 'Dimensions not set'}
                     </p>
                   </div>
                 </div>
