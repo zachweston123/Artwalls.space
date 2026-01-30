@@ -5,18 +5,22 @@ export interface Entitlements {
   activeDisplays: number | 'unlimited';
 }
 
+export const TIER_LIMITS: Record<PlanId, { artworks: number; activeDisplays: number | 'unlimited' }> = {
+  free: { artworks: 1, activeDisplays: 1 },
+  starter: { artworks: 10, activeDisplays: 4 },
+  growth: { artworks: 30, activeDisplays: 10 },
+  pro: { artworks: Number.POSITIVE_INFINITY, activeDisplays: 'unlimited' },
+};
+
 export function entitlementsFor(plan: PlanId, isActive: boolean): Entitlements {
   const effectivePlan: PlanId = isActive ? plan : 'free';
-  switch (effectivePlan) {
-    case 'free':
-      return { artworksLimit: 1, activeDisplays: 1 };
-    case 'starter':
-      return { artworksLimit: 10, activeDisplays: 4 };
-    case 'growth':
-      return { artworksLimit: 30, activeDisplays: 10 };
-    case 'pro':
-      return { artworksLimit: Number.POSITIVE_INFINITY, activeDisplays: 'unlimited' };
-    default:
-      return { artworksLimit: 1, activeDisplays: 1 };
-  }
+  const limits = TIER_LIMITS[effectivePlan] || TIER_LIMITS.free;
+  return {
+    artworksLimit: limits.artworks,
+    activeDisplays: limits.activeDisplays,
+  };
+}
+
+export function getArtworkLimit(plan: PlanId, isActive: boolean): number {
+  return entitlementsFor(plan, isActive).artworksLimit;
 }
