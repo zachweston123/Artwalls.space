@@ -35,9 +35,9 @@ export function AdminSidebar({ currentPage, onNavigate, onLogout, userName, user
   ];
 
   return (
-    <aside className="w-64 bg-[var(--surface-2)] border-r border-[var(--border)] flex flex-col">
+    <aside className="w-64 h-screen sticky top-0 bg-[var(--surface-2)] border-r border-[var(--border)] flex flex-col">
       {/* Admin Badge */}
-      <div className="p-6 border-b border-[var(--border)]">
+      <div className="p-6 border-b border-[var(--border)] flex-shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-[var(--blue)] rounded-lg flex items-center justify-center">
             <Shield className="w-5 h-5 text-[var(--on-blue)]" />
@@ -50,7 +50,7 @@ export function AdminSidebar({ currentPage, onNavigate, onLogout, userName, user
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-1">
+      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentPage === item.id;
@@ -73,7 +73,7 @@ export function AdminSidebar({ currentPage, onNavigate, onLogout, userName, user
       </nav>
 
       {/* User Info */}
-      <div className="p-4 border-t border-[var(--border)] space-y-3">
+      <div className="p-4 border-t border-[var(--border)] space-y-3 flex-shrink-0 bg-[var(--surface-2)]">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-[var(--surface-3)] border border-[var(--border)] rounded-full flex items-center justify-center">
             <span className="text-xs text-[var(--text)]">AD</span>
