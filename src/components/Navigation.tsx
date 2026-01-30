@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { Palette, Store, LogOut, Menu, Bell, ChevronDown, Grid, BarChart, Compass, Settings as SettingsIcon, Shield, HelpCircle, BookOpen } from 'lucide-react';
+import { Palette, Store, LogOut, Menu, Bell, ChevronDown, Grid, BarChart, Compass, Settings as SettingsIcon, Shield, HelpCircle, BookOpen, ChevronRight } from 'lucide-react';
 import type { User } from '../App';
-import { getMyNotifications } from '../lib/api';
+import { getMyNotifications, setNotificationReadState } from '../lib/api';
 
 interface NavigationProps {
   user: User | null;
@@ -12,10 +12,10 @@ interface NavigationProps {
   unreadCount?: number;
 }
 
-export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClick, unreadCount = 2 }: NavigationProps) {
+export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClick, unreadCount = 0 }: NavigationProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [loadingNotifications, setLoadingNotifications] = useState(false);
-  const [notifications, setNotifications] = useState<Array<{ id: string; title: string; message?: string; createdAt: string; isRead?: boolean }>>([]);
+  const [notifications, setNotifications] = useState<Array<{ id: string; type?: string; title: string; message?: string; createdAt: string; isRead?: boolean; artworkId?: string | null; orderId?: string | null }>>([]);
   const notificationRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLElement>(null);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
@@ -37,15 +37,18 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
     if (!showNotifications || !user) return;
     let mounted = true;
     setLoadingNotifications(true);
-    getMyNotifications()
+    getMyNotifications(user.id, user.role || '')
       .then(({ notifications: items }) => {
         if (!mounted) return;
         setNotifications((items || []).map((n) => ({
           id: n.id,
+          type: n.type,
           title: n.title,
           message: n.message || '',
           createdAt: n.createdAt,
           isRead: n.isRead,
+          artworkId: n.artworkId,
+          orderId: n.orderId,
         })));
       })
       .catch(() => {
@@ -58,7 +61,7 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
     return () => {
       mounted = false;
     };
-  }, [showNotifications]);
+  }, [showNotifications, user?.id, user?.role]);
 
   if (!user) {
     const learnLinks = [
@@ -198,6 +201,31 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
   const learnActive = isActiveGroup(learnLinks.map((l) => l.id));
   const userInitial = (user.name || user.email || 'U').charAt(0).toUpperCase();
 
+  const hasUnread = notifications.length
+    ? notifications.some((n) => !n.isRead)
+    : (unreadCount || 0) > 0;
+
+  const resolveNotificationTarget = (n: { type?: string; artworkId?: string | null }) => {
+    if (n.type === 'artwork_sold') return isArtist ? 'artist-sales' : 'venue-sales';
+    if (n.type === 'artwork_approved') return 'artist-artworks';
+    if (n.type === 'venue_invite' || n.type === 'venue_invite_question') return 'artist-invites';
+    return homeTarget;
+  };
+
+  const handleNotificationClick = async (n: { id: string; isRead?: boolean; type?: string; artworkId?: string | null }) => {
+    const nextState = !n.isRead;
+    setNotifications((prev) => prev.map((item) => item.id === n.id ? { ...item, isRead: nextState } : item));
+    setShowNotifications(false);
+    try {
+      await setNotificationReadState(n.id, nextState);
+    } catch (err) {
+      // If server fails, revert local state to avoid desync
+      setNotifications((prev) => prev.map((item) => item.id === n.id ? { ...item, isRead: n.isRead } : item));
+      console.error('Failed to update notification read state', err);
+    }
+    onNavigate(resolveNotificationTarget(n));
+  };
+
   const renderMenu = (menuId: string, label: string, links: { id: string; label: string }[], active: boolean, icon?: JSX.Element) => (
     <div className="relative">
       <button
@@ -284,10 +312,8 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
                 aria-expanded={showNotifications}
               >
                 <Bell className="w-5 h-5" />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[1.35rem] px-1.5 h-5 text-[var(--accent-contrast)] text-[11px] font-semibold leading-5 rounded-full flex items-center justify-center bg-[var(--accent)] border border-[var(--surface-1)] shadow-sm">
-                    {unreadCount > 99 ? '99+' : unreadCount}
-                  </span>
+                {hasUnread && (
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-[var(--accent)] border border-[var(--surface-1)]" />
                 )}
               </button>
 
@@ -310,20 +336,30 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
                     {!loadingNotifications && notifications.length === 0 && (
                       <div className="px-4 py-6 text-xs text-[var(--text-muted)]">No notifications yet.</div>
                     )}
-                    {!loadingNotifications && notifications.map((n) => (
-                      <div key={n.id} className="px-4 py-3 border-b border-[var(--border)] last:border-b-0">
-                        <div className="flex items-start justify-between gap-2">
-                          <p className="text-sm text-[var(--text)]">
-                            {n.title}
-                            {!n.isRead && <span className="ml-2 inline-block w-2 h-2 bg-[var(--blue)] rounded-full" />}
-                          </p>
-                          <span className="text-xs text-[var(--text-muted)] whitespace-nowrap">
-                            {new Date(n.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                          </span>
-                        </div>
-                        {n.message && <p className="text-xs text-[var(--text-muted)] mt-1">{n.message}</p>}
-                      </div>
-                    ))}
+                    {!loadingNotifications && notifications.map((n) => {
+                      const target = resolveNotificationTarget(n);
+                      const dateLabel = new Date(n.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                      return (
+                        <button
+                          key={n.id}
+                          onClick={() => handleNotificationClick(n)}
+                          className={`w-full text-left px-4 py-3 border-b border-[var(--border)] last:border-b-0 transition-colors ${n.isRead ? 'bg-[var(--surface-1)]' : 'bg-[var(--surface-2)]'}`}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <p className="text-sm text-[var(--text)] flex items-center gap-2">
+                              {n.title}
+                              {!n.isRead && <span className="inline-block w-2 h-2 bg-[var(--blue)] rounded-full" aria-label="Unread notification" />}
+                            </p>
+                            <span className="text-xs text-[var(--text-muted)] whitespace-nowrap">{dateLabel}</span>
+                          </div>
+                          {n.message && <p className="text-xs text-[var(--text-muted)] mt-1">{n.message}</p>}
+                          <div className="mt-2 flex items-center text-[11px] uppercase tracking-wide text-[var(--blue)]">
+                            <span>View</span>
+                            <ChevronRight className="w-3 h-3 ml-1" />
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}

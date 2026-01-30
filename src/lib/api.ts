@@ -167,12 +167,14 @@ export async function createVenueBooking(venueId: string, body: { artworkId?: st
 }
 
 // -------- Notifications --------
-export async function getMyNotifications() {
-  return apiGet<{ notifications: Array<{ id: string; type: string; title: string; message?: string; isRead: boolean; createdAt: string }> }>(`/api/notifications`);
+export async function getMyNotifications(userId: string, role: string) {
+  const qs = `?userId=${encodeURIComponent(userId)}&role=${encodeURIComponent(role)}`;
+  return apiGet<{ notifications: Array<{ id: string; type: string; title: string; message?: string; isRead?: boolean; createdAt: string; artworkId?: string | null; orderId?: string | null }> }>(`/api/notifications${qs}`);
 }
 
-export async function markNotificationRead(id: string) {
-  return apiPost<{ notification: any }>(`/api/notifications/${id}/read`, {});
+export async function setNotificationReadState(id: string, isRead: boolean) {
+  const suffix = isRead ? 'read' : 'unread';
+  return apiPost<{ notification: { id: string; isRead: boolean } }>(`/api/notifications/${id}/${suffix}`, {});
 }
 
 // -------- Venue Invites --------

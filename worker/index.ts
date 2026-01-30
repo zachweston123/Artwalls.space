@@ -1343,9 +1343,10 @@ export default {
       const id = parts[3];
       if (!id) return json({ error: 'Missing artwork id' }, { status: 400 });
       const venueName = user.user_metadata?.name || null;
+      const nowIso = new Date().toISOString();
       const { data: updated, error } = await supabaseAdmin
         .from('artworks')
-        .update({ status: 'active', venue_id: user.id, venue_name: venueName, purchase_url: `${allowOrigin}/#/purchase-${id}`, updated_at: new Date().toISOString() })
+        .update({ status: 'active', venue_id: user.id, venue_name: venueName, purchase_url: `${allowOrigin}/#/purchase-${id}`, updated_at: nowIso })
         .eq('id', id)
         .select('*')
         .maybeSingle();
@@ -1354,6 +1355,18 @@ export default {
       const purchaseUrl = `${allowOrigin}/#/purchase-${id}`;
       const qrSvg = await generateQrSvg(purchaseUrl, 300);
       await supabaseAdmin.from('artworks').update({ qr_svg: qrSvg }).eq('id', id);
+      if (updated.artist_id) {
+        await supabaseAdmin.from('notifications').insert({
+          id: crypto.randomUUID(),
+          user_id: updated.artist_id,
+          role: 'artist',
+          type: 'artwork_approved',
+          title: 'Artwork approved for display',
+          message: `${updated.title || 'Artwork'} was approved to display at ${venueName || 'a venue'}.`,
+          artwork_id: updated.id,
+          created_at: nowIso,
+        });
+      }
       return json({ ok: true, purchaseUrl, qrSvg });
     }
 
@@ -2604,6 +2617,7 @@ export default {
             id: crypto.randomUUID(),
             user_id: orderRow.artist_id,
             role: 'artist',
+            type: 'artwork_sold',
             title: 'Artwork sold',
             message: `Your artwork "${artwork?.title || 'Artwork'}" sold for $${saleAmount}.`,
             artwork_id: orderRow.artwork_id,
@@ -2616,6 +2630,7 @@ export default {
             id: crypto.randomUUID(),
             user_id: orderRow.venue_id,
             role: 'venue',
+            type: 'artwork_sold',
             title: 'Artwork sold',
             message: `Artwork "${artwork?.title || 'Artwork'}" sold for $${saleAmount}.`,
             artwork_id: orderRow.artwork_id,
@@ -2627,6 +2642,7 @@ export default {
           id: crypto.randomUUID(),
           user_id: null,
           role: 'platform',
+          type: 'artwork_sold',
           title: 'Sale completed',
           message: `"${artwork?.title || 'Artwork'}" sold. Platform fee: $${(platformFeeCents / 100).toFixed(2)}.`,
           artwork_id: orderRow.artwork_id,
@@ -3373,7 +3389,7 @@ export default {
       if (!role) return json({ error: 'Missing role' }, { status: 400 });
       let query = supabaseAdmin
         .from('notifications')
-        .select('id,title,message,artwork_id,order_id,created_at')
+        .select('id,type,title,message,artwork_id,order_id,created_at,is_read')
         .eq('role', role)
         .order('created_at', { ascending: false })
         .limit(50);
@@ -3388,13 +3404,45 @@ export default {
       if (error) return json({ error: error.message }, { status: 500 });
       const notifications = (data || []).map((n: any) => ({
         id: n.id,
+        type: n.type || 'general',
         title: n.title,
         message: n.message,
         artworkId: n.artwork_id || null,
         orderId: n.order_id || null,
         createdAt: n.created_at,
+        isRead: !!n.is_read,
       }));
       return json({ notifications });
+    }
+
+    // Notifications: mark read/unread (toggle based on endpoint suffix)
+    if (url.pathname.startsWith('/api/notifications/') && method === 'POST' && (url.pathname.endsWith('/read') || url.pathname.endsWith('/unread'))) {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const user = await getSupabaseUserFromRequest(request);
+      if (!user) return json({ error: 'Missing or invalid Authorization bearer token' }, { status: 401 });
+      const parts = url.pathname.split('/');
+      const id = parts[3];
+      if (!id) return json({ error: 'Missing notification id' }, { status: 400 });
+      const markRead = url.pathname.endsWith('/read');
+      const { data, error } = await supabaseAdmin
+        .from('notifications')
+        .update({ is_read: markRead })
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .select('id,type,title,message,artwork_id,order_id,created_at,is_read')
+        .maybeSingle();
+      if (error) return json({ error: error.message }, { status: 500 });
+      if (!data) return json({ error: 'Notification not found' }, { status: 404 });
+      return json({ notification: {
+        id: data.id,
+        type: data.type || 'general',
+        title: data.title,
+        message: data.message,
+        artworkId: data.artwork_id || null,
+        orderId: data.order_id || null,
+        createdAt: data.created_at,
+        isRead: !!data.is_read,
+      } });
     }
 
     // Latest order by artwork (for receipt display)
