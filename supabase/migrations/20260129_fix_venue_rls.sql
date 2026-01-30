@@ -16,16 +16,18 @@ DROP POLICY IF EXISTS "venues_read_own" ON public.venues;
 CREATE POLICY "venues_read_own" ON public.venues
   FOR SELECT USING (auth.uid() = id);
 
--- Also allow admins to read all venues
+-- Allow admins to read all venues (using JWT claims, not auth.users table)
 DROP POLICY IF EXISTS "venues_admin_read" ON public.venues;
 CREATE POLICY "venues_admin_read" ON public.venues
   FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM auth.users 
-      WHERE auth.users.id = auth.uid() 
-      AND (
-        auth.users.raw_user_meta_data->>'role' = 'admin'
-        OR auth.users.raw_user_meta_data->>'isAdmin' = 'true'
-      )
-    )
+    (auth.jwt() -> 'user_metadata' ->> 'role') = 'admin'
+    OR (auth.jwt() -> 'user_metadata' ->> 'isAdmin') = 'true'
+  );
+
+-- Allow admins to update all venues
+DROP POLICY IF EXISTS "venues_admin_update" ON public.venues;
+CREATE POLICY "venues_admin_update" ON public.venues
+  FOR UPDATE USING (
+    (auth.jwt() -> 'user_metadata' ->> 'role') = 'admin'
+    OR (auth.jwt() -> 'user_metadata' ->> 'isAdmin') = 'true'
   );
