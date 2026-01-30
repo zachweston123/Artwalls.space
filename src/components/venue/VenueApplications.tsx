@@ -76,58 +76,58 @@ export function VenueApplications() {
   };
 
   const pendingCount = applications.filter(a => a.status === 'pending').length;
+  const approvedCount = applications.filter(a => a.status === 'approved').length;
+  const rejectedCount = applications.filter(a => a.status === 'rejected').length;
+  const totalCount = applications.length;
+
+  const summaryStats = [
+    { label: 'Pending', value: pendingCount, icon: Clock, tone: 'bg-[var(--surface-2)] text-[var(--warning)]' },
+    { label: 'Approved', value: approvedCount, icon: Check, tone: 'bg-[var(--green-muted)] text-[var(--green)]' },
+    { label: 'Rejected', value: rejectedCount, icon: X, tone: 'bg-[var(--surface-2)] text-[var(--danger)]' },
+    { label: 'Total', value: totalCount, icon: Calendar, tone: 'bg-[var(--surface-2)] text-[var(--text-muted)]' },
+  ];
 
   return (
     <div className="bg-[var(--bg)] text-[var(--text)]">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl mb-2 text-[var(--text)]">Artist Applications</h1>
           <p className="text-[var(--text-muted)]">
             {pendingCount} pending application{pendingCount !== 1 ? 's' : ''} to review
           </p>
         </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setFilter('all')}
-            className={`px-4 py-2 rounded-lg transition-colors ${
-              filter === 'all'
-                ? 'bg-[var(--green)] text-[var(--accent-contrast)]'
-                : 'bg-[var(--surface-2)] text-[var(--text)] hover:bg-[var(--surface-3)]'
-            }`}
-          >
-            All
-          </button>
-          <button
-            onClick={() => setFilter('pending')}
-            className={`px-4 py-2 rounded-lg transition-colors ${
-              filter === 'pending'
-                ? 'bg-[var(--green)] text-[var(--accent-contrast)]'
-                : 'bg-[var(--surface-2)] text-[var(--text)] hover:bg-[var(--surface-3)]'
-            }`}
-          >
-            Pending
-          </button>
-          <button
-            onClick={() => setFilter('approved')}
-            className={`px-4 py-2 rounded-lg transition-colors ${
-              filter === 'approved'
-                ? 'bg-[var(--green)] text-[var(--accent-contrast)]'
-                : 'bg-[var(--surface-2)] text-[var(--text)] hover:bg-[var(--surface-3)]'
-            }`}
-          >
-            Approved
-          </button>
-          <button
-            onClick={() => setFilter('rejected')}
-            className={`px-4 py-2 rounded-lg transition-colors ${
-              filter === 'rejected'
-                ? 'bg-[var(--green)] text-[var(--accent-contrast)]'
-                : 'bg-[var(--surface-2)] text-[var(--text)] hover:bg-[var(--surface-3)]'
-            }`}
-          >
-            Rejected
-          </button>
+        <div className="flex flex-wrap gap-2">
+          {(['all', 'pending', 'approved', 'rejected'] as const).map((status) => (
+            <button
+              key={status}
+              onClick={() => setFilter(status)}
+              className={`px-4 py-2 rounded-lg transition-colors border ${
+                filter === status
+                  ? 'bg-[var(--green)] text-[var(--accent-contrast)] border-transparent'
+                  : 'bg-[var(--surface-2)] text-[var(--text)] border-[var(--border)] hover:bg-[var(--surface-3)]'
+              }`}
+            >
+              {status.charAt(0).toUpperCase() + status.slice(1)}
+            </button>
+          ))}
         </div>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-8">
+        {summaryStats.map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <div key={stat.label} className="flex items-center gap-3 px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--surface-1)]">
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${stat.tone}`}>
+                <Icon className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="text-xl font-semibold text-[var(--text)]">{stat.value}</div>
+                <div className="text-sm text-[var(--text-muted)]">{stat.label}</div>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       <div className="space-y-4">
@@ -137,7 +137,7 @@ export function VenueApplications() {
             className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)] hover:shadow-md transition-shadow"
           >
             <div className="flex gap-6">
-              <div className="w-48 h-48 bg-[var(--surface-2)] rounded-lg overflow-hidden flex-shrink-0">
+              <div className="w-40 h-40 bg-[var(--surface-2)] rounded-lg overflow-hidden flex-shrink-0">
                 <img
                   src={application.artworkImage}
                   alt={application.artworkTitle}

@@ -1,4 +1,4 @@
-import { X, Palette, Store, LogOut, LayoutDashboard, Image, Search, Send, FileText, Bell, User, CreditCard, Shield, Mail, ShoppingCart, Frame, Users, BookOpen, Settings } from 'lucide-react';
+import { X, Palette, Store, LogOut, LayoutDashboard, Image, Search, Send, FileText, Bell, CreditCard, Shield, Mail, ShoppingCart, Frame, Users, BookOpen, Settings, BarChart, Activity, User } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import type { User as UserType } from '../App';
 
@@ -15,37 +15,90 @@ export function MobileSidebar({ isOpen, onClose, user, onNavigate, onLogout, cur
   const isArtist = user.role === 'artist';
   const activePage = currentPage === 'artist-settings' || currentPage === 'venue-settings' ? 'settings' : currentPage;
 
-  const artistLinks = [
-    { id: 'artist-dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'artist-artworks', label: 'My Artworks', icon: Image },
-    { id: 'artist-venues', label: 'Find Venues', icon: Search },
-    { id: 'artist-applications', label: 'Applications', icon: Send },
-    { id: 'artist-invites', label: 'Invitations', icon: Mail },
-    { id: 'artist-invite-venue', label: 'Invite a Venue', icon: Mail },
-    { id: 'artist-referrals', label: 'Referrals', icon: FileText },
-    { id: 'artist-sales', label: 'Sales & Earnings', icon: ShoppingCart },
-    { id: 'artist-notifications', label: 'Notifications', icon: Bell },
-    { id: 'artist-profile', label: 'Profile', icon: User },
-    { id: 'settings', label: 'Settings', icon: Settings },
-    { id: 'plans-pricing', label: 'Plans & Pricing', icon: CreditCard },
-    { id: 'policies', label: 'Policies & Agreements', icon: Shield },
+  const artistNav = [
+    {
+      title: 'Manage',
+      links: [
+        { id: 'artist-dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { id: 'artist-profile', label: 'Profile', icon: User },
+        { id: 'artist-artworks', label: 'My Artworks', icon: Image },
+        { id: 'artist-applications', label: 'Applications', icon: Send },
+        { id: 'artist-invites', label: 'Invitations', icon: Mail },
+        { id: 'artist-invite-venue', label: 'Invite a Venue', icon: Mail },
+      ],
+    },
+    {
+      title: 'Discover',
+      links: [
+        { id: 'artist-venues', label: 'Find Venues', icon: Search },
+      ],
+    },
+    {
+      title: 'Performance',
+      links: [
+        { id: 'artist-sales', label: 'Sales & Earnings', icon: ShoppingCart },
+      ],
+    },
+    {
+      title: 'Learn',
+      links: [
+        { id: 'plans-pricing', label: 'Plans & Pricing', icon: CreditCard },
+        { id: 'artist-referrals', label: 'Referrals', icon: FileText },
+      ],
+    },
+    {
+      title: 'Support',
+      links: [
+        { id: 'artist-notifications', label: 'Notifications', icon: Bell },
+        { id: 'policies', label: 'Policies & Agreements', icon: Shield },
+        { id: 'settings', label: 'Settings', icon: Settings },
+      ],
+    },
   ];
 
-  const venueLinks = [
-    { id: 'venue-dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'venue-profile', label: 'My Venue', icon: Store },
-    { id: 'venue-walls', label: 'My Walls', icon: Frame },
-    { id: 'venue-applications', label: 'Applications', icon: Send },
-    { id: 'venue-find-artists', label: 'Find Artists', icon: Users },
-    { id: 'venue-current', label: 'Current Art', icon: Image },
-    { id: 'venue-sales', label: 'Sales', icon: ShoppingCart },
-    { id: 'venue-partner-kit', label: 'Success Guide', icon: BookOpen },
-    { id: 'venue-notifications', label: 'Notifications', icon: Bell },
-    { id: 'policies', label: 'Policies & Agreements', icon: Shield },
-    { id: 'settings', label: 'Settings', icon: Settings },
+  const venueNav = [
+    {
+      title: 'Manage',
+      links: [
+        { id: 'venue-dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { id: 'venue-profile', label: 'My Venue', icon: Store },
+        { id: 'venue-walls', label: 'My Walls', icon: Frame },
+        { id: 'venue-applications', label: 'Applications', icon: Send },
+        { id: 'venue-current', label: 'Current Art', icon: Image },
+      ],
+    },
+    {
+      title: 'Discover',
+      links: [
+        { id: 'venue-find-artists', label: 'Find Artists', icon: Users },
+        { id: 'find-art', label: 'Find Art', icon: Search },
+      ],
+    },
+    {
+      title: 'Performance',
+      links: [
+        { id: 'venue-sales', label: 'Sales', icon: ShoppingCart },
+        { id: 'venue-analytics', label: 'Analytics', icon: BarChart },
+        { id: 'venue-wall-stats', label: 'Wall Stats', icon: Activity },
+      ],
+    },
+    {
+      title: 'Learn',
+      links: [
+        { id: 'venue-partner-kit', label: 'Success Guide', icon: BookOpen },
+      ],
+    },
+    {
+      title: 'Support',
+      links: [
+        { id: 'venue-notifications', label: 'Notifications', icon: Bell },
+        { id: 'policies', label: 'Policies & Agreements', icon: Shield },
+        { id: 'settings', label: 'Settings', icon: Settings },
+      ],
+    },
   ];
 
-  const links = isArtist ? artistLinks : venueLinks;
+  const navGroups = isArtist ? artistNav : venueNav;
 
   const handleNavigate = (page: string) => {
     onNavigate(page);
@@ -100,24 +153,29 @@ export function MobileSidebar({ isOpen, onClose, user, onNavigate, onLogout, cur
           <ThemeToggle variant="button" />
         </div>
 
-                {/* Navigation Links */}
-        <nav className="p-4 pb-24">
-          <div className="space-y-1">
-            {links.map((link) => (
-              <button
-                key={link.id}
-                onClick={() => handleNavigate(link.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                  activePage === link.id
-                    ? 'bg-[var(--surface-3)] text-[var(--text)]'
-                    : 'text-[var(--text-muted)] hover:bg-[var(--surface-3)] hover:text-[var(--text)]'
-                }`}
-              >
-                <link.icon className="w-5 h-5 flex-shrink-0" />
-                <span className="font-medium">{link.label}</span>
-              </button>
-            ))}
-          </div>
+        {/* Navigation Links */}
+        <nav className="p-4 pb-24 space-y-6">
+          {navGroups.map((group) => (
+            <div key={group.title}>
+              <p className="px-2 mb-2 text-xs uppercase tracking-wide text-[var(--text-muted)]">{group.title}</p>
+              <div className="space-y-1">
+                {group.links.map((link) => (
+                  <button
+                    key={link.id}
+                    onClick={() => handleNavigate(link.id)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                      activePage === link.id
+                        ? 'bg-[var(--surface-3)] text-[var(--text)] border border-[var(--border)]'
+                        : 'text-[var(--text-muted)] hover:bg-[var(--surface-3)] hover:text-[var(--text)]'
+                    }`}
+                  >
+                    <link.icon className="w-5 h-5 flex-shrink-0" />
+                    <span className="font-medium">{link.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
         </nav>
 
         {/* Logout Button */}
