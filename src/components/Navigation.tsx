@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Palette, Store, LogOut, Menu, Bell, ChevronDown } from 'lucide-react';
+import { Palette, Store, LogOut, Menu, Bell, ChevronDown, ChevronRight, Grid, BarChart, Compass, Settings as SettingsIcon, Shield, HelpCircle } from 'lucide-react';
 import type { User } from '../App';
 import { getMyNotifications } from '../lib/api';
 
@@ -17,16 +17,16 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
   const [loadingNotifications, setLoadingNotifications] = useState(false);
   const [notifications, setNotifications] = useState<Array<{ id: string; title: string; message?: string; createdAt: string; isRead?: boolean }>>([]);
   const notificationRef = useRef<HTMLDivElement>(null);
-  const learnRef = useRef<HTMLDivElement>(null);
-  const [showLearnMenu, setShowLearnMenu] = useState(false);
+  const menuRef = useRef<HTMLElement>(null);
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (notificationRef.current && !notificationRef.current.contains(e.target as Node)) {
         setShowNotifications(false);
       }
-      if (learnRef.current && !learnRef.current.contains(e.target as Node)) {
-        setShowLearnMenu(false);
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpenMenu(null);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -69,29 +69,31 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
 
     return (
       <nav className="bg-[var(--surface-2)] border-b border-[var(--border)]">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex items-center justify-between h-16">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8">
+          <div className="flex items-center justify-between h-16 gap-4">
             <div className="flex items-center gap-2">
               <Palette className="w-6 h-6 text-[var(--blue)]" />
               <span className="text-xl tracking-tight text-[var(--text)]">Artwalls</span>
             </div>
 
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="relative" ref={learnRef}>
+            <div className="flex items-center gap-3">
+              <div className="relative" ref={menuRef}>
                 <button
-                  onClick={() => setShowLearnMenu((prev) => !prev)}
+                  onClick={() => setOpenMenu(openMenu === 'learn' ? null : 'learn')}
                   className="flex items-center gap-1 px-3 py-2 rounded-lg text-[var(--text-muted)] hover:bg-[var(--surface-3)] transition-colors"
+                  aria-expanded={openMenu === 'learn'}
+                  aria-haspopup="menu"
                 >
                   Learn
                   <ChevronDown className="w-4 h-4" />
                 </button>
-                {showLearnMenu && (
+                {openMenu === 'learn' && (
                   <div className="absolute right-0 mt-2 w-56 bg-[var(--surface-1)] border border-[var(--border)] rounded-xl shadow-xl z-50">
                     {learnLinks.map((link) => (
                       <button
                         key={link.id}
                         onClick={() => {
-                          setShowLearnMenu(false);
+                          setOpenMenu(null);
                           onNavigate(link.id);
                         }}
                         className="w-full text-left px-4 py-3 text-sm text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
@@ -114,6 +116,16 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
                 Venues
               </button>
               <button
+                onClick={() => onNavigate('plans-pricing')}
+                className={`hidden sm:inline-flex px-3 py-2 rounded-lg transition-colors ${
+                  currentPage === 'plans-pricing'
+                    ? 'bg-[var(--surface-3)] text-[var(--text)]'
+                    : 'text-[var(--text-muted)] hover:bg-[var(--surface-3)]'
+                }`}
+              >
+                Pricing
+              </button>
+              <button
                 onClick={() => onNavigate('login')}
                 className="px-4 py-2 rounded-lg bg-[var(--surface-1)] border border-[var(--border)] text-[var(--text)] hover:bg-[var(--surface-2)] transition"
               >
@@ -129,51 +141,104 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
   const isArtist = user.role === 'artist';
   const activePage = currentPage === 'artist-settings' || currentPage === 'venue-settings' ? 'settings' : currentPage;
 
-  const artistLinks = [
-    { id: 'artist-dashboard', label: 'Dashboard' },
-    { id: 'artist-profile', label: 'Profile' },
-    { id: 'artist-artworks', label: 'My Artworks' },
-    { id: 'artist-venues', label: 'Find Venues' },
-    { id: 'artist-applications', label: 'Applications' },
-    { id: 'artist-invites', label: 'Invitations' },
-    { id: 'artist-invite-venue', label: 'Invite a Venue' },
-    { id: 'artist-referrals', label: 'Referrals' },
-    { id: 'artist-sales', label: 'Sales & Earnings' },
-    { id: 'settings', label: 'Settings' },
-  ];
+  const manageLinks = isArtist
+    ? [
+        { id: 'artist-profile', label: 'Profile' },
+        { id: 'artist-artworks', label: 'My Artworks' },
+        { id: 'artist-applications', label: 'Applications' },
+        { id: 'artist-invites', label: 'Invitations' },
+        { id: 'artist-invite-venue', label: 'Invite a Venue' },
+      ]
+    : [
+        { id: 'venue-profile', label: 'My Venue' },
+        { id: 'venue-walls', label: 'My Walls' },
+        { id: 'venue-applications', label: 'Applications' },
+        { id: 'venue-current', label: 'Current Art' },
+      ];
 
-  const venueLinks = [
-    { id: 'venue-dashboard', label: 'Dashboard' },
-    { id: 'venue-profile', label: 'My Venue' },
-    { id: 'venue-walls', label: 'My Walls' },
-    { id: 'venue-applications', label: 'Applications' },
-    { id: 'venue-find-artists', label: 'Find Artists' },
-    { id: 'venue-current', label: 'Current Art' },
-    { id: 'venue-sales', label: 'Sales' },
-    { id: 'venue-partner-kit', label: 'Success Guide' },
-    { id: 'venue-notifications', label: 'Notifications' },
-    { id: 'policies', label: 'Policies & Agreements' },
-    { id: 'settings', label: 'Settings' },
-  ];
+  const discoverLinks = isArtist
+    ? [
+        { id: 'artist-venues', label: 'Find Venues' },
+      ]
+    : [
+        { id: 'venue-find-artists', label: 'Find Artists' },
+        { id: 'find-art', label: 'Find Art' },
+      ];
 
-  const links = isArtist ? artistLinks : venueLinks;
+  const performanceLinks = isArtist
+    ? [
+        { id: 'artist-sales', label: 'Sales & Earnings' },
+        { id: 'artist-analytics', label: 'Analytics' },
+      ]
+    : [
+        { id: 'venue-sales', label: 'Sales' },
+        { id: 'venue-analytics', label: 'Analytics' },
+        { id: 'venue-wall-stats', label: 'Wall Stats' },
+      ];
 
   const learnLinks = [
     ...(isArtist
       ? [{ id: 'why-artwalls-artist', label: 'Why Artwalls (Artists)' }]
       : [{ id: 'venues', label: 'Why Artwalls (Venues)' }]),
+    ...(isArtist ? [] : [{ id: 'venue-partner-kit', label: 'Success Guide' }]),
     { id: 'plans-pricing', label: 'Plans & Pricing' },
   ];
 
+  const homeTarget = isArtist ? 'artist-dashboard' : 'venue-dashboard';
+
+  const isActiveGroup = (ids: string[]) => ids.includes(activePage);
+
+  const manageActive = isActiveGroup(manageLinks.map((l) => l.id));
+  const discoverActive = isActiveGroup(discoverLinks.map((l) => l.id));
+  const performanceActive = isActiveGroup(performanceLinks.map((l) => l.id));
+  const learnActive = isActiveGroup(learnLinks.map((l) => l.id));
+  const userInitial = (user.name || user.email || 'U').charAt(0).toUpperCase();
+
+  const renderMenu = (menuId: string, label: string, links: { id: string; label: string }[], active: boolean, icon?: JSX.Element) => (
+    <div className="relative">
+      <button
+        onClick={() => setOpenMenu(openMenu === menuId ? null : menuId)}
+        className={`px-3 py-2 rounded-lg inline-flex items-center gap-2 transition-colors ${
+          active ? 'bg-[var(--surface-3)] text-[var(--text)]' : 'text-[var(--text-muted)] hover:bg-[var(--surface-3)]'
+        }`}
+        aria-expanded={openMenu === menuId}
+        aria-haspopup="menu"
+      >
+        {icon}
+        <span>{label}</span>
+        <ChevronDown className="w-4 h-4" />
+      </button>
+      {openMenu === menuId && (
+        <div className="absolute left-0 mt-2 w-56 bg-[var(--surface-1)] border border-[var(--border)] rounded-xl shadow-xl z-50">
+          {links.map((link) => (
+            <button
+              key={link.id}
+              onClick={() => {
+                setOpenMenu(null);
+                onNavigate(link.id);
+              }}
+              className={`w-full text-left px-4 py-3 text-sm transition-colors ${
+                activePage === link.id ? 'text-[var(--text)] bg-[var(--surface-3)]' : 'text-[var(--text)] hover:bg-[var(--surface-2)]'
+              }`}
+            >
+              {link.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
   return (
-    <nav className="bg-[var(--surface-2)] border-b border-[var(--border)]">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="flex items-center justify-between h-16">
-          <div className="flex items-center gap-8">
+    <nav className="bg-[var(--surface-2)] border-b border-[var(--border)]" ref={menuRef}>
+      <div className="max-w-7xl mx-auto px-6 sm:px-8">
+        <div className="flex items-center justify-between h-16 gap-4">
+          <div className="flex items-center gap-6">
             {/* Mobile Menu Button */}
             <button
               onClick={onMenuClick}
               className="lg:hidden p-2 hover:bg-[var(--surface-3)] rounded-lg transition-colors text-[var(--text)]"
+              aria-label="Open navigation menu"
             >
               <Menu className="w-6 h-6" />
             </button>
@@ -186,61 +251,37 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
               )}
               <span className="text-xl tracking-tight text-[var(--text)]">Artwalls</span>
             </div>
-            
-            {/* Desktop Navigation - Hidden on Mobile */}
-            <div className="hidden lg:flex gap-1">
-              {links.map((link) => (
-                <button
-                  key={link.id}
-                  onClick={() => onNavigate(link.id)}
-                  className={`px-4 py-2 rounded-lg transition-colors ${
-                     activePage === link.id
-                      ? 'bg-[var(--surface-3)] text-[var(--text)]'
-                      : 'text-[var(--text-muted)] hover:bg-[var(--surface-3)]'
-                  }`}
-                >
-                  {link.label}
-                </button>
-              ))}
 
-              <div className="relative" ref={learnRef}>
-                <button
-                  onClick={() => setShowLearnMenu((prev) => !prev)}
-                  className="px-4 py-2 rounded-lg transition-colors text-[var(--text-muted)] hover:bg-[var(--surface-3)] inline-flex items-center gap-1"
-                >
-                  Learn
-                  <ChevronDown className="w-4 h-4" />
-                </button>
-                {showLearnMenu && (
-                  <div className="absolute left-0 mt-2 w-56 bg-[var(--surface-1)] border border-[var(--border)] rounded-xl shadow-xl z-50">
-                    {learnLinks.map((link) => (
-                      <button
-                        key={link.id}
-                        onClick={() => {
-                          setShowLearnMenu(false);
-                          onNavigate(link.id);
-                        }}
-                        className="w-full text-left px-4 py-3 text-sm text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
-                      >
-                        {link.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+            {/* Desktop Navigation - Hidden on Mobile */}
+            <div className="hidden lg:flex items-center gap-2">
+              <button
+                onClick={() => onNavigate(homeTarget)}
+                className={`px-3 py-2 rounded-lg transition-colors ${
+                  activePage === homeTarget ? 'bg-[var(--surface-3)] text-[var(--text)]' : 'text-[var(--text-muted)] hover:bg-[var(--surface-3)]'
+                }`}
+              >
+                Dashboard
+              </button>
+
+              {renderMenu('manage', 'Manage', manageLinks, manageActive, <Grid className="w-4 h-4" />)}
+              {renderMenu('discover', 'Discover', discoverLinks, discoverActive, <Compass className="w-4 h-4" />)}
+              {renderMenu('performance', 'Performance', performanceLinks, performanceActive, <BarChart className="w-4 h-4" />)}
+              {renderMenu('learn', 'Learn', learnLinks, learnActive, <ChevronRight className="w-4 h-4 rotate-90" />)}
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             {/* Notification Bell */}
             <div className="relative" ref={notificationRef}>
               <button
                 onClick={() => setShowNotifications((prev) => !prev)}
                 className="relative p-2 text-[var(--text-muted)] hover:bg-[var(--surface-3)] rounded-lg transition-colors"
+                aria-label="Notifications"
+                aria-expanded={showNotifications}
               >
                 <Bell className="w-5 h-5" />
                 {unreadCount > 0 && (
-                  <span className="absolute top-1 right-1 w-4 h-4 text-[var(--accent-contrast)] text-xs rounded-full flex items-center justify-center bg-[var(--accent)]">
+                  <span className="absolute top-1 right-1 min-w-[1.1rem] px-1 h-4 text-[var(--accent-contrast)] text-[10px] leading-4 rounded-full flex items-center justify-center bg-[var(--accent)]">
                     {unreadCount}
                   </span>
                 )}
@@ -284,22 +325,73 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
               )}
             </div>
 
-            {/* Role Badge - Mobile Only */}
-            <div className="lg:hidden px-3 py-1 rounded-full text-xs bg-[var(--surface-3)] text-[var(--text)] border border-[var(--border)]">
-              {user.role === 'artist' ? 'Artist' : 'Venue'}
-            </div>
+            {/* User Menu */}
+            <div className="relative">
+              <button
+                onClick={() => setOpenMenu(openMenu === 'user' ? null : 'user')}
+                className="flex items-center gap-2 px-2 py-1 rounded-lg border border-[var(--border)] bg-[var(--surface-3)] text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+                aria-haspopup="menu"
+                aria-expanded={openMenu === 'user'}
+              >
+                <span className="w-8 h-8 rounded-full bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center text-sm font-semibold">
+                  {userInitial}
+                </span>
+                <div className="hidden xl:flex flex-col items-start leading-tight">
+                  <span className="text-sm text-[var(--text)]">{user.name}</span>
+                  <span className="text-xs text-[var(--text-muted)] capitalize">{user.role}</span>
+                </div>
+                <ChevronDown className="w-4 h-4 text-[var(--text-muted)]" />
+              </button>
 
-            {/* Desktop User Info */}
-            <div className="hidden lg:block text-right">
-              <div className="text-sm text-[var(--text)]">{user.name}</div>
-                <div className="text-xs text-[var(--text-muted)] capitalize">{user.role}</div>
+              {openMenu === 'user' && (
+                <div className="absolute right-0 mt-2 w-60 bg-[var(--surface-1)] border border-[var(--border)] rounded-xl shadow-xl z-50">
+                  <button
+                    onClick={() => {
+                      setOpenMenu(null);
+                      onNavigate('settings');
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+                  >
+                    <SettingsIcon className="w-4 h-4" />
+                    Settings
+                  </button>
+                  <button
+                    onClick={() => {
+                      setOpenMenu(null);
+                      onNavigate('policies');
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+                  >
+                    <Shield className="w-4 h-4" />
+                    Policies & Agreements
+                  </button>
+                  <button
+                    onClick={() => {
+                      setOpenMenu(null);
+                      try {
+                        window.location.href = 'mailto:support@artwalls.space';
+                      } catch {
+                        onNavigate('policies');
+                      }
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+                  >
+                    <HelpCircle className="w-4 h-4" />
+                    Help & Support
+                  </button>
+                  <button
+                    onClick={() => {
+                      setOpenMenu(null);
+                      onLogout();
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-[var(--danger)] hover:bg-[var(--danger)]/10 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Sign out
+                  </button>
+                </div>
+              )}
             </div>
-            <button
-              onClick={onLogout}
-              className="hidden lg:block p-2 text-[var(--text-muted)] hover:bg-[var(--surface-3)] rounded-lg transition-colors"
-            >
-              <LogOut className="w-5 h-5" />
-            </button>
           </div>
         </div>
       </div>
