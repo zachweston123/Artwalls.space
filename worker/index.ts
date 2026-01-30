@@ -1218,8 +1218,44 @@ export default {
       if (!isPublishable) {
         return json({ error: 'Missing required listing details. Please complete dimensions, medium, condition, flaws, edition info, shipping estimate, and at least 3 photos.' }, { status: 400 });
       }
+      // Create Stripe Product + Price for marketplace listing
+      const artworkId = crypto.randomUUID();
+      let stripeProductId: string | null = null;
+      let stripePriceId: string | null = null;
+      try {
+        const productResp = await stripeFetch('/v1/products', {
+          method: 'POST',
+          body: toForm({
+            name: String(payload?.title || 'Artwork'),
+            description: payload?.description || undefined,
+            'images[]': primaryImageUrl || undefined,
+            'metadata[artworkId]': artworkId,
+            'metadata[artistId]': user.id,
+          }),
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        });
+        const productJson = await productResp.json();
+        if (!productResp.ok) throw new Error(productJson?.error?.message || 'Stripe product create failed');
+        stripeProductId = productJson.id;
+
+        const priceResp = await stripeFetch('/v1/prices', {
+          method: 'POST',
+          body: toForm({
+            product: stripeProductId,
+            unit_amount: price_cents,
+            currency: String(payload?.currency || 'usd').toLowerCase(),
+          }),
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        });
+        const priceJson = await priceResp.json();
+        if (!priceResp.ok) throw new Error(priceJson?.error?.message || 'Stripe price create failed');
+        stripePriceId = priceJson.id;
+      } catch (err: any) {
+        return json({ error: err?.message || 'Unable to create Stripe product/price' }, { status: 500 });
+      }
+
       const insert = {
-        id: crypto.randomUUID(),
+        id: artworkId,
         artist_id: user.id,
         artist_name: payload?.name || user.user_metadata?.name || null,
         venue_id: null,
@@ -1247,6 +1283,8 @@ export default {
         status: 'available',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
+        stripe_product_id: stripeProductId,
+        stripe_price_id: stripePriceId,
       };
       const { data, error } = await supabaseAdmin.from('artworks').insert(insert).select('*').single();
       if (error) return json({ error: error.message }, { status: 500 });
@@ -1846,7 +1884,7 @@ export default {
 
       const { data: art, error: artErr } = await supabaseAdmin
         .from('artworks')
-        .select('id,title,price_cents,currency,status,artist_id,venue_id')
+        .select('id,title,price_cents,currency,status,artist_id,venue_id,stripe_price_id')
         .eq('id', artworkId)
         .maybeSingle();
       if (artErr) return json({ error: artErr.message }, { status: 500 });
@@ -1935,9 +1973,6 @@ export default {
         success_url,
         cancel_url,
         'payment_intent_data[transfer_group]': `artwork_${artworkId}`,
-        'line_items[0][price_data][currency]': currency,
-        'line_items[0][price_data][unit_amount]': String(listPriceCents),
-        'line_items[0][price_data][product_data][name]': art.title || 'Artwork',
         'line_items[0][quantity]': '1',
         'metadata[orderId]': orderId,
         'metadata[artworkId]': artworkId,
@@ -1977,6 +2012,14 @@ export default {
         sessionForm['line_items[1][price_data][unit_amount]'] = String(buyerFeeCents);
         sessionForm['line_items[1][price_data][product_data][name]'] = 'Service fee';
         sessionForm['line_items[1][quantity]'] = '1';
+      }
+
+      if (art.stripe_price_id) {
+        sessionForm['line_items[0][price]'] = art.stripe_price_id;
+      } else {
+        sessionForm['line_items[0][price_data][currency]'] = currency;
+        sessionForm['line_items[0][price_data][unit_amount]'] = String(listPriceCents);
+        sessionForm['line_items[0][price_data][product_data][name]'] = art.title || 'Artwork';
       }
 
       if (artist?.stripe_account_id) {
@@ -2020,7 +2063,7 @@ export default {
 
       const { data: art, error: artErr } = await supabaseAdmin
         .from('artworks')
-        .select('id,title,price_cents,currency,status,artist_id,venue_id')
+        .select('id,title,price_cents,currency,status,artist_id,venue_id,stripe_price_id')
         .eq('id', artworkId)
         .maybeSingle();
       if (artErr) return json({ error: artErr.message }, { status: 500 });
@@ -2109,9 +2152,6 @@ export default {
         success_url,
         cancel_url,
         'payment_intent_data[transfer_group]': `artwork_${artworkId}`,
-        'line_items[0][price_data][currency]': currency,
-        'line_items[0][price_data][unit_amount]': String(listPriceCents),
-        'line_items[0][price_data][product_data][name]': art.title || 'Artwork',
         'line_items[0][quantity]': '1',
         'metadata[orderId]': orderId,
         'metadata[artworkId]': artworkId,
@@ -2151,6 +2191,14 @@ export default {
         sessionForm['line_items[1][price_data][unit_amount]'] = String(buyerFeeCents);
         sessionForm['line_items[1][price_data][product_data][name]'] = 'Service fee';
         sessionForm['line_items[1][quantity]'] = '1';
+      }
+
+      if (art.stripe_price_id) {
+        sessionForm['line_items[0][price]'] = art.stripe_price_id;
+      } else {
+        sessionForm['line_items[0][price_data][currency]'] = currency;
+        sessionForm['line_items[0][price_data][unit_amount]'] = String(listPriceCents);
+        sessionForm['line_items[0][price_data][product_data][name]'] = art.title || 'Artwork';
       }
 
       if (artist?.stripe_account_id) {
