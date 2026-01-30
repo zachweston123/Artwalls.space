@@ -2257,14 +2257,14 @@ export default {
       if (!artist?.phone_number) return json({ error: 'Phone number required. Please add your phone to your profile.' }, { status: 400 });
       if (!artist?.stripe_account_id) return json({ error: 'Artist has no stripeAccountId yet. Call /create-account first.' }, { status: 400 });
 
-      const appUrl = 'https://artwalls.space';
+      const appUrl = env.PAGES_ORIGIN || 'https://artwalls.space';
       const refresh_url = `${appUrl}/#/artist-dashboard`;
       const return_url = `${appUrl}/#/artist-dashboard`;
       const body = toForm({ account: artist.stripe_account_id, refresh_url, return_url, type: 'account_onboarding' });
       const resp = await stripeFetch('/v1/account_links', { method: 'POST', body });
-      const json = await resp.json();
-      if (!resp.ok) return json(json, { status: resp.status });
-      return json({ url: json.url });
+      const respJson = await resp.json();
+      if (!resp.ok) return json(respJson, { status: resp.status });
+      return json({ url: respJson.url });
     }
 
     // Connect: Artist login link
@@ -2277,9 +2277,9 @@ export default {
       if (!artist?.stripe_account_id) return json({ error: 'Artist has no stripeAccountId yet.' }, { status: 400 });
       const body = toForm({ account: artist.stripe_account_id });
       const resp = await stripeFetch('/v1/accounts/create_login_link', { method: 'POST', body });
-      const json = await resp.json();
-      if (!resp.ok) return json(json, { status: resp.status });
-      return json({ url: json.url });
+      const respJson = await resp.json();
+      if (!resp.ok) return json(respJson, { status: resp.status });
+      return json({ url: respJson.url });
     }
 
     // Connect: Artist status
@@ -2317,10 +2317,10 @@ export default {
         'metadata[venueId]': user.id,
       });
       const resp = await stripeFetch('/v1/accounts', { method: 'POST', body });
-      const json = await resp.json();
-      if (!resp.ok) return json(json, { status: resp.status });
-      await upsertVenue({ id: user.id, stripeAccountId: json.id });
-      return json({ accountId: json.id, alreadyExists: false });
+      const respJson = await resp.json();
+      if (!resp.ok) return json(respJson, { status: resp.status });
+      await upsertVenue({ id: user.id, stripeAccountId: respJson.id });
+      return json({ accountId: respJson.id, alreadyExists: false });
     }
 
     // Connect: Venue account link
@@ -2331,14 +2331,14 @@ export default {
       const { data: venue } = await supabaseAdmin.from('venues').select('*').eq('id', user.id).maybeSingle();
       if (!venue?.phone_number) return json({ error: 'Phone number required. Please add your phone to your profile.' }, { status: 400 });
       if (!venue?.stripe_account_id) return json({ error: 'Venue has no stripeAccountId yet. Call /create-account first.' }, { status: 400 });
-      const appUrl = 'https://artwalls.space';
+      const appUrl = env.PAGES_ORIGIN || 'https://artwalls.space';
       const refresh_url = `${appUrl}/#/venue-dashboard`;
       const return_url = `${appUrl}/#/venue-dashboard`;
       const body = toForm({ account: venue.stripe_account_id, refresh_url, return_url, type: 'account_onboarding' });
       const resp = await stripeFetch('/v1/account_links', { method: 'POST', body });
-      const json = await resp.json();
-      if (!resp.ok) return json(json, { status: resp.status });
-      return json({ url: json.url });
+      const respJson = await resp.json();
+      if (!resp.ok) return json(respJson, { status: resp.status });
+      return json({ url: respJson.url });
     }
 
     // Connect: Venue login link
@@ -2351,9 +2351,9 @@ export default {
       if (!venue?.stripe_account_id) return json({ error: 'Venue has no stripeAccountId yet.' }, { status: 400 });
       const body = toForm({ account: venue.stripe_account_id });
       const resp = await stripeFetch('/v1/accounts/create_login_link', { method: 'POST', body });
-      const json = await resp.json();
-      if (!resp.ok) return json(json, { status: resp.status });
-      return json({ url: json.url });
+      const respJson = await resp.json();
+      if (!resp.ok) return json(respJson, { status: resp.status });
+      return json({ url: respJson.url });
     }
 
     // Connect: Venue status
