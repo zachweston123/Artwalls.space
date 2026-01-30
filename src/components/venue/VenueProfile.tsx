@@ -19,6 +19,8 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
     email: string;
     phoneNumber: string;
     address: string;
+    addressLat?: number;
+    addressLng?: number;
     instagram: string;
     coverPhoto: string;
     city?: string;
@@ -34,6 +36,8 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
     email: '',
     phoneNumber: '',
     address: '',
+    addressLat: undefined,
+    addressLng: undefined,
     instagram: '',
     coverPhoto: '',
     city: '',
@@ -63,11 +67,11 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
         phoneNumber: (user.user_metadata?.phone as string | undefined) || prev.phoneNumber,
       }));
 
-      // Load cover photo, city, bio, and labels from database
+      // Load cover photo, city, bio, labels, and address from database
       try {
         const { data: venueData } = await supabase
           .from('venues')
-          .select('cover_photo_url, city, bio, labels')
+          .select('cover_photo_url, city, bio, labels, address, address_lat, address_lng')
           .eq('id', user.id)
           .single();
         
@@ -78,6 +82,9 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
             city: venueData.city || prev.city,
             bio: venueData.bio || prev.bio,
             labels: venueData.labels || prev.labels,
+            address: venueData.address || prev.address,
+            addressLat: venueData.address_lat || prev.addressLat,
+            addressLng: venueData.address_lng || prev.addressLng,
           }));
         }
       } catch (err) {
@@ -104,6 +111,9 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
           city: data.city,
           bio: data.bio,
           coverPhoto: data.coverPhoto,
+          address: data.address,
+          addressLat: data.addressLat,
+          addressLng: data.addressLng,
         });
       } catch (apiErr) {
         console.warn('API update failed, falling back to direct database update:', apiErr);
@@ -128,6 +138,15 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
       }
       if (data.bio !== undefined) {
         updateData.bio = data.bio;
+      }
+      if (data.address !== undefined) {
+        updateData.address = data.address;
+      }
+      if (data.addressLat !== undefined) {
+        updateData.address_lat = data.addressLat;
+      }
+      if (data.addressLng !== undefined) {
+        updateData.address_lng = data.addressLng;
       }
       
       if (Object.keys(updateData).length > 0) {
@@ -163,7 +182,9 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
         bio: data.bio || prev.bio,
         labels: data.labels || prev.labels,
         coverPhoto: data.coverPhoto || prev.coverPhoto,
-        address: prev.address, // address remains; city stored separately
+        address: data.address || prev.address,
+        addressLat: data.addressLat || prev.addressLat,
+        addressLng: data.addressLng || prev.addressLng,
       }));
       setIsEditing(false);
     } catch (err: any) {
@@ -203,30 +224,33 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Profile Information Card */}
         <div className="lg:col-span-2 bg-[var(--surface-1)] rounded-xl border border-[var(--border)] overflow-hidden">
+          {/* Cover Photo Banner */}
+          {profile.coverPhoto ? (
+            <div className="relative h-48 sm:h-56 w-full">
+              <img
+                src={profile.coverPhoto}
+                alt="Venue cover"
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+            </div>
+          ) : (
+            <div className="h-32 sm:h-40 w-full bg-gradient-to-br from-[var(--green-muted)] to-[var(--surface-2)] flex items-center justify-center">
+              <Store className="w-16 h-16 text-[var(--green)] opacity-50" />
+            </div>
+          )}
+
           <div className="p-6">
             <div className="flex items-start justify-between mb-6">
-              <div className="flex items-center gap-4">
-                <div className="w-20 h-20 bg-[var(--green-muted)] rounded-full flex items-center justify-center overflow-hidden">
-                  {profile.coverPhoto ? (
-                    <img
-                      src={profile.coverPhoto}
-                      alt="Cover"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <Store className="w-10 h-10 text-[var(--green)]" />
-                  )}
-                </div>
-                <div>
-                  <h2 className="text-2xl mb-1">{profile.name}</h2>
-                  <div className="flex flex-wrap gap-2">
-                    <span className="inline-flex px-3 py-1 rounded-full text-sm bg-[var(--surface-3)] text-[var(--text-muted)] border border-[var(--border)]">
-                      Venue Account
-                    </span>
-                    <span className="inline-flex px-3 py-1 rounded-full text-sm bg-[var(--green-muted)] text-[var(--green)] border border-[var(--border)]">
-                      {profile.type}
-                    </span>
-                  </div>
+              <div>
+                <h2 className="text-2xl mb-2">{profile.name}</h2>
+                <div className="flex flex-wrap gap-2">
+                  <span className="inline-flex px-3 py-1 rounded-full text-sm bg-[var(--surface-3)] text-[var(--text-muted)] border border-[var(--border)]">
+                    Venue Account
+                  </span>
+                  <span className="inline-flex px-3 py-1 rounded-full text-sm bg-[var(--green-muted)] text-[var(--green)] border border-[var(--border)]">
+                    {profile.type}
+                  </span>
                 </div>
               </div>
               <button
@@ -418,6 +442,9 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
             coverPhoto: profile.coverPhoto,
             bio: profile.bio,
             labels: profile.labels,
+            address: profile.address,
+            addressLat: profile.addressLat,
+            addressLng: profile.addressLng,
           }}
           onSave={handleSave}
           onCancel={() => setIsEditing(false)}

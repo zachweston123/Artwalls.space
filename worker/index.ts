@@ -288,7 +288,7 @@ export default {
       return json(data);
     }
 
-    async function upsertVenue(venue: { id: string; email?: string | null; name?: string | null; type?: string | null; phoneNumber?: string | null; city?: string | null; stripeAccountId?: string | null; defaultVenueFeeBps?: number | null; labels?: any; suspended?: boolean | null; bio?: string | null; coverPhotoUrl?: string | null; }): Promise<Response> {
+    async function upsertVenue(venue: { id: string; email?: string | null; name?: string | null; type?: string | null; phoneNumber?: string | null; city?: string | null; stripeAccountId?: string | null; defaultVenueFeeBps?: number | null; labels?: any; suspended?: boolean | null; bio?: string | null; coverPhotoUrl?: string | null; address?: string | null; addressLat?: number | null; addressLng?: number | null; }): Promise<Response> {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured - check SUPABASE_SERVICE_ROLE_KEY secret' }, { status: 500 });
       const payload: Record<string, any> = {
         id: venue.id,
@@ -310,6 +310,16 @@ export default {
       // Only include cover_photo_url if provided
       if (venue.coverPhotoUrl !== undefined && venue.coverPhotoUrl !== null) {
         payload.cover_photo_url = venue.coverPhotoUrl;
+      }
+      // Only include address fields if provided
+      if (venue.address !== undefined && venue.address !== null) {
+        payload.address = venue.address;
+      }
+      if (venue.addressLat !== undefined && venue.addressLat !== null) {
+        payload.address_lat = venue.addressLat;
+      }
+      if (venue.addressLng !== undefined && venue.addressLng !== null) {
+        payload.address_lng = venue.addressLng;
       }
       const { data, error } = await supabaseAdmin.from('venues').upsert(payload, { onConflict: 'id' }).select('*').single();
       if (error) {
@@ -1369,6 +1379,9 @@ export default {
         bio: payload?.bio || null,
         labels: payload?.labels || null,
         coverPhotoUrl: payload?.coverPhoto || payload?.coverPhotoUrl || null,
+        address: payload?.address || null,
+        addressLat: typeof payload?.addressLat === 'number' ? payload.addressLat : null,
+        addressLng: typeof payload?.addressLng === 'number' ? payload.addressLng : null,
         defaultVenueFeeBps: typeof payload?.defaultVenueFeeBps === 'number' ? payload.defaultVenueFeeBps : 1000,
       });
       return resp;

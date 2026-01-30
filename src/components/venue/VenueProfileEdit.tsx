@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { X, Upload, Image as ImageIcon, Loader2, AlertCircle } from 'lucide-react';
 import { LabelChip } from '../LabelChip';
 import { CitySelect } from '../shared/CitySelect';
+import { AddressAutocomplete, type PlaceDetails } from '../shared/AddressAutocomplete';
 import { VENUE_HIGHLIGHTS_GROUPS } from '../../data/highlights';
 import { supabase } from '../../lib/supabase';
 import { uploadProfilePhoto } from '../../lib/storage';
@@ -23,6 +24,9 @@ export interface VenueProfileData {
   email?: string;
   phoneNumber?: string;
   city?: string;
+  address?: string;
+  addressLat?: number;
+  addressLng?: number;
 }
 
 export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfileEditProps) {
@@ -36,6 +40,9 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
     email: initialData?.email ?? '',
     phoneNumber: initialData?.phoneNumber ?? '',
     city: (initialData as any)?.city ?? '',
+    address: (initialData as any)?.address ?? '',
+    addressLat: (initialData as any)?.addressLat,
+    addressLng: (initialData as any)?.addressLng,
   });
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -283,6 +290,28 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
               placeholder="Select or search city..."
             />
             <p className="text-xs text-[var(--text-muted)] mt-1">Helps artists find you by location. Artists within 50 miles will see your venue.</p>
+          </div>
+
+          {/* Address */}
+          <div>
+            <AddressAutocomplete
+              label="Street Address"
+              value={formData.address || ''}
+              onChange={(address, placeDetails) => {
+                setFormData({
+                  ...formData,
+                  address,
+                  addressLat: placeDetails?.lat,
+                  addressLng: placeDetails?.lng,
+                  // Auto-fill city if we got it from the address
+                  city: placeDetails?.city && placeDetails?.state 
+                    ? `${placeDetails.city}, ${placeDetails.state}`
+                    : formData.city,
+                });
+              }}
+              placeholder="123 Main Street, Suite 100"
+              helpText="This helps artists find your venue for installations and shows."
+            />
           </div>
 
           {/* Venue Type */}
