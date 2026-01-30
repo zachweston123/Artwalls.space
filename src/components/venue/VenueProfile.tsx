@@ -195,6 +195,25 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
   };
 
   const hasCompleteBio = (profile.bio || '').trim().length >= 100;
+  const hasAddress = !!(profile.address && profile.address.trim());
+  const hasCity = !!(profile.city && profile.city.trim());
+  const profileStatus = hasCompleteBio && hasAddress && hasCity
+    ? { label: 'Live', tone: 'success' as const }
+    : hasAddress || hasCity
+      ? { label: 'Needs setup', tone: 'warn' as const }
+      : { label: 'Draft', tone: 'muted' as const };
+
+  const statusToneStyles = {
+    success: 'bg-[var(--green-muted)] text-[var(--green)] border border-[var(--border)]',
+    warn: 'bg-[var(--surface-3)] text-[var(--text)] border border-[var(--border)]',
+    muted: 'bg-[var(--surface-3)] text-[var(--text-muted)] border border-[var(--border)]',
+  } as const;
+
+  const statusDotStyles = {
+    success: 'bg-[var(--green)]',
+    warn: 'bg-[var(--focus)]',
+    muted: 'bg-[var(--text-muted)]',
+  } as const;
 
   return (
     <div className="bg-[var(--bg)] text-[var(--text)]">
@@ -265,6 +284,10 @@ export function VenueProfile({ onNavigate }: VenueProfileProps) {
                   </span>
                   <span className="inline-flex px-3 py-1 rounded-full text-sm bg-[var(--green-muted)] text-[var(--green)] border border-[var(--border)]">
                     {profile.type}
+                  </span>
+                  <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm ${statusToneStyles[profileStatus.tone]}`}>
+                    <span className={`h-2 w-2 rounded-full ${statusDotStyles[profileStatus.tone]}`} aria-hidden="true" />
+                    <span className="font-medium">{profileStatus.label}</span>
                   </span>
                 </div>
               </div>

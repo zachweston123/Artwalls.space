@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Search, X } from 'lucide-react';
 import { City, searchCities } from '../../data/cities';
+import { IconInput } from './IconInput';
 
 interface CitySelectProps {
   value: string;
@@ -119,61 +120,38 @@ export function CitySelect({
         </label>
       )}
       
-      <div
-        ref={containerRef}
-        className="relative"
-      >
-        {/* Input Field */}
-        <div
-          className={`
-            relative flex items-center w-full h-12 px-4 rounded-xl
-            border border-[var(--border)] bg-[var(--surface-2)]
-            focus-within:border-[var(--blue)] focus-within:ring-2 focus-within:ring-[var(--blue)]/20
-            hover:border-[var(--border-hover)] transition-all duration-200
-            box-border
-            ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
-          `}
-        >
-          <Search className="w-5 h-5 text-[var(--text-muted)] mr-3 flex-shrink-0" />
-          <input
-            ref={inputRef}
-            type="text"
-            placeholder={placeholder}
-            value={isOpen ? searchQuery : displayValue}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              // If user is clearing their input, ensure it updates
-              if (e.target.value === '' && !isOpen) {
-                  onChange('');
-              }
-              if (!isOpen) setIsOpen(true);
-            }}
-            onFocus={() => {
-              // Populate search query with current value when opening so user can edit it
-              if (displayValue && !searchQuery) {
-                setSearchQuery(displayValue);
-              }
-              setIsOpen(true);
-            }}
-            onKeyDown={handleKeyDown}
-            disabled={disabled}
-            className="flex-1 bg-transparent outline-none text-[var(--text)] placeholder-[var(--text-muted)] text-sm font-medium leading-none overflow-hidden text-ellipsis whitespace-nowrap"
-            role="combobox"
-            aria-expanded={isOpen}
-            aria-autocomplete="list"
-            aria-controls={isOpen ? 'city-listbox' : undefined}
-            aria-activedescendant={isOpen && results[highlightedIndex] ? `city-option-${highlightedIndex}` : undefined}
-          />
-          {hasValue && !isOpen && (
-            <button
-              onClick={clearSelection}
-              className="p-1 hover:bg-[var(--surface-1)] rounded transition-colors flex-shrink-0"
-              aria-label="Clear selection"
-            >
-              <X className="w-4 h-4 text-[var(--text-muted)]" />
-            </button>
-          )}
-        </div>
+      <div ref={containerRef} className="relative">
+        <IconInput
+          ref={inputRef}
+          placeholder={placeholder}
+          value={isOpen ? searchQuery : displayValue}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            if (e.target.value === '' && !isOpen) {
+              onChange('');
+            }
+            if (!isOpen) setIsOpen(true);
+          }}
+          onFocus={() => {
+            if (displayValue && !searchQuery) {
+              setSearchQuery(displayValue);
+            }
+            setIsOpen(true);
+          }}
+          onKeyDown={handleKeyDown}
+          onClick={() => !disabled && setIsOpen(true)}
+          disabled={disabled}
+          leadingIcon={<Search className="w-5 h-5" />}
+          trailingIcon={hasValue ? <X className="w-4 h-4" /> : undefined}
+          onTrailingAction={hasValue ? clearSelection : undefined}
+          trailingAriaLabel={hasValue ? 'Clear selection' : undefined}
+          className={`${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+          role="combobox"
+          aria-expanded={isOpen}
+          aria-autocomplete="list"
+          aria-controls={isOpen ? 'city-listbox' : undefined}
+          aria-activedescendant={isOpen && results[highlightedIndex] ? `city-option-${highlightedIndex}` : undefined}
+        />
 
         {/* Dropdown List */}
         {isOpen && results.length > 0 && (

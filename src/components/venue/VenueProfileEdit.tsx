@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { X, Upload, Image as ImageIcon, Loader2, AlertCircle } from 'lucide-react';
 import { LabelChip } from '../LabelChip';
 import { CitySelect } from '../shared/CitySelect';
@@ -46,6 +46,17 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
   });
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onCancel();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onCancel]);
 
   const venueTypes = [
     'Coffee Shop',
@@ -146,19 +157,24 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 sm:p-6">
-      <div className="bg-[var(--surface-1)] border border-[var(--border)] text-[var(--text)] rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+      <div className="bg-[var(--surface-1)] border border-[var(--border)] text-[var(--text)] rounded-2xl max-w-3xl w-full max-h-[90vh] shadow-2xl flex flex-col">
         {/* Header */}
-        <div className="sticky top-0 bg-[var(--surface-1)] border-b border-[var(--border)] p-5 sm:p-6 flex items-center justify-between z-10">
-          <h2 className="text-xl sm:text-2xl font-bold">Edit Venue Profile</h2>
+        <div className="sticky top-0 bg-[var(--surface-1)] border-b border-[var(--border)] px-5 sm:px-6 py-4 sm:py-5 flex items-center justify-between z-10">
+          <div>
+            <p className="text-xs uppercase tracking-wide text-[var(--text-muted)] mb-1">Profile</p>
+            <h2 className="text-xl sm:text-2xl font-bold leading-tight">Edit Venue Profile</h2>
+          </div>
           <button
             onClick={onCancel}
-            className="p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors text-[var(--text-muted)] hover:text-[var(--text)]"
+            aria-label="Close edit venue profile modal"
+            className="p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors text-[var(--text-muted)] hover:text-[var(--text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)]"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-5 sm:p-8 space-y-6 sm:space-y-8">
+        <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-1 overflow-y-auto px-5 sm:px-8 py-5 sm:py-8 space-y-8">
           {/* Cover Photo */}
           <div>
             <label className="block text-sm text-[var(--text-muted)] mb-3">
@@ -241,152 +257,181 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
             )}
           </div>
 
-          {/* Venue Name */}
-          <div>
-            <label className="block text-sm text-[var(--text-muted)] mb-2">
-              Venue Name
-            </label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
-              placeholder="Your venue name"
-              required
-            />
-          </div>
-
-          {/* Contact Email */}
-          <div>
-            <label className="block text-sm text-[var(--text-muted)] mb-2">Contact Email</label>
-            <input
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
-              placeholder="you@venue.com"
-            />
-          </div>
-
-          {/* Phone Number */}
-          <div>
-            <label className="block text-sm text-[var(--text-muted)] mb-2">Phone Number</label>
-            <input
-              type="tel"
-              value={formData.phoneNumber}
-              onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-              className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
-              placeholder="e.g. +15551234567"
-            />
-            <p className="text-xs text-[var(--text-muted)] mt-1">Sale notifications will be sent to this number.</p>
-          </div>
-
-          {/* City */}
-          <div>
-            <CitySelect
-              label="City"
-              value={formData.city || ''}
-              onChange={(city) => setFormData({ ...formData, city })}
-              placeholder="Select or search city..."
-            />
-            <p className="text-xs text-[var(--text-muted)] mt-1">Helps artists find you by location. Artists within 50 miles will see your venue.</p>
-          </div>
-
-          {/* Address */}
-          <div>
-            <AddressAutocomplete
-              label="Street Address"
-              value={formData.address || ''}
-              onChange={(address, placeDetails) => {
-                setFormData({
-                  ...formData,
-                  address,
-                  addressLat: placeDetails?.lat,
-                  addressLng: placeDetails?.lng,
-                  // Auto-fill city if we got it from the address
-                  city: placeDetails?.city && placeDetails?.state 
-                    ? `${placeDetails.city}, ${placeDetails.state}`
-                    : formData.city,
-                });
-              }}
-              placeholder="123 Main Street, Suite 100"
-              helpText="This helps artists find your venue for installations and shows."
-            />
-          </div>
-
-          {/* Venue Type */}
-          <div>
-            <label className="block text-sm text-[var(--text-muted)] mb-2">
-              Venue Type
-            </label>
-            <select
-              value={formData.type}
-              onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-              className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
-              required
-            >
-              {venueTypes.map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Bio */}
-          <div className="bg-[var(--surface-3)] border border-[var(--border)] rounded-lg p-4">
-            <label className="block text-sm font-semibold text-[var(--text)] mb-2">
-              About Your Venue
-            </label>
-            <textarea
-              value={formData.bio}
-              onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-              rows={6}
-              maxLength={600}
-              className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
-              placeholder="Describe your venue, atmosphere, mission, and why you support local artists..."
-              required
-            />
-            <p className="text-xs text-[var(--text-muted)] mt-1">
-              {formData.bio.length}/600 characters
-            </p>
-            <div className="mt-3 p-3 bg-[var(--surface-1)] rounded border-l-4 border-[var(--focus)]">
-              <p className="text-xs font-semibold text-[var(--text)] mb-1">💡 Pro Tip: Attract More Artists</p>
-              <p className="text-xs text-[var(--text-muted)]">
-                Artists browse venues looking for authentic spaces that align with their values. 
-                A compelling bio about your venue&apos;s atmosphere, artist support, and mission helps 
-                talented artists choose your space for collaboration.
-              </p>
+          {/* Contact */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-[var(--text)]">Contact</p>
+              <span className="text-xs text-[var(--text-muted)]">Let artists reach you</span>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <label className="block text-sm text-[var(--text-muted)]">
+                  Venue Name <span className="text-[var(--danger)]" aria-hidden="true">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
+                  placeholder="Your venue name"
+                  required
+                  aria-required="true"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="block text-sm text-[var(--text-muted)]">
+                  Contact Email
+                </label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
+                  placeholder="you@venue.com"
+                />
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <label className="block text-sm text-[var(--text-muted)]">Phone Number</label>
+                <input
+                  type="tel"
+                  value={formData.phoneNumber}
+                  onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                  className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
+                  placeholder="e.g. +15551234567"
+                />
+                <p className="text-xs text-[var(--text-muted)]">Sale notifications will be sent to this number.</p>
+              </div>
             </div>
           </div>
 
-          {/* Founded Year */}
-          <div>
-            <label className="block text-sm text-[var(--text-muted)] mb-2">
-              Founded Year
-            </label>
-            <select
-              value={formData.foundedYear}
-              onChange={(e) => setFormData({ ...formData, foundedYear: parseInt(e.target.value) })}
-              className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
-              required
-            >
-              {years.map((year) => (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              ))}
-            </select>
-            <p className="text-xs text-[var(--text-muted)] mt-1">
-              {currentYear - formData.foundedYear} years in business
-            </p>
+          {/* Location */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-[var(--text)]">Location</p>
+              <span className="text-xs text-[var(--text-muted)]">Help artists find you</span>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2 sm:col-span-2">
+                <AddressAutocomplete
+                  label="Street Address"
+                  value={formData.address || ''}
+                  onChange={(address, placeDetails) => {
+                    setFormData({
+                      ...formData,
+                      address,
+                      addressLat: placeDetails?.lat,
+                      addressLng: placeDetails?.lng,
+                      // Auto-fill city if we got it from the address
+                      city: placeDetails?.city && placeDetails?.state 
+                        ? `${placeDetails.city}, ${placeDetails.state}`
+                        : formData.city,
+                    });
+                  }}
+                  placeholder="123 Main Street, Suite 100"
+                  helpText="This helps artists find your venue for installations and shows."
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <CitySelect
+                  label="City"
+                  value={formData.city || ''}
+                  onChange={(city) => setFormData({ ...formData, city })}
+                  placeholder="Select or search city..."
+                />
+                <p className="text-xs text-[var(--text-muted)] mt-1">Artists within 50 miles will see your venue.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Venue Details */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-[var(--text)]">Venue details</p>
+              <span className="text-xs text-[var(--text-muted)]">What you offer</span>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <label className="block text-sm text-[var(--text-muted)]">
+                  Venue Type <span className="text-[var(--danger)]" aria-hidden="true">*</span>
+                </label>
+                <select
+                  value={formData.type}
+                  onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                  className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
+                  required
+                  aria-required="true"
+                >
+                  {venueTypes.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="block text-sm text-[var(--text-muted)]">
+                  Founded Year <span className="text-[var(--danger)]" aria-hidden="true">*</span>
+                </label>
+                <select
+                  value={formData.foundedYear}
+                  onChange={(e) => setFormData({ ...formData, foundedYear: parseInt(e.target.value) })}
+                  className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
+                  required
+                  aria-required="true"
+                >
+                  {years.map((year) => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-[var(--text-muted)]">
+                  {currentYear - formData.foundedYear} years in business
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* About */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-[var(--text)]">About</p>
+              <span className="text-xs text-[var(--text-muted)]">Tell artists your story</span>
+            </div>
+            <div className="bg-[var(--surface-3)] border border-[var(--border)] rounded-lg p-4">
+              <label className="block text-sm font-semibold text-[var(--text)] mb-2">
+                About Your Venue <span className="text-[var(--danger)]" aria-hidden="true">*</span>
+              </label>
+              <textarea
+                value={formData.bio}
+                onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                rows={6}
+                maxLength={600}
+                className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
+                placeholder="Describe your venue, atmosphere, mission, and why you support local artists..."
+                required
+                aria-required="true"
+              />
+              <p className="text-xs text-[var(--text-muted)] mt-1">
+                {formData.bio.length}/600 characters
+              </p>
+              <div className="mt-3 p-3 bg-[var(--surface-1)] rounded border-l-4 border-[var(--focus)]">
+                <p className="text-xs font-semibold text-[var(--text)] mb-1">💡 Pro Tip: Attract More Artists</p>
+                <p className="text-xs text-[var(--text-muted)]">
+                  Artists browse venues looking for authentic spaces that align with their values. 
+                  A compelling bio about your venue&apos;s atmosphere, artist support, and mission helps 
+                  talented artists choose your space for collaboration.
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Venue Labels */}
-          <div>
-            <label className="block text-sm text-[var(--text-muted)] mb-3">
-              Venue Highlights <span className="text-[var(--text-muted)]">(Select all that apply)</span>
-            </label>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-[var(--text)]">Highlights</p>
+              <span className="text-xs text-[var(--text-muted)]">Select all that apply</span>
+            </div>
             <div className="space-y-4">
               {Object.entries(grouped).map(([groupName, items]) => (
                 <div key={groupName}>
@@ -406,7 +451,7 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
                 </div>
               ))}
             </div>
-            <p className="text-xs text-[var(--text-muted)] mt-2">
+            <p className="text-xs text-[var(--text-muted)]">
               {formData.labels.length} selected • Help artists find the right fit
             </p>
           </div>
@@ -417,19 +462,20 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
               <strong>Tip:</strong> A complete profile helps artists understand your venue culture and increases quality applications. Update your installation schedule in Venue Settings.
             </p>
           </div>
+          </div>
 
           {/* Actions */}
-          <div className="flex gap-3 pt-4 border-t border-[var(--border)]">
+          <div className="sticky bottom-0 bg-[var(--surface-1)] border-t border-[var(--border)] px-5 sm:px-6 py-4 flex flex-col gap-3 sm:flex-row sm:justify-end">
             <button
               type="button"
               onClick={onCancel}
-              className="flex-1 px-4 py-2 bg-[var(--surface-2)] text-[var(--text)] rounded-lg hover:bg-[var(--surface-3)] transition-colors"
+              className="w-full sm:w-auto px-4 py-2 bg-[var(--surface-2)] text-[var(--text)] rounded-lg hover:bg-[var(--surface-3)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)]"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-opacity"
+              className="w-full sm:w-auto px-4 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)]"
             >
               Save Changes
             </button>

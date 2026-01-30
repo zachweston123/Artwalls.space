@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { MapPin, Loader2 } from 'lucide-react';
+import { IconInput } from './IconInput';
 
 interface AddressAutocompleteProps {
   value: string;
@@ -193,22 +194,17 @@ export function AddressAutocomplete({
           {label}
         </label>
       )}
-      <div className="relative">
-        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
-        <input
-          ref={inputRef}
-          type="text"
-          value={localValue}
-          onChange={handleManualChange}
-          onBlur={handleBlur}
-          placeholder={placeholder}
-          className="w-full pl-10 pr-10 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
-          disabled={isLoading}
-        />
-        {isLoading && (
-          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)] animate-spin" />
-        )}
-      </div>
+      <IconInput
+        ref={inputRef}
+        value={localValue}
+        onChange={handleManualChange}
+        onBlur={handleBlur}
+        placeholder={placeholder}
+        disabled={isLoading}
+        leadingIcon={<MapPin className="w-4 h-4" />}
+        trailingIcon={isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : undefined}
+        aria-label={label}
+      />
       {helpText && (
         <p className="text-xs text-[var(--text-muted)] mt-1">{helpText}</p>
       )}
