@@ -2,14 +2,18 @@ export type ThemePreference = 'system' | 'light' | 'dark';
 
 const STORAGE_KEY = 'theme';
 
-function isThemePreference(value: unknown): value is ThemePreference {
+export function isThemePreference(value: unknown): value is ThemePreference {
   return value === 'system' || value === 'light' || value === 'dark';
+}
+
+export function coerceThemePreference(value: unknown, fallback: ThemePreference = 'system'): ThemePreference {
+  return isThemePreference(value) ? value : fallback;
 }
 
 export function getStoredThemePreference(): ThemePreference {
   if (typeof window === 'undefined') return 'system';
   const raw = window.localStorage.getItem(STORAGE_KEY);
-  return isThemePreference(raw) ? raw : 'system';
+  return coerceThemePreference(raw, 'system');
 }
 
 export function setStoredThemePreference(preference: ThemePreference) {

@@ -1,35 +1,38 @@
 import { useEffect, useState } from 'react';
-import { 
-  User, 
-  CreditCard, 
-  Palette, 
-  Check, 
-  Loader2, 
-  ExternalLink, 
+import {
+  User as UserIcon,
+  CreditCard,
+  Palette,
+  Check,
+  Loader2,
+  ExternalLink,
   AlertCircle,
   Monitor,
   Sun,
   Moon,
   Mail,
   Phone,
-  ChevronRight
+  ChevronRight,
 } from 'lucide-react';
+import type { User as AppUser, UserRole } from '../../App';
 import { supabase } from '../../lib/supabase';
 import { apiPost } from '../../lib/api';
 import type { ThemePreference } from '../../lib/theme';
-import { applyThemePreference, getStoredThemePreference } from '../../lib/theme';
+import { applyThemePreference, coerceThemePreference, getStoredThemePreference } from '../../lib/theme';
 import { PlanBadge } from '../pricing/PlanBadge';
 
 interface SettingsProps {
   onNavigate: (page: string) => void;
+  user?: AppUser | null;
 }
 
 type SettingsSection = 'profile' | 'billing' | 'appearance';
 
-export function Settings({ onNavigate }: SettingsProps) {
+export function Settings({ onNavigate, user: currentUser }: SettingsProps) {
   const [activeSection, setActiveSection] = useState<SettingsSection>('profile');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [themeSaving, setThemeSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -39,6 +42,7 @@ export function Settings({ onNavigate }: SettingsProps) {
   const [phone, setPhone] = useState('');
   const [originalName, setOriginalName] = useState('');
   const [originalPhone, setOriginalPhone] = useState('');
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
 
   // Subscription state
   const [currentPlan, setCurrentPlan] = useState<'free' | 'starter' | 'growth' | 'pro'>('free');
@@ -54,36 +58,48 @@ export function Settings({ onNavigate }: SettingsProps) {
       try {
         const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
         if (sessionErr) throw sessionErr;
-        const user = sessionData.session?.user;
-        if (!user) throw new Error('Not signed in');
+        const sessionUser = sessionData.session?.user;
+        const resolvedRole = (currentUser?.role ?? (sessionUser?.user_metadata?.role as UserRole | undefined)) || null;
+        const userId = currentUser?.id ?? sessionUser?.id;
+        if (!sessionUser || !userId || !resolvedRole) throw new Error('Not signed in');
 
-        // Load artist data
-        const { data: artistRows, error: selErr } = await supabase
-          .from('artists')
-          .select('*')
-          .eq('id', user.id)
-          .limit(1);
-        if (selErr) throw selErr;
+        setUserRole(resolvedRole);
 
-        if (artistRows && artistRows.length > 0) {
-          const row = artistRows[0] as any;
-          setName(row.name || user.user_metadata?.name || '');
-          setOriginalName(row.name || user.user_metadata?.name || '');
-          setEmail(row.email || user.email || '');
-          setPhone(row.phone_number || user.user_metadata?.phone || '');
-          setOriginalPhone(row.phone_number || user.user_metadata?.phone || '');
-          setCurrentPlan(row.subscription_tier || 'free');
-          setSubscriptionStatus(row.subscription_status || 'inactive');
+        const table = resolvedRole === 'venue' ? 'venues' : 'artists';
+        const fields = resolvedRole === 'artist'
+          ? 'id,name,email,phone_number,subscription_tier,subscription_status,theme_preference'
+          : 'id,name,email,phone_number,theme_preference';
+
+        const { data: profileRow, error: selErr } = await supabase
+          .from(table)
+          .select(fields)
+          .eq('id', userId)
+          .single();
+
+        if (selErr && selErr.code !== 'PGRST116') throw selErr;
+
+        const row = profileRow as any;
+        const fallbackName = sessionUser.user_metadata?.name || '';
+        const fallbackPhone = sessionUser.user_metadata?.phone || '';
+
+        setName(row?.name || fallbackName);
+        setOriginalName(row?.name || fallbackName);
+        setEmail(row?.email || sessionUser.email || '');
+        setPhone(row?.phone_number || fallbackPhone);
+        setOriginalPhone(row?.phone_number || fallbackPhone);
+
+        if (resolvedRole === 'artist') {
+          setCurrentPlan((row?.subscription_tier as any) || 'free');
+          setSubscriptionStatus(row?.subscription_status || 'inactive');
         } else {
-          setName(user.user_metadata?.name || '');
-          setOriginalName(user.user_metadata?.name || '');
-          setEmail(user.email || '');
-          setPhone(user.user_metadata?.phone || '');
-          setOriginalPhone(user.user_metadata?.phone || '');
+          setCurrentPlan('free');
+          setSubscriptionStatus('not available');
         }
 
-        // Load theme preference
-        setThemePreference(getStoredThemePreference());
+        const storedTheme = getStoredThemePreference();
+        const remoteTheme = coerceThemePreference(row?.theme_preference, storedTheme);
+        setThemePreference(remoteTheme);
+        applyThemePreference(remoteTheme);
       } catch (e: any) {
         if (mounted) setError(e?.message || 'Failed to load settings');
       } finally {
@@ -91,41 +107,61 @@ export function Settings({ onNavigate }: SettingsProps) {
       }
     })();
     return () => { mounted = false; };
-  }, []);
+  }, [currentUser]);
 
   const hasProfileChanges = name !== originalName || phone !== originalPhone;
+  const isArtist = userRole === 'artist';
+  const isVenue = userRole === 'venue';
+  const canCancelSubscription = isArtist && subscriptionStatus !== 'inactive';
 
   async function saveProfile() {
     if (!hasProfileChanges) return;
     setSaving(true);
     setError(null);
     setSuccess(null);
-    try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const user = sessionData.session?.user;
-      if (!user) throw new Error('Not signed in');
+    const trimmedName = name.trim();
+    const trimmedPhone = phone.trim();
 
-      // Update in Supabase
+    if (!trimmedName) {
+      setError('Name is required.');
+      setSaving(false);
+      return;
+    }
+
+    const phoneValid = !trimmedPhone || /^[+0-9(). -]{7,20}$/.test(trimmedPhone);
+    if (!phoneValid) {
+      setError('Enter a valid phone number.');
+      setSaving(false);
+      return;
+    }
+
+    try {
+      const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
+      if (sessionErr) throw sessionErr;
+      const sessionUser = sessionData.session?.user;
+      if (!sessionUser || !userRole) throw new Error('Not signed in');
+
+      const table = userRole === 'venue' ? 'venues' : 'artists';
+
       const { error: updateErr } = await supabase
-        .from('artists')
+        .from(table)
         .update({
-          name: name.trim(),
-          phone_number: phone.trim(),
+          name: trimmedName,
+          phone_number: trimmedPhone || null,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', user.id);
+        .eq('id', sessionUser.id);
       if (updateErr) throw updateErr;
 
-      // Update auth metadata
       await supabase.auth.updateUser({
         data: {
-          name: name.trim(),
-          phone: phone.trim(),
+          name: trimmedName,
+          phone: trimmedPhone,
         },
       });
 
-      setOriginalName(name.trim());
-      setOriginalPhone(phone.trim());
+      setOriginalName(trimmedName);
+      setOriginalPhone(trimmedPhone);
       setSuccess('Profile updated successfully');
       setTimeout(() => setSuccess(null), 3000);
     } catch (e: any) {
@@ -139,7 +175,13 @@ export function Settings({ onNavigate }: SettingsProps) {
     setError(null);
     setManagingPortal(true);
     try {
-      const { data } = await supabase.auth.getSession();
+      if (!isArtist) {
+        setError('Billing portal is available for artist subscriptions. Contact support for venue billing.');
+        return;
+      }
+
+      const { data, error: sessionErr } = await supabase.auth.getSession();
+      if (sessionErr) throw sessionErr;
       const token = data.session?.access_token;
       if (!token) {
         setError('Please sign in to manage your subscription.');
@@ -163,13 +205,39 @@ export function Settings({ onNavigate }: SettingsProps) {
     }
   }
 
-  function handleThemeChange(preference: ThemePreference) {
-    setThemePreference(preference);
-    applyThemePreference(preference);
+  async function handleThemeChange(preference: ThemePreference) {
+    setThemeSaving(true);
+    setError(null);
+    try {
+      const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
+      if (sessionErr) throw sessionErr;
+      const sessionUser = sessionData.session?.user;
+      const resolvedRole = (sessionUser?.user_metadata?.role as UserRole | undefined) || userRole;
+      if (!sessionUser || !resolvedRole) throw new Error('Please sign in to update theme.');
+
+      const table = resolvedRole === 'venue' ? 'venues' : 'artists';
+      const { error: updateErr } = await supabase
+        .from(table)
+        .update({
+          theme_preference: preference,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', sessionUser.id);
+      if (updateErr) throw updateErr;
+
+      setThemePreference(preference);
+      applyThemePreference(preference);
+      setSuccess('Theme preference saved');
+      setTimeout(() => setSuccess(null), 2500);
+    } catch (e: any) {
+      setError(e?.message || 'Failed to update theme');
+    } finally {
+      setThemeSaving(false);
+    }
   }
 
   const sections = [
-    { id: 'profile' as const, label: 'Profile', icon: User },
+    { id: 'profile' as const, label: 'Profile', icon: UserIcon },
     { id: 'billing' as const, label: 'Billing', icon: CreditCard },
     { id: 'appearance' as const, label: 'Appearance', icon: Palette },
   ];
@@ -246,7 +314,7 @@ export function Settings({ onNavigate }: SettingsProps) {
                       Display Name
                     </label>
                     <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-muted)]" />
+                      <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-muted)]" />
                       <input
                         type="text"
                         value={name}
@@ -324,21 +392,21 @@ export function Settings({ onNavigate }: SettingsProps) {
                 <h3 className="text-lg font-semibold text-[var(--text)] mb-4">Quick Links</h3>
                 <div className="space-y-2">
                   <button
-                    onClick={() => onNavigate('artist-profile')}
+                    onClick={() => onNavigate(isArtist ? 'artist-profile' : 'venue-profile')}
                     className="w-full flex items-center justify-between px-4 py-3 bg-[var(--surface-3)] border border-[var(--border)] rounded-lg text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
                   >
                     <span>Edit Full Profile</span>
                     <ChevronRight className="w-5 h-5 text-[var(--text-muted)]" />
                   </button>
                   <button
-                    onClick={() => onNavigate('artist-password-security')}
+                    onClick={() => onNavigate(isArtist ? 'artist-password-security' : 'venue-password-security')}
                     className="w-full flex items-center justify-between px-4 py-3 bg-[var(--surface-3)] border border-[var(--border)] rounded-lg text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
                   >
                     <span>Password & Security</span>
                     <ChevronRight className="w-5 h-5 text-[var(--text-muted)]" />
                   </button>
                   <button
-                    onClick={() => onNavigate('artist-notifications')}
+                    onClick={() => onNavigate(isArtist ? 'artist-notifications' : 'venue-notifications')}
                     className="w-full flex items-center justify-between px-4 py-3 bg-[var(--surface-3)] border border-[var(--border)] rounded-lg text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
                   >
                     <span>Notification Preferences</span>
@@ -388,27 +456,53 @@ export function Settings({ onNavigate }: SettingsProps) {
                 </p>
                 
                 <div className="space-y-3">
-                  <button
-                    onClick={openBillingPortal}
-                    disabled={managingPortal}
-                    className="w-full sm:w-auto px-6 py-3 bg-[var(--surface-3)] border border-[var(--border)] text-[var(--text)] rounded-lg font-medium hover:bg-[var(--surface-2)] transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-                  >
-                    {managingPortal ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Opening Portal...
-                      </>
-                    ) : (
-                      <>
-                        <ExternalLink className="w-4 h-4" />
-                        Manage Billing & Payments
-                      </>
-                    )}
-                  </button>
-                  
-                  <p className="text-xs text-[var(--text-muted)]">
-                    You'll be redirected to Stripe's secure portal. From there you can update payment methods, download invoices, or cancel your subscription.
-                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <button
+                      onClick={openBillingPortal}
+                      disabled={managingPortal || !isArtist}
+                      className="w-full sm:w-auto px-6 py-3 bg-[var(--surface-3)] border border-[var(--border)] text-[var(--text)] rounded-lg font-medium hover:bg-[var(--surface-2)] transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                      {managingPortal ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Opening Portal...
+                        </>
+                      ) : (
+                        <>
+                          <ExternalLink className="w-4 h-4" />
+                          Manage Billing & Payments
+                        </>
+                      )}
+                    </button>
+
+                    <button
+                      onClick={openBillingPortal}
+                      disabled={managingPortal || !canCancelSubscription}
+                      className="w-full sm:w-auto px-6 py-3 border border-[var(--border)] text-[var(--danger)] bg-[var(--surface-3)] rounded-lg font-medium hover:bg-[var(--surface-2)] transition-colors flex items-center justify-center gap-2 disabled:opacity-40"
+                    >
+                      {managingPortal ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Opening...
+                        </>
+                      ) : (
+                        <>
+                          <ExternalLink className="w-4 h-4" />
+                          Cancel Subscription
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  {!isArtist && (
+                    <p className="text-xs text-[var(--text-muted)]">
+                      Billing portal is available for artist subscriptions. Contact support to update venue billing details.
+                    </p>
+                  )}
+                  {isArtist && (
+                    <p className="text-xs text-[var(--text-muted)]">
+                      You'll be redirected to Stripe's secure portal. From there you can update payment methods, download invoices, or cancel your subscription.
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -441,11 +535,12 @@ export function Settings({ onNavigate }: SettingsProps) {
                   {/* System */}
                   <button
                     onClick={() => handleThemeChange('system')}
+                    disabled={themeSaving}
                     className={`p-4 rounded-xl border-2 transition-all ${
                       themePreference === 'system'
                         ? 'border-[var(--blue)] bg-[var(--blue)]/5'
                         : 'border-[var(--border)] bg-[var(--surface-3)] hover:border-[var(--text-muted)]'
-                    }`}
+                    } ${themeSaving ? 'opacity-60 cursor-not-allowed' : ''}`}
                   >
                     <div className="w-12 h-12 mx-auto mb-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg flex items-center justify-center">
                       <Monitor className="w-6 h-6 text-[var(--text)]" />
@@ -464,11 +559,12 @@ export function Settings({ onNavigate }: SettingsProps) {
                   {/* Light */}
                   <button
                     onClick={() => handleThemeChange('light')}
+                    disabled={themeSaving}
                     className={`p-4 rounded-xl border-2 transition-all ${
                       themePreference === 'light'
                         ? 'border-[var(--blue)] bg-[var(--blue)]/5'
                         : 'border-[var(--border)] bg-[var(--surface-3)] hover:border-[var(--text-muted)]'
-                    }`}
+                    } ${themeSaving ? 'opacity-60 cursor-not-allowed' : ''}`}
                   >
                     <div className="w-12 h-12 mx-auto mb-3 bg-white border border-gray-200 rounded-lg flex items-center justify-center">
                       <Sun className="w-6 h-6 text-amber-500" />
@@ -487,11 +583,12 @@ export function Settings({ onNavigate }: SettingsProps) {
                   {/* Dark */}
                   <button
                     onClick={() => handleThemeChange('dark')}
+                    disabled={themeSaving}
                     className={`p-4 rounded-xl border-2 transition-all ${
                       themePreference === 'dark'
                         ? 'border-[var(--blue)] bg-[var(--blue)]/5'
                         : 'border-[var(--border)] bg-[var(--surface-3)] hover:border-[var(--text-muted)]'
-                    }`}
+                    } ${themeSaving ? 'opacity-60 cursor-not-allowed' : ''}`}
                   >
                     <div className="w-12 h-12 mx-auto mb-3 bg-gray-900 border border-gray-700 rounded-lg flex items-center justify-center">
                       <Moon className="w-6 h-6 text-blue-400" />
@@ -512,7 +609,7 @@ export function Settings({ onNavigate }: SettingsProps) {
               <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl p-6">
                 <h3 className="text-lg font-semibold text-[var(--text)] mb-2">About Theme Settings</h3>
                 <p className="text-sm text-[var(--text-muted)]">
-                  Your theme preference is saved locally on this device. When set to "System", the app will automatically switch between light and dark mode based on your device or browser settings.
+                  Your theme preference is saved to your Artwalls account and this device. When set to "System", the app automatically follows your device or browser preference.
                 </p>
               </div>
             </div>

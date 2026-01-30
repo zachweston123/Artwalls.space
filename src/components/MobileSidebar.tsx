@@ -13,6 +13,7 @@ interface MobileSidebarProps {
 
 export function MobileSidebar({ isOpen, onClose, user, onNavigate, onLogout, currentPage }: MobileSidebarProps) {
   const isArtist = user.role === 'artist';
+  const activePage = currentPage === 'artist-settings' || currentPage === 'venue-settings' ? 'settings' : currentPage;
 
   const artistLinks = [
     { id: 'artist-dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -25,7 +26,7 @@ export function MobileSidebar({ isOpen, onClose, user, onNavigate, onLogout, cur
     { id: 'artist-sales', label: 'Sales & Earnings', icon: ShoppingCart },
     { id: 'artist-notifications', label: 'Notifications', icon: Bell },
     { id: 'artist-profile', label: 'Profile', icon: User },
-    { id: 'artist-settings', label: 'Settings', icon: Settings },
+    { id: 'settings', label: 'Settings', icon: Settings },
     { id: 'plans-pricing', label: 'Plans & Pricing', icon: CreditCard },
     { id: 'policies', label: 'Policies & Agreements', icon: Shield },
   ];
@@ -41,6 +42,7 @@ export function MobileSidebar({ isOpen, onClose, user, onNavigate, onLogout, cur
     { id: 'venue-partner-kit', label: 'Success Guide', icon: BookOpen },
     { id: 'venue-notifications', label: 'Notifications', icon: Bell },
     { id: 'policies', label: 'Policies & Agreements', icon: Shield },
+    { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
   const links = isArtist ? artistLinks : venueLinks;
@@ -106,7 +108,7 @@ export function MobileSidebar({ isOpen, onClose, user, onNavigate, onLogout, cur
                 key={link.id}
                 onClick={() => handleNavigate(link.id)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                  currentPage === link.id
+                  activePage === link.id
                     ? 'bg-[var(--surface-3)] text-[var(--text)]'
                     : 'text-[var(--text-muted)] hover:bg-[var(--surface-3)] hover:text-[var(--text)]'
                 }`}

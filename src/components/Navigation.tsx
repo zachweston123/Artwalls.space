@@ -127,6 +127,7 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
   }
 
   const isArtist = user.role === 'artist';
+  const activePage = currentPage === 'artist-settings' || currentPage === 'venue-settings' ? 'settings' : currentPage;
 
   const artistLinks = [
     { id: 'artist-dashboard', label: 'Dashboard' },
@@ -138,7 +139,7 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
     { id: 'artist-invite-venue', label: 'Invite a Venue' },
     { id: 'artist-referrals', label: 'Referrals' },
     { id: 'artist-sales', label: 'Sales & Earnings' },
-    { id: 'artist-settings', label: 'Settings' },
+    { id: 'settings', label: 'Settings' },
   ];
 
   const venueLinks = [
@@ -150,6 +151,9 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
     { id: 'venue-current', label: 'Current Art' },
     { id: 'venue-sales', label: 'Sales' },
     { id: 'venue-partner-kit', label: 'Success Guide' },
+    { id: 'venue-notifications', label: 'Notifications' },
+    { id: 'policies', label: 'Policies & Agreements' },
+    { id: 'settings', label: 'Settings' },
   ];
 
   const links = isArtist ? artistLinks : venueLinks;
@@ -190,7 +194,7 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
                   key={link.id}
                   onClick={() => onNavigate(link.id)}
                   className={`px-4 py-2 rounded-lg transition-colors ${
-                    currentPage === link.id
+                     activePage === link.id
                       ? 'bg-[var(--surface-3)] text-[var(--text)]'
                       : 'text-[var(--text-muted)] hover:bg-[var(--surface-3)]'
                   }`}
