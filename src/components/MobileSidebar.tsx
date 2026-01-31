@@ -13,6 +13,7 @@ interface MobileSidebarProps {
 
 export function MobileSidebar({ isOpen, onClose, user, onNavigate, onLogout, currentPage }: MobileSidebarProps) {
   const isArtist = user.role === 'artist';
+  const settingsTarget = isArtist ? 'artist-settings' : 'venue-settings';
   const activePage = currentPage === 'artist-settings' || currentPage === 'venue-settings' ? 'settings' : currentPage;
 
   const artistNav = [
@@ -51,7 +52,7 @@ export function MobileSidebar({ isOpen, onClose, user, onNavigate, onLogout, cur
       links: [
         { id: 'artist-notifications', label: 'Notifications', icon: Bell },
         { id: 'policies', label: 'Policies & Agreements', icon: Shield },
-        { id: 'settings', label: 'Settings', icon: Settings },
+        { id: settingsTarget, label: 'Settings', icon: Settings },
       ],
     },
   ];
@@ -93,7 +94,7 @@ export function MobileSidebar({ isOpen, onClose, user, onNavigate, onLogout, cur
       links: [
         { id: 'venue-notifications', label: 'Notifications', icon: Bell },
         { id: 'policies', label: 'Policies & Agreements', icon: Shield },
-        { id: 'settings', label: 'Settings', icon: Settings },
+        { id: settingsTarget, label: 'Settings', icon: Settings },
       ],
     },
   ];

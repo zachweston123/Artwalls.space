@@ -51,6 +51,13 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [artistPlan, setArtistPlan] = useState<{ tier: 'free' | 'starter' | 'growth' | 'pro'; status: string } | null>(null);
 
+  const planId = (artistPlan?.tier || 'free') as 'free' | 'starter' | 'growth' | 'pro';
+  const isPlanActive = String(artistPlan?.status || '').toLowerCase() === 'active';
+  const ent = entitlementsFor(planId, isPlanActive);
+  const activeCount = artworks.filter((a) => a.status !== 'sold').length;
+  const hasFiniteLimit = Number.isFinite(ent.artworksLimit);
+  const atLimit = hasFiniteLimit && activeCount >= ent.artworksLimit;
+
   const refresh = async () => {
     try {
       setLoading(true);
@@ -149,6 +156,11 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
     try {
       setSaving(true);
       setError(null);
+
+      if (atLimit) {
+        setError('You have reached the active artwork limit for your plan. Upgrade to add more listings.');
+        return;
+      }
 
       const priceNumber = Number(newArtwork.price);
       if (!Number.isFinite(priceNumber) || priceNumber <= 0) {
@@ -317,14 +329,13 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
           <p className="text-[var(--text-muted)] text-sm">
             {loading ? 'Loading…' : `${artworks.length} pieces in your collection`}
           </p>
+          <p className="text-[var(--text-muted)] text-xs mt-1">
+            Plan: {isPlanActive ? planId : `${planId} (inactive)`} · Active listings: {activeCount}
+            {hasFiniteLimit ? ` / ${ent.artworksLimit}` : ' (unlimited)'}
+          </p>
         </div>
         <div className="flex items-center gap-3">
           {(() => {
-            const planId = (artistPlan?.tier || 'free') as 'free' | 'starter' | 'growth' | 'pro';
-            const isActive = String(artistPlan?.status || '').toLowerCase() === 'active';
-            const ent = entitlementsFor(planId, isActive);
-            const activeCount = artworks.filter(a => a.status !== 'sold').length;
-            const atLimit = Number.isFinite(ent.artworksLimit) && activeCount >= ent.artworksLimit;
             return (
               <div className="flex items-center gap-3 w-full sm:w-auto">
                 <button
@@ -352,6 +363,20 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
         })()}
         </div>
       </div>
+
+      {atLimit && (
+        <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl p-4 mb-6 text-sm flex items-center justify-between flex-wrap gap-3">
+          <div className="text-[var(--text)]">
+            You have {activeCount} active listings, which is the maximum for your plan. Upgrade to unlock more slots.
+          </div>
+          <a
+            href="#/plans-pricing"
+            className="px-3 py-2 bg-[var(--accent)] text-[var(--accent-contrast)] rounded-lg text-sm"
+          >
+            View plans
+          </a>
+        </div>
+      )}
 
       {error && (
         <div className="bg-[var(--surface-2)] rounded-xl p-4 border border-[var(--border)] mb-6">
@@ -607,7 +632,7 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
                 </button>
                 <button
                   type="submit"
-                  disabled={saving || uploading}
+                  disabled={saving || uploading || atLimit}
                   className="flex-1 px-4 py-2 bg-[var(--blue)] text-[var(--on-blue)] rounded-lg hover:bg-[var(--blue-hover)] transition-colors disabled:opacity-60 inline-flex items-center justify-center gap-2"
                 >
                   {saving && <Loader2 className="w-4 h-4 animate-spin" />}

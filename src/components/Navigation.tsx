@@ -1,3 +1,4 @@
+// SETTINGS_PATCH_TEST_NAV
 import { useEffect, useRef, useState } from 'react';
 import { Palette, Store, LogOut, Menu, Bell, ChevronDown, Grid, BarChart, Compass, Settings as SettingsIcon, Shield, HelpCircle, BookOpen, ChevronRight } from 'lucide-react';
 import type { User } from '../App';
@@ -142,6 +143,7 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
   }
 
   const isArtist = user.role === 'artist';
+  const settingsTarget = isArtist ? 'artist-settings' : 'venue-settings';
   const activePage = currentPage === 'artist-settings' || currentPage === 'venue-settings' ? 'settings' : currentPage;
 
   const manageLinks = isArtist
@@ -387,7 +389,7 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
                   <button
                     onClick={() => {
                       setOpenMenu(null);
-                      onNavigate('settings');
+                      onNavigate(settingsTarget);
                     }}
                     className="w-full flex items-center gap-3 px-4 py-3 text-sm text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
                   >
