@@ -7,6 +7,7 @@ export function VenueSettingsWithEmptyState() {
   const [hasSchedule, setHasSchedule] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [venueId, setVenueId] = useState<string>('');
+  const [venueInfo, setVenueInfo] = useState({ name: '', email: '' });
   const [scheduleConfig, setScheduleConfig] = useState({
     dayOfWeek: 'Thursday',
     startTime: '16:00',
@@ -16,34 +17,45 @@ export function VenueSettingsWithEmptyState() {
   });
 
   const [tempConfig, setTempConfig] = useState(scheduleConfig);
-    useEffect(() => {
-      supabase.auth.getUser().then(async ({ data }) => {
-        const id = data.user?.id || '';
-        setVenueId(id);
-        if (id) {
-          try {
-            const { schedule } = await getVenueSchedule(id);
-            if (schedule) {
-              setScheduleConfig({
-                dayOfWeek: schedule.dayOfWeek,
-                startTime: schedule.startTime,
-                endTime: schedule.endTime,
-                timezone: schedule.timezone || 'PST',
-                slotMinutes: (schedule.slotMinutes as 30 | 60 | 90 | 120) || 30,
-              });
-              setTempConfig({
-                dayOfWeek: schedule.dayOfWeek,
-                startTime: schedule.startTime,
-                endTime: schedule.endTime,
-                timezone: schedule.timezone || 'PST',
-                slotMinutes: (schedule.slotMinutes as 30 | 60 | 90 | 120) || 30,
-              });
-              setHasSchedule(true);
-            }
-          } catch {}
+  useEffect(() => {
+    supabase.auth.getUser().then(async ({ data }) => {
+      const user = data.user;
+      const id = user?.id || '';
+      setVenueId(id);
+      if (user) {
+        setVenueInfo({
+          name: (user.user_metadata?.name as string) || user.user_metadata?.venue_name || user.email || '',
+          email: user.email || '',
+        });
+      }
+      if (id) {
+        try {
+          const { schedule } = await getVenueSchedule(id);
+          if (schedule) {
+            setScheduleConfig({
+              dayOfWeek: schedule.dayOfWeek,
+              startTime: schedule.startTime,
+              endTime: schedule.endTime,
+              timezone: schedule.timezone || 'PST',
+              slotMinutes: (schedule.slotMinutes as 30 | 60 | 90 | 120) || 30,
+            });
+            setTempConfig({
+              dayOfWeek: schedule.dayOfWeek,
+              startTime: schedule.startTime,
+              endTime: schedule.endTime,
+              timezone: schedule.timezone || 'PST',
+              slotMinutes: (schedule.slotMinutes as 30 | 60 | 90 | 120) || 30,
+            });
+            setHasSchedule(true);
+          } else {
+            setHasSchedule(false);
+          }
+        } catch {
+          setHasSchedule(false);
         }
-      }).catch(() => {});
-    }, []);
+      }
+    }).catch(() => {});
+  }, []);
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
@@ -87,6 +99,7 @@ export function VenueSettingsWithEmptyState() {
   const handleSave = async () => {
     if (validateConfig() && venueId) {
       setScheduleConfig(tempConfig);
+      setHasSchedule(true);
       try {
         await saveVenueSchedule(venueId, {
           dayOfWeek: tempConfig.dayOfWeek,
@@ -95,11 +108,10 @@ export function VenueSettingsWithEmptyState() {
           slotMinutes: tempConfig.slotMinutes,
           timezone: tempConfig.timezone,
         } as any);
-        setHasSchedule(true);
         setShowToast(true);
         setTimeout(() => setShowToast(false), 3000);
       } catch (e) {
-        // noop: toast could show error
+        setHasSchedule(false);
       }
     }
   };
@@ -261,7 +273,8 @@ export function VenueSettingsWithEmptyState() {
               <label className="block text-sm text-[var(--text-muted)] mb-2">Venue Name</label>
               <input
                 type="text"
-                defaultValue="The Corner Café"
+                value={venueInfo.name}
+                onChange={(e) => setVenueInfo({ ...venueInfo, name: e.target.value })}
                 className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
               />
             </div>
@@ -269,7 +282,8 @@ export function VenueSettingsWithEmptyState() {
               <label className="block text-sm text-[var(--text-muted)] mb-2">Contact Email</label>
               <input
                 type="email"
-                defaultValue="venue@example.com"
+                value={venueInfo.email}
+                onChange={(e) => setVenueInfo({ ...venueInfo, email: e.target.value })}
                 className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
               />
             </div>
