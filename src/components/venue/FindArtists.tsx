@@ -48,7 +48,7 @@ export function FindArtists({ onInviteArtist, onViewProfile, onNavigate }: FindA
   useEffect(() => {
     let isMounted = true;
     const timeout = setTimeout(async () => {
-        await loadArtists();
+      await loadArtists();
     }, 500);
 
     async function loadArtists() {
@@ -56,9 +56,9 @@ export function FindArtists({ onInviteArtist, onViewProfile, onNavigate }: FindA
         // Load venue profile to determine local city (only once if not loaded)
         let city = venueCity;
         if (!city && !venueCity) {
-             const me = await apiGet<{ role: string; profile: { id: string; city?: string | null } }>('/api/profile/me');
-             city = (me?.profile?.city || '').trim();
-             if (isMounted) setVenueCity(city);
+          const me = await apiGet<{ role: string; profile: { id: string; city?: string | null } }>('/api/profile/me');
+          city = (me?.profile?.city || '').trim();
+          if (isMounted) setVenueCity(city);
         }
 
         let path = '/api/artists';
@@ -67,7 +67,7 @@ export function FindArtists({ onInviteArtist, onViewProfile, onNavigate }: FindA
         if (searchQuery.trim()) params.append('q', searchQuery.trim());
 
         if (Array.from(params).length > 0) {
-           path += `?${params.toString()}`;
+          path += `?${params.toString()}`;
         }
 
         const resp = await apiGet<{ artists: Array<{ id: string; name?: string | null; email?: string | null; profile_photo_url?: string | null; location?: string }> }>(
@@ -90,14 +90,11 @@ export function FindArtists({ onInviteArtist, onViewProfile, onNavigate }: FindA
       }
     }
 
-    // Initial load
-    // loadArtists(); // handled by debounce effect
-    
+    // Initial load is covered by debounce
     return () => {
       isMounted = false;
       clearTimeout(timeout);
     };
-  }, [searchQuery, searchRadius]); // Re-run when searchQuery changes
   }, [searchQuery]); // Re-run when searchQuery changes
 
   const hasActiveFilters = filters.artTypes.length > 0 || filters.openToNew || searchQuery;
@@ -328,11 +325,8 @@ export function FindArtists({ onInviteArtist, onViewProfile, onNavigate }: FindA
         <EmptyState
           icon={<Users className="w-8 h-8" />}
           title="No artists found"
-          description={hasActiveFilters ? 'Try adjusting filters or expanding your search radius to see more artists.' : 'Check back soon as new artists join the platform.'}
-          primaryAction={hasActiveFilters
-            ? { label: 'Adjust filters', onClick: () => setShowFilters(true) }
-            : { label: 'Expand search radius', onClick: () => setSearchRadius((r) => r + 10) }
-          }
+          description={hasActiveFilters ? 'Try adjusting filters to see more artists.' : 'Check back soon as new artists join the platform.'}
+          primaryAction={{ label: 'Adjust filters', onClick: () => setShowFilters(true) }}
           secondaryAction={onNavigate ? { label: 'Improve venue profile', onClick: () => onNavigate('venue-profile') } : undefined}
         />
       )}
