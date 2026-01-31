@@ -9,17 +9,26 @@ interface VenueAnalyticsProps {
 export function VenueAnalytics({ user }: VenueAnalyticsProps) {
   const [data, setData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     (async () => {
       try {
+        setLoading(true);
+        setError(null);
         const res = await apiGet(`/api/analytics/venue?venueId=${encodeURIComponent(user.id)}`);
-        setData(res);
+        setData(res || {});
       } catch (err: any) {
         setError(err?.message || 'Unable to load analytics');
+        setData(null);
       }
+      setLoading(false);
     })();
   }, [user.id]);
+
+  if (loading) {
+    return <p className="text-sm text-[var(--text-muted)]">Loading analytics…</p>;
+  }
 
   if (error) return <p className="text-sm text-[var(--danger)]">{error}</p>;
 

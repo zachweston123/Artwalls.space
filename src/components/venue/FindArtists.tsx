@@ -43,7 +43,6 @@ export function FindArtists({ onInviteArtist, onViewProfile, onNavigate }: FindA
 
   const [artists, setArtists] = useState<any[]>([]);
   const [venueCity, setVenueCity] = useState<string>('');
-  const [searchRadius, setSearchRadius] = useState<number>(25);
 
   // Debounce search
   useEffect(() => {
@@ -66,7 +65,6 @@ export function FindArtists({ onInviteArtist, onViewProfile, onNavigate }: FindA
         const params = new URLSearchParams();
         if (city) params.append('city', city);
         if (searchQuery.trim()) params.append('q', searchQuery.trim());
-        if (searchRadius) params.append('radiusMiles', String(searchRadius));
 
         if (Array.from(params).length > 0) {
            path += `?${params.toString()}`;
@@ -100,10 +98,9 @@ export function FindArtists({ onInviteArtist, onViewProfile, onNavigate }: FindA
       clearTimeout(timeout);
     };
   }, [searchQuery, searchRadius]); // Re-run when searchQuery changes
+  }, [searchQuery]); // Re-run when searchQuery changes
 
   const hasActiveFilters = filters.artTypes.length > 0 || filters.openToNew || searchQuery;
-
-  const radiusLabel = `${searchRadius} mile radius`;
 
   // Filter artists based on criteria
   const filteredArtists = (artists.length ? artists : []).filter(artist => {
@@ -224,7 +221,7 @@ export function FindArtists({ onInviteArtist, onViewProfile, onNavigate }: FindA
       {/* Results Count */}
       <div className="flex items-center justify-between mb-6">
         <p className="text-sm text-[var(--text-muted)]">
-          Showing artists in {venueCity || 'your area'} · {radiusLabel} · {filteredArtists.length} results
+          Showing artists in {venueCity || 'your area'} · {filteredArtists.length} results
         </p>
       </div>
 

@@ -774,21 +774,7 @@ export default {
     // Public listings: artists (only show live artists)
     if (url.pathname === '/api/artists' && method === 'GET') {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
-      let city = (url.searchParams.get('city') || '').trim();
       const q = (url.searchParams.get('q') || '').trim();
-      // If no explicit city is provided, try using the requesting venue's city for local matching
-      if (!city) {
-        const requester = await getSupabaseUserFromRequest(request);
-        const requesterRole = requester?.user_metadata?.role;
-        if (requesterRole === 'venue') {
-          const { data: venueRow } = await supabaseAdmin
-            .from('venues')
-            .select('city')
-            .eq('id', requester.id)
-            .maybeSingle();
-          city = (venueRow?.city || '').trim();
-        }
-      }
       
       let query = supabaseAdmin
         .from('artists')
@@ -800,11 +786,6 @@ export default {
 
       // Allow discovery of active artists; if is_live is null, still include for visibility
       query = query.or('is_live.eq.true,is_live.is.null');
-      
-      // Match either primary or secondary city if a city is provided
-      if (city) {
-        query = query.or(`city_primary.eq.${city},city_secondary.eq.${city}`);
-      }
       
       // Search by name or email if a query is provided
       if (q) {
