@@ -7,6 +7,7 @@ import { supabase } from '../../lib/supabase';
 type ConnectStatus = {
   hasAccount: boolean;
   accountId?: string;
+  onboardingStatus?: 'not_started' | 'pending' | 'complete' | 'restricted';
   chargesEnabled?: boolean;
   payoutsEnabled?: boolean;
   detailsSubmitted?: boolean;
@@ -55,16 +56,12 @@ export function VenuePayoutsCard({ user }: VenuePayoutsCardProps) {
         return;
       }
 
-      // 1) Ensure account exists
-      await apiPost<{ accountId: string }>('/api/stripe/connect/venue/create-account', {});
-
-      // 2) Get onboarding link
       const { url } = await apiPost<{ url: string }>(
-        '/api/stripe/connect/venue/account-link',
+        '/api/stripe/connect/venue/onboard',
         {},
       );
 
-      window.open(url, '_blank', 'noopener,noreferrer');
+      window.location.href = url;
     } catch (e: any) {
       setError(e?.message || 'Unable to start Stripe onboarding');
     } finally {
@@ -84,7 +81,7 @@ export function VenuePayoutsCard({ user }: VenuePayoutsCardProps) {
         return;
       }
       const { url } = await apiPost<{ url: string }>(
-        '/api/stripe/connect/venue/login-link',
+        '/api/stripe/connect/venue/login',
         {},
       );
       window.open(url, '_blank', 'noopener,noreferrer');
@@ -94,8 +91,14 @@ export function VenuePayoutsCard({ user }: VenuePayoutsCardProps) {
       setWorking(false);
     }
   };
-
   const isReady = !!status.hasAccount && !!status.payoutsEnabled;
+  const onboardingLabel = status.onboardingStatus === 'complete'
+    ? 'Ready to receive payouts'
+    : status.onboardingStatus === 'pending'
+      ? 'Finish Stripe setup'
+      : status.onboardingStatus === 'restricted'
+        ? 'Action needed in Stripe'
+        : 'Not connected';
 
   return (
     <div className="bg-[var(--surface-1)] text-[var(--text)] rounded-xl p-6 border border-[var(--border)]">
@@ -108,7 +111,7 @@ export function VenuePayoutsCard({ user }: VenuePayoutsCardProps) {
             <h2 className="text-xl text-[var(--text)]">Enable venue payouts</h2>
           </div>
           <p className="text-sm text-[var(--text-muted)]">
-            Stripe Connect routes each sale’s venue share to your bank account.
+            Stripe Connect routes each sale’s venue share to your bank account. It’s quick and free to join.
           </p>
         </div>
         {!loading && (
@@ -119,7 +122,7 @@ export function VenuePayoutsCard({ user }: VenuePayoutsCardProps) {
                 : 'bg-[var(--surface-2)] text-[var(--warning)] border-[var(--border)]'
             }`}
           >
-            {isReady ? 'Payouts enabled' : 'Action required'}
+            {isReady ? 'Payouts enabled' : onboardingLabel}
           </span>
         )}
       </div>
@@ -161,7 +164,7 @@ export function VenuePayoutsCard({ user }: VenuePayoutsCardProps) {
                     : 'Complete onboarding to receive venue payouts.'}
                 </p>
                 <p className="text-[var(--text-muted)]">
-                  Stripe will collect business and bank info securely.
+                  Connect Stripe — takes ~2 minutes. We automate payouts after each sale.
                 </p>
               </div>
             </div>
@@ -174,7 +177,7 @@ export function VenuePayoutsCard({ user }: VenuePayoutsCardProps) {
                   className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 disabled:opacity-60"
                 >
                   {working ? <Loader2 className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-4 h-4" />}
-                  Set up venue payouts
+                  Connect Stripe to get paid
                 </button>
               ) : (
                 <button

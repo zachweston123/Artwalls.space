@@ -22,6 +22,9 @@ function mapArtistRow(r) {
     role: r.role,
     stripeAccountId: r.stripe_account_id,
     stripeCustomerId: r.stripe_customer_id,
+    stripePayoutsEnabled: r.stripe_payouts_enabled,
+    stripeChargesEnabled: r.stripe_charges_enabled,
+    stripeOnboardingStatus: r.stripe_onboarding_status,
     subscriptionTier: r.subscription_tier,
     subscriptionStatus: r.subscription_status,
     stripeSubscriptionId: r.stripe_subscription_id,
@@ -48,6 +51,9 @@ function mapVenueRow(r) {
     name: r.name,
     type: r.type,
     stripeAccountId: r.stripe_account_id,
+    stripePayoutsEnabled: r.stripe_payouts_enabled,
+    stripeChargesEnabled: r.stripe_charges_enabled,
+    stripeOnboardingStatus: r.stripe_onboarding_status,
     defaultVenueFeeBps: r.default_venue_fee_bps,
     labels: Array.isArray(r.labels) ? r.labels : (r.labels ? r.labels : []),
     suspended: !!r.suspended,
@@ -94,6 +100,8 @@ function mapOrderRow(r) {
     platformFeeCents: r.platform_fee_cents,
     artistPayoutCents: r.artist_payout_cents,
     venuePayoutCents: r.venue_payout_cents,
+    payoutStatus: r.payout_status,
+    payoutError: r.payout_error,
     status: r.status,
     stripeCheckoutSessionId: r.stripe_checkout_session_id,
     stripePaymentIntentId: r.stripe_payment_intent_id,
@@ -357,6 +365,8 @@ export async function updateOrder(id, patch) {
   if (patch.stripeChargeId !== undefined) payload.stripe_charge_id = patch.stripeChargeId;
   if (patch.transferIds !== undefined) payload.transfer_ids = patch.transferIds;
   if (patch.stripeCheckoutSessionId !== undefined) payload.stripe_checkout_session_id = patch.stripeCheckoutSessionId;
+  if (patch.payoutStatus !== undefined) payload.payout_status = patch.payoutStatus;
+  if (patch.payoutError !== undefined) payload.payout_error = patch.payoutError;
   payload.updated_at = nowIso();
 
   const { data, error } = await supabaseAdmin.from('orders').update(payload).eq('id', id).select('*').single();

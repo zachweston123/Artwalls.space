@@ -1562,6 +1562,62 @@ export default {
       return Math.max(0, Math.round(num));
     }
 
+    function deriveConnectOnboardingStatus(account: any): 'not_started' | 'pending' | 'complete' | 'restricted' {
+      const details = !!account?.details_submitted;
+      const charges = !!account?.charges_enabled;
+      const payouts = !!account?.payouts_enabled;
+      const hasRequirements = Array.isArray(account?.requirements?.currently_due)
+        ? account.requirements.currently_due.length > 0
+        : false;
+
+      if (details && charges && payouts) return 'complete';
+      if (details && (!charges || !payouts)) return 'restricted';
+      if (details || hasRequirements) return 'pending';
+      return 'not_started';
+    }
+
+    async function syncConnectAccountInSupabase(account: any) {
+      if (!supabaseAdmin) return { status: 'noop', reason: 'supabase_disabled' } as const;
+      const accountId = account?.id;
+      if (!accountId) return { status: 'noop', reason: 'missing_account_id' } as const;
+
+      const nowIso = new Date().toISOString();
+      const updates = {
+        stripe_charges_enabled: !!account?.charges_enabled,
+        stripe_payouts_enabled: !!account?.payouts_enabled,
+        stripe_details_submitted: !!account?.details_submitted,
+        stripe_requirements_currently_due: account?.requirements?.currently_due || [],
+        stripe_requirements_eventually_due: account?.requirements?.eventually_due || [],
+        stripe_onboarding_status: deriveConnectOnboardingStatus(account),
+        stripe_last_status_sync_at: nowIso,
+        updated_at: nowIso,
+      } as const;
+
+      const { data: artistRow } = await supabaseAdmin
+        .from('artists')
+        .select('id')
+        .eq('stripe_account_id', accountId)
+        .maybeSingle();
+      const { data: venueRow } = await supabaseAdmin
+        .from('venues')
+        .select('id')
+        .eq('stripe_account_id', accountId)
+        .maybeSingle();
+
+      if (!artistRow && !venueRow) {
+        return { status: 'noop', reason: 'no_owner' } as const;
+      }
+
+      if (artistRow) {
+        await supabaseAdmin.from('artists').update(updates).eq('id', artistRow.id);
+      }
+      if (venueRow) {
+        await supabaseAdmin.from('venues').update(updates).eq('id', venueRow.id);
+      }
+
+      return { status: 'ok', updatedArtist: !!artistRow, updatedVenue: !!venueRow, onboardingStatus: updates.stripe_onboarding_status } as const;
+    }
+
     // Helper: require Supabase auth in production-like usage
     async function requireArtist(req: Request): Promise<any | null> {
       const user = await getSupabaseUserFromRequest(req);
@@ -2458,9 +2514,11 @@ export default {
       const resp = await stripeFetch(`/v1/accounts/${artist.stripe_account_id}`);
       const acc = await resp.json();
       if (!resp.ok) return json(acc, { status: resp.status });
+      await syncConnectAccountInSupabase(acc);
       return json({
         hasAccount: true,
         accountId: artist.stripe_account_id,
+        onboardingStatus: deriveConnectOnboardingStatus(acc),
         chargesEnabled: acc.charges_enabled,
         payoutsEnabled: acc.payouts_enabled,
         detailsSubmitted: acc.details_submitted,
@@ -2470,7 +2528,52 @@ export default {
       });
     }
 
-    // Connect: Venue create account
+    // Connect: Venue onboard (create or reuse + account link)
+    if (url.pathname === '/api/stripe/connect/venue/onboard' && method === 'POST') {
+      const user = await requireVenue(request);
+      if (!user) return json({ error: 'Missing or invalid Authorization bearer token (venue required)' }, { status: 401 });
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+
+      const { data: venue } = await supabaseAdmin.from('venues').select('*').eq('id', user.id).maybeSingle();
+      let accountId = venue?.stripe_account_id || null;
+
+      if (!accountId) {
+        const body = toForm({
+          type: 'express',
+          email: user.email ?? undefined,
+          'capabilities[card_payments][requested]': 'true',
+          'capabilities[transfers][requested]': 'true',
+          'metadata[venueId]': user.id,
+        });
+        const createResp = await stripeFetch('/v1/accounts', { method: 'POST', body });
+        const created = await createResp.json();
+        if (!createResp.ok) return json(created, { status: createResp.status });
+        accountId = created.id;
+        const nowIso = new Date().toISOString();
+        await supabaseAdmin
+          .from('venues')
+          .upsert({
+            id: user.id,
+            email: user.email ?? venue?.email ?? null,
+            name: user.user_metadata?.name ?? venue?.name ?? null,
+            stripe_account_id: accountId,
+            stripe_onboarding_status: 'pending',
+            stripe_last_status_sync_at: nowIso,
+            updated_at: nowIso,
+          }, { onConflict: 'id' });
+      }
+
+      const appUrl = env.PAGES_ORIGIN || 'https://artwalls.space';
+      const refresh_url = `${appUrl}/#/venue-dashboard?stripe=refresh`;
+      const return_url = `${appUrl}/#/venue-dashboard?stripe=complete`;
+      const linkBody = toForm({ account: accountId, refresh_url, return_url, type: 'account_onboarding' });
+      const resp = await stripeFetch('/v1/account_links', { method: 'POST', body: linkBody });
+      const respJson = await resp.json();
+      if (!resp.ok) return json(respJson, { status: resp.status });
+      return json({ url: respJson.url, accountId });
+    }
+
+    // Connect: Venue create account (legacy alias)
     if (url.pathname === '/api/stripe/connect/venue/create-account' && method === 'POST') {
       const user = await requireVenue(request);
       if (!user) return json({ error: 'Missing or invalid Authorization bearer token (venue required)' }, { status: 401 });
@@ -2495,7 +2598,6 @@ export default {
       if (!user) return json({ error: 'Missing or invalid Authorization bearer token (venue required)' }, { status: 401 });
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
       const { data: venue } = await supabaseAdmin.from('venues').select('*').eq('id', user.id).maybeSingle();
-      if (!venue?.phone_number) return json({ error: 'Phone number required. Please add your phone to your profile.' }, { status: 400 });
       if (!venue?.stripe_account_id) return json({ error: 'Venue has no stripeAccountId yet. Call /create-account first.' }, { status: 400 });
       const appUrl = env.PAGES_ORIGIN || 'https://artwalls.space';
       const refresh_url = `${appUrl}/#/venue-dashboard`;
@@ -2508,12 +2610,25 @@ export default {
     }
 
     // Connect: Venue login link
+    if (url.pathname === '/api/stripe/connect/venue/login' && method === 'POST') {
+      const user = await requireVenue(request);
+      if (!user) return json({ error: 'Missing or invalid Authorization bearer token (venue required)' }, { status: 401 });
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const { data: venue } = await supabaseAdmin.from('venues').select('*').eq('id', user.id).maybeSingle();
+      if (!venue?.stripe_account_id) return json({ error: 'Venue has no stripeAccountId yet.' }, { status: 400 });
+      const body = toForm({ account: venue.stripe_account_id });
+      const resp = await stripeFetch('/v1/accounts/create_login_link', { method: 'POST', body });
+      const respJson = await resp.json();
+      if (!resp.ok) return json(respJson, { status: resp.status });
+      return json({ url: respJson.url });
+    }
+
+    // Connect: Venue login link (legacy alias)
     if (url.pathname === '/api/stripe/connect/venue/login-link' && method === 'POST') {
       const user = await requireVenue(request);
       if (!user) return json({ error: 'Missing or invalid Authorization bearer token (venue required)' }, { status: 401 });
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
       const { data: venue } = await supabaseAdmin.from('venues').select('*').eq('id', user.id).maybeSingle();
-      if (!venue?.phone_number) return json({ error: 'Phone number required. Please add your phone to your profile.' }, { status: 400 });
       if (!venue?.stripe_account_id) return json({ error: 'Venue has no stripeAccountId yet.' }, { status: 400 });
       const body = toForm({ account: venue.stripe_account_id });
       const resp = await stripeFetch('/v1/accounts/create_login_link', { method: 'POST', body });
@@ -2532,9 +2647,11 @@ export default {
       const resp = await stripeFetch(`/v1/accounts/${venue.stripe_account_id}`);
       const acc = await resp.json();
       if (!resp.ok) return json(acc, { status: resp.status });
+      await syncConnectAccountInSupabase(acc);
       return json({
         hasAccount: true,
         accountId: venue.stripe_account_id,
+        onboardingStatus: deriveConnectOnboardingStatus(acc),
         chargesEnabled: acc.charges_enabled,
         payoutsEnabled: acc.payouts_enabled,
         detailsSubmitted: acc.details_submitted,
@@ -2651,7 +2768,7 @@ export default {
       const { data: venue, error: venueErr } = orderRow.venue_id
         ? await supabaseAdmin
             .from('venues')
-            .select('id,name,phone_number,stripe_account_id,default_venue_fee_bps')
+            .select('id,name,phone_number,stripe_account_id,default_venue_fee_bps,stripe_payouts_enabled,stripe_charges_enabled,stripe_onboarding_status')
             .eq('id', orderRow.venue_id)
             .maybeSingle()
         : { data: null, error: null };
@@ -2694,7 +2811,11 @@ export default {
       let venueTransferId = typeof transferRecord.venue_transfer_id === 'string' ? transferRecord.venue_transfer_id : null;
       let artistTransferId = typeof transferRecord.artist_transfer_id === 'string' ? transferRecord.artist_transfer_id : null;
 
-      if (!venueTransferId && venue?.stripe_account_id && venuePayoutCents > 0) {
+      const venueReadyForPayout = !!venue?.stripe_account_id && !!venue?.stripe_payouts_enabled;
+      const venueTransferAttempted = venuePayoutCents > 0 && venueReadyForPayout;
+      const venueTransferBlocked = venuePayoutCents > 0 && !venueReadyForPayout && !!venue;
+
+      if (!venueTransferId && venueTransferAttempted) {
         const transferPayload: Record<string, string> = {
           amount: String(venuePayoutCents),
           currency,
@@ -2732,6 +2853,24 @@ export default {
 
       const transferArray = Object.keys(transferRecord).length ? [transferRecord] : [];
 
+      const artistTransferAttempted = artistPayoutCents > 0 && !!artist?.stripe_account_id;
+      const artistTransferCompleted = !!transferDest || !!artistTransferId;
+      const venueTransferCompleted = !!venueTransferId;
+      let payoutStatus: 'pending_connect' | 'pending_transfer' | 'paid' | 'failed' | 'blocked_pending_onboarding' =
+        (orderRow.payout_status as any) || 'pending_connect';
+      let payoutError: string | null = orderRow.payout_error || null;
+
+      if (venueTransferBlocked) {
+        payoutStatus = 'blocked_pending_onboarding';
+        payoutError = 'Venue payouts are disabled; onboarding incomplete';
+      } else if ((artistTransferAttempted && !artistTransferCompleted) || (venueTransferAttempted && !venueTransferCompleted)) {
+        payoutStatus = 'pending_transfer';
+        payoutError = payoutError || 'Transfer not completed yet';
+      } else if ((artistTransferAttempted ? artistTransferCompleted : true) && (venueTransferAttempted ? venueTransferCompleted : true)) {
+        payoutStatus = 'paid';
+        payoutError = null;
+      }
+
       const orderUpdate: Record<string, any> = {
         status: 'paid',
         stripe_checkout_session_id: sessionId,
@@ -2753,6 +2892,8 @@ export default {
         platform_gross_before_stripe_cents: platformRemainderCents,
         artist_plan_id_at_purchase: artistTier,
         transfer_ids: transferArray,
+        payout_status: payoutStatus,
+        payout_error: payoutError,
         updated_at: new Date().toISOString(),
       };
 
@@ -2904,7 +3045,23 @@ export default {
 
             let note = 'ignored';
 
-            if (canProcess && eventType === 'checkout.session.completed') {
+            if (canProcess && eventType === 'account.updated') {
+              try {
+                const accountObj = (event as any)?.data?.object;
+                const syncResult = await syncConnectAccountInSupabase(accountObj);
+                if (syncResult.status === 'ok') {
+                  const owners = [syncResult.updatedArtist ? 'artist' : null, syncResult.updatedVenue ? 'venue' : null]
+                    .filter(Boolean)
+                    .join('+');
+                  note = `connect_sync:${owners || 'unknown_owner'}`;
+                } else {
+                  note = `connect_skip:${syncResult.reason || 'unknown'}`;
+                }
+              } catch (processErr) {
+                note = `error:${processErr instanceof Error ? processErr.message : 'unknown'}`;
+                console.error('Connect sync error', processErr);
+              }
+            } else if (canProcess && eventType === 'checkout.session.completed') {
               try {
                 const sessionObj = (event as any)?.data?.object;
                 const paymentType = sessionObj?.metadata?.paymentType || null;

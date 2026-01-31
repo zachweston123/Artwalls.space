@@ -2072,6 +2072,38 @@ async function assertPayoutReady(accountId, label) {
 async function handleStripeWebhookEvent(event) {
   if (!event || !event.type) return;
 
+  const deriveConnectOnboardingStatus = (account) => {
+    const details = !!account?.details_submitted;
+    const charges = !!account?.charges_enabled;
+    const payouts = !!account?.payouts_enabled;
+    const hasRequirements = Array.isArray(account?.requirements?.currently_due)
+      ? account.requirements.currently_due.length > 0
+      : false;
+
+    if (details && charges && payouts) return 'complete';
+    if (details && (!charges || !payouts)) return 'restricted';
+    if (details || hasRequirements) return 'pending';
+    return 'not_started';
+  };
+
+  const syncConnectAccount = async (account) => {
+    if (!account?.id || !supabaseAdmin) return;
+    const nowIso = new Date().toISOString();
+    const updates = {
+      stripe_charges_enabled: !!account?.charges_enabled,
+      stripe_payouts_enabled: !!account?.payouts_enabled,
+      stripe_details_submitted: !!account?.details_submitted,
+      stripe_requirements_currently_due: account?.requirements?.currently_due || [],
+      stripe_requirements_eventually_due: account?.requirements?.eventually_due || [],
+      stripe_onboarding_status: deriveConnectOnboardingStatus(account),
+      stripe_last_status_sync_at: nowIso,
+      updated_at: nowIso,
+    };
+
+    await supabaseAdmin.from('artists').update(updates).eq('stripe_account_id', account.id);
+    await supabaseAdmin.from('venues').update(updates).eq('stripe_account_id', account.id);
+  };
+
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
 
@@ -2091,6 +2123,8 @@ async function handleStripeWebhookEvent(event) {
         if (!chargeId) throw new Error('Missing latest_charge on PaymentIntent');
 
         const transfers = [];
+        let payoutStatus = order.payoutStatus || 'pending_connect';
+        let payoutError = order.payoutError || null;
 
         if (order.artistPayoutCents > 0) {
           const artist = await getArtist(order.artistId);
@@ -2108,16 +2142,25 @@ async function handleStripeWebhookEvent(event) {
 
         if (order.venuePayoutCents > 0) {
           const venue = await getVenue(order.venueId);
-          if (!venue?.stripeAccountId) throw new Error('Venue stripeAccountId missing for payout');
-          const t = await stripe.transfers.create({
-            amount: order.venuePayoutCents,
-            currency: order.currency,
-            destination: venue.stripeAccountId,
-            source_transaction: chargeId,
-            transfer_group: orderId,
-            metadata: { orderId, artworkId, recipient: 'venue', recipientId: order.venueId },
-          });
-          transfers.push({ recipient: 'venue', id: t.id });
+          const venueReady = !!venue?.stripeAccountId && !!venue?.stripePayoutsEnabled;
+          if (!venueReady) {
+            payoutStatus = 'blocked_pending_onboarding';
+            payoutError = 'Venue payouts disabled or onboarding incomplete';
+          } else {
+            const t = await stripe.transfers.create({
+              amount: order.venuePayoutCents,
+              currency: order.currency,
+              destination: venue.stripeAccountId,
+              source_transaction: chargeId,
+              transfer_group: orderId,
+              metadata: { orderId, artworkId, recipient: 'venue', recipientId: order.venueId },
+            });
+            transfers.push({ recipient: 'venue', id: t.id });
+          }
+        }
+
+        if (!payoutError) {
+          payoutStatus = 'paid';
         }
 
         await updateOrder(orderId, {
@@ -2125,6 +2168,8 @@ async function handleStripeWebhookEvent(event) {
           stripePaymentIntentId: piId,
           stripeChargeId: chargeId,
           transferIds: transfers,
+          payoutStatus,
+          payoutError,
         });
 
         if (artworkId) {
@@ -2167,6 +2212,11 @@ async function handleStripeWebhookEvent(event) {
         console.log('✅ Artist subscription activated + synced', { artistId, tier, subscriptionId });
       }
     }
+  }
+
+  if (event.type === 'account.updated') {
+    await syncConnectAccount(event.data?.object);
+    return;
   }
 
   if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.deleted') {

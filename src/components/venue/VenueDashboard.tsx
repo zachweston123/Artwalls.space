@@ -102,6 +102,12 @@ export function VenueDashboard({ onNavigate, user, hasAcceptedAgreement }: Venue
       />
 
       {user && (
+        <div className="mb-6">
+          <VenuePayoutsCard user={user} />
+        </div>
+      )}
+
+      {user && (
         <div className="mb-8">
           <VenueSetupChecklist user={user} stats={stats || undefined} onNavigate={onNavigate} hasAcceptedAgreement={hasAcceptedAgreement} />
         </div>
@@ -181,11 +187,6 @@ export function VenueDashboard({ onNavigate, user, hasAcceptedAgreement }: Venue
         </div>
       </div>
 
-      {user && (
-        <div className="mt-12">
-          <VenuePayoutsCard user={user} />
-        </div>
-      )}
     </div>
   );
 }

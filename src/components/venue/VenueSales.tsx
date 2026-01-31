@@ -3,12 +3,15 @@ import { mockSales } from '../../data/mockData';
 import { PageHeader } from '../PageHeader';
 import { EmptyState } from '../EmptyState';
 import { formatCurrency, safeDivide } from '../../utils/format';
+import { VenuePayoutsCard } from './VenuePayoutsCard';
+import type { User } from '../../App';
 
 interface VenueSalesProps {
   onNavigate?: (page: string) => void;
+  user?: User;
 }
 
-export function VenueSales({ onNavigate }: VenueSalesProps) {
+export function VenueSales({ onNavigate, user }: VenueSalesProps) {
   const totalEarnings = mockSales.reduce((sum, sale) => sum + sale.venueEarnings, 0);
   const totalSales = mockSales.length;
   const averageCommission = safeDivide(totalEarnings, totalSales);
@@ -24,6 +27,12 @@ export function VenueSales({ onNavigate }: VenueSalesProps) {
         secondaryAction={onNavigate ? { label: 'Add wall space', onClick: () => onNavigate('venue-walls') } : undefined}
         className="mb-8"
       />
+
+      {user && (
+        <div className="mb-6">
+          <VenuePayoutsCard user={user} />
+        </div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <div className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)]">
