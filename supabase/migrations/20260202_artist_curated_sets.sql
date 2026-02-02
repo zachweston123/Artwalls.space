@@ -19,6 +19,9 @@ as $$
   end;
 $$;
 
+-- Ensure artworks has archived_at column for availability checks (defensive)
+alter table public.artworks add column if not exists archived_at timestamptz;
+
 -- ---------------------------------------------------------------------------
 -- Tables
 -- ---------------------------------------------------------------------------
@@ -321,7 +324,8 @@ alter table public.artwork_set_items enable row level security;
 alter table public.venue_set_selections enable row level security;
 
 -- Artwork sets policies
-create policy if not exists artwork_sets_public_read on public.artwork_sets
+drop policy if exists artwork_sets_public_read on public.artwork_sets;
+create policy artwork_sets_public_read on public.artwork_sets
   for select using (
     status = 'published' and
     (select count(*) from public.artwork_set_items i
@@ -331,49 +335,62 @@ create policy if not exists artwork_sets_public_read on public.artwork_sets
        and a.archived_at is null) between 3 and 6
   );
 
-create policy if not exists artwork_sets_read_own on public.artwork_sets
+drop policy if exists artwork_sets_read_own on public.artwork_sets;
+create policy artwork_sets_read_own on public.artwork_sets
   for select using (auth.uid() = artist_id);
 
-create policy if not exists artwork_sets_insert_own on public.artwork_sets
+drop policy if exists artwork_sets_insert_own on public.artwork_sets;
+create policy artwork_sets_insert_own on public.artwork_sets
   for insert with check (auth.uid() = artist_id);
 
-create policy if not exists artwork_sets_update_own on public.artwork_sets
+drop policy if exists artwork_sets_update_own on public.artwork_sets;
+create policy artwork_sets_update_own on public.artwork_sets
   for update using (auth.uid() = artist_id);
 
-create policy if not exists artwork_sets_delete_own on public.artwork_sets
+drop policy if exists artwork_sets_delete_own on public.artwork_sets;
+create policy artwork_sets_delete_own on public.artwork_sets
   for delete using (auth.uid() = artist_id);
 
 -- Set items policies
-create policy if not exists artwork_set_items_public_read on public.artwork_set_items
+drop policy if exists artwork_set_items_public_read on public.artwork_set_items;
+create policy artwork_set_items_public_read on public.artwork_set_items
   for select using (exists (
     select 1 from public.artwork_sets s
     where s.id = set_id and s.status = 'published'
   ));
 
-create policy if not exists artwork_set_items_read_own on public.artwork_set_items
+drop policy if exists artwork_set_items_read_own on public.artwork_set_items;
+create policy artwork_set_items_read_own on public.artwork_set_items
   for select using (auth.uid() = (select artist_id from public.artwork_sets s where s.id = set_id));
 
-create policy if not exists artwork_set_items_insert_own on public.artwork_set_items
+drop policy if exists artwork_set_items_insert_own on public.artwork_set_items;
+create policy artwork_set_items_insert_own on public.artwork_set_items
   for insert with check (auth.uid() = (select artist_id from public.artwork_sets s where s.id = set_id));
 
-create policy if not exists artwork_set_items_update_own on public.artwork_set_items
+drop policy if exists artwork_set_items_update_own on public.artwork_set_items;
+create policy artwork_set_items_update_own on public.artwork_set_items
   for update using (auth.uid() = (select artist_id from public.artwork_sets s where s.id = set_id));
 
-create policy if not exists artwork_set_items_delete_own on public.artwork_set_items
+drop policy if exists artwork_set_items_delete_own on public.artwork_set_items;
+create policy artwork_set_items_delete_own on public.artwork_set_items
   for delete using (auth.uid() = (select artist_id from public.artwork_sets s where s.id = set_id));
 
 -- Venue selections policies
-create policy if not exists venue_set_selections_read_venue on public.venue_set_selections
+drop policy if exists venue_set_selections_read_venue on public.venue_set_selections;
+create policy venue_set_selections_read_venue on public.venue_set_selections
   for select using (auth.uid() = venue_id);
 
-create policy if not exists venue_set_selections_insert_venue on public.venue_set_selections
+drop policy if exists venue_set_selections_insert_venue on public.venue_set_selections;
+create policy venue_set_selections_insert_venue on public.venue_set_selections
   for insert with check (auth.uid() = venue_id);
 
-create policy if not exists venue_set_selections_update_venue on public.venue_set_selections
+drop policy if exists venue_set_selections_update_venue on public.venue_set_selections;
+create policy venue_set_selections_update_venue on public.venue_set_selections
   for update using (auth.uid() = venue_id);
 
 -- Allow artists to see selections for their sets (read-only)
-create policy if not exists venue_set_selections_read_artist on public.venue_set_selections
+drop policy if exists venue_set_selections_read_artist on public.venue_set_selections;
+create policy venue_set_selections_read_artist on public.venue_set_selections
   for select using (
     exists (
       select 1 from public.artwork_sets s
