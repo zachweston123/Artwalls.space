@@ -175,6 +175,12 @@ export function VenueDashboard({ onNavigate, user, hasAcceptedAgreement }: Venue
               Invite artists
             </button>
             <button
+              onClick={() => onNavigate('venue-curated-sets')}
+              className="w-full px-4 py-3 bg-[var(--surface-2)] text-[var(--text)] rounded-lg hover:bg-[var(--surface-3)] transition-colors"
+            >
+              Browse curated sets
+            </button>
+            <button
               onClick={() => onNavigate('venue-sales')}
               className="w-full px-4 py-3 bg-[var(--surface-2)] text-[var(--text)] rounded-lg hover:bg-[var(--surface-3)] transition-colors"
             >

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Clock, Save, CheckCircle, AlertCircle } from 'lucide-react';
 import { getVenueSchedule, saveVenueSchedule } from '../../lib/api';
 import { supabase } from '../../lib/supabase';
@@ -13,7 +13,7 @@ export function VenueSettingsWithEmptyState() {
     startTime: '16:00',
     endTime: '18:00',
     timezone: 'PST',
-    slotMinutes: 30 as 30 | 60 | 90 | 120,
+    slotMinutes: 30 as 15 | 30 | 60 | 90 | 120,
   });
 
   const [tempConfig, setTempConfig] = useState(scheduleConfig);
@@ -37,14 +37,14 @@ export function VenueSettingsWithEmptyState() {
               startTime: schedule.startTime,
               endTime: schedule.endTime,
               timezone: schedule.timezone || 'PST',
-              slotMinutes: (schedule.slotMinutes as 30 | 60 | 90 | 120) || 30,
+              slotMinutes: (schedule.slotMinutes as 15 | 30 | 60 | 90 | 120) || 30,
             });
             setTempConfig({
               dayOfWeek: schedule.dayOfWeek,
               startTime: schedule.startTime,
               endTime: schedule.endTime,
               timezone: schedule.timezone || 'PST',
-              slotMinutes: (schedule.slotMinutes as 30 | 60 | 90 | 120) || 30,
+              slotMinutes: (schedule.slotMinutes as 15 | 30 | 60 | 90 | 120) || 30,
             });
             setHasSchedule(true);
           } else {
@@ -69,6 +69,27 @@ export function VenueSettingsWithEmptyState() {
     'Sunday',
   ];
 
+  const timeToMinutes = (time: string) => {
+    const [h, m] = time.split(':').map(Number);
+    return h * 60 + m;
+  };
+
+  const baseTimeOptions = useMemo(() => {
+    const times: string[] = [];
+    for (let hour = 6; hour <= 22; hour += 1) {
+      ['00', '15', '30', '45'].forEach((minutes) => {
+        times.push(`${String(hour).padStart(2, '0')}:${minutes}`);
+      });
+    }
+    return times;
+  }, []);
+
+  const timeOptions = useMemo(() => {
+    const set = new Set(baseTimeOptions);
+    [tempConfig.startTime, tempConfig.endTime].forEach((time) => time && set.add(time));
+    return Array.from(set).sort((a, b) => timeToMinutes(a) - timeToMinutes(b));
+  }, [baseTimeOptions, tempConfig.endTime, tempConfig.startTime]);
+
   const formatTime = (time: string) => {
     const [hour, minute] = time.split(':');
     const h = parseInt(hour);
@@ -80,14 +101,14 @@ export function VenueSettingsWithEmptyState() {
   const validateConfig = () => {
     const newErrors: { [key: string]: string } = {};
     
-    const start = parseInt(tempConfig.startTime.replace(':', ''));
-    const end = parseInt(tempConfig.endTime.replace(':', ''));
+    const start = timeToMinutes(tempConfig.startTime);
+    const end = timeToMinutes(tempConfig.endTime);
     
     if (end <= start) {
       newErrors.endTime = 'End time must be after start time';
     }
     
-    const duration = (end - start) / 100;
+    const duration = (end - start) / 60;
     if (duration < 1) {
       newErrors.duration = 'Recommended duration: 1-3 hours';
     }
@@ -117,10 +138,9 @@ export function VenueSettingsWithEmptyState() {
   };
 
   const getDuration = () => {
-    const start = parseInt(tempConfig.startTime.replace(':', ''));
-    const end = parseInt(tempConfig.endTime.replace(':', ''));
-    const hours = (end - start) / 100;
-    return hours;
+    const start = timeToMinutes(tempConfig.startTime);
+    const end = timeToMinutes(tempConfig.endTime);
+    return (end - start) / 60;
   };
 
   return (
@@ -183,17 +203,21 @@ export function VenueSettingsWithEmptyState() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm text-[var(--text-muted)] mb-2">Start Time</label>
-                <input
-                  type="time"
+                <select
                   value={tempConfig.startTime}
                   onChange={(e) => setTempConfig({ ...tempConfig, startTime: e.target.value })}
                   className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
-                />
+                >
+                  {timeOptions.map((time) => (
+                    <option key={time} value={time}>
+                      {formatTime(time)}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-sm text-[var(--text-muted)] mb-2">End Time</label>
-                <input
-                  type="time"
+                <select
                   value={tempConfig.endTime}
                   onChange={(e) => setTempConfig({ ...tempConfig, endTime: e.target.value })}
                   className={`w-full px-4 py-2 rounded-lg border bg-[var(--surface-2)] focus:outline-none focus:ring-2 ${
@@ -201,9 +225,18 @@ export function VenueSettingsWithEmptyState() {
                       ? 'border-[var(--danger)] focus:ring-[var(--danger)]'
                       : 'border-[var(--border)] focus:ring-[var(--focus)]'
                   }`}
-                />
+                >
+                  {timeOptions.map((time) => (
+                    <option key={time} value={time}>
+                      {formatTime(time)}
+                    </option>
+                  ))}
+                </select>
                 {errors.endTime && (
                   <p className="text-xs text-[var(--danger)] mt-1">{errors.endTime}</p>
+                )}
+                {errors.duration && !errors.endTime && (
+                  <p className="text-xs text-[var(--warning)] mt-1">{errors.duration}</p>
                 )}
               </div>
             </div>
@@ -213,9 +246,10 @@ export function VenueSettingsWithEmptyState() {
               <label className="block text-sm text-[var(--text-muted)] mb-2">Slot Length</label>
               <select
                 value={tempConfig.slotMinutes}
-                onChange={(e) => setTempConfig({ ...tempConfig, slotMinutes: Number(e.target.value) as 30 | 60 | 90 | 120 })}
+                onChange={(e) => setTempConfig({ ...tempConfig, slotMinutes: Number(e.target.value) as 15 | 30 | 60 | 90 | 120 })}
                 className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
               >
+                <option value={15}>15 minutes</option>
                 <option value={30}>30 minutes</option>
                 <option value={60}>60 minutes</option>
                 <option value={90}>90 minutes</option>

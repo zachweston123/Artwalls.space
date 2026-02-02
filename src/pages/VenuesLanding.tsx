@@ -251,6 +251,47 @@ export function VenuesLandingPage({ onNavigate, onLogin, viewerRole = null }: Ve
         </div>
       </section>
 
+      {/* Curated Sets for venues */}
+      <section className="py-12 sm:py-16 px-4 bg-[var(--surface)] border-y border-[var(--border)]">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_.8fr] gap-6 items-center">
+            <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-2xl p-6 sm:p-8 shadow-sm">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--surface-2)] border border-[var(--border)] text-[var(--green)] mb-3">Curated sets</div>
+              <h2 className="text-2xl sm:text-3xl font-bold mb-3 text-[var(--text)]">Pick a ready-to-hang wall in minutes</h2>
+              <p className="text-[var(--text-muted)] mb-4">Artists bundle 3–6 pieces that fit your vibe. Availability is auto-checked, so you skip the back-and-forth and schedule one install.</p>
+              <ul className="space-y-2 text-sm text-[var(--text-muted)] mb-6">
+                <li>• 3–6 pieces, curated for one wall</li>
+                <li>• Verified availability + pricing upfront</li>
+                <li>• One-click save to compare with your team</li>
+              </ul>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={() => onNavigate?.('venue-curated-sets')}
+                  className="px-5 py-3 rounded-lg bg-[var(--green)] text-[var(--accent-contrast)] hover:brightness-95 transition"
+                >
+                  Browse curated sets
+                </button>
+                <button
+                  onClick={() => onNavigate?.('venue-dashboard')}
+                  className="px-5 py-3 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] hover:bg-[var(--surface-2)] transition"
+                >
+                  View my wall plan
+                </button>
+              </div>
+            </div>
+            <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-2xl p-6 sm:p-8">
+              <div className="grid grid-cols-2 gap-3 text-xs text-[var(--text-muted)]">
+                <div className="rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--surface-2)] h-28" />
+                <div className="rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--surface-2)] h-28" />
+                <div className="rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--surface-2)] h-28" />
+                <div className="rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--surface-2)] h-28" />
+              </div>
+              <p className="mt-4 text-sm text-[var(--text-muted)]">Sets are curated by artists and kept to 3–6 pieces so install is simple and cohesive.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Old way vs Artwalls */}
       <section className="py-12 sm:py-16 px-4">
         <div className="max-w-6xl mx-auto">

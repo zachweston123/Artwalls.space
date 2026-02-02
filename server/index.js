@@ -25,6 +25,21 @@ import {
   markArtworkSold,
   wasEventProcessed,
   markEventProcessed,
+  getArtistSetLimitInfo,
+  createArtworkSetRecord,
+  updateArtworkSetRecord,
+  publishArtworkSetRecord,
+  archiveArtworkSetRecord,
+  addArtworkToSet,
+  removeArtworkFromSet,
+  reorderArtworkSetItems,
+  listArtworkSetsByArtist,
+  listPublishedArtworkSets,
+  getArtworkSetWithItems,
+  getArtworkSetPublic,
+  recordVenueSetSelection,
+  listVenueSetSelectionsForVenue,
+  recordEvent,
   listWallspacesByVenue,
   createWallspace,
   updateWallspace,
@@ -1808,6 +1823,281 @@ app.post('/api/stripe/webhook/forwarded', async (req, res) => {
   } catch (err) {
     console.error('Forwarded webhook handler error', err);
     return res.status(500).json({ error: 'Forwarded webhook handler failed' });
+  }
+});
+
+// -----------------------------
+// Curated Artwork Sets
+// -----------------------------
+const ALLOWED_SET_ARTWORK_STATUSES = new Set(['available', 'active', 'published']);
+
+function getAvailableItems(items = []) {
+  return (items || []).filter((item) => {
+    const status = String(item?.artwork?.status || '').toLowerCase();
+    return ALLOWED_SET_ARTWORK_STATUSES.has(status) && !item?.artwork?.archivedAt;
+  });
+}
+
+app.get('/api/curated-sets', async (req, res) => {
+  try {
+    const authUser = await getSupabaseUserFromRequest(req);
+    if (!authUser) return res.status(401).json({ error: 'Unauthorized' });
+    if (authUser.user_metadata?.role !== 'artist') return res.status(403).json({ error: 'Artist role required' });
+
+    const artistId = (typeof req.query?.artistId === 'string' && req.query.artistId) ? req.query.artistId : authUser.id;
+    if (artistId !== authUser.id) return res.status(403).json({ error: 'Can only view your own sets' });
+
+    const [sets, limits] = await Promise.all([
+      listArtworkSetsByArtist(artistId),
+      getArtistSetLimitInfo(artistId),
+    ]);
+
+    return res.json({ sets, limit: limits });
+  } catch (err) {
+    console.error('[GET /api/curated-sets]', err);
+    return res.status(500).json({ error: err?.message || 'Failed to load curated sets' });
+  }
+});
+
+app.post('/api/curated-sets', async (req, res) => {
+  try {
+    const authUser = await getSupabaseUserFromRequest(req);
+    if (!authUser) return res.status(401).json({ error: 'Unauthorized' });
+    if (authUser.user_metadata?.role !== 'artist') return res.status(403).json({ error: 'Artist role required' });
+
+    const { title, description, tags } = req.body || {};
+    if (!title || String(title).trim().length === 0) return res.status(400).json({ error: 'Title is required' });
+
+    const limits = await getArtistSetLimitInfo(authUser.id);
+    if (limits.maxSets === 0 || limits.activeCount >= limits.maxSets) {
+      return res.status(402).json({ error: 'Upgrade required to create curated sets', limit: limits });
+    }
+
+    const set = await createArtworkSetRecord({
+      artistId: authUser.id,
+      title: String(title).trim().slice(0, 60),
+      description: description ? String(description).slice(0, 240) : null,
+      tags: Array.isArray(tags) ? tags.slice(0, 8) : null,
+      status: 'draft',
+    });
+
+    await recordEvent('set_created', authUser.id, { setId: set.id });
+    return res.json({ set, limit: { ...limits, activeCount: limits.activeCount + 1 } });
+  } catch (err) {
+    console.error('[POST /api/curated-sets]', err);
+    return res.status(500).json({ error: err?.message || 'Failed to create set' });
+  }
+});
+
+app.post('/api/curated-sets/:id', async (req, res) => {
+  try {
+    const authUser = await getSupabaseUserFromRequest(req);
+    if (!authUser) return res.status(401).json({ error: 'Unauthorized' });
+    if (authUser.user_metadata?.role !== 'artist') return res.status(403).json({ error: 'Artist role required' });
+
+    const setId = req.params.id;
+    const set = await getArtworkSetWithItems(setId);
+    if (!set || set.artistId !== authUser.id) return res.status(404).json({ error: 'Set not found' });
+
+    const { title, description, tags, status } = req.body || {};
+    const next = await updateArtworkSetRecord(setId, {
+      title: title !== undefined ? String(title).slice(0, 60) : undefined,
+      description: description !== undefined ? String(description).slice(0, 240) : undefined,
+      tags: Array.isArray(tags) ? tags.slice(0, 8) : undefined,
+      status,
+    });
+    return res.json({ set: { ...next, items: set.items } });
+  } catch (err) {
+    console.error('[POST /api/curated-sets/:id]', err);
+    return res.status(500).json({ error: err?.message || 'Failed to update set' });
+  }
+});
+
+app.post('/api/curated-sets/:id/publish', async (req, res) => {
+  try {
+    const authUser = await getSupabaseUserFromRequest(req);
+    if (!authUser) return res.status(401).json({ error: 'Unauthorized' });
+    if (authUser.user_metadata?.role !== 'artist') return res.status(403).json({ error: 'Artist role required' });
+
+    const setId = req.params.id;
+    const set = await getArtworkSetWithItems(setId);
+    if (!set || set.artistId !== authUser.id) return res.status(404).json({ error: 'Set not found' });
+
+    const available = getAvailableItems(set.items);
+    if (available.length < 3 || available.length > 6) {
+      return res.status(400).json({ error: 'You need 3–6 available artworks to publish this set.' });
+    }
+
+    const limits = await getArtistSetLimitInfo(authUser.id);
+    if (limits.maxSets === 0) return res.status(402).json({ error: 'Upgrade required to publish curated sets', limit: limits });
+
+    const published = await publishArtworkSetRecord(setId);
+    await recordEvent('set_published', authUser.id, { setId });
+    return res.json({ set: { ...published, items: available }, limit: limits });
+  } catch (err) {
+    console.error('[POST /api/curated-sets/:id/publish]', err);
+    return res.status(500).json({ error: err?.message || 'Failed to publish set' });
+  }
+});
+
+app.post('/api/curated-sets/:id/archive', async (req, res) => {
+  try {
+    const authUser = await getSupabaseUserFromRequest(req);
+    if (!authUser) return res.status(401).json({ error: 'Unauthorized' });
+    if (authUser.user_metadata?.role !== 'artist') return res.status(403).json({ error: 'Artist role required' });
+
+    const setId = req.params.id;
+    const set = await getArtworkSetWithItems(setId);
+    if (!set || set.artistId !== authUser.id) return res.status(404).json({ error: 'Set not found' });
+
+    const archived = await archiveArtworkSetRecord(setId);
+    await recordEvent('set_archived', authUser.id, { setId });
+    return res.json({ set: { ...archived, items: set.items || [] } });
+  } catch (err) {
+    console.error('[POST /api/curated-sets/:id/archive]', err);
+    return res.status(500).json({ error: err?.message || 'Failed to archive set' });
+  }
+});
+
+app.post('/api/curated-sets/:id/add-item', async (req, res) => {
+  try {
+    const authUser = await getSupabaseUserFromRequest(req);
+    if (!authUser) return res.status(401).json({ error: 'Unauthorized' });
+    if (authUser.user_metadata?.role !== 'artist') return res.status(403).json({ error: 'Artist role required' });
+
+    const setId = req.params.id;
+    const { artworkId, sortOrder } = req.body || {};
+    if (!artworkId) return res.status(400).json({ error: 'artworkId is required' });
+
+    const [set, artwork] = await Promise.all([
+      getArtworkSetWithItems(setId),
+      getArtwork(artworkId),
+    ]);
+
+    if (!set || set.artistId !== authUser.id) return res.status(404).json({ error: 'Set not found' });
+    if (!artwork || artwork.artistId !== authUser.id) return res.status(400).json({ error: 'Artwork must belong to you' });
+
+    const available = getAvailableItems(set.items);
+    if (available.length >= 6) return res.status(400).json({ error: 'Sets can include up to 6 artworks' });
+    if (!ALLOWED_SET_ARTWORK_STATUSES.has(String(artwork.status || '').toLowerCase()) || artwork.status === 'sold') {
+      return res.status(400).json({ error: 'Artwork must be available or active to add to a set' });
+    }
+
+    const item = await addArtworkToSet({ setId, artworkId, sortOrder: sortOrder ?? available.length });
+    const refreshed = await getArtworkSetWithItems(setId);
+    return res.json({ item, set: refreshed });
+  } catch (err) {
+    console.error('[POST /api/curated-sets/:id/add-item]', err);
+    return res.status(500).json({ error: err?.message || 'Failed to add artwork to set' });
+  }
+});
+
+app.post('/api/curated-sets/:id/remove-item', async (req, res) => {
+  try {
+    const authUser = await getSupabaseUserFromRequest(req);
+    if (!authUser) return res.status(401).json({ error: 'Unauthorized' });
+    if (authUser.user_metadata?.role !== 'artist') return res.status(403).json({ error: 'Artist role required' });
+
+    const setId = req.params.id;
+    const { artworkId } = req.body || {};
+    if (!artworkId) return res.status(400).json({ error: 'artworkId is required' });
+
+    const set = await getArtworkSetWithItems(setId);
+    if (!set || set.artistId !== authUser.id) return res.status(404).json({ error: 'Set not found' });
+
+    await removeArtworkFromSet(setId, artworkId);
+    const refreshed = await getArtworkSetWithItems(setId);
+    return res.json({ set: refreshed });
+  } catch (err) {
+    console.error('[POST /api/curated-sets/:id/remove-item]', err);
+    return res.status(500).json({ error: err?.message || 'Failed to remove artwork from set' });
+  }
+});
+
+app.post('/api/curated-sets/:id/reorder', async (req, res) => {
+  try {
+    const authUser = await getSupabaseUserFromRequest(req);
+    if (!authUser) return res.status(401).json({ error: 'Unauthorized' });
+    if (authUser.user_metadata?.role !== 'artist') return res.status(403).json({ error: 'Artist role required' });
+
+    const setId = req.params.id;
+    const set = await getArtworkSetWithItems(setId);
+    if (!set || set.artistId !== authUser.id) return res.status(404).json({ error: 'Set not found' });
+
+    const items = Array.isArray(req.body?.items) ? req.body.items : [];
+    const reordered = await reorderArtworkSetItems(setId, items);
+    return res.json({ set: { ...set, items: reordered } });
+  } catch (err) {
+    console.error('[POST /api/curated-sets/:id/reorder]', err);
+    return res.status(500).json({ error: err?.message || 'Failed to reorder set items' });
+  }
+});
+
+app.get('/api/curated-sets/published', async (req, res) => {
+  try {
+    const tagsRaw = req.query?.tags;
+    const tagList = typeof tagsRaw === 'string' && tagsRaw.length ? tagsRaw.split(',').map((t) => t.trim()).filter(Boolean) : [];
+    const search = typeof req.query?.search === 'string' ? req.query.search : undefined;
+
+    const sets = await listPublishedArtworkSets({ search, tags: tagList });
+    await recordEvent('set_viewed', null, { scope: 'published-list', search, tags: tagList });
+    return res.json({ sets });
+  } catch (err) {
+    console.error('[GET /api/curated-sets/published]', err);
+    return res.status(500).json({ error: err?.message || 'Failed to load published sets' });
+  }
+});
+
+app.get('/api/curated-sets/:id/public', async (req, res) => {
+  try {
+    const setId = req.params.id;
+    const set = await getArtworkSetPublic(setId);
+    if (!set) return res.status(404).json({ error: 'Set not found or not published' });
+    await recordEvent('set_viewed', null, { setId });
+    return res.json({ set });
+  } catch (err) {
+    console.error('[GET /api/curated-sets/:id/public]', err);
+    return res.status(500).json({ error: err?.message || 'Failed to load set' });
+  }
+});
+
+app.post('/api/curated-sets/:id/select', async (req, res) => {
+  try {
+    const authUser = await getSupabaseUserFromRequest(req);
+    if (!authUser) return res.status(401).json({ error: 'Unauthorized' });
+    if (authUser.user_metadata?.role !== 'venue') return res.status(403).json({ error: 'Venue role required' });
+
+    const setId = req.params.id;
+    const status = req.body?.status || 'selected';
+    const set = await getArtworkSetPublic(setId);
+    if (!set) return res.status(404).json({ error: 'Set not available' });
+
+    const snapshot = (set.items || []).map((i) => i.artworkId).filter(Boolean);
+    const selection = await recordVenueSetSelection({
+      venueId: authUser.id,
+      setId,
+      status,
+      artworkIdsSnapshot: snapshot,
+    });
+    await recordEvent('set_selected', authUser.id, { setId, venueId: authUser.id });
+    return res.json({ selection, set });
+  } catch (err) {
+    console.error('[POST /api/curated-sets/:id/select]', err);
+    return res.status(500).json({ error: err?.message || 'Failed to select set' });
+  }
+});
+
+app.get('/api/venue/curated-set-selections', async (req, res) => {
+  try {
+    const authUser = await getSupabaseUserFromRequest(req);
+    if (!authUser) return res.status(401).json({ error: 'Unauthorized' });
+    if (authUser.user_metadata?.role !== 'venue') return res.status(403).json({ error: 'Venue role required' });
+
+    const selections = await listVenueSetSelectionsForVenue(authUser.id);
+    return res.json({ selections });
+  } catch (err) {
+    console.error('[GET /api/venue/curated-set-selections]', err);
+    return res.status(500).json({ error: err?.message || 'Failed to load selections' });
   }
 });
 

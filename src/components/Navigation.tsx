@@ -150,12 +150,14 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
     ? [
         { id: 'artist-profile', label: 'Profile' },
         { id: 'artist-artworks', label: 'My Artworks' },
+        { id: 'artist-curated-sets', label: 'Curated Sets' },
         { id: 'artist-applications', label: 'Applications' },
         { id: 'artist-invites', label: 'Invitations' },
         { id: 'artist-invite-venue', label: 'Invite a Venue' },
       ]
     : [
-        { id: 'venue-profile', label: 'My Venue' },
+        { id: 'venue-find-artists', label: 'Find Artists' },
+        { id: 'venue-curated-sets', label: 'Curated Sets' },
         { id: 'venue-walls', label: 'My Walls' },
         { id: 'venue-applications', label: 'Applications' },
         { id: 'venue-current', label: 'Current Art' },

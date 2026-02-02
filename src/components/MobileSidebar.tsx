@@ -1,4 +1,4 @@
-import { X, Palette, Store, LogOut, LayoutDashboard, Image, Search, Send, FileText, Bell, CreditCard, Shield, Mail, ShoppingCart, Frame, Users, BookOpen, Settings, BarChart, Activity, User } from 'lucide-react';
+import { X, Palette, Store, LogOut, LayoutDashboard, Image, Search, Send, FileText, Bell, CreditCard, Shield, Mail, ShoppingCart, Frame, Users, BookOpen, Settings, BarChart, Activity, User, LayoutList } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import type { User as UserType } from '../App';
 
@@ -23,6 +23,7 @@ export function MobileSidebar({ isOpen, onClose, user, onNavigate, onLogout, cur
         { id: 'artist-dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { id: 'artist-profile', label: 'Profile', icon: User },
         { id: 'artist-artworks', label: 'My Artworks', icon: Image },
+        { id: 'artist-curated-sets', label: 'Curated Sets', icon: LayoutList },
         { id: 'artist-applications', label: 'Applications', icon: Send },
         { id: 'artist-invites', label: 'Invitations', icon: Mail },
         { id: 'artist-invite-venue', label: 'Invite a Venue', icon: Mail },
@@ -72,6 +73,7 @@ export function MobileSidebar({ isOpen, onClose, user, onNavigate, onLogout, cur
       title: 'Discover',
       links: [
         { id: 'venue-find-artists', label: 'Find Artists', icon: Users },
+        { id: 'venue-curated-sets', label: 'Curated Sets', icon: LayoutList },
         { id: 'find-art', label: 'Find Art', icon: Search },
       ],
     },

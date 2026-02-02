@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from './lib/supabase';
 import { apiPost } from './lib/api';
+import { applyThemePreference, coerceThemePreference, getStoredThemePreference } from './lib/theme';
 import { Navigation } from './components/Navigation';
 import { MobileSidebar } from './components/MobileSidebar';
 import { Login } from './components/Login';
@@ -30,6 +31,7 @@ import { VenueWallsPublic } from './components/venue/VenueWallsPublic';
 import { FindArtists } from './components/venue/FindArtists';
 import { VenueProfilePage } from './components/venue/VenueProfilePage';
 import { FindArtHub } from './components/venue/FindArtHub';
+import { CuratedSetsMarketplace } from './components/venue/CuratedSetsMarketplace';
 import { VenuePartnerKitEmbedded } from './components/venue/VenuePartnerKitEmbedded';
 import { VenueSetupWizard } from './components/venue/VenueSetupWizard';
 import { VenueHostingPolicy } from './components/venue/VenueHostingPolicy';
@@ -78,6 +80,9 @@ import { VenueWallStats } from './components/venue/VenueWallStats';
 import { CallPublicPage } from './components/calls/CallPublicPage';
 import { CallApplyPage } from './components/calls/CallApplyPage';
 import { Settings } from './components/settings/Settings';
+import { PublicArtistPage } from './pages/PublicArtistPage';
+import { ArtistOnboardingWizard } from './components/onboarding/ArtistOnboardingWizard';
+import { CuratedSets } from './components/artist/CuratedSets';
 
 export type UserRole = 'artist' | 'venue' | 'admin' | null;
 
@@ -104,6 +109,9 @@ export default function App() {
   const [googleUser, setGoogleUser] = useState<any>(null);
   const [showProfileCompletion, setShowProfileCompletion] = useState(false);
   const [pendingPhoneNumber, setPendingPhoneNumber] = useState<string | null>(null);
+  const [artistOnboarding, setArtistOnboarding] = useState<{ completed: boolean; step: number | null } | null>(null);
+
+  const ARTIST_ONBOARDING_SNOOZE_KEY = 'artistOnboardingSkipUntil';
 
   const marketingPages = new Set(['why-artwalls-artist', 'why-artwalls-venue', 'venues']);
 
@@ -111,12 +119,14 @@ export default function App() {
     const normalized = path.toLowerCase();
     if (normalized === '/why-artwalls' || normalized === '/why-artwalls/artists') return 'why-artwalls-artist';
     if (normalized === '/venues' || normalized === '/venue/login' || normalized === '/why-artwalls/venues') return 'venues';
+    if (normalized === '/onboarding/artist') return 'artist-onboarding';
     return null;
   };
 
   const getPathFromPage = (page: string) => {
     if (page === 'why-artwalls-artist') return '/why-artwalls';
     if (page === 'why-artwalls-venue' || page === 'venues') return '/venues';
+    if (page === 'artist-onboarding') return '/onboarding/artist';
     return null;
   };
 
@@ -136,6 +146,12 @@ export default function App() {
     const callId = parts[1] || '';
     const isApply = parts[2] === 'apply';
     return isApply ? <CallApplyPage callId={callId} /> : <CallPublicPage callId={callId} />;
+  }
+
+  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/artists/')) {
+    const parts = window.location.pathname.split('/').filter(Boolean);
+    const slugOrId = parts[1] || '';
+    return <PublicArtistPage slugOrId={slugOrId} />;
   }
 
   const userFromSupabase = (supaUser: any): User | null => {
@@ -242,6 +258,75 @@ export default function App() {
     
     checkAgreementStatus();
   }, [currentUser]);
+
+  const getArtistOnboardingSnoozeUntil = () => {
+    if (typeof window === 'undefined') return null;
+    const raw = localStorage.getItem(ARTIST_ONBOARDING_SNOOZE_KEY);
+    if (!raw) return null;
+    const ts = Date.parse(raw);
+    return Number.isFinite(ts) ? ts : null;
+  };
+
+  const isArtistOnboardingSnoozed = () => {
+    const until = getArtistOnboardingSnoozeUntil();
+    return until !== null && until > Date.now();
+  };
+
+  const snoozeArtistOnboarding = () => {
+    if (typeof window === 'undefined') return;
+    const until = new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString();
+    localStorage.setItem(ARTIST_ONBOARDING_SNOOZE_KEY, until);
+  };
+
+  const clearArtistOnboardingSnooze = () => {
+    if (typeof window === 'undefined') return;
+    localStorage.removeItem(ARTIST_ONBOARDING_SNOOZE_KEY);
+  };
+
+  useEffect(() => {
+    let isActive = true;
+    async function loadArtistOnboarding() {
+      if (!currentUser || currentUser.role !== 'artist') {
+        if (isActive) setArtistOnboarding(null);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('artists')
+        .select('onboarding_completed,onboarding_step')
+        .eq('id', currentUser.id)
+        .single();
+
+      if (!isActive) return;
+      if (error) {
+        console.warn('Failed to load onboarding status', error);
+        return;
+      }
+
+      setArtistOnboarding({
+        completed: !!data?.onboarding_completed,
+        step: data?.onboarding_step ?? 1,
+      });
+    }
+
+    loadArtistOnboarding();
+    return () => {
+      isActive = false;
+    };
+  }, [currentUser]);
+
+  useEffect(() => {
+    if (!currentUser || currentUser.role !== 'artist') return;
+    if (!artistOnboarding || artistOnboarding.completed) return;
+    if (isArtistOnboardingSnoozed()) return;
+    if (currentPage === 'artist-onboarding') return;
+
+    setCurrentPage('artist-onboarding');
+    const path = getPathFromPage('artist-onboarding');
+    if (path && window.location.pathname !== path) {
+      window.history.pushState({}, '', path);
+    }
+  }, [artistOnboarding, currentUser, currentPage]);
 
   useEffect(() => {
     if (!currentUser) return;
@@ -683,6 +768,11 @@ export default function App() {
             )}
             {currentPage === 'admin-stripe-payments' && <StripePaymentSetup onNavigate={handleNavigate} />}
             {currentPage === 'admin-activity-log' && <AdminActivityLog />}
+            {currentPage === 'admin-invites' && <AdminInvites />}
+            {currentPage === 'admin-referrals' && <AdminReferrals />}
+            {currentPage === 'admin-sales' && <AdminSalesPage />}
+            {currentPage === 'admin-current-displays' && <AdminCurrentDisplays />}
+            {currentPage === 'admin-support' && <AdminSupport />}
             {currentPage === 'admin-support-messages' && (
               <SupportInbox onSelectMessage={(messageId) => {
                 setSelectedMessageId(messageId);
@@ -770,6 +860,7 @@ export default function App() {
           <>
             {currentPage === 'artist-dashboard' && <ArtistDashboard onNavigate={handleNavigate} user={currentUser} />}
             {currentPage === 'artist-artworks' && <ArtistArtworks user={currentUser} />}
+            {currentPage === 'artist-curated-sets' && <CuratedSets user={currentUser} onNavigate={handleNavigate} />}
             {currentPage === 'artist-analytics' && <ArtistAnalytics user={currentUser} />}
             {currentPage === 'artist-approved' && <ApplicationsAndInvitations userRole="artist" defaultTab="approved" onBack={() => handleNavigate('artist-dashboard')} />}
             {currentPage === 'artist-venues' && (
@@ -823,7 +914,7 @@ export default function App() {
         
         {currentUser.role === 'venue' && (
           <>
-            {currentPage === 'venue-dashboard' && <VenueDashboard onNavigate={handleNavigate} user={currentUser} />}
+            {currentPage === 'venue-dashboard' && <VenueDashboard onNavigate={handleNavigate} user={currentUser} hasAcceptedAgreement={hasAcceptedAgreement} />}
             {currentPage === 'venue-setup' && <VenueSetupWizard onNavigate={handleNavigate} onComplete={() => handleNavigate('venue-dashboard')} />}
             {currentPage === 'venue-partner-kit' && <VenuePartnerKitEmbedded onNavigate={handleNavigate} />}
             {currentPage === 'venue-walls' && <VenueWalls />}
@@ -831,7 +922,7 @@ export default function App() {
             {currentPage === 'venue-call-detail' && selectedCallId && <VenueCallDetail callId={selectedCallId} onBack={() => handleNavigate('venue-calls')} />}
             {currentPage === 'venue-applications' && <ApplicationsAndInvitations userRole="venue" onBack={() => handleNavigate('venue-dashboard')} />}
             {currentPage === 'venue-current' && <VenueCurrentArtWithScheduling />}
-            {currentPage === 'venue-sales' && <VenueSales />}
+            {currentPage === 'venue-sales' && <VenueSales user={currentUser} onNavigate={handleNavigate} />}
             {currentPage === 'venue-analytics' && <VenueAnalytics user={currentUser} />}
             {currentPage === 'venue-wall-stats' && <VenueWallStats user={currentUser} />}
             {currentPage === 'venue-settings' && <VenueSettingsWithEmptyState />}
@@ -839,6 +930,7 @@ export default function App() {
             {currentPage === 'venue-password-security' && <VenuePasswordSecurity onBack={() => handleNavigate('venue-profile')} />}
             {currentPage === 'venue-notifications' && <VenueNotificationPreferences onBack={() => handleNavigate('venue-profile')} />}
             {currentPage === 'find-art' && <FindArtHub onNavigate={handleNavigate} />}
+            {currentPage === 'venue-curated-sets' && <CuratedSetsMarketplace onNavigate={handleNavigate} />}
             {currentPage === 'venue-find-artists' && (
               <FindArtists
                 onViewProfile={(artistId) => {

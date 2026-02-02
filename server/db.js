@@ -112,6 +112,96 @@ function mapOrderRow(r) {
   };
 }
 
+const SET_LIMITS = { free: 0, starter: 1, growth: 3, pro: 6 };
+
+function mapArtworkSetRow(r, items = []) {
+  if (!r) return null;
+  return {
+    id: r.id,
+    artistId: r.artist_id,
+    title: r.title,
+    description: r.description,
+    tags: Array.isArray(r.tags) ? r.tags : [],
+    status: r.status,
+    needsAttention: !!r.needs_attention,
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+    itemCount: r.item_count ?? items.length,
+    items,
+  };
+}
+
+function mapArtworkSetItemRow(r) {
+  if (!r) return null;
+  const art = r.artwork || r.artworks;
+  return {
+    id: r.id,
+    setId: r.set_id,
+    artworkId: r.artwork_id,
+    sortOrder: r.sort_order ?? 0,
+    createdAt: r.created_at,
+    artwork: art
+      ? {
+          id: art.id,
+          artistId: art.artist_id,
+          title: art.title,
+          imageUrl: art.image_url,
+          status: art.status,
+          priceCents: art.price_cents,
+          archivedAt: art.archived_at,
+        }
+      : undefined,
+  };
+}
+
+function mapVenueSetSelectionRow(r) {
+  if (!r) return null;
+  return {
+    id: r.id,
+    venueId: r.venue_id,
+    setId: r.set_id,
+    status: r.status,
+    artworkIdsSnapshot: Array.isArray(r.artwork_ids_snapshot) ? r.artwork_ids_snapshot : [],
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+  };
+}
+
+function isSetItemAvailable(item) {
+  const art = item?.artwork;
+  if (!art) return false;
+  const allowed = ['available', 'active', 'published'];
+  return allowed.includes(String(art.status || '').toLowerCase()) && !art.archivedAt;
+}
+
+async function resolveArtistSetLimit(artistId) {
+  const { data, error } = await supabaseAdmin
+    .from('artists')
+    .select('subscription_tier, subscription_status, pro_until')
+    .eq('id', artistId)
+    .maybeSingle();
+  throwIfError(error, 'resolveArtistSetLimit');
+
+  const proUntil = data?.pro_until ? new Date(data.pro_until).getTime() : 0;
+  const hasProOverride = proUntil > Date.now();
+  const rawTier = (data?.subscription_tier || 'free').toLowerCase();
+  const isActive = hasProOverride || (data?.subscription_status || '').toLowerCase() === 'active';
+  const effectiveTier = isActive ? (hasProOverride ? 'pro' : rawTier) : 'free';
+  const maxSets = SET_LIMITS[effectiveTier] ?? 0;
+
+  return { tier: effectiveTier, isActive, hasProOverride, maxSets };
+}
+
+async function countActiveSetsForArtist(artistId) {
+  const { count, error } = await supabaseAdmin
+    .from('artwork_sets')
+    .select('id', { count: 'exact', head: true })
+    .eq('artist_id', artistId)
+    .neq('status', 'archived');
+  throwIfError(error, 'countActiveSetsForArtist');
+  return count || 0;
+}
+
 function throwIfError(error, context) {
   if (!error) return;
   // Include error code and details for better debugging
@@ -305,6 +395,262 @@ export async function markArtworkSold(id) {
     .single();
   throwIfError(error, 'markArtworkSold');
   return mapArtworkRow(data);
+}
+
+// --- Curated Artwork Sets ---
+async function fetchSetItems(setIds) {
+  if (!setIds?.length) return {};
+  const { data, error } = await supabaseAdmin
+    .from('artwork_set_items')
+    .select('*, artwork:artworks(*)')
+    .in('set_id', setIds)
+    .order('sort_order', { ascending: true });
+  throwIfError(error, 'fetchSetItems');
+
+  const map = {};
+  for (const row of data || []) {
+    const item = mapArtworkSetItemRow(row);
+    if (!item) continue;
+    if (!map[item.setId]) map[item.setId] = [];
+    map[item.setId].push(item);
+  }
+  return map;
+}
+
+export async function getArtistSetLimitInfo(artistId) {
+  const limits = await resolveArtistSetLimit(artistId);
+  const activeCount = await countActiveSetsForArtist(artistId);
+  return { ...limits, activeCount };
+}
+
+export async function createArtworkSetRecord({ artistId, title, description, tags, status }) {
+  const payload = {
+    artist_id: artistId,
+    title,
+    description: description ?? null,
+    tags: Array.isArray(tags) ? tags : null,
+    status: status || 'draft',
+    created_at: nowIso(),
+    updated_at: nowIso(),
+  };
+
+  const { data, error } = await supabaseAdmin
+    .from('artwork_sets')
+    .insert(payload)
+    .select('*')
+    .single();
+  throwIfError(error, 'createArtworkSetRecord');
+  return mapArtworkSetRow(data);
+}
+
+export async function updateArtworkSetRecord(id, patch) {
+  const payload = { updated_at: nowIso() };
+  if (patch.title !== undefined) payload.title = patch.title;
+  if (patch.description !== undefined) payload.description = patch.description;
+  if (patch.tags !== undefined) payload.tags = Array.isArray(patch.tags) ? patch.tags : null;
+  if (patch.status !== undefined) payload.status = patch.status;
+  if (patch.needsAttention !== undefined) payload.needs_attention = patch.needsAttention;
+
+  const { data, error } = await supabaseAdmin
+    .from('artwork_sets')
+    .update(payload)
+    .eq('id', id)
+    .select('*')
+    .maybeSingle();
+  throwIfError(error, 'updateArtworkSetRecord');
+  return mapArtworkSetRow(data);
+}
+
+export async function publishArtworkSetRecord(id) {
+  const { data, error } = await supabaseAdmin
+    .from('artwork_sets')
+    .update({ status: 'published', needs_attention: false, updated_at: nowIso() })
+    .eq('id', id)
+    .select('*')
+    .maybeSingle();
+  throwIfError(error, 'publishArtworkSetRecord');
+  return mapArtworkSetRow(data);
+}
+
+export async function archiveArtworkSetRecord(id) {
+  const { data, error } = await supabaseAdmin
+    .from('artwork_sets')
+    .update({ status: 'archived', updated_at: nowIso() })
+    .eq('id', id)
+    .select('*')
+    .maybeSingle();
+  throwIfError(error, 'archiveArtworkSetRecord');
+  return mapArtworkSetRow(data);
+}
+
+export async function addArtworkToSet({ setId, artworkId, sortOrder = 0 }) {
+  const { data, error } = await supabaseAdmin
+    .from('artwork_set_items')
+    .insert({ set_id: setId, artwork_id: artworkId, sort_order: sortOrder })
+    .select('*, artwork:artworks(*)')
+    .maybeSingle();
+  throwIfError(error, 'addArtworkToSet');
+  return mapArtworkSetItemRow(data);
+}
+
+export async function removeArtworkFromSet(setId, artworkId) {
+  const { error } = await supabaseAdmin
+    .from('artwork_set_items')
+    .delete()
+    .eq('set_id', setId)
+    .eq('artwork_id', artworkId);
+  throwIfError(error, 'removeArtworkFromSet');
+  return { setId, artworkId };
+}
+
+export async function reorderArtworkSetItems(setId, items = []) {
+  const updates = Array.isArray(items) ? items : [];
+  for (const item of updates) {
+    if (!item?.id) continue;
+    const { error } = await supabaseAdmin
+      .from('artwork_set_items')
+      .update({ sort_order: item.sortOrder ?? 0 })
+      .eq('id', item.id)
+      .eq('set_id', setId);
+    throwIfError(error, 'reorderArtworkSetItems');
+  }
+  const refreshed = await fetchSetItems([setId]);
+  return refreshed[setId] || [];
+}
+
+export async function listArtworkSetsByArtist(artistId) {
+  const { data, error } = await supabaseAdmin
+    .from('artwork_sets')
+    .select('*')
+    .eq('artist_id', artistId)
+    .order('created_at', { ascending: false });
+  throwIfError(error, 'listArtworkSetsByArtist');
+
+  const setIds = (data || []).map((s) => s.id);
+  const items = await fetchSetItems(setIds);
+  return (data || []).map((row) => mapArtworkSetRow(row, items[row.id] || []));
+}
+
+export async function getArtworkSetWithItems(setId) {
+  const { data, error } = await supabaseAdmin
+    .from('artwork_sets')
+    .select('*')
+    .eq('id', setId)
+    .maybeSingle();
+  throwIfError(error, 'getArtworkSetWithItems');
+  if (!data) return null;
+  const items = await fetchSetItems([setId]);
+  return mapArtworkSetRow(data, items[setId] || []);
+}
+
+export async function getArtworkSetPublic(setId) {
+  const { data, error } = await supabaseAdmin
+    .from('artwork_sets')
+    .select('*')
+    .eq('id', setId)
+    .eq('status', 'published')
+    .maybeSingle();
+  throwIfError(error, 'getArtworkSetPublic');
+  if (!data) return null;
+  const itemsBySet = await fetchSetItems([setId]);
+  const available = (itemsBySet[setId] || []).filter(isSetItemAvailable);
+  if (available.length < 3 || available.length > 6) return null;
+  return mapArtworkSetRow(data, available);
+}
+
+export async function listPublishedArtworkSets({ search, tags } = {}) {
+  let query = supabaseAdmin
+    .from('artwork_sets')
+    .select('*')
+    .eq('status', 'published')
+    .order('updated_at', { ascending: false });
+
+  if (search) {
+    query = query.ilike('title', `%${search}%`);
+  }
+  if (Array.isArray(tags) && tags.length) {
+    query = query.contains('tags', tags);
+  }
+
+  const { data, error } = await query;
+  throwIfError(error, 'listPublishedArtworkSets');
+  const setIds = (data || []).map((s) => s.id);
+  const items = await fetchSetItems(setIds);
+
+  const results = [];
+  for (const row of data || []) {
+    const available = (items[row.id] || []).filter(isSetItemAvailable);
+    if (available.length < 3 || available.length > 6) continue;
+    results.push(mapArtworkSetRow(row, available));
+  }
+  return results;
+}
+
+export async function recordVenueSetSelection({ venueId, setId, status = 'selected', artworkIdsSnapshot }) {
+  const { data: existing } = await supabaseAdmin
+    .from('venue_set_selections')
+    .select('*')
+    .eq('venue_id', venueId)
+    .eq('set_id', setId)
+    .maybeSingle();
+
+  if (existing?.id) {
+    const { data, error } = await supabaseAdmin
+      .from('venue_set_selections')
+      .update({ status, artwork_ids_snapshot: artworkIdsSnapshot ?? existing.artwork_ids_snapshot, updated_at: nowIso() })
+      .eq('id', existing.id)
+      .select('*')
+      .maybeSingle();
+    throwIfError(error, 'recordVenueSetSelection(update)');
+    return mapVenueSetSelectionRow(data);
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from('venue_set_selections')
+    .insert({ venue_id: venueId, set_id: setId, status, artwork_ids_snapshot: artworkIdsSnapshot ?? null })
+    .select('*')
+    .maybeSingle();
+  throwIfError(error, 'recordVenueSetSelection(insert)');
+  return mapVenueSetSelectionRow(data);
+}
+
+export async function listVenueSetSelectionsForVenue(venueId) {
+  const { data, error } = await supabaseAdmin
+    .from('venue_set_selections')
+    .select('*')
+    .eq('venue_id', venueId)
+    .order('created_at', { ascending: false });
+  throwIfError(error, 'listVenueSetSelectionsForVenue');
+  return (data || []).map(mapVenueSetSelectionRow);
+}
+
+export async function listVenueSetSelectionsForArtist(artistId) {
+  const { data, error } = await supabaseAdmin
+    .from('venue_set_selections')
+    .select('*, set:artwork_sets(artist_id)')
+    .eq('set.artist_id', artistId)
+    .order('created_at', { ascending: false });
+  throwIfError(error, 'listVenueSetSelectionsForArtist');
+  return (data || []).map(mapVenueSetSelectionRow);
+}
+
+export async function recordEvent(eventType, userId, metadata = {}, extra = {}) {
+  const payload = {
+    event_type: eventType,
+    user_id: userId ?? null,
+    artwork_id: extra.artworkId ?? null,
+    venue_id: extra.venueId ?? null,
+    session_id: extra.sessionId ?? null,
+    metadata,
+    created_at: nowIso(),
+  };
+  const { data, error } = await supabaseAdmin
+    .from('events')
+    .insert(payload)
+    .select('*')
+    .maybeSingle();
+  throwIfError(error, 'recordEvent');
+  return data;
 }
 
 // --- Admin moderation helpers ---
