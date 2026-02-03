@@ -2257,189 +2257,7 @@ export default {
         sessionForm['line_items[0][price_data][product_data][name]'] = art.title || 'Artwork';
       }
 
-      if (artist?.stripe_account_id) {
-        sessionForm['payment_intent_data[application_fee_amount]'] = String(applicationFeeCents);
-        sessionForm['payment_intent_data[transfer_data][destination]'] = artist.stripe_account_id;
-      }
-
-      const resp = await stripeFetch('/v1/checkout/sessions', { method: 'POST', body: toForm(sessionForm) });
-      const session = await resp.json();
-      if (!resp.ok) {
-        await supabaseAdmin.from('orders').delete().eq('id', orderId);
-        return json(session, { status: resp.status });
-      }
-
-      const paymentIntentId = typeof session.payment_intent === 'string'
-        ? session.payment_intent
-        : session.payment_intent?.id || null;
-      const updatePayload: Record<string, any> = {
-        stripe_checkout_session_id: session.id,
-        buyer_total_cents: buyerTotalCents,
-        stripe_payment_intent_id: paymentIntentId ?? null,
-        updated_at: new Date().toISOString(),
-      };
-      const { error: attachErr } = await supabaseAdmin
-        .from('orders')
-        .update(updatePayload)
-        .eq('id', orderId);
-      if (attachErr) {
-        console.error('Failed to attach Stripe session to order', attachErr.message);
-      }
-
-      return json({ url: session.url });
-    }
-
-    // Create Stripe Checkout Session for artwork purchase
-    if (url.pathname === '/api/stripe/create-checkout-session' && method === 'POST') {
-      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
-      const payload = await request.json().catch(() => ({}));
-      const artworkId = String(payload?.artworkId || '').trim();
-      if (!artworkId) return json({ error: 'Missing artworkId' }, { status: 400 });
-
-      const { data: art, error: artErr } = await supabaseAdmin
-        .from('artworks')
-        .select('id,title,price_cents,currency,status,artist_id,venue_id,stripe_price_id')
-        .eq('id', artworkId)
-        .maybeSingle();
-      if (artErr) return json({ error: artErr.message }, { status: 500 });
-      if (!art) return json({ error: 'Artwork not found' }, { status: 404 });
-      if (art.status === 'sold') return json({ error: 'Artwork already sold' }, { status: 400 });
-
-      const listPriceCents = toCents(art.price_cents);
-      if (listPriceCents <= 0) {
-        return json({ error: 'Invalid artwork price' }, { status: 400 });
-      }
-
-      const currency = String(art.currency || 'usd').toLowerCase();
-      const success_url = `${allowOrigin}/#/purchase-${artworkId}?status=success`;
-      const cancel_url = `${allowOrigin}/#/purchase-${artworkId}?status=cancel`;
-
-      const { data: artist, error: artistErr } = art.artist_id
-        ? await supabaseAdmin
-            .from('artists')
-            .select('id,stripe_account_id,subscription_tier,platform_fee_bps')
-            .eq('id', art.artist_id)
-            .maybeSingle()
-        : { data: null, error: null };
-      if (artistErr) return json({ error: artistErr.message }, { status: 500 });
-
-      const { data: venue, error: venueErr } = art.venue_id
-        ? await supabaseAdmin
-            .from('venues')
-            .select('id,stripe_account_id')
-            .eq('id', art.venue_id)
-            .maybeSingle()
-        : { data: null, error: null };
-      if (venueErr) return json({ error: venueErr.message }, { status: 500 });
-
-      const artistTier = normalizeArtistTier(
-        (payload?.artistTier ?? payload?.artistPlan) ||
-          (artist?.subscription_tier ?? artist?.platform_fee_bps) ||
-          'starter'
-      );
-      const breakdown = calculatePricingBreakdown(listPriceCents / 100, artistTier);
-      const buyerFeeCents = breakdown.buyerFeeCents;
-      const buyerTotalCents = breakdown.customerPaysCents;
-      const venuePayoutCents = breakdown.venueCents;
-      const artistPayoutCents = breakdown.artistCents;
-      const platformRemainderCents = breakdown.platformRemainderCents;
-      const platformFeeBps = calculatePlatformFeeBps(breakdown);
-      const venueFeeBps = calculateVenueFeeBps(breakdown);
-      const applicationFeeCents = calculateApplicationFeeCents(breakdown);
-
-      const orderId = crypto.randomUUID();
-      const nowIso = new Date().toISOString();
-      const { error: reserveErr } = await supabaseAdmin.from('orders').insert({
-        id: orderId,
-        artwork_id: art.id,
-        artist_id: art.artist_id,
-        venue_id: art.venue_id ?? null,
-        amount_cents: listPriceCents,
-        list_price_cents: listPriceCents,
-        buyer_fee_cents: buyerFeeCents,
-        buyer_total_cents: buyerTotalCents,
-        venue_amount_cents: venuePayoutCents,
-        artist_amount_cents: artistPayoutCents,
-        platform_gross_before_stripe_cents: platformRemainderCents,
-        artist_plan_id_at_purchase: artistTier,
-        currency,
-        platform_fee_bps: platformFeeBps,
-        venue_fee_bps: venueFeeBps,
-        platform_fee_cents: platformRemainderCents,
-        artist_payout_cents: artistPayoutCents,
-        venue_payout_cents: venuePayoutCents,
-        status: 'pending',
-        stripe_checkout_session_id: null,
-        stripe_payment_intent_id: null,
-        stripe_charge_id: null,
-        transfer_ids: [],
-        stripe_receipt_url: null,
-        created_at: nowIso,
-        updated_at: nowIso,
-      });
-      if (reserveErr) {
-        console.error('Failed to reserve order', reserveErr.message);
-        return json({ error: 'Unable to reserve order' }, { status: 500 });
-      }
-
-      const sessionForm: Record<string, string> = {
-        mode: 'payment',
-        success_url,
-        cancel_url,
-        'payment_intent_data[transfer_group]': `artwork_${artworkId}`,
-        'line_items[0][quantity]': '1',
-        'metadata[orderId]': orderId,
-        'metadata[artworkId]': artworkId,
-        'metadata[artistId]': art.artist_id || '',
-        'metadata[artistTier]': artistTier,
-        'metadata[listPriceCents]': String(listPriceCents),
-        'metadata[buyerFeeCents]': String(buyerFeeCents),
-        'metadata[buyerTotalCents]': String(buyerTotalCents),
-        'metadata[venuePayoutCents]': String(venuePayoutCents),
-        'metadata[artistPayoutCents]': String(artistPayoutCents),
-        'metadata[platformRemainderCents]': String(platformRemainderCents),
-        'metadata[platformFeeBps]': String(platformFeeBps),
-        'metadata[venueFeeBps]': String(venueFeeBps),
-        'metadata[applicationFeeCents]': String(applicationFeeCents),
-        'payment_intent_data[metadata][orderId]': orderId,
-        'payment_intent_data[metadata][artworkId]': artworkId,
-        'payment_intent_data[metadata][artistId]': art.artist_id || '',
-        'payment_intent_data[metadata][artistTier]': artistTier,
-        'payment_intent_data[metadata][listPriceCents]': String(listPriceCents),
-        'payment_intent_data[metadata][buyerFeeCents]': String(buyerFeeCents),
-        'payment_intent_data[metadata][buyerTotalCents]': String(buyerTotalCents),
-        'payment_intent_data[metadata][venuePayoutCents]': String(venuePayoutCents),
-        'payment_intent_data[metadata][artistPayoutCents]': String(artistPayoutCents),
-        'payment_intent_data[metadata][platformRemainderCents]': String(platformRemainderCents),
-        'payment_intent_data[metadata][platformFeeBps]': String(platformFeeBps),
-        'payment_intent_data[metadata][venueFeeBps]': String(venueFeeBps),
-        'payment_intent_data[metadata][applicationFeeCents]': String(applicationFeeCents),
-      };
-
-      if (art.venue_id) {
-        sessionForm['metadata[venueId]'] = art.venue_id;
-        sessionForm['payment_intent_data[metadata][venueId]'] = art.venue_id;
-      }
-
-      if (buyerFeeCents > 0) {
-        sessionForm['line_items[1][price_data][currency]'] = currency;
-        sessionForm['line_items[1][price_data][unit_amount]'] = String(buyerFeeCents);
-        sessionForm['line_items[1][price_data][product_data][name]'] = 'Service fee';
-        sessionForm['line_items[1][quantity]'] = '1';
-      }
-
-      if (art.stripe_price_id) {
-        sessionForm['line_items[0][price]'] = art.stripe_price_id;
-      } else {
-        sessionForm['line_items[0][price_data][currency]'] = currency;
-        sessionForm['line_items[0][price_data][unit_amount]'] = String(listPriceCents);
-        sessionForm['line_items[0][price_data][product_data][name]'] = art.title || 'Artwork';
-      }
-
-      if (artist?.stripe_account_id) {
-        sessionForm['payment_intent_data[application_fee_amount]'] = String(applicationFeeCents);
-        sessionForm['payment_intent_data[transfer_data][destination]'] = artist.stripe_account_id;
-      }
+      // Leave charges on the platform account; transfers will be created post-payment via webhook
 
       const resp = await stripeFetch('/v1/checkout/sessions', { method: 'POST', body: toForm(sessionForm) });
       const session = await resp.json();
@@ -3026,11 +2844,24 @@ export default {
               return;
             }
 
+            // Idempotency: prefer new stripe_webhook_events table, fall back to legacy webhook_events if needed
             let insertedEvent = false;
             let canProcess = true;
-            const { error: insertErr } = await supabaseAdmin
-              .from('webhook_events')
-              .insert({ id: eventId, type: eventType, note: 'pending' });
+
+            async function insertEventRow(table: string) {
+              return supabaseAdmin
+                .from(table)
+                .insert(table === 'stripe_webhook_events'
+                  ? { stripe_event_id: eventId, type: eventType, note: 'pending', processed_at: null }
+                  : { id: eventId, type: eventType, note: 'pending' });
+            }
+
+            let insertErr = (await insertEventRow('stripe_webhook_events')).error;
+            if (insertErr && (insertErr as any)?.code === '42P01') {
+              // Table missing in older environments; fall back
+              insertErr = (await insertEventRow('webhook_events')).error;
+            }
+
             if (insertErr) {
               const duplicate = (insertErr as any)?.code === '23505';
               if (duplicate) {
@@ -3102,10 +2933,20 @@ export default {
             }
 
             if (insertedEvent) {
-              const { error: updateErr } = await supabaseAdmin
-                .from('webhook_events')
-                .update({ note, processed_at: new Date().toISOString() })
-                .eq('id', eventId);
+              const processedAt = new Date().toISOString();
+
+              async function updateEventRow(table: string) {
+                const column = table === 'stripe_webhook_events' ? 'stripe_event_id' : 'id';
+                return supabaseAdmin
+                  .from(table)
+                  .update({ note, processed_at: processedAt })
+                  .eq(column, eventId);
+              }
+
+              let updateErr = (await updateEventRow('stripe_webhook_events')).error;
+              if (updateErr && (updateErr as any)?.code === '42P01') {
+                updateErr = (await updateEventRow('webhook_events')).error;
+              }
               if (updateErr) {
                 console.error('Failed to update webhook event note', updateErr.message);
               }
