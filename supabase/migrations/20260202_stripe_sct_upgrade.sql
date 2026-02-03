@@ -39,4 +39,19 @@ CREATE TABLE IF NOT EXISTS public.stripe_webhook_events (
   note TEXT
 );
 
+-- Basic RLS: only service role (or disabled by default)
+ALTER TABLE public.stripe_webhook_events ENABLE ROW LEVEL SECURITY;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'stripe_webhook_events' AND policyname = 'stripe_webhook_events_service_only'
+  ) THEN
+    CREATE POLICY stripe_webhook_events_service_only
+      ON public.stripe_webhook_events
+      FOR ALL
+      USING (auth.role() = 'service_role')
+      WITH CHECK (auth.role() = 'service_role');
+  END IF;
+END$$;
+
 COMMENT ON TABLE public.stripe_webhook_events IS 'Tracks processed Stripe events for idempotency of transfers';
