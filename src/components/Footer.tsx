@@ -119,19 +119,31 @@ export function Footer({ onNavigate }: FooterProps) {
             <h3 className="text-sm mb-3 text-[var(--text)]">Legal & Support</h3>
             <ul className="space-y-2 text-sm text-[var(--text-muted)]">
               <li>
-                <button onClick={() => onNavigate('policies')} className="hover:text-[var(--text)] transition-colors">
+                <a
+                  href="/policies"
+                  onClick={(e) => { e.preventDefault(); onNavigate('policies'); }}
+                  className="hover:text-[var(--text)] transition-colors"
+                >
                   Policies & Agreements
-                </button>
+                </a>
               </li>
               <li>
-                <button onClick={() => onNavigate('artist-agreement')} className="hover:text-[var(--text)] transition-colors">
+                <a
+                  href="/artist-agreement"
+                  onClick={(e) => { e.preventDefault(); onNavigate('artist-agreement'); }}
+                  className="hover:text-[var(--text)] transition-colors"
+                >
                   Artist Agreement
-                </button>
+                </a>
               </li>
               <li>
-                <button onClick={() => onNavigate('venue-agreement')} className="hover:text-[var(--text)] transition-colors">
+                <a
+                  href="/venue-agreement"
+                  onClick={(e) => { e.preventDefault(); onNavigate('venue-agreement'); }}
+                  className="hover:text-[var(--text)] transition-colors"
+                >
                   Venue Agreement
-                </button>
+                </a>
               </li>
               <li>
                 <a href="mailto:support@artwalls.space" className="hover:text-[var(--text)] transition-colors">
@@ -148,12 +160,20 @@ export function Footer({ onNavigate }: FooterProps) {
             © 2026 Artwalls. All rights reserved.
           </p>
           <div className="flex items-center gap-6 text-sm text-[var(--text-muted)]">
-            <button onClick={() => onNavigate('privacy-policy')} className="hover:text-[var(--text)] transition-colors">
-              Privacy
-            </button>
-            <button onClick={() => onNavigate('terms-of-service')} className="hover:text-[var(--text)] transition-colors">
-              Terms
-            </button>
+            <a
+              href="/privacy-policy"
+              onClick={(e) => { e.preventDefault(); onNavigate('privacy-policy'); }}
+              className="hover:text-[var(--text)] transition-colors"
+            >
+              Privacy Policy
+            </a>
+            <a
+              href="/terms-of-service"
+              onClick={(e) => { e.preventDefault(); onNavigate('terms-of-service'); }}
+              className="hover:text-[var(--text)] transition-colors"
+            >
+              Terms of Service
+            </a>
             <a href="mailto:legal@artwalls.space" className="hover:text-[var(--text)] transition-colors">
               Legal
             </a>
