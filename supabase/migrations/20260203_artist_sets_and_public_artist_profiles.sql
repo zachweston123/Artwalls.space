@@ -33,6 +33,10 @@ create index if not exists idx_artwork_set_items_artwork_id on public.artwork_se
 -- ---------------------------------------------------------------------------
 -- 2) Add set_id to canonical display table (artworks acts as live listings)
 -- ---------------------------------------------------------------------------
+-- Ensure public flag exists (earlier migration added, but keep idempotent for fresh envs)
+alter table public.artworks add column if not exists is_public boolean not null default true;
+update public.artworks set is_public = coalesce(is_public, true);
+
 alter table public.artworks add column if not exists set_id uuid;
 
 do $$
