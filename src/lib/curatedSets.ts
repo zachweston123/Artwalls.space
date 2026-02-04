@@ -28,6 +28,8 @@ export type CuratedSet = {
   tags?: string[];
   status: CuratedSetStatus;
   needsAttention?: boolean;
+   visibility?: 'public' | 'private';
+   heroImageUrl?: string | null;
   items?: SetItem[];
   itemCount?: number;
 };

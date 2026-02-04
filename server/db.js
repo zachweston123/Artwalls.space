@@ -116,6 +116,7 @@ const SET_LIMITS = { free: 0, starter: 1, growth: 3, pro: 6 };
 
 function mapArtworkSetRow(r, items = []) {
   if (!r) return null;
+  const heroFromItems = items.find((i) => i?.artwork?.imageUrl)?.artwork?.imageUrl;
   return {
     id: r.id,
     artistId: r.artist_id,
@@ -124,6 +125,8 @@ function mapArtworkSetRow(r, items = []) {
     tags: Array.isArray(r.tags) ? r.tags : [],
     status: r.status,
     needsAttention: !!r.needs_attention,
+    visibility: r.visibility || 'public',
+    heroImageUrl: r.hero_image_url || heroFromItems || null,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
     itemCount: r.item_count ?? items.length,
@@ -430,6 +433,7 @@ export async function createArtworkSetRecord({ artistId, title, description, tag
     description: description ?? null,
     tags: Array.isArray(tags) ? tags : null,
     status: status || 'draft',
+    visibility: 'public',
     created_at: nowIso(),
     updated_at: nowIso(),
   };
@@ -450,6 +454,8 @@ export async function updateArtworkSetRecord(id, patch) {
   if (patch.tags !== undefined) payload.tags = Array.isArray(patch.tags) ? patch.tags : null;
   if (patch.status !== undefined) payload.status = patch.status;
   if (patch.needsAttention !== undefined) payload.needs_attention = patch.needsAttention;
+  if (patch.visibility !== undefined) payload.visibility = patch.visibility;
+  if (patch.heroImageUrl !== undefined) payload.hero_image_url = patch.heroImageUrl;
 
   const { data, error } = await supabaseAdmin
     .from('artwork_sets')
@@ -549,6 +555,7 @@ export async function getArtworkSetPublic(setId) {
     .select('*')
     .eq('id', setId)
     .eq('status', 'published')
+    .eq('visibility', 'public')
     .maybeSingle();
   throwIfError(error, 'getArtworkSetPublic');
   if (!data) return null;
@@ -563,6 +570,7 @@ export async function listPublishedArtworkSets({ search, tags } = {}) {
     .from('artwork_sets')
     .select('*')
     .eq('status', 'published')
+    .eq('visibility', 'public')
     .order('updated_at', { ascending: false });
 
   if (search) {

@@ -81,6 +81,7 @@ import { CallPublicPage } from './components/calls/CallPublicPage';
 import { CallApplyPage } from './components/calls/CallApplyPage';
 import { Settings } from './components/settings/Settings';
 import { PublicArtistPage } from './pages/PublicArtistPage';
+import { PublicArtistSetPage } from './pages/PublicArtistSetPage';
 import { ArtistOnboardingWizard } from './components/onboarding/ArtistOnboardingWizard';
 import { CuratedSets } from './components/artist/CuratedSets';
 
@@ -151,6 +152,11 @@ export default function App() {
   if (typeof window !== 'undefined' && window.location.pathname.startsWith('/artists/')) {
     const parts = window.location.pathname.split('/').filter(Boolean);
     const slugOrId = parts[1] || '';
+    const isSetDetail = parts[2] === 'sets' && !!parts[3];
+    if (isSetDetail) {
+      const setId = parts[3];
+      return <PublicArtistSetPage slugOrId={slugOrId} setId={setId} />;
+    }
     return <PublicArtistPage slugOrId={slugOrId} />;
   }
 
