@@ -740,8 +740,38 @@ export default function App() {
     }
 
     return (
-      <div>
-        <Login onLogin={handleLogin} onNavigate={handleNavigate} />
+      <div className="min-h-screen flex flex-col bg-[var(--bg)]">
+        <div className="flex-1">
+          <Login onLogin={handleLogin} onNavigate={handleNavigate} />
+        </div>
+        <div className="border-t border-[var(--border)] bg-[var(--surface-2)]">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-[var(--text-muted)]">
+            <p className="text-center sm:text-left">© 2026 Artwalls. All rights reserved.</p>
+            <div className="flex items-center gap-4">
+              <a
+                href="/privacy-policy"
+                onClick={(e) => { e.preventDefault(); handleNavigate('privacy-policy'); }}
+                className="hover:text-[var(--text)] transition-colors"
+              >
+                Privacy Policy
+              </a>
+              <a
+                href="/terms-of-service"
+                onClick={(e) => { e.preventDefault(); handleNavigate('terms-of-service'); }}
+                className="hover:text-[var(--text)] transition-colors"
+              >
+                Terms of Service
+              </a>
+              <a
+                href="/policies"
+                onClick={(e) => { e.preventDefault(); handleNavigate('policies'); }}
+                className="hover:text-[var(--text)] transition-colors"
+              >
+                Policies
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
