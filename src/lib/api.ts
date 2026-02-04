@@ -137,7 +137,8 @@ export interface VenueSchedule {
   dayOfWeek: string; // e.g., 'Thursday'
   startTime: string; // '16:00'
   endTime: string;   // '18:00'
-  slotMinutes: number; // 30 | 60 | 90 | 120
+  slotMinutes?: number; // legacy field
+  installSlotIntervalMinutes?: number; // 15 | 30 | 60 | 120
   timezone?: string | null;
 }
 
@@ -154,6 +155,7 @@ export async function getVenueAvailability(venueId: string, weekStart?: string) 
   return apiGet<{
     slots: string[]; // ISO strings
     slotMinutes: number;
+    slotIntervalMinutes?: number;
     dayOfWeek: string | null;
     startTime: string | null;
     endTime: string | null;

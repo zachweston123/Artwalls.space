@@ -14,10 +14,11 @@ interface TimeSlotPickerProps {
 export function TimeSlotPicker({ isOpen, onClose, venueId, type, artworkTitle, onConfirm }: TimeSlotPickerProps) {
   const [selectedSlot, setSelectedSlot] = React.useState<string>('');
   const [weeklySlots, setWeeklySlots] = React.useState<Array<{ weekStart: Date; slots: string[] }>>([]);
-  const [slotMinutes, setSlotMinutes] = React.useState<number>(30);
+  const [slotMinutes, setSlotMinutes] = React.useState<number>(60);
   const [windowDay, setWindowDay] = React.useState<string>('');
   const [startLabel, setStartLabel] = React.useState<string>('');
   const [endLabel, setEndLabel] = React.useState<string>('');
+  const [validationMessage, setValidationMessage] = React.useState<string>('');
   const [weekStart, setWeekStart] = React.useState<Date>(() => {
     const now = new Date();
     const d = new Date(now);
@@ -42,10 +43,18 @@ export function TimeSlotPicker({ isOpen, onClose, venueId, type, artworkTitle, o
       setWeeklySlots(agg.map((a: any) => ({ weekStart: a.weekStart, slots: a.slots })));
       // take metadata from first
       const meta = results[0] as any;
-      setSlotMinutes(meta?.slotMinutes || 30);
+      setSlotMinutes(meta?.slotIntervalMinutes || meta?.slotMinutes || 60);
       setWindowDay(meta?.dayOfWeek || '');
       setStartLabel(meta?.startTime ? formatTimeLabel(meta.startTime) : '');
       setEndLabel(meta?.endTime ? formatTimeLabel(meta.endTime) : '');
+      setValidationMessage((prev) => {
+        // Clear stale selection warning when interval changes and selection becomes valid again
+        const allSlots = agg.flatMap((a: any) => a.slots || []);
+        if (selectedSlot && !allSlots.includes(selectedSlot)) {
+          return 'Selected time is no longer available. Please choose another slot.';
+        }
+        return '';
+      });
     } catch (e) {
       setWeeklySlots([]);
     }
@@ -81,6 +90,11 @@ export function TimeSlotPicker({ isOpen, onClose, venueId, type, artworkTitle, o
       onConfirm(selectedSlot);
       onClose();
     }
+  };
+
+  const handleSelectSlot = (slotIso: string) => {
+    setSelectedSlot(slotIso);
+    setValidationMessage('');
   };
 
   if (!isOpen) return null;
@@ -157,7 +171,7 @@ export function TimeSlotPicker({ isOpen, onClose, venueId, type, artworkTitle, o
                       {slots.map((slotIso) => (
                         <button
                           key={slotIso}
-                          onClick={() => setSelectedSlot(slotIso)}
+                          onClick={() => handleSelectSlot(slotIso)}
                           className={`px-4 py-3 rounded-lg border-2 transition-all ${
                             selectedSlot === slotIso
                               ? 'border-[var(--blue)] bg-[var(--surface-2)] text-[var(--blue)]'
@@ -179,6 +193,9 @@ export function TimeSlotPicker({ isOpen, onClose, venueId, type, artworkTitle, o
 
           {/* Actions */}
           <div className="p-6 border-t border-[var(--border)] bg-[var(--surface-2)]">
+            {validationMessage && (
+              <p className="text-sm text-[var(--danger)] mb-3">{validationMessage}</p>
+            )}
             <div className="flex gap-3">
               <button
                 onClick={onClose}

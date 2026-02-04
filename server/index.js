@@ -7,6 +7,7 @@ import https from 'https';
 import fs from 'fs';
 
 import { supabaseAdmin } from './supabaseClient.js';
+import { generateTimeOptions } from '../shared/timeOptions.js';
 
 import {
   upsertArtist,
@@ -1006,9 +1007,24 @@ app.post('/api/venues/:venueId/schedule', async (req, res) => {
     const venueId = req.params.venueId;
     if (venue.id !== venueId) return res.status(403).json({ error: 'Can only update your own schedule' });
 
-    const { dayOfWeek, startTime, endTime, slotMinutes, timezone } = req.body || {};
+    const { dayOfWeek, startTime, endTime, slotMinutes, installSlotIntervalMinutes, timezone } = req.body || {};
     if (!dayOfWeek || !startTime || !endTime) return res.status(400).json({ error: 'Missing dayOfWeek/startTime/endTime' });
-    const updated = await upsertVenueSchedule({ venueId, dayOfWeek, startTime, endTime, slotMinutes, timezone });
+
+    const interval = Number(installSlotIntervalMinutes ?? slotMinutes ?? 60);
+    const allowedIntervals = new Set([15, 30, 60, 120]);
+    if (!Number.isFinite(interval) || interval <= 0 || !allowedIntervals.has(interval)) {
+      return res.status(400).json({ error: 'Invalid slot interval. Allowed: 15, 30, 60, 120 minutes.' });
+    }
+
+    const updated = await upsertVenueSchedule({
+      venueId,
+      dayOfWeek,
+      startTime,
+      endTime,
+      slotMinutes: interval,
+      installSlotIntervalMinutes: interval,
+      timezone,
+    });
     return res.json({ schedule: updated });
   } catch (e) {
     return res.status(500).json({ error: e?.message || 'Failed to save schedule' });
@@ -1019,7 +1035,7 @@ app.get('/api/venues/:venueId/availability', async (req, res) => {
   try {
     const venueId = req.params.venueId;
     const schedule = await getVenueSchedule(venueId);
-    if (!schedule) return res.json({ slots: [], slotMinutes: 30, dayOfWeek: null, startTime: null, endTime: null });
+    if (!schedule) return res.json({ slots: [], slotMinutes: 60, slotIntervalMinutes: 60, dayOfWeek: null, startTime: null, endTime: null });
 
     const weekStartParam = req.query.weekStart;
     const baseDate = weekStartParam ? new Date(String(weekStartParam)) : new Date();
@@ -1031,24 +1047,22 @@ app.get('/api/venues/:venueId/availability', async (req, res) => {
     // Fetch existing bookings overlapping this window
     const existing = await listBookingsByVenueBetween(venueId, dayStart.toISOString(), dayEnd.toISOString());
 
-    // Generate slots by slotMinutes and filter out overlaps
-    const slots = [];
-    const slotMins = Number(schedule.slotMinutes || 30);
-    let cursor = new Date(dayStart);
-    while (cursor < dayEnd) {
-      const slotStart = new Date(cursor);
-      const slotEnd = new Date(cursor);
-      slotEnd.setMinutes(slotEnd.getMinutes() + slotMins);
-      if (slotEnd <= dayEnd) {
-        const overlaps = existing.some(b => new Date(b.startAt) < slotEnd && new Date(b.endAt) > slotStart);
-        if (!overlaps) slots.push(slotStart.toISOString());
-      }
-      cursor.setMinutes(cursor.getMinutes() + slotMins);
-    }
+    const slotMins = Number(schedule.installSlotIntervalMinutes ?? schedule.slotMinutes ?? 60);
+    const generatedSlots = generateTimeOptions({ startTime: dayStart, endTime: dayEnd, intervalMinutes: slotMins });
+
+    const slots = generatedSlots
+      .map((opt) => opt.value)
+      .filter((slotIso) => {
+        const slotStart = new Date(slotIso);
+        const slotEnd = new Date(slotStart.getTime() + slotMins * 60 * 1000);
+        const overlaps = existing.some((b) => new Date(b.startAt) < slotEnd && new Date(b.endAt) > slotStart);
+        return !overlaps && slotEnd <= dayEnd;
+      });
 
     return res.json({
       slots,
       slotMinutes: slotMins,
+      slotIntervalMinutes: slotMins,
       dayOfWeek: schedule.dayOfWeek,
       startTime: schedule.startTime,
       endTime: schedule.endTime,
@@ -1127,7 +1141,7 @@ app.post('/api/venues/:venueId/bookings', async (req, res) => {
 
     const schedule = await getVenueSchedule(venueId);
     if (!schedule) return res.status(400).json({ error: 'Venue has no schedule configured' });
-    const slotMins = Number(schedule.slotMinutes || 30);
+    const slotMins = Number(schedule.installSlotIntervalMinutes ?? schedule.slotMinutes ?? 60);
     const start = new Date(startAt);
     const end = new Date(startAt);
     end.setMinutes(end.getMinutes() + slotMins);
@@ -1138,6 +1152,11 @@ app.post('/api/venues/:venueId/bookings', async (req, res) => {
     const dayStart = buildDateForWeekday(weekStart, weekdayIndex, schedule.startTime);
     const dayEnd = buildDateForWeekday(weekStart, weekdayIndex, schedule.endTime);
     if (!(start >= dayStart && end <= dayEnd)) return res.status(400).json({ error: 'Time outside venue window' });
+
+    // Verify selection aligns to generated options (guards against stale intervals)
+    const validSlots = generateTimeOptions({ startTime: dayStart, endTime: dayEnd, intervalMinutes: slotMins });
+    const isAligned = validSlots.some((opt) => new Date(opt.value).getTime() === start.getTime());
+    if (!isAligned) return res.status(400).json({ error: 'Selected time is no longer available. Please pick another slot.' });
 
     // Check overlap
     const overlaps = await listBookingsByVenueBetween(venueId, start.toISOString(), end.toISOString());

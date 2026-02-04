@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Clock, Save, CheckCircle, AlertCircle } from 'lucide-react';
 import { getVenueSchedule, saveVenueSchedule } from '../../lib/api';
+import { generateTimeOptions } from '../../lib/timeOptions';
 import { supabase } from '../../lib/supabase';
 
 export function VenueSettingsWithEmptyState() {
@@ -13,7 +14,7 @@ export function VenueSettingsWithEmptyState() {
     startTime: '16:00',
     endTime: '18:00',
     timezone: 'PST',
-    slotMinutes: 30 as 15 | 30 | 60 | 90 | 120,
+    slotMinutes: 60 as 15 | 30 | 60 | 120,
   });
 
   const [tempConfig, setTempConfig] = useState(scheduleConfig);
@@ -32,19 +33,20 @@ export function VenueSettingsWithEmptyState() {
         try {
           const { schedule } = await getVenueSchedule(id);
           if (schedule) {
+            const interval = (schedule.installSlotIntervalMinutes ?? schedule.slotMinutes ?? 60) as 15 | 30 | 60 | 120;
             setScheduleConfig({
               dayOfWeek: schedule.dayOfWeek,
               startTime: schedule.startTime,
               endTime: schedule.endTime,
               timezone: schedule.timezone || 'PST',
-              slotMinutes: (schedule.slotMinutes as 15 | 30 | 60 | 90 | 120) || 30,
+              slotMinutes: interval,
             });
             setTempConfig({
               dayOfWeek: schedule.dayOfWeek,
               startTime: schedule.startTime,
               endTime: schedule.endTime,
               timezone: schedule.timezone || 'PST',
-              slotMinutes: (schedule.slotMinutes as 15 | 30 | 60 | 90 | 120) || 30,
+              slotMinutes: interval,
             });
             setHasSchedule(true);
           } else {
@@ -107,10 +109,14 @@ export function VenueSettingsWithEmptyState() {
     if (end <= start) {
       newErrors.endTime = 'End time must be after start time';
     }
-    
+
     const duration = (end - start) / 60;
     if (duration < 1) {
       newErrors.duration = 'Recommended duration: 1-3 hours';
+    }
+
+    if (end - start < tempConfig.slotMinutes) {
+      newErrors.slotMinutes = 'Install window is shorter than the selected appointment length';
     }
     
     setErrors(newErrors);
@@ -127,6 +133,7 @@ export function VenueSettingsWithEmptyState() {
           startTime: tempConfig.startTime,
           endTime: tempConfig.endTime,
           slotMinutes: tempConfig.slotMinutes,
+          installSlotIntervalMinutes: tempConfig.slotMinutes,
           timezone: tempConfig.timezone,
         } as any);
         setShowToast(true);
@@ -142,6 +149,17 @@ export function VenueSettingsWithEmptyState() {
     const end = timeToMinutes(tempConfig.endTime);
     return (end - start) / 60;
   };
+
+  const slotPreview = useMemo(() => {
+    const base = new Date();
+    base.setHours(0, 0, 0, 0);
+    return generateTimeOptions({
+      startTime: tempConfig.startTime,
+      endTime: tempConfig.endTime,
+      intervalMinutes: tempConfig.slotMinutes,
+      baseDate: base,
+    });
+  }, [tempConfig.endTime, tempConfig.slotMinutes, tempConfig.startTime]);
 
   return (
     <div className="bg-[var(--bg)] text-[var(--text)]">
@@ -243,18 +261,24 @@ export function VenueSettingsWithEmptyState() {
 
             {/* Slot Length */}
             <div>
-              <label className="block text-sm text-[var(--text-muted)] mb-2">Slot Length</label>
+              <label className="block text-sm text-[var(--text-muted)] mb-2">Install appointment length</label>
               <select
                 value={tempConfig.slotMinutes}
-                onChange={(e) => setTempConfig({ ...tempConfig, slotMinutes: Number(e.target.value) as 15 | 30 | 60 | 90 | 120 })}
+                onChange={(e) => setTempConfig({ ...tempConfig, slotMinutes: Number(e.target.value) as 15 | 30 | 60 | 120 })}
                 className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
               >
                 <option value={15}>15 minutes</option>
                 <option value={30}>30 minutes</option>
                 <option value={60}>60 minutes</option>
-                <option value={90}>90 minutes</option>
                 <option value={120}>120 minutes</option>
               </select>
+              <p className="text-xs text-[var(--text-muted)] mt-2">This controls the time options artists can pick within your install window.</p>
+              {errors.slotMinutes && (
+                <p className="text-xs text-[var(--danger)] mt-1">{errors.slotMinutes}</p>
+              )}
+              {slotPreview.length > 0 && (
+                <p className="text-xs text-[var(--text-muted)] mt-2">Example options: {slotPreview.slice(0, 4).map((o) => o.label).join(', ')}{slotPreview.length > 4 ? '…' : ''}</p>
+              )}
             </div>
 
             {/* Duration Info */}

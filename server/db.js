@@ -51,20 +51,23 @@ function mapVenueRow(r) {
     name: r.name,
     type: r.type,
     stripeAccountId: r.stripe_account_id,
-    stripePayoutsEnabled: r.stripe_payouts_enabled,
+    slotMinutes: r.install_slot_interval_minutes ?? r.slot_minutes,
+    installSlotIntervalMinutes: r.install_slot_interval_minutes ?? r.slot_minutes,
     stripeChargesEnabled: r.stripe_charges_enabled,
     stripeOnboardingStatus: r.stripe_onboarding_status,
     defaultVenueFeeBps: r.default_venue_fee_bps,
     labels: Array.isArray(r.labels) ? r.labels : (r.labels ? r.labels : []),
     suspended: !!r.suspended,
     createdAt: r.created_at,
-    updatedAt: r.updated_at,
+export async function upsertVenueSchedule({ venueId, dayOfWeek, startTime, endTime, slotMinutes, installSlotIntervalMinutes, timezone }) {
+  const interval = installSlotIntervalMinutes ?? slotMinutes ?? 60;
   };
 }
 
 function mapArtworkRow(r) {
   if (!r) return null;
-  return {
+    slot_minutes: interval,
+    install_slot_interval_minutes: interval,
     id: r.id,
     artistId: r.artist_id,
     venueId: r.venue_id,
@@ -920,13 +923,15 @@ export async function getVenueSchedule(venueId) {
   return mapVenueScheduleRow(data);
 }
 
-export async function upsertVenueSchedule({ venueId, dayOfWeek, startTime, endTime, slotMinutes, timezone }) {
+export async function upsertVenueSchedule({ venueId, dayOfWeek, startTime, endTime, slotMinutes, installSlotIntervalMinutes, timezone }) {
+  const interval = installSlotIntervalMinutes ?? slotMinutes ?? 60;
   const payload = {
     venue_id: venueId,
     day_of_week: dayOfWeek,
     start_time: startTime,
     end_time: endTime,
-    slot_minutes: slotMinutes ?? 30,
+    slot_minutes: interval,
+    install_slot_interval_minutes: interval,
     timezone: timezone ?? null,
     updated_at: nowIso(),
   };

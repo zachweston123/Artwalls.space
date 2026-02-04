@@ -45,6 +45,12 @@ const [approvalData, setApprovalData] = useState<{
 
 ---
 
+## ✅ Testing Notes (Slot Intervals)
+### Location: After Files Modified Section
+- Set venue interval to 30 minutes in [Venue Settings With Empty State](src/components/venue/VenueSettingsWithEmptyState.tsx) UI; save; confirm API `GET /api/venues/:id/availability` returns options at :00 and :30 within window.
+- Change interval to 60 minutes; save; availability should show hourly options only and previously selected 30-minute slot should now display a warning in the picker.
+- Booking creation (`POST /api/venues/:id/bookings`) should reject times not aligned to the configured interval.
+
 #### Change 2: Update handleApprove Reset
 
 **Location:** Lines 32-40 (handleApprove function)
