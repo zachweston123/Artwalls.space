@@ -906,6 +906,7 @@ function mapVenueScheduleRow(r) {
     dayOfWeek: r.day_of_week,
     startTime: r.start_time,
     endTime: r.end_time,
+    installSlotIntervalMinutes: r.install_slot_interval_minutes ?? r.slot_minutes ?? 60,
     slotMinutes: r.slot_minutes,
     timezone: r.timezone,
     createdAt: r.created_at,

@@ -2229,7 +2229,7 @@ async function requireArtist(req, res) {
   if (!requireAuthInProduction(req, res)) return null;
 
   const authUser = await getSupabaseUserFromRequest(req);
-  const authRole = authUser?.user_metadata?.role;
+  const authRole = (authUser?.user_metadata?.role || '').toLowerCase();
 
   // Preferred path: Supabase JWT
   if (authUser) {
@@ -2266,7 +2266,7 @@ async function requireVenue(req, res) {
   if (!requireAuthInProduction(req, res)) return null;
 
   const authUser = await getSupabaseUserFromRequest(req);
-  const authRole = authUser?.user_metadata?.role;
+  const authRole = (authUser?.user_metadata?.role || '').toLowerCase();
 
   // Preferred path: Supabase JWT
   if (authUser) {
