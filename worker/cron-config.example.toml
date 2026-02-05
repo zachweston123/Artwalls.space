@@ -1,0 +1,10 @@
+# Cloudflare Workers Cron Configuration
+# Add this to wrangler.toml to enable the payout retry cron job
+
+[triggers]
+crons = ["0 * * * *"]  # Runs hourly at :00 (e.g., 1:00, 2:00, 3:00...)
+
+# Alternative schedules:
+# Every 30 minutes: "*/30 * * * *"
+# Every 6 hours:    "0 */6 * * *"
+# Daily at 3am:     "0 3 * * *"

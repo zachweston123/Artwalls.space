@@ -1739,6 +1739,16 @@ export default {
       if (!headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
       return fetch(`https://api.stripe.com${path}`, { ...init, headers });
     }
+    
+    // Helper for cron scheduled tasks (uses env parameter directly)
+    function createStripeFetch(stripeSecretKey: string) {
+      return async (path: string, init: RequestInit = {}): Promise<Response> => {
+        const headers = new Headers(init.headers || {});
+        headers.set('Authorization', `Bearer ${stripeSecretKey}`);
+        if (!headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
+        return fetch(`https://api.stripe.com${path}`, { ...init, headers });
+      };
+    }
 
     function toForm(obj: Record<string, any>): string {
       return Object.entries(obj)
@@ -4645,5 +4655,178 @@ export default {
     }
 
     return new Response('Not found', { status: 404 });
+  },
+
+  /**
+   * P2 Enhancement F8: Scheduled cron trigger to retry stuck payouts
+   * Runs hourly to find orders with payout_status='pending_transfer' older than 1 hour
+   * and retries the Stripe transfer creation.
+   * 
+   * Configure in wrangler.toml:
+   * [triggers]
+   * crons = ["0 * * * *"]  # Every hour at :00
+   */
+  async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
+    console.log(`[Cron] Starting payout retry job at ${new Date().toISOString()}`);
+    
+    const supabaseUrl = env.SUPABASE_URL;
+    const supabaseServiceKey = env.SUPABASE_SERVICE_ROLE_KEY;
+    const stripeKey = env.STRIPE_SECRET_KEY;
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('[Cron] Missing Supabase configuration');
+      return;
+    }
+    
+    if (!stripeKey) {
+      console.error('[Cron] Missing Stripe secret key');
+      return;
+    }
+    
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    });
+    
+    // Create Stripe fetch helper with the key from env
+    const stripeFetch = async (path: string, init: RequestInit = {}): Promise<Response> => {
+      const headers = new Headers(init.headers || {});
+      headers.set('Authorization', `Bearer ${stripeKey}`);
+      if (!headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
+      return fetch(`https://api.stripe.com${path}`, { ...init, headers });
+    };
+    
+    const toForm = (obj: Record<string, any>): string => {
+      return Object.entries(obj)
+        .filter(([, v]) => v !== undefined && v !== null)
+        .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
+        .join('&');
+    };
+
+    // Find orders stuck in pending_transfer for more than 1 hour
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    
+    const { data: stuckOrders, error } = await supabaseAdmin
+      .from('orders')
+      .select('id, order_number, artist_id, venue_id, stripe_payment_intent_id, payout_status, created_at')
+      .eq('payout_status', 'pending_transfer')
+      .lt('created_at', oneHourAgo)
+      .limit(50); // Process max 50 per run to avoid timeouts
+    
+    if (error) {
+      console.error('[Cron] Error querying stuck orders:', error);
+      return;
+    }
+    
+    if (!stuckOrders || stuckOrders.length === 0) {
+      console.log('[Cron] No stuck orders found');
+      return;
+    }
+    
+    console.log(`[Cron] Found ${stuckOrders.length} stuck orders to retry`);
+    
+    // Retry each order
+    for (const order of stuckOrders) {
+      try {
+        console.log(`[Cron] Retrying order ${order.order_number} (${order.id})`);
+        
+        // Fetch full order details
+        const { data: fullOrder } = await supabaseAdmin
+          .from('orders')
+          .select('*')
+          .eq('id', order.id)
+          .single();
+        
+        if (!fullOrder) continue;
+        
+        // Re-run transfer logic (similar to webhook processing)
+        const artistConnectedAccountId = fullOrder.artist_connected_account_id;
+        const venueConnectedAccountId = fullOrder.venue_connected_account_id;
+        
+        if (!artistConnectedAccountId) {
+          console.log(`[Cron] Order ${order.order_number} - artist not onboarded, skipping`);
+          continue;
+        }
+        
+        // Calculate amounts using centralized pricing
+        const artistTier = normalizeArtistTier(fullOrder.artist_tier);
+        const pricing = calculatePricingBreakdown(fullOrder.final_price, artistTier, !!venueConnectedAccountId);
+        
+        const transfers: any = {};
+        
+        // Create artist transfer
+        if (pricing.artistTakeHome > 0) {
+          const artistTransferBody = toForm({
+            amount: Math.round(pricing.artistTakeHome * 100),
+            currency: 'usd',
+            destination: artistConnectedAccountId,
+            source_transaction: fullOrder.stripe_charge_id,
+            description: `Order ${order.order_number} - Artist payout`,
+          });
+          
+          const artistResp = await stripeFetch('/v1/transfers', { 
+            method: 'POST', 
+            body: artistTransferBody,
+          });
+          
+          if (artistResp.ok) {
+            const artistTransfer = await artistResp.json();
+            transfers.artist_transfer_id = artistTransfer.id;
+            console.log(`[Cron] Created artist transfer ${artistTransfer.id}`);
+          } else {
+            const err = await artistResp.text();
+            console.error(`[Cron] Failed to create artist transfer: ${err}`);
+            continue;
+          }
+        }
+        
+        // Create venue transfer if applicable
+        if (venueConnectedAccountId && pricing.venueFee > 0) {
+          const venueTransferBody = toForm({
+            amount: Math.round(pricing.venueFee * 100),
+            currency: 'usd',
+            destination: venueConnectedAccountId,
+            source_transaction: fullOrder.stripe_charge_id,
+            description: `Order ${order.order_number} - Venue payout`,
+          });
+          
+          const venueResp = await stripeFetch('/v1/transfers', {
+            method: 'POST',
+            body: venueTransferBody,
+          });
+          
+          if (venueResp.ok) {
+            const venueTransfer = await venueResp.json();
+            transfers.venue_transfer_id = venueTransfer.id;
+            console.log(`[Cron] Created venue transfer ${venueTransfer.id}`);
+          } else {
+            const err = await venueResp.text();
+            console.error(`[Cron] Failed to create venue transfer: ${err}`);
+          }
+        }
+        
+        // Update order with transfer IDs and mark as paid
+        const existingIds = fullOrder.transfer_ids || {};
+        const mergedIds = mergeTransferRecords(existingIds, transfers);
+        
+        await supabaseAdmin
+          .from('orders')
+          .update({
+            transfer_ids: mergedIds,
+            payout_status: 'paid',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', order.id);
+        
+        console.log(`[Cron] Successfully retried order ${order.order_number}`);
+        
+      } catch (err) {
+        console.error(`[Cron] Error retrying order ${order.order_number}:`, err);
+      }
+    }
+    
+    console.log(`[Cron] Completed payout retry job`);
   },
 };
