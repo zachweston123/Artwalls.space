@@ -1,3 +1,5 @@
+import { supabase } from './supabase';
+
 const DEFAULT_API_BASE = (() => {
   if (typeof window === 'undefined') return 'https://artwalls.space';
   const { origin, hostname } = window.location;
@@ -147,7 +149,50 @@ export async function getVenueSchedule(venueId: string) {
 }
 
 export async function saveVenueSchedule(venueId: string, schedule: Omit<VenueSchedule, 'id' | 'venueId'>) {
-  return apiPost<{ schedule: VenueSchedule }>(`/api/venues/${venueId}/schedule`, schedule);
+  const interval = schedule.installSlotIntervalMinutes ?? schedule.slotMinutes ?? 60;
+  const allowedIntervals = new Set([15, 30, 60, 120]);
+  if (!allowedIntervals.has(interval)) {
+    throw new Error('Invalid slot interval. Allowed: 15, 30, 60, 120 minutes.');
+  }
+
+  // x-venue-id enables local/dev environments where Supabase auth is absent but server allows a fallback
+  try {
+    return await apiPost<{ schedule: VenueSchedule }>(`/api/venues/${venueId}/schedule`, schedule, { 'x-venue-id': venueId });
+  } catch (apiErr) {
+    // Fallback: write directly via Supabase with RLS (auth.uid() must match venue_id)
+    console.warn('[saveVenueSchedule] API save failed, falling back to Supabase direct write:', apiErr);
+    const { data, error } = await supabase
+      .from('venue_schedules')
+      .upsert({
+        venue_id: venueId,
+        day_of_week: schedule.dayOfWeek,
+        start_time: schedule.startTime,
+        end_time: schedule.endTime,
+        slot_minutes: interval,
+        install_slot_interval_minutes: interval,
+        timezone: schedule.timezone ?? null,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'venue_id' })
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error('[saveVenueSchedule] Supabase fallback failed:', error);
+      throw apiErr;
+    }
+
+    const mapped: VenueSchedule = {
+      id: data.id,
+      venueId: data.venue_id,
+      dayOfWeek: data.day_of_week,
+      startTime: data.start_time,
+      endTime: data.end_time,
+      slotMinutes: data.slot_minutes,
+      installSlotIntervalMinutes: data.install_slot_interval_minutes ?? data.slot_minutes ?? interval,
+      timezone: data.timezone,
+    };
+    return { schedule: mapped };
+  }
 }
 
 export async function getVenueAvailability(venueId: string, weekStart?: string) {

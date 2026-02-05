@@ -142,7 +142,9 @@ export function VenueSettingsWithEmptyState() {
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
     } catch (e) {
+      console.error('Failed to save schedule', e);
       setHasSchedule(false);
+      setErrors((prev) => ({ ...prev, general: 'Save failed. Please make sure you are signed in as a venue and try again.' }));
     }
   };
 
@@ -314,6 +316,12 @@ export function VenueSettingsWithEmptyState() {
                 {tempConfig.dayOfWeek}, {formatTime(tempConfig.startTime)} – {formatTime(tempConfig.endTime)}.
               </p>
             </div>
+
+            {errors.general && (
+              <div className="p-3 rounded-lg border border-[var(--danger)] text-[var(--danger)] bg-[var(--surface-2)]">
+                {errors.general}
+              </div>
+            )}
 
             {/* Save Button */}
             <button
