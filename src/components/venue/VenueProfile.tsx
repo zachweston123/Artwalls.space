@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Store, Mail, Phone, MapPin, Clock, DollarSign, Instagram } from 'lucide-react';
 import { VenueProfileEdit, type VenueProfileData } from './VenueProfileEdit';
-import { apiPost } from '../../lib/api';
+import { apiPost, getVenueSchedule } from '../../lib/api';
 import { supabase } from '../../lib/supabase';
 import { PageHeader } from '../PageHeader';
 import { formatCurrency } from '../../utils/format';
@@ -14,6 +14,15 @@ interface VenueProfileProps {
 export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfileProps) {
   const [isEditing, setIsEditing] = useState(startInEdit);
   const [saveError, setSaveError] = useState<string | null>(null);
+
+  const formatTime = (time: string) => {
+    const [hourStr, minuteStr] = time.split(':');
+    const hour = parseInt(hourStr, 10);
+    const minute = parseInt(minuteStr || '0', 10);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const normalizedHour = hour % 12 || 12;
+    return `${normalizedHour}:${minute.toString().padStart(2, '0')} ${ampm}`;
+  };
 
   // Profile data - loaded from database on mount
   const [profile, setProfile] = useState<{
@@ -50,8 +59,8 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
     wallSpaces: 0,
     activeDisplays: 0,
     installWindow: {
-      day: 'Monday',
-      time: '9:00 AM - 11:00 AM',
+      day: 'Not set',
+      time: 'Add your install window in Settings',
     },
   });
 
@@ -89,6 +98,22 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
             addressLat: venueData.address_lat || prev.addressLat,
             addressLng: venueData.address_lng || prev.addressLng,
           }));
+        }
+
+        try {
+          const { schedule } = await getVenueSchedule(user.id);
+          if (schedule) {
+            const interval = schedule.installSlotIntervalMinutes ?? schedule.slotMinutes ?? 60;
+            setProfile((prev) => ({
+              ...prev,
+              installWindow: {
+                day: schedule.dayOfWeek,
+                time: `${formatTime(schedule.startTime)} - ${formatTime(schedule.endTime)} (${interval}-minute slots)`,
+              },
+            }));
+          }
+        } catch (err) {
+          console.warn('Failed to load venue schedule:', err);
         }
       } catch (err) {
         console.warn('Failed to load venue data:', err);
@@ -203,6 +228,10 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
     : hasAddress || hasCity
       ? { label: 'Needs setup', tone: 'warn' as const }
       : { label: 'Draft', tone: 'muted' as const };
+
+  const installWindowLabel = profile.installWindow.day === 'Not set'
+    ? profile.installWindow.time
+    : `${profile.installWindow.day}s, ${profile.installWindow.time}`;
 
   const statusToneStyles = {
     success: 'bg-[var(--green-muted)] text-[var(--green)] border border-[var(--border)]',
@@ -368,9 +397,7 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
                 <Clock className="w-5 h-5 text-[var(--text-muted)] mt-0.5" />
                 <div className="flex-1">
                   <label className="block text-sm text-[var(--text-muted)] mb-1">Install Window</label>
-                  <p className="text-[var(--text)]">
-                    {profile.installWindow.day}s, {profile.installWindow.time}
-                  </p>
+                  <p className="text-[var(--text)]">{installWindowLabel}</p>
                   <button 
                     onClick={() => onNavigate('venue-settings')}
                     className="text-sm text-[var(--blue)] hover:underline mt-1"

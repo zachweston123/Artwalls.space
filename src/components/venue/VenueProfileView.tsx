@@ -3,8 +3,9 @@ import { MapPin, Edit, Flag, CheckCircle, Calendar } from 'lucide-react';
 import { VenuePayoutsCard } from './VenuePayoutsCard';
 import { LabelChip } from '../LabelChip';
 import { VENUE_HIGHLIGHTS } from '../../data/highlights';
-import { apiGet } from '../../lib/api';
+import { apiGet, getVenueSchedule } from '../../lib/api';
 import type { User } from '../../App';
+import { supabase } from '../../lib/supabase';
 
 interface VenueProfileViewProps {
   isOwnProfile: boolean;
@@ -17,6 +18,20 @@ interface VenueProfileViewProps {
 
 type WallSpace = { id: string; name: string; width?: number; height?: number; available: boolean; photos?: string[] };
 
+type VenueProfileData = {
+  id?: string;
+  name: string;
+  coverPhoto: string;
+  location: string;
+  bio: string;
+  labels: string[];
+  foundedYear: number;
+  wallSpaces: number;
+  currentArtists: number;
+  installWindow: string;
+  verified: boolean;
+};
+
 export function VenueProfileView({ 
   isOwnProfile, 
   venueId,
@@ -25,9 +40,8 @@ export function VenueProfileView({
   onNavigate,
   currentUser 
 }: VenueProfileViewProps) {
-  // Mock venue data - in real app would come from props or API
-  const venue = {
-    id: '1',
+  const [venue, setVenue] = useState<VenueProfileData>({
+    id: venueId,
     name: '',
     coverPhoto: '',
     location: '',
@@ -36,15 +50,71 @@ export function VenueProfileView({
     foundedYear: new Date().getFullYear(),
     wallSpaces: 0,
     currentArtists: 0,
-    installWindow: '',
+    installWindow: 'Install window not set yet',
     verified: false,
+  });
+
+  const formatTime = (time: string) => {
+    const [hourStr, minuteStr] = time.split(':');
+    const hour = parseInt(hourStr || '0', 10);
+    const minute = parseInt(minuteStr || '0', 10);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const normalizedHour = hour % 12 || 12;
+    return `${normalizedHour}:${minute.toString().padStart(2, '0')} ${ampm}`;
   };
 
   // Show only highlights the venue has selected (filtered to known highlights)
   const selectedLabels = (venue.labels ?? []).filter((l) => VENUE_HIGHLIGHTS.includes(l));
 
-  const yearsInBusiness = new Date().getFullYear() - venue.foundedYear;
+  const yearsInBusiness = venue.foundedYear ? Math.max(0, new Date().getFullYear() - venue.foundedYear) : 0;
   const [walls, setWalls] = useState<WallSpace[]>([]);
+
+  useEffect(() => {
+    let mounted = true;
+    if (!venueId) return undefined;
+
+    (async () => {
+      try {
+        const [venueResp, scheduleResp] = await Promise.all([
+          supabase
+            .from('venues')
+            .select('id,name,cover_photo_url,address,city,bio,labels,verified,founded_year')
+            .eq('id', venueId)
+            .single(),
+          getVenueSchedule(venueId).catch(() => ({ schedule: null })),
+        ]);
+
+        if (!mounted) return;
+
+        const venueRow = venueResp?.data;
+        setVenue((prev) => ({
+          ...prev,
+          id: venueId,
+          name: venueRow?.name || prev.name,
+          coverPhoto: venueRow?.cover_photo_url || prev.coverPhoto,
+          location: venueRow?.city || venueRow?.address || prev.location,
+          bio: venueRow?.bio || prev.bio,
+          labels: venueRow?.labels || prev.labels,
+          verified: Boolean(venueRow?.verified ?? prev.verified),
+          foundedYear: venueRow?.founded_year || prev.foundedYear,
+        }));
+
+        if (scheduleResp?.schedule) {
+          const interval = scheduleResp.schedule.installSlotIntervalMinutes ?? scheduleResp.schedule.slotMinutes ?? 60;
+          setVenue((prev) => ({
+            ...prev,
+            installWindow: `${scheduleResp.schedule.dayOfWeek}, ${formatTime(scheduleResp.schedule.startTime)} - ${formatTime(scheduleResp.schedule.endTime)} (${interval}-minute slots)`,
+          }));
+        }
+      } catch (err) {
+        console.warn('Failed to load venue profile', err);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, [venueId]);
 
   useEffect(() => {
     let isMounted = true;
@@ -52,7 +122,9 @@ export function VenueProfileView({
       if (!venueId) return;
       try {
         const items = await apiGet<WallSpace[]>(`/api/venues/${venueId}/wallspaces`);
-        if (isMounted) setWalls(items);
+        if (!isMounted) return;
+        setWalls(items);
+        setVenue((prev) => ({ ...prev, wallSpaces: items.length }));
       } catch {
         setWalls([]);
       }
