@@ -1574,6 +1574,9 @@ export default {
     }
 
     // Analytics events (append-only)
+    // Security: RLS on events table enforces service-role INSERT only (see 20260205_fix_p0_rls_and_idempotency.sql)
+    // This endpoint uses service-role key, so writes succeed despite RLS
+    // Client-side queries via anon key will fail (read-only access for own events)
     if (url.pathname === '/api/events' && method === 'POST') {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
       const payload = await request.json().catch(() => ({}));
@@ -3034,34 +3037,32 @@ export default {
               return;
             }
 
-            // Idempotency: prefer new stripe_webhook_events table, fall back to legacy webhook_events if needed
+            // Idempotency: use single stripe_webhook_events table with ON CONFLICT
             let insertedEvent = false;
             let canProcess = true;
 
-            async function insertEventRow(table: string) {
-              return supabaseAdmin
-                .from(table)
-                .insert(table === 'stripe_webhook_events'
-                  ? { stripe_event_id: eventId, type: eventType, note: 'pending', processed_at: null }
-                  : { id: eventId, type: eventType, note: 'pending' });
-            }
-
-            let insertErr = (await insertEventRow('stripe_webhook_events')).error;
-            if (insertErr && (insertErr as any)?.code === '42P01') {
-              // Table missing in older environments; fall back
-              insertErr = (await insertEventRow('webhook_events')).error;
-            }
+            const { data: insertResult, error: insertErr } = await supabaseAdmin
+              .from('stripe_webhook_events')
+              .insert({ stripe_event_id: eventId, type: eventType, note: 'pending', processed_at: null })
+              .select('stripe_event_id')
+              .maybeSingle();
 
             if (insertErr) {
+              // 23505 = duplicate key violation (event already processed)
               const duplicate = (insertErr as any)?.code === '23505';
               if (duplicate) {
-                console.log('Stripe event already processed', { eventId, eventType });
+                console.log('Stripe event already processed (idempotent skip)', { eventId, eventType });
+                canProcess = false;
               } else {
-                console.error('Failed to record webhook event', insertErr.message);
+                console.error('Failed to record webhook event', insertErr.message, insertErr.code);
+                canProcess = false;
               }
-              canProcess = false;
-            } else {
+            } else if (insertResult) {
               insertedEvent = true;
+            } else {
+              // Insert succeeded but returned no row (should not happen with .single())
+              console.warn('Webhook event insert ambiguous', { eventId });
+              canProcess = false;
             }
 
             let note = 'ignored';
@@ -3124,21 +3125,13 @@ export default {
 
             if (insertedEvent) {
               const processedAt = new Date().toISOString();
+              const { error: updateErr } = await supabaseAdmin
+                .from('stripe_webhook_events')
+                .update({ note, processed_at: processedAt })
+                .eq('stripe_event_id', eventId);
 
-              async function updateEventRow(table: string) {
-                const column = table === 'stripe_webhook_events' ? 'stripe_event_id' : 'id';
-                return supabaseAdmin
-                  .from(table)
-                  .update({ note, processed_at: processedAt })
-                  .eq(column, eventId);
-              }
-
-              let updateErr = (await updateEventRow('stripe_webhook_events')).error;
-              if (updateErr && (updateErr as any)?.code === '42P01') {
-                updateErr = (await updateEventRow('webhook_events')).error;
-              }
               if (updateErr) {
-                console.error('Failed to update webhook event note', updateErr.message);
+                console.error('Failed to update webhook event note', updateErr.message, updateErr.code);
               }
             }
           })(),
