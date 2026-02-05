@@ -441,10 +441,11 @@ export function Settings({ onNavigate, user: currentUser }: SettingsProps) {
                     </div>
                   </div>
                   <button
-                    onClick={() => onNavigate('plans-pricing')}
-                    className="px-4 py-2 bg-[var(--blue)] text-[var(--on-blue)] rounded-lg font-medium hover:opacity-90 transition-opacity"
+                    onClick={() => isArtist && onNavigate('plans-pricing')}
+                    disabled={!isArtist}
+                    className="px-4 py-2 bg-[var(--blue)] text-[var(--on-blue)] rounded-lg font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {currentPlan === 'free' ? 'Upgrade Plan' : 'Change Plan'}
+                    {isArtist ? (currentPlan === 'free' ? 'Upgrade Plan' : 'Change Plan') : 'Artist plans only'}
                   </button>
                 </div>
               </div>

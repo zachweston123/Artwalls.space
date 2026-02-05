@@ -99,11 +99,13 @@ export function Footer({ onNavigate }: FooterProps) {
                   </button>
                 </li>
               )}
-              <li>
-                <button onClick={() => onNavigate('plans-pricing')} className="hover:text-[var(--text)] transition-colors">
-                  Plans & Pricing
-                </button>
-              </li>
+              {(!userRole || userRole === 'artist') && (
+                <li>
+                  <button onClick={() => onNavigate('plans-pricing')} className="hover:text-[var(--text)] transition-colors">
+                    Plans & Pricing
+                  </button>
+                </li>
+              )}
               {!userRole && (
                 <li>
                   <button onClick={() => onNavigate('venues')} className="hover:text-[var(--text)] transition-colors">

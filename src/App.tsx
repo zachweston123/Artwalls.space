@@ -861,7 +861,9 @@ export default function App() {
         {currentPage === 'policies' && <PoliciesLanding onNavigate={handleNavigate} />}
         {currentPage === 'privacy-policy' && <PrivacyPolicy onNavigate={handleNavigate} />}
         {currentPage === 'terms-of-service' && <TermsOfService onNavigate={handleNavigate} />}
-        {currentPage === 'plans-pricing' && <PricingPage onNavigate={handleNavigate} currentPlan="free" />}
+        {currentPage === 'plans-pricing' && currentUser.role === 'artist' && (
+          <PricingPage onNavigate={handleNavigate} currentPlan="free" />
+        )}
         {currentPage === 'why-artwalls-artist' && (
           <WhyArtwallsArtistsPage onNavigate={handleNavigate} viewerRole={currentUser.role} />
         )}

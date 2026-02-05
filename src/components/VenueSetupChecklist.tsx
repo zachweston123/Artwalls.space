@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { CheckCircle2, Circle, ExternalLink, Loader2, ShieldCheck, Sparkles, Users, Waypoints } from 'lucide-react';
+import { CheckCircle2, Circle, Clock, ExternalLink, Loader2, ShieldCheck, Sparkles, Waypoints } from 'lucide-react';
 import type { User } from '../App';
-import { apiGet } from '../lib/api';
+import { apiGet, getVenueSchedule } from '../lib/api';
 import { supabase } from '../lib/supabase';
 import { formatRatioOrCount } from '../utils/format';
 
@@ -20,7 +20,7 @@ interface SetupStatus {
   payoutsEnabled: boolean;
   hasWall: boolean;
   profileComplete: boolean;
-  engagedWithArtists: boolean;
+  installWindowSet: boolean;
 }
 
 export function VenueSetupChecklist({ user, stats, onNavigate, hasAcceptedAgreement }: VenueSetupChecklistProps) {
@@ -29,7 +29,7 @@ export function VenueSetupChecklist({ user, stats, onNavigate, hasAcceptedAgreem
     payoutsEnabled: false,
     hasWall: false,
     profileComplete: false,
-    engagedWithArtists: false,
+    installWindowSet: false,
   });
   const [loading, setLoading] = useState(true);
 
@@ -41,7 +41,7 @@ export function VenueSetupChecklist({ user, stats, onNavigate, hasAcceptedAgreem
       setLoading(true);
 
       try {
-        const [profileResp, payoutsResp] = await Promise.all([
+        const [profileResp, payoutsResp, scheduleResp] = await Promise.all([
           supabase
             .from('venues')
             .select('agreement_accepted_at, cover_photo_url, bio, name, email')
@@ -50,25 +50,25 @@ export function VenueSetupChecklist({ user, stats, onNavigate, hasAcceptedAgreem
           apiGet<{ hasAccount?: boolean; payoutsEnabled?: boolean }>(
             `/api/stripe/connect/venue/status?userId=${encodeURIComponent(user.id)}`
           ).catch(() => ({ hasAccount: false, payoutsEnabled: false })),
+          getVenueSchedule(user.id).catch(() => ({ schedule: null })),
         ]);
 
         const wallTotal = stats?.walls?.total ?? 0;
         const wallAvailable = stats?.walls?.available ?? 0;
-        const occupiedWalls = Math.max(0, wallTotal - wallAvailable);
-        const pendingApplications = stats?.applications?.pending ?? 0;
 
         const profile = profileResp?.data;
         const hasPhoto = !!profile?.cover_photo_url;
         const hasBio = !!profile?.bio?.trim();
         const hasName = !!profile?.name?.trim();
         const hasContact = !!(profile?.email || user.email);
+        const hasSchedule = !!scheduleResp?.schedule?.dayOfWeek;
 
         const nextStatus: SetupStatus = {
           agreementAccepted: !!hasAcceptedAgreement || !!profile?.agreement_accepted_at,
           payoutsEnabled: !!payoutsResp?.payoutsEnabled,
           hasWall: wallTotal > 0,
           profileComplete: Boolean(hasPhoto && hasBio && hasName && hasContact),
-          engagedWithArtists: pendingApplications > 0 || occupiedWalls > 0,
+          installWindowSet: hasSchedule,
         };
 
         if (mounted) setStatus(nextStatus);
@@ -84,7 +84,7 @@ export function VenueSetupChecklist({ user, stats, onNavigate, hasAcceptedAgreem
     return () => {
       mounted = false;
     };
-  }, [user.id, user.email, stats?.walls?.total, stats?.walls?.available, stats?.applications?.pending, hasAcceptedAgreement]);
+  }, [user.id, user.email, stats?.walls?.total, stats?.walls?.available, hasAcceptedAgreement]);
 
   const steps = useMemo(
     () => [
@@ -113,6 +113,14 @@ export function VenueSetupChecklist({ user, stats, onNavigate, hasAcceptedAgreem
         icon: <Waypoints className="w-4 h-4" />,
       },
       {
+        id: 'install-window',
+        label: 'Set install & pickup window',
+        description: 'Choose your weekly day/time so artists can book installs (low effort, required for scheduling).',
+        completed: status.installWindowSet,
+        action: () => onNavigate?.('venue-settings'),
+        icon: <Clock className="w-4 h-4" />,
+      },
+      {
         id: 'profile',
         label: 'Complete venue profile',
         description: 'Name, story, contact email, and a cover photo.',
@@ -120,16 +128,8 @@ export function VenueSetupChecklist({ user, stats, onNavigate, hasAcceptedAgreem
         action: () => onNavigate?.('venue-profile'),
         icon: <Sparkles className="w-4 h-4" />,
       },
-      {
-        id: 'artists',
-        label: 'Find or invite artists',
-        description: 'Approve an application or invite artists to apply.',
-        completed: status.engagedWithArtists,
-        action: () => onNavigate?.('venue-find-artists'),
-        icon: <Users className="w-4 h-4" />,
-      },
     ],
-    [onNavigate, status.agreementAccepted, status.payoutsEnabled, status.hasWall, status.profileComplete, status.engagedWithArtists]
+    [onNavigate, status.agreementAccepted, status.payoutsEnabled, status.hasWall, status.profileComplete, status.installWindowSet]
   );
 
   const completedCount = steps.filter((step) => step.completed).length;
@@ -162,7 +162,7 @@ export function VenueSetupChecklist({ user, stats, onNavigate, hasAcceptedAgreem
           <p className="text-sm text-[var(--text-muted)]">Complete these steps to unlock discovery and payouts.</p>
         </div>
         <div className="px-3 py-1 rounded-full text-xs bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text-muted)]">
-          {formatRatioOrCount(completedCount, totalSteps, { zeroLabel: '0/5 complete' })}
+          {formatRatioOrCount(completedCount, totalSteps, { zeroLabel: `0/${totalSteps} complete` })}
         </div>
       </div>
 

@@ -191,7 +191,6 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
     : [
         { id: 'venues', label: 'Why Artwalls (Venues)' },
         { id: 'venue-partner-kit', label: 'Success Guide' },
-        { id: 'plans-pricing', label: 'Plans & Pricing' },
       ];
 
   const homeTarget = isArtist ? 'artist-dashboard' : 'venue-dashboard';
