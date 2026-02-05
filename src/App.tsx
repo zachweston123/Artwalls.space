@@ -95,10 +95,12 @@ export interface User {
 }
 
 export default function App() {
+  const normalizePage = (page: string) => (page === 'venue-profile-edit' ? 'venue-profile' : page);
+
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [currentPage, setCurrentPage] = useState<string>(() => {
     // Try to restore page from localStorage, default to 'login'
-    return localStorage.getItem('currentPage') || 'login';
+    return normalizePage(localStorage.getItem('currentPage') || 'login');
   });
   const [selectedVenueId, setSelectedVenueId] = useState<string | null>(null);
   const [selectedArtistId, setSelectedArtistId] = useState<string | null>(null);
@@ -192,14 +194,14 @@ export default function App() {
         const storedPage = localStorage.getItem('currentPage');
         if (storedPage && storedPage !== 'login') {
           // Keep the stored page if user is logged in
-          setCurrentPage(storedPage);
+          setCurrentPage(normalizePage(storedPage));
         } else {
           // Set to appropriate dashboard if no stored page
           setCurrentPage(nextUser.role === 'artist' ? 'artist-dashboard' : 'venue-dashboard');
         }
       } else {
         const pageFromPath = getPageFromPath(window.location.pathname);
-        setCurrentPage(pageFromPath || 'login');
+        setCurrentPage(normalizePage(pageFromPath || 'login'));
       }
     });
 
@@ -223,10 +225,10 @@ export default function App() {
         if (!nextUser) {
           localStorage.removeItem('currentPage');
           const pageFromPath = getPageFromPath(window.location.pathname);
-          return pageFromPath || 'login';
+          return normalizePage(pageFromPath || 'login');
         }
         // Keep current page if user is still logged in
-        return prevPage;
+        return normalizePage(prevPage);
       });
     });
 
@@ -574,21 +576,22 @@ export default function App() {
   };
 
   const handleNavigate = (page: string, params?: any) => {
-    setCurrentPage(page);
+    const nextPage = normalizePage(page);
+    setCurrentPage(nextPage);
     if (params?.userId) setSelectedArtistId(params.userId);
     if (params?.venueId) setSelectedVenueId(params.venueId);
     if (params?.artistId) setSelectedArtistId(params.artistId);
     if (params?.callId) setSelectedCallId(params.callId);
 
-    const nextPath = getPathFromPage(page);
+    const nextPath = getPathFromPage(nextPage);
     if (nextPath) {
       window.history.pushState({}, '', nextPath);
     } else if (getPageFromPath(window.location.pathname)) {
       window.history.pushState({}, '', '/');
     }
 
-    if (page.startsWith('purchase-')) {
-      window.location.hash = `#/purchase-${page.split('-')[1]}`;
+    if (nextPage.startsWith('purchase-')) {
+      window.location.hash = `#/purchase-${nextPage.split('-')[1]}`;
     } else if (window.location.hash) {
       // Clear hash for non-purchase pages
       window.location.hash = '';
