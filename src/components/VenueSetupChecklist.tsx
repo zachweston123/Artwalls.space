@@ -125,7 +125,7 @@ export function VenueSetupChecklist({ user, stats, onNavigate, hasAcceptedAgreem
         label: 'Complete venue profile',
         description: 'Name, story, contact email, and a cover photo.',
         completed: status.profileComplete,
-        action: () => onNavigate?.('venue-profile-edit'),
+        action: () => onNavigate?.('venue-profile'),
         icon: <Sparkles className="w-4 h-4" />,
       },
     ],
