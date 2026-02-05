@@ -69,11 +69,12 @@ export function VenueProfileView({
   const yearsInBusiness = venue.foundedYear ? Math.max(0, new Date().getFullYear() - venue.foundedYear) : 0;
   const [walls, setWalls] = useState<WallSpace[]>([]);
 
+  // Pull latest venue and walls, and resubscribe so other users see updates live
   useEffect(() => {
     let mounted = true;
     if (!venueId) return undefined;
 
-    (async () => {
+    const fetchVenue = async () => {
       try {
         const [venueResp, scheduleResp] = await Promise.all([
           supabase
@@ -109,28 +110,46 @@ export function VenueProfileView({
       } catch (err) {
         console.warn('Failed to load venue profile', err);
       }
-    })();
-
-    return () => {
-      mounted = false;
     };
-  }, [venueId]);
 
-  useEffect(() => {
-    let isMounted = true;
-    async function loadWalls() {
+    const fetchWalls = async () => {
       if (!venueId) return;
       try {
         const items = await apiGet<WallSpace[]>(`/api/venues/${venueId}/wallspaces`);
-        if (!isMounted) return;
+        if (!mounted) return;
         setWalls(items);
         setVenue((prev) => ({ ...prev, wallSpaces: items.length }));
       } catch {
         setWalls([]);
       }
-    }
-    loadWalls();
-    return () => { isMounted = false; };
+    };
+
+    fetchVenue();
+    fetchWalls();
+
+    const channel = supabase.channel(`venue-profile-view-${venueId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'venues', filter: `id=eq.${venueId}` }, (payload) => {
+        const v: any = payload.new || payload.old;
+        setVenue((prev) => ({
+          ...prev,
+          name: v?.name ?? prev.name,
+          coverPhoto: v?.cover_photo_url ?? prev.coverPhoto,
+          location: v?.city ?? v?.address ?? prev.location,
+          bio: v?.bio ?? prev.bio,
+          labels: v?.labels ?? prev.labels,
+          verified: typeof v?.verified === 'boolean' ? v.verified : prev.verified,
+          foundedYear: v?.founded_year ?? prev.foundedYear,
+        }));
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'wallspaces', filter: `venue_id=eq.${venueId}` }, () => {
+        fetchWalls();
+      })
+      .subscribe();
+
+    return () => {
+      mounted = false;
+      supabase.removeChannel(channel);
+    };
   }, [venueId]);
 
   return (
