@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Store, Mail, Phone, MapPin, Clock, DollarSign, Instagram } from 'lucide-react';
+import { useEffect, useState, useRef } from 'react';
+import { Store, Mail, Phone, MapPin, Clock, DollarSign, Instagram, Edit2, X, Check } from 'lucide-react';
 import { VenueProfileEdit, type VenueProfileData } from './VenueProfileEdit';
 import { apiPost, getVenueSchedule } from '../../lib/api';
 import { supabase } from '../../lib/supabase';
@@ -14,6 +14,9 @@ interface VenueProfileProps {
 export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfileProps) {
   const [isEditing, setIsEditing] = useState(startInEdit);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [isEditingBio, setIsEditingBio] = useState(false);
+  const [editedBio, setEditedBio] = useState('');
+  const bioSectionRef = useRef<HTMLDivElement>(null);
 
   const formatTime = (time: string) => {
     const [hourStr, minuteStr] = time.split(':');
@@ -274,7 +277,11 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
               <button
                 onClick={() => {
                   setSaveError(null);
-                  setIsEditing(true);
+                  setEditedBio(profile.bio || '');
+                  setIsEditingBio(true);
+                  setTimeout(() => {
+                    bioSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }, 100);
                 }}
                 className="text-sm text-[var(--blue)] hover:underline"
               >
@@ -354,14 +361,93 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
                 </div>
               </div>
 
-              <div className="flex items-start gap-3 p-4 bg-[var(--surface-1)] rounded-lg border border-[var(--border)]">
+              <div ref={bioSectionRef} className="flex items-start gap-3 p-4 bg-[var(--surface-1)] rounded-lg border border-[var(--border)]">
                 <Store className="w-5 h-5 text-[var(--text-muted)] mt-0.5" />
                 <div className="flex-1 space-y-2">
                   <div>
-                    <label className="block text-sm text-[var(--text-muted)] mb-1">Venue description</label>
-                    <p className="text-[var(--text)] leading-relaxed">
-                      {profile.bio?.trim() ? profile.bio : 'Add a short story about your venue to help artists understand your vibe.'}
-                    </p>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-sm text-[var(--text-muted)]">Venue description</label>
+                      {!isEditingBio && (
+                        <button
+                          onClick={() => {
+                            setEditedBio(profile.bio || '');
+                            setIsEditingBio(true);
+                          }}
+                          className="text-xs text-[var(--blue)] hover:underline flex items-center gap-1"
+                        >
+                          <Edit2 className="w-3 h-3" />
+                          Edit
+                        </button>
+                      )}
+                    </div>
+                    {isEditingBio ? (
+                      <div className="space-y-2">
+                        <textarea
+                          value={editedBio}
+                          onChange={(e) => setEditedBio(e.target.value)}
+                          rows={6}
+                          maxLength={600}
+                          className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
+                          placeholder="Describe your venue, atmosphere, mission, and why you support local artists..."
+                          autoFocus
+                        />
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs text-[var(--text-muted)]">
+                            {editedBio.length}/600 characters
+                          </p>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => {
+                                setIsEditingBio(false);
+                                setEditedBio('');
+                              }}
+                              className="px-3 py-1.5 text-sm bg-[var(--surface-2)] text-[var(--text)] border border-[var(--border)] rounded-lg hover:bg-[var(--surface-3)] transition-colors flex items-center gap-1"
+                            >
+                              <X className="w-3 h-3" />
+                              Cancel
+                            </button>
+                            <button
+                              onClick={async () => {
+                                try {
+                                  const { data: userData } = await supabase.auth.getUser();
+                                  const userId = userData.user?.id;
+                                  if (!userId) throw new Error('Not signed in');
+
+                                  await apiPost('/api/venues', {
+                                    venueId: userId,
+                                    bio: editedBio,
+                                  });
+
+                                  const { error: updateError } = await supabase
+                                    .from('venues')
+                                    .upsert({
+                                      id: userId,
+                                      bio: editedBio,
+                                      updated_at: new Date().toISOString(),
+                                    });
+
+                                  if (updateError) throw updateError;
+
+                                  setProfile(prev => ({ ...prev, bio: editedBio }));
+                                  setIsEditingBio(false);
+                                  setEditedBio('');
+                                } catch (err: any) {
+                                  setSaveError(err?.message || 'Failed to update bio.');
+                                }
+                              }}
+                              className="px-3 py-1.5 text-sm bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-opacity flex items-center gap-1"
+                            >
+                              <Check className="w-3 h-3" />
+                              Save
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-[var(--text)] leading-relaxed">
+                        {profile.bio?.trim() ? profile.bio : 'Add a short story about your venue to help artists understand your vibe.'}
+                      </p>
+                    )}
                   </div>
                   {!!(profile.labels && profile.labels.length) && (
                     <div className="space-y-1">
