@@ -63,7 +63,7 @@ export function MobileSidebar({ isOpen, onClose, user, onNavigate, onLogout, cur
       title: 'Manage',
       links: [
         { id: 'venue-dashboard', label: 'Dashboard', icon: LayoutDashboard },
-        { id: 'venue-profile', label: 'My Venue', icon: Store },
+        { id: 'venue-profile-edit', label: 'Edit Venue Profile', icon: Store },
         { id: 'venue-walls', label: 'My Walls', icon: Frame },
         { id: 'venue-applications', label: 'Applications', icon: Send },
         { id: 'venue-current', label: 'Current Art', icon: Image },

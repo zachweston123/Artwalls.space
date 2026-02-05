@@ -112,8 +112,10 @@ export function VenueWalls() {
 
     try {
       setSubmitting(true);
-      const widthNum = parseFloat(newWall.width);
-      const heightNum = parseFloat(newWall.height);
+      const widthNumFeet = parseFloat(newWall.width);
+      const heightNumFeet = parseFloat(newWall.height);
+      const widthNum = Number.isFinite(widthNumFeet) ? widthNumFeet * 12 : NaN;
+      const heightNum = Number.isFinite(heightNumFeet) ? heightNumFeet * 12 : NaN;
       
       const { data } = await supabase.auth.getUser();
       const user = data.user;
@@ -219,8 +221,8 @@ export function VenueWalls() {
     setEditingWall(wall);
     setEditForm({
       name: wall.name || '',
-      width: wall.width ? String(wall.width) : '',
-      height: wall.height ? String(wall.height) : '',
+      width: wall.width ? String(wall.width / 12) : '',
+      height: wall.height ? String(wall.height / 12) : '',
       description: wall.description || '',
       photos: Array.isArray(wall.photos) ? wall.photos : [],
       available: Boolean(wall.available),
@@ -239,13 +241,15 @@ export function VenueWalls() {
       return;
     }
 
-    const widthNum = editForm.width ? parseFloat(editForm.width) : undefined;
-    const heightNum = editForm.height ? parseFloat(editForm.height) : undefined;
-    if (editForm.width && (!Number.isFinite(widthNum) || widthNum <= 0)) {
+    const widthFeet = editForm.width ? parseFloat(editForm.width) : undefined;
+    const heightFeet = editForm.height ? parseFloat(editForm.height) : undefined;
+    const widthNum = widthFeet !== undefined && Number.isFinite(widthFeet) ? widthFeet * 12 : undefined;
+    const heightNum = heightFeet !== undefined && Number.isFinite(heightFeet) ? heightFeet * 12 : undefined;
+    if (editForm.width && (!Number.isFinite(widthFeet) || widthFeet <= 0)) {
       setEditError('Width must be a positive number');
       return;
     }
-    if (editForm.height && (!Number.isFinite(heightNum) || heightNum <= 0)) {
+    if (editForm.height && (!Number.isFinite(heightFeet) || heightFeet <= 0)) {
       setEditError('Height must be a positive number');
       return;
     }
@@ -324,7 +328,7 @@ export function VenueWalls() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-[var(--text-muted)] mb-2">Width (inches)</label>
+                  <label className="block text-sm text-[var(--text-muted)] mb-2">Width (feet)</label>
                   <input
                     type="number"
                     step="0.1"
@@ -332,11 +336,12 @@ export function VenueWalls() {
                     value={editForm.width}
                     onChange={(e) => setEditForm({ ...editForm, width: e.target.value })}
                     className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
-                    placeholder="96"
+                    placeholder="8"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-[var(--text-muted)] mb-2">Height (inches)</label>
+                  <label className="block text-sm text-[var(--text-muted)] mb-2">Height (feet)
+                  </label>
                   <input
                     type="number"
                     step="0.1"
@@ -344,7 +349,7 @@ export function VenueWalls() {
                     value={editForm.height}
                     onChange={(e) => setEditForm({ ...editForm, height: e.target.value })}
                     className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
-                    placeholder="72"
+                    placeholder="6"
                   />
                 </div>
               </div>
@@ -489,7 +494,7 @@ export function VenueWalls() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-[var(--text-muted)] mb-2">Width (inches)</label>
+                  <label className="block text-sm text-[var(--text-muted)] mb-2">Width (feet)</label>
                   <input
                     type="number"
                     step="0.1"
@@ -497,11 +502,11 @@ export function VenueWalls() {
                     value={newWall.width}
                     onChange={(e) => setNewWall({ ...newWall, width: e.target.value })}
                     className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
-                    placeholder="96"
+                    placeholder="8"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-[var(--text-muted)] mb-2">Height (inches)</label>
+                  <label className="block text-sm text-[var(--text-muted)] mb-2">Height (feet)</label>
                   <input
                     type="number"
                     step="0.1"
@@ -509,7 +514,7 @@ export function VenueWalls() {
                     value={newWall.height}
                     onChange={(e) => setNewWall({ ...newWall, height: e.target.value })}
                     className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
-                    placeholder="72"
+                    placeholder="6"
                   />
                 </div>
               </div>

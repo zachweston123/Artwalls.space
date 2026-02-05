@@ -8,10 +8,11 @@ import { formatCurrency } from '../../utils/format';
 
 interface VenueProfileProps {
   onNavigate: (page: string) => void;
+  startInEdit?: boolean;
 }
 
-export function VenueProfile({ onNavigate }: VenueProfileProps) {
-  const [isEditing, setIsEditing] = useState(false);
+export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfileProps) {
+  const [isEditing, setIsEditing] = useState(startInEdit);
   const [saveError, setSaveError] = useState<string | null>(null);
 
   // Profile data - loaded from database on mount

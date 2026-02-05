@@ -156,6 +156,7 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
         { id: 'artist-invite-venue', label: 'Invite a Venue' },
       ]
     : [
+        { id: 'venue-profile-edit', label: 'Edit Venue Profile' },
         { id: 'venue-find-artists', label: 'Find Artists' },
         { id: 'venue-curated-sets', label: 'Curated Sets' },
         { id: 'venue-walls', label: 'My Walls' },

@@ -965,6 +965,7 @@ export default function App() {
             {currentPage === 'venue-wall-stats' && <VenueWallStats user={currentUser} />}
             {currentPage === 'venue-settings' && <VenueSettingsWithEmptyState />}
             {currentPage === 'venue-profile' && <VenueProfile onNavigate={handleNavigate} />}
+            {currentPage === 'venue-profile-edit' && <VenueProfile onNavigate={handleNavigate} startInEdit />}
             {currentPage === 'venue-password-security' && <VenuePasswordSecurity onBack={() => handleNavigate('venue-profile')} />}
             {currentPage === 'venue-notifications' && <VenueNotificationPreferences onBack={() => handleNavigate('venue-profile')} />}
             {currentPage === 'find-art' && <FindArtHub onNavigate={handleNavigate} />}
