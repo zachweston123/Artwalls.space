@@ -20,11 +20,11 @@ const TEST_CASES = [
     listPrice: 5000, // $50.00
     tier: 'free',
     expected: {
-      artistAmount: 3250, // $32.50 (65%)
-      venueAmount: 500,    // $5.00 (10%)
-      buyerFee: 150,       // $1.50 (3%)
-      buyerTotal: 5150,    // $51.50
-      platformNet: 1100,   // remainder
+      artistAmount: 3000, // $30.00 (60%)
+      venueAmount: 750,    // $7.50 (15%)
+      buyerFee: 225,       // $2.25 (4.5%)
+      buyerTotal: 5225,    // $52.25
+      platformNet: 1250,   // remainder
     }
   },
   {
@@ -33,10 +33,10 @@ const TEST_CASES = [
     tier: 'pro',
     expected: {
       artistAmount: 11900, // $119.00 (85%)
-      venueAmount: 1400,   // $14.00 (10%)
-      buyerFee: 420,       // $4.20 (3%)
-      buyerTotal: 14420,   // $144.20
-      platformNet: 280,    // remainder
+      venueAmount: 2100,   // $21.00 (15%)
+      buyerFee: 630,       // $6.30 (4.5%)
+      buyerTotal: 14630,   // $146.30
+      platformNet: 0,      // remainder
     }
   },
   {
@@ -45,10 +45,10 @@ const TEST_CASES = [
     tier: 'growth',
     expected: {
       artistAmount: 83000, // $830.00 (83%)
-      venueAmount: 10000,  // $100.00 (10%)
-      buyerFee: 3000,      // $30.00 (3%)
-      buyerTotal: 103000,  // $1030.00
-      platformNet: 4000,   // remainder
+      venueAmount: 15000,  // $150.00 (15%)
+      buyerFee: 4500,      // $45.00 (4.5%)
+      buyerTotal: 104500,  // $1045.00
+      platformNet: 2000,   // remainder
     }
   },
   {
@@ -57,10 +57,10 @@ const TEST_CASES = [
     tier: 'starter',
     expected: {
       artistAmount: 79920, // $799.20 (80%)
-      venueAmount: 9990,   // $99.90 (10%)
-      buyerFee: 2997,      // $29.97 (3%)
-      buyerTotal: 102897,  // $1028.97
-      platformNet: 7893,   // remainder
+      venueAmount: 14985,  // $149.85 (15%)
+      buyerFee: 4496,      // $44.96 (4.5%)
+      buyerTotal: 104396,  // $1043.96
+      platformNet: 4995,   // remainder
     }
   }
 ];
@@ -138,7 +138,7 @@ TEST_CASES.forEach(testCase => {
   console.log(`  Results:`);
   console.log(`    Artist Amount: ${centsToDollars(breakdown.artistAmount)}`);
   console.log(`    Venue Commission: ${centsToDollars(breakdown.venueAmount)}`);
-  console.log(`    Buyer Fee (3%): ${centsToDollars(breakdown.buyerFee)}`);
+  console.log(`    Buyer Fee (4.5%): ${centsToDollars(breakdown.buyerFee)}`);
   console.log(`    Buyer Total: ${centsToDollars(breakdown.buyerTotal)}`);
   console.log(`    Platform Net: ${centsToDollars(breakdown.platformNetCents)}`);
   
@@ -207,7 +207,7 @@ tiers.forEach(tier => {
   console.log(`  ${tier.padEnd(8)}: ${bps.toString().padStart(4)} bps = ${percentage}% of gross`);
 });
 
-console.log('\n  Basis points represent platform\'s share AFTER artist take-home and venue commission (10%)');
+console.log('\n  Basis points represent platform\'s share AFTER artist take-home and venue commission (15%)');
 
 // TEST 5: Edge Cases
 console.log('\n\n5️⃣  EDGE CASES TEST');
@@ -223,7 +223,7 @@ const edgeCases = [
 edgeCases.forEach(edgeCase => {
   const breakdown = plans.calculateOrderBreakdown(edgeCase.price, edgeCase.tier);
   const total = breakdown.artistAmount + breakdown.venueAmount + breakdown.buyerFee + breakdown.platformNetCents;
-  const match = total === breakdown.listPrice;
+  const match = total === breakdown.listPrice + breakdown.buyerFee;
   
   console.log(`\n  Edge Case: ${edgeCase.name} (${edgeCase.tier} tier)`);
   console.log(`    Calculated total: ${centsToDollars(total)}`);
@@ -251,7 +251,7 @@ const oddPrices = [
 oddPrices.forEach(case_obj => {
   const breakdown = plans.calculateOrderBreakdown(case_obj.price, case_obj.tier);
   const total = breakdown.artistAmount + breakdown.venueAmount + breakdown.buyerFee + breakdown.platformNetCents;
-  const difference = Math.abs(total - breakdown.listPrice);
+  const difference = Math.abs(total - (breakdown.listPrice + breakdown.buyerFee));
   
   if (difference > 1) {
     console.log(`  ❌ ${centsToDollars(case_obj.price)} (${case_obj.tier}): Lost ${difference} cents!`);
@@ -285,13 +285,13 @@ console.log('-'.repeat(70));
 const ex1 = plans.calculateOrderBreakdown(14000, 'pro');
 console.log(`
 List Price:              $140.00
-Buyer Support Fee (3%):  $  4.20
+Buyer Support Fee (4.5%): $  6.30
 ────────────────────────────────
-Buyer Total:             $144.20
+Buyer Total:             $146.30
 
 Artist Receives (85%):   $119.00
-Venue Commission (10%):  $ 14.00
-Platform Processing:     $  3.00
+Venue Commission (15%):  $ 21.00
+Platform Processing:     $  0.00
 ────────────────────────────────
 Total:                   $140.00
 `);

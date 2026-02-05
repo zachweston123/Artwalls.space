@@ -124,23 +124,25 @@ export function VenueSettingsWithEmptyState() {
   };
 
   const handleSave = async () => {
-    if (validateConfig() && venueId) {
+    if (!(validateConfig() && venueId)) return;
+
+    try {
+      await saveVenueSchedule(venueId, {
+        dayOfWeek: tempConfig.dayOfWeek,
+        startTime: tempConfig.startTime,
+        endTime: tempConfig.endTime,
+        slotMinutes: tempConfig.slotMinutes,
+        installSlotIntervalMinutes: tempConfig.slotMinutes,
+        timezone: tempConfig.timezone,
+      } as any);
+
+      // Persist locally and hide the empty-state banner
       setScheduleConfig(tempConfig);
       setHasSchedule(true);
-      try {
-        await saveVenueSchedule(venueId, {
-          dayOfWeek: tempConfig.dayOfWeek,
-          startTime: tempConfig.startTime,
-          endTime: tempConfig.endTime,
-          slotMinutes: tempConfig.slotMinutes,
-          installSlotIntervalMinutes: tempConfig.slotMinutes,
-          timezone: tempConfig.timezone,
-        } as any);
-        setShowToast(true);
-        setTimeout(() => setShowToast(false), 3000);
-      } catch (e) {
-        setHasSchedule(false);
-      }
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+    } catch (e) {
+      setHasSchedule(false);
     }
   };
 
@@ -273,6 +275,7 @@ export function VenueSettingsWithEmptyState() {
                 <option value={120}>120 minutes</option>
               </select>
               <p className="text-xs text-[var(--text-muted)] mt-2">This controls the time options artists can pick within your install window.</p>
+              <p className="text-xs text-[var(--text-muted)] mt-1">Recommendation: 15–30 minutes for a single artwork; 60–120 minutes when installing a set from one artist.</p>
               {errors.slotMinutes && (
                 <p className="text-xs text-[var(--danger)] mt-1">{errors.slotMinutes}</p>
               )}

@@ -107,37 +107,32 @@ export function getPlatformFeeBpsFromPlan(planId) {
  * @returns {Object} Breakdown with all monetary amounts
  */
 export function calculateOrderBreakdown(listPriceCents, planId) {
-  const listPrice = listPriceCents / 100; // Convert to dollars
   const artistTakeHomePct = getArtistTakeHomePct(planId);
 
-  // Calculate amounts
-  const buyerFeeAmount = listPrice * BUYER_FEE_PCT;
-  const buyerTotal = listPrice + buyerFeeAmount;
-  const venueAmount = listPrice * VENUE_COMMISSION_PCT;
-  const artistAmount = listPrice * artistTakeHomePct;
-
-  // Platform and processing gets the remainder
-  // (Note: actual Stripe fees come from Stripe and reduce platform net)
-  const platformGrossBeforeStripe = listPrice - venueAmount - artistAmount;
+  // Work in cents throughout to avoid floating-point errors
+  const buyerFeeCents = Math.round(listPriceCents * BUYER_FEE_PCT);
+  const buyerTotalCents = listPriceCents + buyerFeeCents;
+  const venueAmountCents = Math.round(listPriceCents * VENUE_COMMISSION_PCT);
+  const artistAmountCents = Math.round(listPriceCents * artistTakeHomePct);
+  const platformNetCents = listPriceCents - venueAmountCents - artistAmountCents;
 
   return {
+    listPrice: listPriceCents,
     listPriceCents,
-    listPrice,
     // Buyer side
-    buyerFeeCents: Math.round(buyerFeeAmount * 100),
-    buyerFeeAmount,
-    buyerTotalCents: Math.round(buyerTotal * 100),
-    buyerTotal,
+    buyerFee: buyerFeeCents,
+    buyerFeeCents,
+    buyerTotal: buyerTotalCents,
+    buyerTotalCents,
     // Venue
-    venueCents: Math.round(venueAmount * 100),
-    venueAmount,
+    venueAmount: venueAmountCents,
+    venueAmountCents,
     // Artist
-    artistCents: Math.round(artistAmount * 100),
-    artistAmount,
+    artistAmount: artistAmountCents,
+    artistAmountCents,
     artistTakeHomePct,
-    // Platform (before actual Stripe fees)
-    platformGrossCents: Math.round(platformGrossBeforeStripe * 100),
-    platformGrossAmount: platformGrossBeforeStripe,
+    // Platform (before payment processor fees)
+    platformNetCents,
   };
 }
 
