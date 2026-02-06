@@ -46,7 +46,6 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
 
   // Student fields
   const [isStudent, setIsStudent] = useState(false);
-  const [pronouns, setPronouns] = useState('');
   const [schoolId, setSchoolId] = useState<string>('');
   const [schoolName, setSchoolName] = useState('');
   const [studentEmail, setStudentEmail] = useState('');
@@ -112,7 +111,6 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
           setArtTypes((row.art_types as string[]) || []);
           setInstagramHandle((row.instagram_handle as string) || '');
           setIsStudent((row.is_student as boolean) || false);
-          setPronouns((row.pronouns as string) || '');
           setSchoolId((row.school_id as string) || '');
           setSchoolName((row.school_name as string) || '');
           setIsStudentVerified((row.is_student_verified as boolean) || false);
@@ -344,7 +342,6 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
           portfolioUrl,
           instagramHandle,
           isStudent,
-          pronouns,
           schoolName,
         }}
         onEditProfile={() => setIsEditing(true)}
@@ -365,7 +362,6 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
           portfolioUrl,
           instagramHandle,
           isStudent,
-          pronouns,
           schoolName,
         }}
         onEditProfile={() => setIsEditing(true)}
@@ -735,17 +731,6 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
 
                     {isStudent && (
                       <>
-                        <div>
-                          <label className="block text-sm text-[var(--text-muted)] mb-1">Pronouns (Optional)</label>
-                          <input
-                            value={pronouns}
-                            onChange={(e) => setPronouns(e.target.value)}
-                            className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
-                            placeholder="e.g. she/her, he/him, they/them"
-                          />
-                          <p className="text-xs text-[var(--text-muted)] mt-1">How would you like to be referred to?</p>
-                        </div>
-
                         <div>
                           <label className="block text-sm text-[var(--text-muted)] mb-2">School/University</label>
                           <SchoolSearch
