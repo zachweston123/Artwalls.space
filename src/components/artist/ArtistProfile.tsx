@@ -21,6 +21,7 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
   const [info, setInfo] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [userId, setUserId] = useState('');
+  const [slug, setSlug] = useState('');
 
   const handleScrollToEdit = () => {
     setIsEditing(true);
@@ -120,6 +121,7 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
           setCurrentPlan(tier);
           setAvatar((row.profile_photo_url as string) || (user.user_metadata?.avatar as string) || '');
           setPortfolioUrl((row.portfolio_url as string) || (user.user_metadata?.portfolioUrl as string) || '');
+          setSlug((row.slug as string) || '');
           
           // Fallback to metadata if DB fields are empty (robustness)
           if (!row.city_primary && user.user_metadata?.cityPrimary) setCityPrimary(user.user_metadata.cityPrimary);
@@ -404,8 +406,8 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
                   <button
                     onClick={() => {
                       if (!userId) return;
-                      const url = `${window.location.origin}/artists/${userId}`;
-                      window.open(url, '_blank', 'noopener,noreferrer');
+                      const identifier = slug || userId;
+                      window.location.href = `/artists/${identifier}`;
                     }}
                     disabled={!userId}
                     className="flex items-center gap-2 px-4 py-2 bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text)] rounded-lg hover:bg-[var(--surface-3)] transition-colors disabled:opacity-60"
@@ -427,8 +429,8 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
                   <button
                     onClick={() => {
                       if (!userId) return;
-                      const url = `${window.location.origin}/artists/${userId}`;
-                      window.open(url, '_blank', 'noopener,noreferrer');
+                      const identifier = slug || userId;
+                      window.location.href = `/artists/${identifier}`;
                     }}
                     disabled={!userId}
                     className="flex items-center gap-2 px-3 py-2 bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text)] rounded-lg transition-colors disabled:opacity-60"

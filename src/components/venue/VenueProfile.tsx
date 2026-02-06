@@ -270,8 +270,7 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
         <button
           onClick={() => {
             if (!venueId) return;
-            const url = `${window.location.origin}/venues/${venueId}`;
-            window.open(url, '_blank', 'noopener,noreferrer');
+            window.location.href = `/venues/${venueId}`;
           }}
           disabled={!venueId}
           className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--surface-2)] text-[var(--text)] border border-[var(--border)] rounded-lg hover:bg-[var(--surface-3)] transition-colors disabled:opacity-60"
