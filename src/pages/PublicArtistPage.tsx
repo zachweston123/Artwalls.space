@@ -69,6 +69,8 @@ export function PublicArtistPage({ slugOrId, onNavigate }: PublicArtistPageProps
     };
   }, [slugOrId]);
 
+  const isPublicView = view === 'public';
+
   const cityLine = useMemo(() => {
     if (!artist) return '';
     const city = artist.cityPrimary || artist.citySecondary;
@@ -112,9 +114,11 @@ export function PublicArtistPage({ slugOrId, onNavigate }: PublicArtistPageProps
   }, [artistId, uid, view]);
 
   const handleBack = () => {
-    if (onNavigate) {
+    if (!isPublicView && onNavigate) {
       onNavigate('artist-profile');
-    } else if (window.history.length > 1) {
+      return;
+    }
+    if (window.history.length > 1) {
       window.history.back();
     } else {
       window.location.href = '/';
@@ -180,15 +184,17 @@ export function PublicArtistPage({ slugOrId, onNavigate }: PublicArtistPageProps
 
   return (
     <div className="text-[var(--text)]">
-      <div className="max-w-5xl mx-auto py-2">
-        <button
-          onClick={handleBack}
-          className="flex items-center gap-2 text-[var(--text-muted)] hover:text-[var(--text)] transition-colors mb-6"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm">Back</span>
-        </button>
-      </div>
+      {!isPublicView && (
+        <div className="max-w-5xl mx-auto py-2">
+          <button
+            onClick={handleBack}
+            className="flex items-center gap-2 text-[var(--text-muted)] hover:text-[var(--text)] transition-colors mb-6"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span className="text-sm">Back</span>
+          </button>
+        </div>
+      )}
 
       <div className="max-w-5xl mx-auto">
         {loading && (

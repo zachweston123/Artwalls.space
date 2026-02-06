@@ -178,14 +178,14 @@ export default function App() {
 
     // If user is authenticated, route inside the app shell instead of standalone
     if (currentUser) {
-      // Redirect URL back to root so we don't keep hitting this early-return
-      window.history.replaceState({}, '', '/');
-      // Set the public artist page state and let the main shell render it
-      // Use a microtask to avoid setState during render
-      Promise.resolve().then(() => {
-        setPublicArtistSlugOrId(slugOrId);
-        setCurrentPage(isSetDetail ? 'public-artist-set' : 'public-artist-profile');
-      });
+      const targetPage = isSetDetail ? 'public-artist-set' : 'public-artist-profile';
+      if (publicArtistSlugOrId !== slugOrId || currentPage !== targetPage) {
+        // Set the public artist page state and let the main shell render it
+        Promise.resolve().then(() => {
+          setPublicArtistSlugOrId(slugOrId);
+          setCurrentPage(targetPage);
+        });
+      }
       // Don't early-return; fall through to the authenticated shell below
     } else {
       // Unauthenticated: render with Navigation wrapper for consistent layout

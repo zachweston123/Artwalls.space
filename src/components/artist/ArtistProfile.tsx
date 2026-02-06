@@ -94,6 +94,7 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
           };
           const { error: upErr } = await supabase.from('artists').upsert(defaults, { onConflict: 'id' });
           if (upErr) throw upErr;
+          setArtistId(defaults.id);
           setName(defaults.name || 'Artist');
           setEmail(defaults.email || '');
           setPhone(((user.user_metadata?.phone as string) || '').trim());
@@ -212,6 +213,13 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
       setUploading(false);
     }
   }
+
+  const getPublicProfilePath = () => {
+    if (!userId) return null;
+    const identifier = (slug?.trim() || artistId || userId || '').trim();
+    if (!identifier) return null;
+    return `/artists/${identifier}?uid=${encodeURIComponent(userId)}&view=public`;
+  };
 
   async function handleSave() {
     setSaving(true);
@@ -401,11 +409,11 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
                   </button>
                   <button
                     onClick={() => {
-                      if (!userId) return;
-                      const identifier = slug || userId;
-                      onNavigate('public-artist-profile', { artistSlugOrId: identifier });
+                      const target = getPublicProfilePath();
+                      if (!target) return;
+                      onNavigate(target);
                     }}
-                    disabled={!userId}
+                    disabled={!getPublicProfilePath()}
                     className="flex items-center gap-2 px-4 py-2 bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text)] rounded-lg hover:bg-[var(--surface-3)] transition-colors disabled:opacity-60"
                   >
                     <LinkIcon className="w-4 h-4" />
@@ -424,11 +432,11 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
                   </button>
                   <button
                     onClick={() => {
-                      if (!userId) return;
-                      const identifier = slug || userId;
-                      onNavigate('public-artist-profile', { artistSlugOrId: identifier });
+                      const target = getPublicProfilePath();
+                      if (!target) return;
+                      onNavigate(target);
                     }}
-                    disabled={!userId}
+                    disabled={!getPublicProfilePath()}
                     className="flex items-center gap-2 px-3 py-2 bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text)] rounded-lg transition-colors disabled:opacity-60"
                   >
                     <LinkIcon className="w-4 h-4" />
