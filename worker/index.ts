@@ -820,7 +820,6 @@ export default {
         .from('artists')
         .select('id,slug,name,bio,profile_photo_url,portfolio_url,website_url,instagram_handle,city_primary,city_secondary,is_public')
         .match(matchFilter)
-        .eq('is_public', true)
         .maybeSingle();
 
       if (artistError) return json({ error: artistError.message }, { status: 500 });
