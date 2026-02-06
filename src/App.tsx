@@ -82,6 +82,7 @@ import { CallApplyPage } from './components/calls/CallApplyPage';
 import { Settings } from './components/settings/Settings';
 import { PublicArtistPage } from './pages/PublicArtistPage';
 import { PublicArtistSetPage } from './pages/PublicArtistSetPage';
+import { PublicVenuePage } from './pages/PublicVenuePage';
 import { ArtistOnboardingWizard } from './components/onboarding/ArtistOnboardingWizard';
 import { CuratedSets } from './components/artist/CuratedSets';
 
@@ -160,6 +161,12 @@ export default function App() {
       return <PublicArtistSetPage slugOrId={slugOrId} setId={setId} />;
     }
     return <PublicArtistPage slugOrId={slugOrId} />;
+  }
+
+  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/venues/')) {
+    const parts = window.location.pathname.split('/').filter(Boolean);
+    const venueId = parts[1] || '';
+    return <PublicVenuePage venueId={venueId} />;
   }
 
   const userFromSupabase = (supaUser: any): User | null => {

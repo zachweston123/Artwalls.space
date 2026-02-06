@@ -27,8 +27,9 @@ export const IconInput = forwardRef<HTMLInputElement, IconInputProps>(function I
   ref
 ) {
   const hasTrailingButton = typeof onTrailingAction === 'function';
-  const leftPadding = leadingIcon ? 'pl-11' : 'pl-4';
-  const rightPadding = trailingIcon ? 'pr-11' : 'pr-4';
+  // Extra padding prevents overlap with left search icon and right clear button
+  const leftPadding = leadingIcon ? 'pl-12' : 'pl-4';
+  const rightPadding = trailingIcon ? 'pr-12' : 'pr-4';
 
   return (
     <div className="w-full">

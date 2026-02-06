@@ -16,6 +16,7 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isEditingBio, setIsEditingBio] = useState(false);
   const [editedBio, setEditedBio] = useState('');
+  const [venueId, setVenueId] = useState<string | null>(null);
   const bioSectionRef = useRef<HTMLDivElement>(null);
 
   const formatTime = (time: string) => {
@@ -71,6 +72,7 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
     supabase.auth.getUser().then(async ({ data }) => {
       const user = data.user;
       if (!user) return;
+      setVenueId(user.id);
       const role = user.user_metadata?.role;
       if (role !== 'venue') return;
       
@@ -263,6 +265,21 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
         }}
         className="mb-8"
       />
+
+      <div className="mb-4 flex justify-end">
+        <button
+          onClick={() => {
+            if (!venueId) return;
+            const url = `${window.location.origin}/venues/${venueId}`;
+            window.open(url, '_blank', 'noopener,noreferrer');
+          }}
+          disabled={!venueId}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--surface-2)] text-[var(--text)] border border-[var(--border)] rounded-lg hover:bg-[var(--surface-3)] transition-colors disabled:opacity-60"
+        >
+          <Store className="w-4 h-4" />
+          <span>Preview as Visitor</span>
+        </button>
+      </div>
 
       {/* Bio Encouragement Banner */}
       {!hasCompleteBio && (

@@ -20,6 +20,7 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [userId, setUserId] = useState('');
 
   const handleScrollToEdit = () => {
     setIsEditing(true);
@@ -71,6 +72,7 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
         if (sessionErr) throw sessionErr;
         const user = sessionData.session?.user;
         if (!user) throw new Error('Not signed in');
+        setUserId(user.id);
 
         // Load artist row; create if missing
         const { data: artistRows, error: selErr } = await supabase
@@ -391,10 +393,27 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
                 </div>
               </div>
               {!isEditing ? (
-                <button onClick={() => setIsEditing(true)} className="flex items-center gap-2 px-4 py-2 bg-[var(--blue)] hover:bg-[var(--blue-hover)] text-[var(--on-blue)] rounded-lg transition-colors">
-                  <Edit className="w-4 h-4" />
-                  <span>Edit Profile</span>
-                </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-[var(--blue)] hover:bg-[var(--blue-hover)] text-[var(--on-blue)] rounded-lg transition-colors"
+                  >
+                    <Edit className="w-4 h-4" />
+                    <span>Edit Profile</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (!userId) return;
+                      const url = `${window.location.origin}/artists/${userId}`;
+                      window.open(url, '_blank', 'noopener,noreferrer');
+                    }}
+                    disabled={!userId}
+                    className="flex items-center gap-2 px-4 py-2 bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text)] rounded-lg hover:bg-[var(--surface-3)] transition-colors disabled:opacity-60"
+                  >
+                    <LinkIcon className="w-4 h-4" />
+                    <span>View Public Profile</span>
+                  </button>
+                </div>
               ) : (
                 <div className="flex items-center gap-2">
                   <button disabled={saving} onClick={handleSave} className="flex items-center gap-2 px-4 py-2 bg-[var(--green)] hover:brightness-95 text-[var(--accent-contrast)] rounded-lg transition-colors disabled:opacity-60">
@@ -404,6 +423,18 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
                   <button disabled={saving} onClick={() => setIsEditing(false)} className="flex items-center gap-2 px-3 py-2 bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text)] rounded-lg transition-colors">
                     <X className="w-4 h-4" />
                     <span>Cancel</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (!userId) return;
+                      const url = `${window.location.origin}/artists/${userId}`;
+                      window.open(url, '_blank', 'noopener,noreferrer');
+                    }}
+                    disabled={!userId}
+                    className="flex items-center gap-2 px-3 py-2 bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text)] rounded-lg transition-colors disabled:opacity-60"
+                  >
+                    <LinkIcon className="w-4 h-4" />
+                    <span>Preview as Visitor</span>
                   </button>
                 </div>
               )}
