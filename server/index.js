@@ -1074,6 +1074,30 @@ app.get('/api/venues/:venueId/availability', async (req, res) => {
   }
 });
 
+// Public: list wallspaces for a venue (used by artist-facing venue view)
+app.get('/api/venues/:venueId/wallspaces', async (req, res) => {
+  try {
+    const venueId = req.params.venueId;
+    if (!venueId) return res.status(400).json({ error: 'Missing venueId' });
+
+    const wallspaces = await listWallspacesByVenue(venueId);
+    const items = (wallspaces || []).map((w) => ({
+      id: w.id,
+      name: w.name,
+      width: typeof w.width === 'number' ? w.width : undefined,
+      height: typeof w.height === 'number' ? w.height : undefined,
+      available: Boolean(w.available),
+      description: w.description || undefined,
+      photos: Array.isArray(w.photos) ? w.photos : [],
+    }));
+
+    return res.json(items);
+  } catch (err) {
+    console.error('[GET /api/venues/:venueId/wallspaces] Error:', err);
+    return res.status(500).json({ error: err?.message || 'Failed to list wallspaces' });
+  }
+});
+
 // Venue metrics (real data for dashboard)
 app.get('/api/venues/:venueId/metrics', async (req, res) => {
   const venue = await requireVenue(req, res);
