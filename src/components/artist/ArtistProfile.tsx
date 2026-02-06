@@ -10,7 +10,7 @@ import { SchoolSearch } from '../shared/SchoolSearch';
 import { apiPost } from '../../lib/api';
 
 interface ArtistProfileProps {
-  onNavigate: (page: string) => void;
+  onNavigate: (page: string, params?: any) => void;
 }
 
 export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
@@ -403,7 +403,7 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
                     onClick={() => {
                       if (!userId) return;
                       const identifier = slug || userId;
-                      window.location.href = `/artists/${identifier}`;
+                      onNavigate('public-artist-profile', { artistSlugOrId: identifier });
                     }}
                     disabled={!userId}
                     className="flex items-center gap-2 px-4 py-2 bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text)] rounded-lg hover:bg-[var(--surface-3)] transition-colors disabled:opacity-60"
@@ -426,7 +426,7 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
                     onClick={() => {
                       if (!userId) return;
                       const identifier = slug || userId;
-                      window.location.href = `/artists/${identifier}`;
+                      onNavigate('public-artist-profile', { artistSlugOrId: identifier });
                     }}
                     disabled={!userId}
                     className="flex items-center gap-2 px-3 py-2 bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text)] rounded-lg transition-colors disabled:opacity-60"

@@ -46,9 +46,10 @@ type ArtistSetSummary = {
 
 interface PublicArtistPageProps {
   slugOrId: string;
+  onNavigate?: (page: string, params?: any) => void;
 }
 
-export function PublicArtistPage({ slugOrId }: PublicArtistPageProps) {
+export function PublicArtistPage({ slugOrId, onNavigate }: PublicArtistPageProps) {
   const [artist, setArtist] = useState<any>(null);
   const [forSale, setForSale] = useState<ArtworkCardData[]>([]);
   const [onDisplay, setOnDisplay] = useState<DisplayGroup[]>([]);
@@ -93,8 +94,13 @@ export function PublicArtistPage({ slugOrId }: PublicArtistPageProps) {
   }, [slugOrId]);
 
   const handleBack = () => {
-    if (window.history.length > 1) window.history.back();
-    else window.location.href = '/';
+    if (onNavigate) {
+      onNavigate('artist-profile');
+    } else if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      window.location.href = '/';
+    }
   };
 
   const openArtwork = (artworkId: string) => {
@@ -155,22 +161,18 @@ export function PublicArtistPage({ slugOrId }: PublicArtistPageProps) {
   );
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
-      <div className="border-b border-[var(--border)] bg-[var(--surface-2)]">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
-          <button
-            onClick={handleBack}
-            className="flex items-center gap-2 text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm">Back</span>
-          </button>
-          <span className="text-lg font-semibold tracking-tight">Artwalls</span>
-          <div className="w-16" />
-        </div>
+    <div className="text-[var(--text)]">
+      <div className="max-w-5xl mx-auto py-2">
+        <button
+          onClick={handleBack}
+          className="flex items-center gap-2 text-[var(--text-muted)] hover:text-[var(--text)] transition-colors mb-6"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span className="text-sm">Back</span>
+        </button>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+      <div className="max-w-5xl mx-auto">
         {loading && (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
             <Loader2 className="w-6 h-6 animate-spin text-[var(--text-muted)]" />

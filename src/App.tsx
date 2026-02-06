@@ -109,6 +109,7 @@ export default function App() {
   const [selectedArtistId, setSelectedArtistId] = useState<string | null>(null);
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
   const [selectedCallId, setSelectedCallId] = useState<string | null>(null);
+  const [publicArtistSlugOrId, setPublicArtistSlugOrId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [hasAcceptedAgreement, setHasAcceptedAgreement] = useState<boolean | null>(null);
   const [showGoogleRoleSelection, setShowGoogleRoleSelection] = useState(false);
@@ -174,11 +175,39 @@ export default function App() {
     const parts = window.location.pathname.split('/').filter(Boolean);
     const slugOrId = parts[1] || '';
     const isSetDetail = parts[2] === 'sets' && !!parts[3];
-    if (isSetDetail) {
-      const setId = parts[3];
-      return <PublicArtistSetPage slugOrId={slugOrId} setId={setId} />;
+
+    // If user is authenticated, route inside the app shell instead of standalone
+    if (currentUser) {
+      // Redirect URL back to root so we don't keep hitting this early-return
+      window.history.replaceState({}, '', '/');
+      // Set the public artist page state and let the main shell render it
+      // Use a microtask to avoid setState during render
+      Promise.resolve().then(() => {
+        setPublicArtistSlugOrId(slugOrId);
+        setCurrentPage(isSetDetail ? 'public-artist-set' : 'public-artist-profile');
+      });
+      // Don't early-return; fall through to the authenticated shell below
+    } else {
+      // Unauthenticated: render with Navigation wrapper for consistent layout
+      if (isSetDetail) {
+        const setId = parts[3];
+        return <PublicArtistSetPage slugOrId={slugOrId} setId={setId} />;
+      }
+      return (
+        <div className="min-h-screen">
+          <Navigation
+            user={null}
+            onNavigate={handleNavigate}
+            onLogout={() => {}}
+            currentPage="public-artist-profile"
+          />
+          <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+            <PublicArtistPage slugOrId={slugOrId} onNavigate={handleNavigate} />
+          </main>
+          <Footer onNavigate={handleNavigate} />
+        </div>
+      );
     }
-    return <PublicArtistPage slugOrId={slugOrId} />;
   }
 
   if (typeof window !== 'undefined' && window.location.pathname.startsWith('/venues/')) {
@@ -607,6 +636,7 @@ export default function App() {
     if (params?.venueId) setSelectedVenueId(params.venueId);
     if (params?.artistId) setSelectedArtistId(params.artistId);
     if (params?.callId) setSelectedCallId(params.callId);
+    if (params?.artistSlugOrId) setPublicArtistSlugOrId(params.artistSlugOrId);
 
     const nextPath = getPathFromPage(nextPage);
     if (nextPath) {
@@ -910,6 +940,11 @@ export default function App() {
           <VenueProfilePage venueSlug={selectedVenueId} onNavigate={handleNavigate} />
         )}
         {currentPage === 'referral-program' && <ReferralProgram onNavigate={handleNavigate} />}
+
+        {/* Public artist profile (rendered inside app shell for authenticated users) */}
+        {currentPage === 'public-artist-profile' && publicArtistSlugOrId && (
+          <PublicArtistPage slugOrId={publicArtistSlugOrId} onNavigate={handleNavigate} />
+        )}
 
         {currentPage === 'artist-agreement' && (
           <ArtistAgreement 
