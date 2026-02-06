@@ -21,6 +21,7 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
   const [info, setInfo] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [userId, setUserId] = useState('');
+  const [artistId, setArtistId] = useState('');
   const [slug, setSlug] = useState('');
 
   const handleScrollToEdit = () => {
@@ -97,13 +98,12 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
           setEmail(defaults.email || '');
           setPhone(((user.user_metadata?.phone as string) || '').trim());
           setCurrentPlan('free');
-          setCityPrimary('');
-          setCitySecondary('');
-          setAvatar((user.user_metadata?.avatar as string) || (row?.profile_photo_url as string) || '');
         } else {
           const row = artistRows[0] as any;
-          setName(row.name || (user.user_metadata?.name as string) || 'Artist');
-          setEmail(row.email || user.email || '');
+          setArtistId(row.id);
+          setSlug(row.slug);
+          setName(row.name || 'Artist');
+          setEmail(row.email || '');
           setPhone((row.phone_number as string) || ((user.user_metadata?.phone as string) || ''));
           setCityPrimary((row.city_primary as string) || '');
           setCitySecondary((row.city_secondary as string) || '');

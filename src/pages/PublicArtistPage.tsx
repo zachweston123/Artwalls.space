@@ -58,6 +58,17 @@ export function PublicArtistPage({ slugOrId, onNavigate }: PublicArtistPageProps
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'display' | 'sale' | 'sets'>('display');
 
+  const { artistId, uid, view } = useMemo(() => {
+    const url = new URL(window.location.href);
+    const params = new URLSearchParams(url.search);
+    const pathParts = url.pathname.split('/').filter(Boolean);
+    return {
+      artistId: pathParts[1] || slugOrId,
+      uid: params.get('uid'),
+      view: params.get('view'),
+    };
+  }, [slugOrId]);
+
   const cityLine = useMemo(() => {
     if (!artist) return '';
     const city = artist.cityPrimary || artist.citySecondary;
@@ -70,12 +81,19 @@ export function PublicArtistPage({ slugOrId, onNavigate }: PublicArtistPageProps
       try {
         setLoading(true);
         setError(null);
+
+        // Construct the API URL with query parameters
+        const apiUrl = new URL(`/api/public/artists/${encodeURIComponent(artistId)}`, window.location.origin);
+        if (uid) apiUrl.searchParams.set('uid', uid);
+        if (view) apiUrl.searchParams.set('view', view);
+
         const { artist: a, forSale: sale, onDisplay: displays, sets: setList } = await apiGet<{
           artist: any;
           forSale: ArtworkCardData[];
           onDisplay: DisplayGroup[];
           sets: ArtistSetSummary[];
-        }>(`/api/public/artists/${encodeURIComponent(slugOrId)}`);
+        }>(apiUrl.pathname + apiUrl.search);
+
         if (cancelled) return;
         setArtist(a);
         setForSale(Array.isArray(sale) ? sale : []);
@@ -91,7 +109,7 @@ export function PublicArtistPage({ slugOrId, onNavigate }: PublicArtistPageProps
     return () => {
       cancelled = true;
     };
-  }, [slugOrId]);
+  }, [artistId, uid, view]);
 
   const handleBack = () => {
     if (onNavigate) {

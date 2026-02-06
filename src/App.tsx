@@ -630,6 +630,19 @@ export default function App() {
   };
 
   const handleNavigate = (page: string, params?: any) => {
+    // Handle URL-based navigation
+    if (page.startsWith('/artists/')) {
+      const url = new URL(page, window.location.origin);
+      const parts = url.pathname.split('/').filter(Boolean);
+      const slugOrId = parts[1] || '';
+      const isSetDetail = parts[2] === 'sets' && !!parts[3];
+
+      setPublicArtistSlugOrId(slugOrId);
+      setCurrentPage(isSetDetail ? 'public-artist-set' : 'public-artist-profile');
+      window.history.pushState({}, '', page); // Keep URL for deep linking
+      return;
+    }
+
     const nextPage = normalizePage(page);
     setCurrentPage(nextPage);
     if (params?.userId) setSelectedArtistId(params.userId);
