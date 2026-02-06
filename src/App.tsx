@@ -83,6 +83,8 @@ import { Settings } from './components/settings/Settings';
 import { PublicArtistPage } from './pages/PublicArtistPage';
 import { PublicArtistSetPage } from './pages/PublicArtistSetPage';
 import { PublicVenuePage } from './pages/PublicVenuePage';
+import { ForgotPassword } from './pages/ForgotPassword';
+import { ResetPassword } from './pages/ResetPassword';
 import { ArtistOnboardingWizard } from './components/onboarding/ArtistOnboardingWizard';
 import { CuratedSets } from './components/artist/CuratedSets';
 
@@ -137,6 +139,22 @@ export default function App() {
   // Direct-route override for email verification page
   if (typeof window !== 'undefined' && window.location.pathname === '/verify-email') {
     return <VerifyEmail />;
+  }
+
+  // Direct-route override for password reset page
+  if (typeof window !== 'undefined' && window.location.pathname === '/reset-password') {
+    return (
+      <ResetPassword 
+        onSuccess={() => {
+          setCurrentPage('login');
+          window.history.pushState({}, '', '/');
+        }}
+        onBackToLogin={() => {
+          setCurrentPage('login');
+          window.history.pushState({}, '', '/');
+        }}
+      />
+    );
   }
 
   // Direct-route override for venue invite landing page
@@ -752,7 +770,11 @@ export default function App() {
     return (
       <div className="min-h-screen flex flex-col bg-[var(--bg)]">
         <div className="flex-1">
-          <Login onLogin={handleLogin} onNavigate={handleNavigate} />
+          {currentPage === 'forgot-password' ? (
+            <ForgotPassword onBack={() => setCurrentPage('login')} />
+          ) : (
+            <Login onLogin={handleLogin} onNavigate={handleNavigate} />
+          )}
         </div>
         <div className="border-t border-[var(--border)] bg-[var(--surface-2)]">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-[var(--text-muted)]">

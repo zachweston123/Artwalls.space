@@ -400,6 +400,17 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
                 }
                 placeholder="••••••••"
               />
+              {!isSignup && (
+                <div className="mt-2 text-right">
+                  <button
+                    type="button"
+                    onClick={() => onNavigate?.('forgot-password')}
+                    className="text-xs text-[var(--blue)] hover:text-[var(--blue-hover)] transition-colors"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+              )}
             </div>
 
             <button
