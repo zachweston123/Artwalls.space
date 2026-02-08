@@ -2518,6 +2518,32 @@ async function handleStripeWebhookEvent(event) {
         }
 
         console.log('✅ Marketplace order paid + transfers created', { orderId, transfers });
+
+        // ── Wall-productivity: record purchase event (idempotent via unique index on order_id) ──
+        try {
+          await supabaseAdmin.from('app_events').insert({
+            event_type: 'purchase',
+            session_id: session?.metadata?.sessionId || session.client_reference_id || orderId,
+            order_id: orderId,
+            artwork_id: artworkId || null,
+            venue_id: order.venueId || null,
+            artist_id: order.artistId || null,
+            stripe_checkout_session_id: session.id || null,
+            metadata: {
+              list_price_cents: order.amountCents || 0,
+              platform_fee_cents: order.platformFeeCents || 0,
+              venue_payout_cents: order.venuePayoutCents || 0,
+              artist_payout_cents: order.artistPayoutCents || 0,
+              currency: order.currency || 'usd',
+            },
+          });
+          console.log('✅ app_events purchase recorded', { orderId });
+        } catch (trackErr) {
+          // 23505 = unique_violation (duplicate purchase for same order – expected on webhook retries)
+          if (trackErr?.code !== '23505') {
+            console.warn('⚠ app_events purchase insert failed (non-critical)', trackErr?.message || trackErr);
+          }
+        }
       }
     }
 

@@ -56,6 +56,7 @@ import { ProfileCompletion } from './components/ProfileCompletion';
 import { AdminSidebar } from './components/admin/AdminSidebar';
 import { AdminAccessDenied } from './components/admin/AdminAccessDenied';
 import { AdminDashboard } from './components/admin/AdminDashboard';
+import { AdminWallProductivity } from './components/admin/AdminWallProductivity';
 import { AdminUsers } from './components/admin/AdminUsers';
 import { AdminUserDetail } from './components/admin/AdminUserDetail';
 import { AdminAnnouncements } from './components/admin/AdminAnnouncements';
@@ -882,6 +883,7 @@ export default function App() {
         <div className="flex-1 flex flex-col">
           <main className="flex-1 p-8 overflow-y-auto">
             {currentPage === 'admin-dashboard' && <AdminDashboard onNavigate={handleNavigate} />}
+            {currentPage === 'admin-wall-productivity' && <AdminWallProductivity onNavigate={handleNavigate} />}
             {currentPage === 'admin-users' && (
               <AdminUsers onViewUser={(userId) => handleNavigate('admin-user-detail')} />
             )}
@@ -1096,6 +1098,7 @@ export default function App() {
         {currentUser.role === 'admin' && (
           <>
             {currentPage === 'admin-dashboard' && <AdminDashboard onNavigate={handleNavigate} />}
+            {currentPage === 'admin-wall-productivity' && <AdminWallProductivity onNavigate={handleNavigate} />}
             {currentPage === 'admin-users' && (
               <AdminUsers onViewUser={(userId: string) => handleNavigate('admin-user-detail', { userId })} />
             )}

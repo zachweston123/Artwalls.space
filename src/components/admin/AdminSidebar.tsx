@@ -10,6 +10,7 @@ import {
   Mail,
   Gift,
   LogOut,
+  BarChart3,
 } from 'lucide-react';
 
 interface AdminSidebarProps {
@@ -23,6 +24,7 @@ interface AdminSidebarProps {
 export function AdminSidebar({ currentPage, onNavigate, onLogout, userName, userEmail }: AdminSidebarProps) {
   const navItems = [
     { id: 'admin-dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'admin-wall-productivity', label: 'Wall Productivity', icon: BarChart3 },
     { id: 'admin-users', label: 'Users', icon: Users },
     { id: 'admin-sales', label: 'Sales & GMV', icon: ShoppingCart },
     { id: 'admin-stripe-payments', label: 'Stripe Payments', icon: CreditCard },

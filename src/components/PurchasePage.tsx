@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ShoppingCart, MapPin, User, ArrowLeft, Loader2 } from 'lucide-react';
 import { ArtworkReactions } from './ArtworkReactions';
 import { CHECKOUT_COPY } from '../lib/feeCopy';
+import { trackQrScan, trackArtworkView, trackCheckoutStart } from '../lib/trackEvent';
 
 type Artwork = {
   id: string;
@@ -78,20 +79,22 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
     return () => { cancelled = true; };
   }, [purchaseStatus, artworkId]);
 
+  // Wall-productivity tracking: log qr_scan + artwork_view once per session visit
   useEffect(() => {
     if (!artwork?.id) return;
+    const opts = {
+      artworkId: artwork.id,
+      venueId: artwork.venueId || null,
+      artistId: artwork.artistId || null,
+    };
+    trackQrScan(opts);
+    trackArtworkView(opts);
+
+    // Keep legacy events endpoint for backward compat (non-blocking)
     (async () => {
       try {
-        await apiPost('/api/events', {
-          event_type: 'view_artwork',
-          artwork_id: artwork.id,
-          venue_id: (artwork as any).venueId || null,
-        });
-        await apiPost('/api/events', {
-          event_type: 'qr_scan',
-          artwork_id: artwork.id,
-          venue_id: (artwork as any).venueId || null,
-        });
+        await apiPost('/api/events', { event_type: 'view_artwork', artwork_id: artwork.id, venue_id: artwork.venueId || null });
+        await apiPost('/api/events', { event_type: 'qr_scan', artwork_id: artwork.id, venue_id: artwork.venueId || null });
       } catch {}
     })();
   }, [artwork?.id]);
@@ -131,11 +134,19 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
       setBuying(true);
       setError(null);
 
+      // Wall-productivity tracking: checkout_start
+      trackCheckoutStart({
+        artworkId: artwork?.id || '',
+        venueId: artwork?.venueId || null,
+        artistId: artwork?.artistId || null,
+      });
+
+      // Keep legacy events endpoint for backward compat (non-blocking)
       try {
         await apiPost('/api/events', {
           event_type: 'start_checkout',
           artwork_id: artwork?.id,
-          venue_id: (artwork as any)?.venueId || null,
+          venue_id: artwork?.venueId || null,
         });
       } catch {}
 

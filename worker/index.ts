@@ -334,6 +334,73 @@ export default {
       return json({ ok: true });
     }
 
+    // =========================================================================
+    // Wall-productivity event tracking (writes to app_events)
+    // Server-side only, dedupe via unique partial indexes in Postgres.
+    // =========================================================================
+    if (url.pathname === '/api/track' && method === 'POST') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+
+      const payload = await request.json().catch(() => ({}));
+      const eventType = String(payload?.event_type || '').trim();
+      const allowedTypes = new Set(['qr_scan', 'artwork_view', 'checkout_start']);
+      if (!allowedTypes.has(eventType)) {
+        return json({ error: 'Invalid event_type' }, { status: 400 });
+      }
+
+      const sessionId = String(payload?.session_id || '').trim();
+      if (!sessionId) return json({ error: 'Missing session_id' }, { status: 400 });
+
+      const rate = rateLimitByIp(getClientIp(request), 30, 60_000);
+      if (!rate.ok) return json({ error: 'Rate limit exceeded' }, { status: 429 });
+
+      const user = await getSupabaseUserFromRequest(request);
+
+      const row: Record<string, unknown> = {
+        event_type: eventType,
+        session_id: sessionId,
+        user_id: user?.id || null,
+        artwork_id: payload?.artwork_id || null,
+        venue_id: payload?.venue_id || null,
+        wallspace_id: payload?.wallspace_id || null,
+        artist_id: payload?.artist_id || null,
+        metadata: payload?.metadata || {},
+      };
+
+      // ON CONFLICT DO NOTHING: leverages the dedupe unique indexes
+      const { error: insertErr } = await supabaseAdmin.from('app_events').insert(row);
+
+      // 23505 = unique_violation → dedupe hit, not an error
+      if (insertErr && insertErr.code !== '23505') {
+        return json({ error: insertErr.message }, { status: 500 });
+      }
+
+      return json({ ok: true, deduped: insertErr?.code === '23505' });
+    }
+
+    // Admin-only: wall productivity metrics (proxies the RPC)
+    if (url.pathname === '/api/admin/wall-productivity' && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+
+      const user = await getSupabaseUserFromRequest(request);
+      if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
+      const { data: artist } = await supabaseAdmin
+        .from('artists')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (artist?.role !== 'admin') return json({ error: 'Forbidden' }, { status: 403 });
+
+      const days = parseInt(url.searchParams.get('days') || '7', 10);
+      const safeDays = Math.min(Math.max(days, 1), 90);
+
+      const { data, error: rpcErr } = await supabaseAdmin.rpc('wall_productivity_metrics', {
+        p_days: safeDays,
+      });
+      if (rpcErr) return json({ error: rpcErr.message }, { status: 500 });
+      return json(data);
+    }
+
     // Debug auth endpoint - test if authorization header is being passed correctly
     if (url.pathname === '/api/debug/auth' && method === 'GET') {
       const authHeader = request.headers.get('authorization') || '';
