@@ -238,6 +238,28 @@ export default {
       };
     }
 
+    // ── Stripe API helpers ──
+    // Encode an object as application/x-www-form-urlencoded (Stripe API format)
+    function toForm(obj: Record<string, any>): string {
+      const params = new URLSearchParams();
+      for (const [k, v] of Object.entries(obj)) {
+        if (v !== undefined && v !== null) params.set(k, String(v));
+      }
+      return params.toString();
+    }
+
+    // Authenticated fetch against the Stripe REST API
+    async function stripeFetch(path: string, init: RequestInit): Promise<Response> {
+      const key = env.STRIPE_SECRET_KEY;
+      if (!key) throw new Error('STRIPE_SECRET_KEY not configured');
+      const headers = new Headers(init.headers);
+      headers.set('Authorization', `Bearer ${key}`);
+      if (!headers.has('Content-Type')) {
+        headers.set('Content-Type', 'application/x-www-form-urlencoded');
+      }
+      return fetch(`https://api.stripe.com${path}`, { ...init, headers });
+    }
+
     // Clean and validate Supabase config
     const rawSupabaseUrl = (env.SUPABASE_URL || '').trim().replace(/\/+$/, '');
     const rawServiceKey = (env.SUPABASE_SERVICE_ROLE_KEY || '').trim();

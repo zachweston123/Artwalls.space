@@ -329,8 +329,16 @@ app.post('/api/stripe/billing/create-subscription-session', async (req, res) => 
       cancel_url: cancelUrl,
       customer: customerId,
       line_items: [{ price: priceId, quantity: 1 }],
-      // Omitting metadata entirely to avoid Stripe metadata validation issues.
-      subscription_data: {},
+      metadata: {
+        artistId: artist.id,
+        tier: normalizedTier,
+      },
+      subscription_data: {
+        metadata: {
+          artistId: artist.id,
+          tier: normalizedTier,
+        },
+      },
     });
 
     return res.json({ url: session.url });

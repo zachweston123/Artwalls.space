@@ -30,7 +30,9 @@ export default function StripeOnboardingReturn() {
         return;
       }
 
-      const response = await fetch(`${API_BASE}/api/stripe/connect/${role}/status`, {
+      const userId = session.user.id;
+      const idParam = role === 'artist' ? 'artistId' : 'venueId';
+      const response = await fetch(`${API_BASE}/api/stripe/connect/${role}/status?${idParam}=${userId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -44,10 +46,10 @@ export default function StripeOnboardingReturn() {
 
       const data = await response.json();
 
-      if (data.payoutsEnabled && data.chargesEnabled) {
+      if ((data.payoutsEnabled || data.payouts_enabled) && (data.chargesEnabled || data.charges_enabled)) {
         setStatus('success');
         setMessage('Your payouts are now enabled! You\'ll receive automatic transfers when sales are made.');
-      } else if (data.detailsSubmitted) {
+      } else if (data.detailsSubmitted || data.details_submitted) {
         setStatus('pending');
         setMessage('Your information is being verified. This usually takes a few minutes.');
       } else {

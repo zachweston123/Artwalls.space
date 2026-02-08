@@ -20,6 +20,21 @@ export const onRequestPost: PagesFunction = async ({ request, env, waitUntil }) 
     env.SUPABASE_SERVICE_ROLE_KEY
   );
 
+  // Idempotency: skip events we've already processed
+  try {
+    const { data: existing } = await supabase
+      .from('stripe_webhook_events')
+      .select('stripe_event_id')
+      .eq('stripe_event_id', event.id)
+      .maybeSingle();
+    if (existing) {
+      return Response.json({ received: true, duplicate: true });
+    }
+  } catch (err) {
+    // If table doesn't exist or query fails, continue processing
+    console.warn('Idempotency check failed (non-fatal):', err);
+  }
+
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
@@ -78,6 +93,18 @@ export const onRequestPost: PagesFunction = async ({ request, env, waitUntil }) 
         if (error) console.error('Error canceling subscription:', error);
         break;
       }
+    }
+
+    // Record this event as processed for idempotency
+    try {
+      await supabase.from('stripe_webhook_events').insert({
+        stripe_event_id: event.id,
+        type: event.type,
+        note: 'processed by pages function',
+        processed_at: new Date().toISOString(),
+      });
+    } catch (err) {
+      console.warn('Failed to record webhook event (non-fatal):', err);
     }
 
     return Response.json({ received: true });

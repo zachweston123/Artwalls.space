@@ -55,6 +55,14 @@ export async function verifyAndParseStripeEvent(request: Request, webhookSecret:
   const ok = signatures.some((s) => timingSafeEqualHex(s, expectedSignature));
   if (!ok) throw new Error('Webhook signature verification failed');
 
+  // Reject events older than 5 minutes (300 seconds) to prevent replay attacks
+  const timestampSeconds = parseInt(timestamp, 10);
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  const tolerance = 300;
+  if (Math.abs(nowSeconds - timestampSeconds) > tolerance) {
+    throw new Error('Webhook timestamp outside tolerance window');
+  }
+
   const parsed = JSON.parse(bodyText);
   return parsed as StripeEvent;
 }

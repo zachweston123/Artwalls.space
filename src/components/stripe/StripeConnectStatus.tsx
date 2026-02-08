@@ -34,17 +34,18 @@ export default function StripeConnectStatus({ role, userId }: StripeConnectStatu
       setLoading(true);
       // Try API first using the smart client (handles localhost/prod automatically)
       try {
-        const data = await apiGet<any>(`/api/stripe/connect/${role}/status`);
+        const idParam = role === 'artist' ? 'artistId' : 'venueId';
+        const data = await apiGet<any>(`/api/stripe/connect/${role}/status?${idParam}=${userId}`);
         setStatus({
-          hasAccount: !!data.accountId,
+          hasAccount: data.hasAccount ?? !!data.accountId,
           accountId: data.accountId,
           onboardingStatus: data.onboardingStatus,
-          chargesEnabled: data.chargesEnabled,
-          payoutsEnabled: data.payoutsEnabled,
-          detailsSubmitted: data.detailsSubmitted,
-          requirementsCurrentlyDue: data.requirementsCurrentlyDue,
-          requirementsEventuallyDue: data.requirementsEventuallyDue,
-          lastSyncAt: data.syncedAt,
+          chargesEnabled: data.chargesEnabled ?? data.charges_enabled,
+          payoutsEnabled: data.payoutsEnabled ?? data.payouts_enabled,
+          detailsSubmitted: data.detailsSubmitted ?? data.details_submitted,
+          requirementsCurrentlyDue: data.requirementsCurrentlyDue ?? data.requirements?.currently_due,
+          requirementsEventuallyDue: data.requirementsEventuallyDue ?? data.requirements?.eventually_due,
+          lastSyncAt: data.syncedAt ?? data.lastSyncAt,
         });
         return;
       } catch (apiErr) {
