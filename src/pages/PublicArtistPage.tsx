@@ -46,10 +46,14 @@ type ArtistSetSummary = {
 
 interface PublicArtistPageProps {
   slugOrId: string;
+  /** Optional UID hint (auth user id) passed via query param */
+  uid?: string | null;
+  /** Optional view mode ('public' = preview-as-visitor) */
+  viewMode?: string | null;
   onNavigate?: (page: string, params?: any) => void;
 }
 
-export function PublicArtistPage({ slugOrId, onNavigate }: PublicArtistPageProps) {
+export function PublicArtistPage({ slugOrId, uid: uidProp, viewMode: viewProp, onNavigate }: PublicArtistPageProps) {
   const [artist, setArtist] = useState<any>(null);
   const [forSale, setForSale] = useState<ArtworkCardData[]>([]);
   const [onDisplay, setOnDisplay] = useState<DisplayGroup[]>([]);
@@ -58,16 +62,31 @@ export function PublicArtistPage({ slugOrId, onNavigate }: PublicArtistPageProps
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'display' | 'sale' | 'sets'>('display');
 
+  // Derive artistId, uid, and view from props first; fall back to URL for
+  // unauthenticated / direct-link visitors where props may not be provided.
   const { artistId, uid, view } = useMemo(() => {
-    const url = new URL(window.location.href);
-    const params = new URLSearchParams(url.search);
-    const pathParts = url.pathname.split('/').filter(Boolean);
-    return {
-      artistId: pathParts[1] || slugOrId,
-      uid: params.get('uid'),
-      view: params.get('view'),
-    };
-  }, [slugOrId]);
+    // Prefer props when available (SPA navigation inside authenticated shell)
+    if (uidProp !== undefined || viewProp !== undefined) {
+      return {
+        artistId: slugOrId,
+        uid: uidProp ?? null,
+        view: viewProp ?? null,
+      };
+    }
+    // Fallback: parse from URL (unauthenticated / direct link)
+    try {
+      const url = new URL(window.location.href);
+      const params = new URLSearchParams(url.search);
+      const pathParts = url.pathname.split('/').filter(Boolean);
+      return {
+        artistId: pathParts[1] || slugOrId,
+        uid: params.get('uid'),
+        view: params.get('view'),
+      };
+    } catch {
+      return { artistId: slugOrId, uid: null, view: null };
+    }
+  }, [slugOrId, uidProp, viewProp]);
 
   const isPublicView = view === 'public';
 
@@ -114,7 +133,8 @@ export function PublicArtistPage({ slugOrId, onNavigate }: PublicArtistPageProps
   }, [artistId, uid, view]);
 
   const handleBack = () => {
-    if (!isPublicView && onNavigate) {
+    // Always use SPA navigation for back when onNavigate is available
+    if (onNavigate) {
       onNavigate('artist-profile');
       return;
     }

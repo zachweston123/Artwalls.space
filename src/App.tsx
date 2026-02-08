@@ -110,6 +110,8 @@ export default function App() {
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
   const [selectedCallId, setSelectedCallId] = useState<string | null>(null);
   const [publicArtistSlugOrId, setPublicArtistSlugOrId] = useState<string | null>(null);
+  const [publicArtistUid, setPublicArtistUid] = useState<string | null>(null);
+  const [publicArtistView, setPublicArtistView] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [hasAcceptedAgreement, setHasAcceptedAgreement] = useState<boolean | null>(null);
   const [showGoogleRoleSelection, setShowGoogleRoleSelection] = useState(false);
@@ -136,6 +138,26 @@ export default function App() {
     if (page === 'artist-onboarding') return '/onboarding/artist';
     return null;
   };
+
+  // Sync /artists/ URL paths into SPA state for authenticated users.
+  // This handles direct links, page refresh, and browser back/forward.
+  // Placed before early-return route overrides to avoid hooks-order violations.
+  useEffect(() => {
+    if (!currentUser) return;
+    if (typeof window === 'undefined') return;
+    if (!window.location.pathname.startsWith('/artists/')) return;
+    const parts = window.location.pathname.split('/').filter(Boolean);
+    const slugOrId = parts[1] || '';
+    const isSetDetail = parts[2] === 'sets' && !!parts[3];
+    const targetPage = isSetDetail ? 'public-artist-set' : 'public-artist-profile';
+    if (publicArtistSlugOrId !== slugOrId || currentPage !== targetPage) {
+      const urlParams = new URLSearchParams(window.location.search);
+      setPublicArtistSlugOrId(slugOrId);
+      setPublicArtistUid(urlParams.get('uid') || null);
+      setPublicArtistView(urlParams.get('view') || null);
+      setCurrentPage(targetPage);
+    }
+  }, [currentUser, currentPage, publicArtistSlugOrId]);
 
   // Direct-route override for email verification page
   if (typeof window !== 'undefined' && window.location.pathname === '/verify-email') {
@@ -176,17 +198,10 @@ export default function App() {
     const slugOrId = parts[1] || '';
     const isSetDetail = parts[2] === 'sets' && !!parts[3];
 
-    // If user is authenticated, route inside the app shell instead of standalone
+    // If user is authenticated, fall through to the authenticated shell.
+    // State sync is handled by the useEffect above.
     if (currentUser) {
-      const targetPage = isSetDetail ? 'public-artist-set' : 'public-artist-profile';
-      if (publicArtistSlugOrId !== slugOrId || currentPage !== targetPage) {
-        // Set the public artist page state and let the main shell render it
-        Promise.resolve().then(() => {
-          setPublicArtistSlugOrId(slugOrId);
-          setCurrentPage(targetPage);
-        });
-      }
-      // Don't early-return; fall through to the authenticated shell below
+      // Fall through to the authenticated shell below
     } else {
       // Unauthenticated: render with Navigation wrapper for consistent layout
       if (isSetDetail) {
@@ -638,6 +653,8 @@ export default function App() {
       const isSetDetail = parts[2] === 'sets' && !!parts[3];
 
       setPublicArtistSlugOrId(slugOrId);
+      setPublicArtistUid(url.searchParams.get('uid'));
+      setPublicArtistView(url.searchParams.get('view'));
       setCurrentPage(isSetDetail ? 'public-artist-set' : 'public-artist-profile');
       window.history.pushState({}, '', page); // Keep URL for deep linking
       return;
@@ -956,7 +973,7 @@ export default function App() {
 
         {/* Public artist profile (rendered inside app shell for authenticated users) */}
         {currentPage === 'public-artist-profile' && publicArtistSlugOrId && (
-          <PublicArtistPage slugOrId={publicArtistSlugOrId} onNavigate={handleNavigate} />
+          <PublicArtistPage slugOrId={publicArtistSlugOrId} uid={publicArtistUid} viewMode={publicArtistView} onNavigate={handleNavigate} />
         )}
 
         {currentPage === 'artist-agreement' && (
