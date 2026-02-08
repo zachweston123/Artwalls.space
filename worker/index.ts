@@ -401,6 +401,24 @@ export default {
       return json(data);
     }
 
+    // ── Momentum banner dismiss ──
+    if (url.pathname === '/api/artists/dismiss-momentum-banner' && method === 'POST') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const user = await getSupabaseUserFromRequest(request);
+      if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
+
+      const { error: updErr } = await supabaseAdmin
+        .from('artists')
+        .update({
+          dismissed_momentum_banner: true,
+          dismissed_momentum_banner_at: new Date().toISOString(),
+        })
+        .eq('id', user.id);
+
+      if (updErr) return json({ error: updErr.message }, { status: 500 });
+      return json({ ok: true });
+    }
+
     // Debug auth endpoint - test if authorization header is being passed correctly
     if (url.pathname === '/api/debug/auth' && method === 'GET') {
       const authHeader = request.headers.get('authorization') || '';
@@ -566,7 +584,7 @@ export default {
         supabaseAdmin.from('artworks').select('id', { count: 'exact', head: true }).eq('artist_id', artistId).eq('status', 'active'),
         supabaseAdmin.from('artworks').select('id', { count: 'exact', head: true }).eq('artist_id', artistId).eq('status', 'sold'),
         supabaseAdmin.from('artworks').select('id', { count: 'exact', head: true }).eq('artist_id', artistId).eq('status', 'available'),
-        supabaseAdmin.from('artists').select('subscription_tier,subscription_status,pro_until').eq('id', artistId).maybeSingle(),
+        supabaseAdmin.from('artists').select('subscription_tier,subscription_status,pro_until,momentum_banner_eligible,momentum_banner_reason,momentum_banner_eligible_at,dismissed_momentum_banner').eq('id', artistId).maybeSingle(),
         supabaseAdmin.from('invitations').select('id', { count: 'exact', head: true }).eq('artist_id', artistId).eq('status', 'pending'),
       ]).then((results: any) => results.map((r: any) => r.count !== undefined ? { count: r.count || 0 } : { data: r }));
 
@@ -611,6 +629,27 @@ export default {
       if (payoutsErr) return json({ error: payoutsErr.message }, { status: 500 });
       const totalArtistPayoutCents = (payouts || []).reduce((sum: number, row: any) => sum + (row.artist_payout_cents || 0), 0);
 
+      // ── Momentum banner: lazy eligibility check ──
+      // If artist has active artworks but hasn't been flagged yet, flag them now.
+      let momentumEligible = !!artist?.momentum_banner_eligible;
+      let momentumReason = artist?.momentum_banner_reason || null;
+      const momentumDismissed = !!artist?.dismissed_momentum_banner;
+
+      if (!momentumEligible && (activeArtworks || 0) > 0) {
+        try {
+          const { data: rpcResult } = await supabaseAdmin.rpc('set_momentum_banner_eligible', {
+            p_artist_id: artistId,
+            p_reason: 'first_live_listing',
+          });
+          if (rpcResult) {
+            momentumEligible = true;
+            momentumReason = 'first_live_listing';
+          }
+        } catch {
+          // Non-critical — will retry next dashboard load
+        }
+      }
+
       return json({
         artistId,
         subscription: {
@@ -637,6 +676,12 @@ export default {
           total: totalSales || 0,
           recent30Days: recentSales || 0,
           totalEarnings: Math.round(totalArtistPayoutCents / 100),
+        },
+        momentum: {
+          eligible: momentumEligible,
+          reason: momentumReason,
+          dismissed: momentumDismissed,
+          showBanner: momentumEligible && !momentumDismissed && subscriptionTier === 'free',
         },
       });
     }

@@ -6,6 +6,7 @@ import { ActiveDisplaysMeter } from '../pricing/ActiveDisplaysMeter';
 import type { User } from '../../App';
 import { ArtistPayoutsCard } from './ArtistPayoutsCard';
 import { apiGet } from '../../lib/api';
+import MomentumBanner from './MomentumBanner';
 
 interface ArtistDashboardProps {
   onNavigate: (page: string) => void;
@@ -24,7 +25,9 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
     displays?: { active: number; limit: number; isOverage: boolean };
     applications?: { pending: number };
     sales: { total: number; recent30Days: number; totalEarnings: number };
+    momentum?: { eligible: boolean; reason: string | null; dismissed: boolean; showBanner: boolean };
   } | null>(null);
+  const [momentumDismissed, setMomentumDismissed] = useState(false);
 
   useEffect(() => {
     try {
@@ -52,6 +55,7 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
           displays?: { active: number; limit: number; isOverage: boolean };
           applications?: { pending: number };
           sales: { total: number; recent30Days: number; totalEarnings: number };
+          momentum?: { eligible: boolean; reason: string | null; dismissed: boolean; showBanner: boolean };
         }>(`/api/stats/artist?artistId=${user.id}`);
         if (!isMounted) return;
         setStats({
@@ -60,6 +64,7 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
           displays: s.displays,
           applications: s.applications,
           sales: s.sales,
+          momentum: s.momentum,
         });
       } catch {
         // Fallback to artworks listing for minimal stats
@@ -188,6 +193,14 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
           </button>
         </div>
       )}
+      {/* ── Momentum upgrade banner ── */}
+      {stats?.momentum?.showBanner && !momentumDismissed && (
+        <MomentumBanner
+          onNavigate={onNavigate}
+          onDismiss={() => setMomentumDismissed(true)}
+        />
+      )}
+
       {/* ════════════════════════════════════════════════════════════
           HEADER SECTION (Welcome + Plan Chip + Upgrade Button)
           ════════════════════════════════════════════════════════════ */}
