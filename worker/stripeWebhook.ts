@@ -1,7 +1,7 @@
-type StripeEvent = {
+export type StripeEvent = {
   id: string;
   type: string;
-  data?: unknown;
+  data?: { object?: any; [key: string]: any };
 };
 
 function parseStripeSignatureHeader(headerValue: string) {
@@ -39,15 +39,31 @@ function timingSafeEqualHex(a: string, b: string): boolean {
   return diff === 0;
 }
 
-export async function verifyAndParseStripeEvent(request: Request, webhookSecret: string): Promise<StripeEvent> {
-  const sigHeader = request.headers.get('stripe-signature');
+// Overload: (body: string, sigHeader: string, secret: string) — for use when body is already read
+// Overload: (request: Request, secret: string) — for use from Pages Functions
+export async function verifyAndParseStripeEvent(bodyOrRequest: string | Request, sigOrSecret: string, maybeSecret?: string): Promise<StripeEvent> {
+  let bodyText: string;
+  let sigHeader: string;
+  let webhookSecret: string;
+
+  if (typeof bodyOrRequest === 'string') {
+    // 3-arg form: (body, sig, secret)
+    bodyText = bodyOrRequest;
+    sigHeader = sigOrSecret;
+    webhookSecret = maybeSecret!;
+  } else {
+    // 2-arg form: (request, secret)
+    webhookSecret = sigOrSecret;
+    const hdr = bodyOrRequest.headers.get('stripe-signature');
+    if (!hdr) throw new Error('Missing stripe-signature header');
+    sigHeader = hdr;
+    const bodyBuffer = await bodyOrRequest.arrayBuffer();
+    bodyText = new TextDecoder().decode(bodyBuffer);
+  }
+
   if (!sigHeader) throw new Error('Missing stripe-signature header');
 
   const { timestamp, signatures } = parseStripeSignatureHeader(sigHeader);
-
-  // Stripe requires verifying the *raw* request body bytes.
-  const bodyBuffer = await request.arrayBuffer();
-  const bodyText = new TextDecoder().decode(bodyBuffer);
 
   const signedPayload = `${timestamp}.${bodyText}`;
   const expectedSignature = await hmacSha256Hex(webhookSecret, signedPayload);

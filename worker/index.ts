@@ -1050,8 +1050,8 @@ export default {
         if (supabaseAdmin) {
           const { data: existing } = await supabaseAdmin
             .from('stripe_webhook_events')
-            .select('id')
-            .eq('event_id', event.id)
+            .select('stripe_event_id')
+            .eq('stripe_event_id', event.id)
             .maybeSingle();
           if (existing) return json({ received: true, duplicate: true });
         }
@@ -1140,8 +1140,9 @@ export default {
         // Record for idempotency
         if (supabaseAdmin) {
           await supabaseAdmin.from('stripe_webhook_events').insert({
-            event_id: event.id,
-            event_type: event.type,
+            stripe_event_id: event.id,
+            type: event.type,
+            note: 'processed by worker',
             processed_at: new Date().toISOString(),
           }).then(() => {}).catch(() => {});
         }
