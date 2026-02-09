@@ -663,6 +663,12 @@ export default function App() {
 
     const nextPage = normalizePage(page);
 
+    // When navigating away from /artists/ paths, clear the URL so the
+    // useEffect sync-from-URL doesn't fight the navigation.
+    if (typeof window !== 'undefined' && window.location.pathname.startsWith('/artists/')) {
+      window.history.replaceState({}, '', '/');
+    }
+
     // Block venue users from accessing artist-only pages
     if (nextPage === 'plans-pricing' && currentUser?.role === 'venue') {
       setCurrentPage('venue-dashboard');

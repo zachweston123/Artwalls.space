@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { MapPin, ExternalLink, Instagram, ArrowLeft, Loader2 } from 'lucide-react';
 import { apiGet } from '../lib/api';
+import { supabase } from '../lib/supabase';
 
 type ArtworkCardData = {
   id: string;
@@ -67,53 +68,118 @@ export function PublicArtistPage({ slugOrId, uid: uidProp, viewMode: viewProp, o
   const isPublicView = view === 'public';
 
   const loadData = useCallback(async () => {
+    const debug: any = {
+      routeParam: identifier,
+      isLoggedIn: !!uid,
+      currentUserId: uid,
+      attempts: [] as string[],
+    };
     try {
       setLoading(true);
       setError(null);
 
       const decoded = decodeURIComponent(identifier);
+      debug.decodedParam = decoded;
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(decoded);
+      debug.isUuid = isUuid;
 
-      // Call the public worker endpoint which uses supabaseAdmin (bypasses RLS)
-      let url = `/api/public/artists/${encodeURIComponent(decoded)}`;
-      if (uid) url += `?uid=${encodeURIComponent(uid)}`;
+      let artistRow: any = null;
+      let artworkRows: any[] = [];
+      let resolvedBy = '';
 
-      const response = await apiGet<any>(url);
+      // ── Attempt 1: Worker API endpoint ──
+      try {
+        debug.attempts.push('worker-api');
+        let apiUrl = `/api/public/artists/${encodeURIComponent(decoded)}`;
+        if (uid) apiUrl += `?uid=${encodeURIComponent(uid)}`;
+        debug.apiUrl = apiUrl;
+        const response = await apiGet<any>(apiUrl);
+        if (response?.artist) {
+          artistRow = response.artist;
+          artworkRows = response.forSale || [];
+          resolvedBy = 'worker-api';
+        }
+      } catch (apiErr: any) {
+        debug.workerError = apiErr?.message || String(apiErr);
+        console.warn('Worker API failed, trying direct Supabase:', apiErr?.message);
+      }
 
-      setDebugInfo({
-        routeParam: identifier,
-        decodedParam: decoded,
-        isLoggedIn: !!uid,
-        currentUserId: uid,
-        lookupUrl: url,
-        responseKeys: response ? Object.keys(response) : null,
-        hasArtist: !!response?.artist,
-        hasForSale: !!response?.forSale,
-        artistId: response?.artist?.id,
-        artistSlug: response?.artist?.slug,
-      });
+      // ── Attempt 2: Direct Supabase query (fallback) ──
+      if (!artistRow) {
+        debug.attempts.push('supabase-direct');
+        const selectCols = 'id,slug,name,bio,profile_photo_url,portfolio_url,website_url,instagram_handle,city_primary,city_secondary,art_types,is_public';
 
-      if (!response?.artist) {
+        // 2a: Try by id if UUID
+        if (isUuid) {
+          debug.attempts.push('supabase-by-id');
+          const { data, error: err } = await supabase
+            .from('artists')
+            .select(selectCols)
+            .eq('id', decoded)
+            .maybeSingle();
+          if (err) debug.supabaseIdError = err.message;
+          if (data) { artistRow = data; resolvedBy = 'supabase-id'; }
+        }
+
+        // 2b: Try by slug
+        if (!artistRow) {
+          debug.attempts.push('supabase-by-slug');
+          const { data, error: err } = await supabase
+            .from('artists')
+            .select(selectCols)
+            .eq('slug', decoded)
+            .maybeSingle();
+          if (err) debug.supabaseSlugError = err.message;
+          if (data) { artistRow = data; resolvedBy = 'supabase-slug'; }
+        }
+
+        // 2c: If found via supabase, fetch artworks
+        if (artistRow) {
+          const { data: awData } = await supabase
+            .from('artworks')
+            .select('id,title,status,price_cents,currency,image_url,venue_id,venue_name,is_public,archived_at')
+            .eq('artist_id', artistRow.id)
+            .eq('is_public', true)
+            .is('archived_at', null)
+            .in('status', PUBLIC_STATUSES)
+            .limit(60);
+          artworkRows = (awData || []).map((aw: any) => ({
+            id: aw.id,
+            title: aw.title,
+            status: aw.status,
+            priceCents: aw.price_cents || 0,
+            currency: aw.currency || 'usd',
+            imageUrl: aw.image_url,
+            venueName: aw.venue_name || null,
+            venueCity: null,
+          }));
+        }
+      }
+
+      debug.resolvedBy = resolvedBy;
+      debug.found = !!artistRow;
+      setDebugInfo(debug);
+
+      if (!artistRow) {
         setError('Artist not found');
         setArtist(null);
         setArtworks([]);
         return;
       }
 
-      const artistRow = response.artist;
-      const artworkRows = response.forSale || [];
-
+      // Normalize field names (worker returns camelCase, supabase returns snake_case)
       const artistData: ArtistData = {
         id: artistRow.id,
-        slug: artistRow.slug,
-        name: artistRow.name || 'Artist',
-        bio: artistRow.bio,
-        profilePhotoUrl: artistRow.profilePhotoUrl,
-        portfolioUrl: artistRow.portfolioUrl,
-        websiteUrl: artistRow.websiteUrl,
-        instagramHandle: artistRow.instagramHandle,
-        cityPrimary: artistRow.cityPrimary,
-        citySecondary: artistRow.citySecondary,
-        artTypes: artistRow.artTypes,
+        slug: artistRow.slug ?? artistRow.slug,
+        name: artistRow.name ?? artistRow.name ?? 'Artist',
+        bio: artistRow.bio ?? artistRow.bio,
+        profilePhotoUrl: artistRow.profilePhotoUrl ?? artistRow.profile_photo_url,
+        portfolioUrl: artistRow.portfolioUrl ?? artistRow.portfolio_url,
+        websiteUrl: artistRow.websiteUrl ?? artistRow.website_url,
+        instagramHandle: artistRow.instagramHandle ?? artistRow.instagram_handle,
+        cityPrimary: artistRow.cityPrimary ?? artistRow.city_primary,
+        citySecondary: artistRow.citySecondary ?? artistRow.city_secondary,
+        artTypes: artistRow.artTypes ?? artistRow.art_types,
       };
       setArtist(artistData);
 
@@ -121,24 +187,19 @@ export function PublicArtistPage({ slugOrId, uid: uidProp, viewMode: viewProp, o
         id: row.id,
         title: row.title || 'Untitled',
         status: row.status || 'available',
-        priceCents: row.priceCents || 0,
+        priceCents: row.priceCents ?? row.price_cents ?? 0,
         currency: row.currency || 'usd',
-        imageUrl: row.imageUrl,
-        venueName: row.venueName || null,
-        venueCity: row.venueCity ? `${row.venueCity}${row.venueState ? `, ${row.venueState}` : ''}` : null,
+        imageUrl: row.imageUrl ?? row.image_url,
+        venueName: row.venueName ?? row.venue_name ?? null,
+        venueCity: (row.venueCity ?? row.venue_city) ? `${row.venueCity ?? row.venue_city}${(row.venueState ?? row.venue_state) ? `, ${row.venueState ?? row.venue_state}` : ''}` : null,
       }));
 
       setArtworks(cards);
     } catch (e: any) {
       console.error('Error loading public artist profile:', e);
       setError(e?.message || 'Unable to load artist profile');
-      setDebugInfo({
-        routeParam: identifier,
-        isLoggedIn: !!uid,
-        currentUserId: uid,
-        lookupMethod: 'catch_block',
-        error: String(e?.message || e),
-      });
+      debug.catchError = String(e?.message || e);
+      setDebugInfo(debug);
     } finally {
       setLoading(false);
     }
@@ -147,6 +208,9 @@ export function PublicArtistPage({ slugOrId, uid: uidProp, viewMode: viewProp, o
   useEffect(() => { loadData(); }, [loadData]);
 
   const handleBack = () => {
+    // Clear /artists/ URL first so the useEffect in App.tsx doesn't
+    // re-force us back to public-artist-profile
+    window.history.replaceState({}, '', '/');
     if (onNavigate) {
       onNavigate('artist-profile');
       return;
