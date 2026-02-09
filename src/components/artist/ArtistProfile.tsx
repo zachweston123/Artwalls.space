@@ -215,10 +215,10 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
   }
 
   const getPublicProfilePath = () => {
-    if (!userId) return null;
-    const identifier = (slug?.trim() || artistId || userId || '').trim();
+    // Prefer slug for clean URLs; fall back to userId (always available)
+    const identifier = (slug?.trim() || userId || '').trim();
     if (!identifier) return null;
-    return `/artists/${identifier}?uid=${encodeURIComponent(userId)}&view=public`;
+    return `/artists/${encodeURIComponent(identifier)}`;
   };
 
   async function handleSave() {

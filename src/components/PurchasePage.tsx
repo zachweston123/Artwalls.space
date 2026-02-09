@@ -214,7 +214,17 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
               <h1 className="text-3xl sm:text-4xl mb-3 text-[var(--text)]">{artwork?.title || 'Artwork'}</h1>
                 <div className="flex items-center gap-2 text-[var(--text-muted)] mb-4">
                 <User className="w-5 h-5" />
-                <span className="text-base sm:text-lg">by {artwork?.artistName || 'Artist'}</span>
+                {artwork?.artistId ? (
+                  <a
+                    href={`/artists/${artwork.artistId}`}
+                    onClick={(e) => { e.preventDefault(); window.location.href = `/artists/${artwork.artistId}`; }}
+                    className="text-base sm:text-lg hover:text-[var(--text)] hover:underline transition-colors cursor-pointer"
+                  >
+                    by {artwork.artistName || 'Artist'}
+                  </a>
+                ) : (
+                  <span className="text-base sm:text-lg">by {artwork?.artistName || 'Artist'}</span>
+                )}
               </div>
               
               <div className="mb-4">
@@ -234,31 +244,52 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
             <div className="bg-[var(--surface-3)] rounded-xl p-4 sm:p-6 mb-6 border border-[var(--border)]">
               <h2 className="text-lg font-semibold text-[var(--text)] mb-2">About the artist</h2>
               <div className="flex items-start gap-4">
-                <div className="w-14 h-14 rounded-full overflow-hidden border border-[var(--border)] bg-[var(--surface-2)] flex-shrink-0">
+                <a
+                  href={artwork?.artistId ? `/artists/${artwork.artistId}` : '#'}
+                  onClick={(e) => { e.preventDefault(); if (artwork?.artistId) window.location.href = `/artists/${artwork.artistId}`; }}
+                  className="w-14 h-14 rounded-full overflow-hidden border border-[var(--border)] bg-[var(--surface-2)] flex-shrink-0 hover:ring-2 hover:ring-[var(--blue)] transition-all cursor-pointer"
+                >
                   {artistProfile?.profilePhotoUrl ? (
                     <img src={artistProfile.profilePhotoUrl} alt={artistProfile?.name || 'Artist'} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-xs text-[var(--text-muted)]">Artist</div>
                   )}
-                </div>
+                </a>
                 <div>
-                  <p className="text-sm text-[var(--text)] font-semibold">{artistProfile?.name || artwork?.artistName || 'Artist'}</p>
+                  <a
+                    href={artwork?.artistId ? `/artists/${artwork.artistId}` : '#'}
+                    onClick={(e) => { e.preventDefault(); if (artwork?.artistId) window.location.href = `/artists/${artwork.artistId}`; }}
+                    className="text-sm text-[var(--text)] font-semibold hover:text-[var(--blue)] hover:underline transition-colors cursor-pointer"
+                  >
+                    {artistProfile?.name || artwork?.artistName || 'Artist'}
+                  </a>
                   {artistProfile?.cityPrimary && (
                     <p className="text-xs text-[var(--text-muted)]">Based in {artistProfile.cityPrimary}</p>
                   )}
                   <p className="text-sm text-[var(--text-muted)] mt-2">
                     {artistProfile?.bio || 'Learn more about the artist behind this piece.'}
                   </p>
-                  {artistProfile?.portfolioUrl && (
-                    <a
-                      href={artistProfile.portfolioUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-xs text-[var(--accent)] underline mt-2 inline-block"
-                    >
-                      View portfolio
-                    </a>
-                  )}
+                  <div className="flex items-center gap-3 mt-2">
+                    {artwork?.artistId && (
+                      <a
+                        href={`/artists/${artwork.artistId}`}
+                        onClick={(e) => { e.preventDefault(); window.location.href = `/artists/${artwork.artistId}`; }}
+                        className="text-xs text-[var(--accent)] underline"
+                      >
+                        View artist profile
+                      </a>
+                    )}
+                    {artistProfile?.portfolioUrl && (
+                      <a
+                        href={artistProfile.portfolioUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs text-[var(--accent)] underline"
+                      >
+                        View portfolio
+                      </a>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
