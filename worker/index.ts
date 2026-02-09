@@ -1621,7 +1621,7 @@ export default {
 
       let { data: artistRow, error: artistError } = await supabaseAdmin // CANONICAL
         .from('artists')
-        .select('id,slug,name,bio,profile_photo_url,portfolio_url,website_url,instagram_handle,city_primary,city_secondary,is_public')
+        .select('id,slug,name,bio,profile_photo_url,portfolio_url,website_url,instagram_handle,city_primary,city_secondary,art_types,is_public')
         .match(matchFilter)
         .maybeSingle();
 
@@ -1630,7 +1630,7 @@ export default {
       if (!artistRow && uid) {
         const { data: artistByUid, error: uidError } = await supabaseAdmin
           .from('artists')
-          .select('id,slug,name,bio,profile_photo_url,portfolio_url,website_url,instagram_handle,city_primary,city_secondary,is_public')
+          .select('id,slug,name,bio,profile_photo_url,portfolio_url,website_url,instagram_handle,city_primary,city_secondary,art_types,is_public')
           .eq('id', uid)
           .maybeSingle();
         
@@ -1791,6 +1791,7 @@ export default {
         instagramHandle: (artistRow as any).instagram_handle || null,
         cityPrimary: (artistRow as any).city_primary || null,
         citySecondary: (artistRow as any).city_secondary || null,
+        artTypes: (artistRow as any).art_types || [],
       };
 
       return json({ artist, forSale, onDisplay, sets });

@@ -24,9 +24,10 @@ import { apiGet, apiPost } from '../lib/api';
 interface PurchasePageProps {
   artworkId: string;
   onBack?: () => void;
+  onNavigate?: (page: string, params?: any) => void;
 }
 
-export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
+export function PurchasePage({ artworkId, onBack, onNavigate }: PurchasePageProps) {
   const [artwork, setArtwork] = useState<Artwork | null>(null);
   const [artistProfile, setArtistProfile] = useState<{ name?: string; bio?: string | null; profilePhotoUrl?: string | null; portfolioUrl?: string | null; cityPrimary?: string | null } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -217,7 +218,7 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
                 {artwork?.artistId ? (
                   <a
                     href={`/artists/${artwork.artistId}`}
-                    onClick={(e) => { e.preventDefault(); window.location.href = `/artists/${artwork.artistId}`; }}
+                    onClick={(e) => { e.preventDefault(); if (onNavigate) { onNavigate(`/artists/${artwork.artistId}`); } else { window.location.href = `/artists/${artwork.artistId}`; } }}
                     className="text-base sm:text-lg hover:text-[var(--text)] hover:underline transition-colors cursor-pointer"
                   >
                     by {artwork.artistName || 'Artist'}
@@ -246,7 +247,7 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
               <div className="flex items-start gap-4">
                 <a
                   href={artwork?.artistId ? `/artists/${artwork.artistId}` : '#'}
-                  onClick={(e) => { e.preventDefault(); if (artwork?.artistId) window.location.href = `/artists/${artwork.artistId}`; }}
+                  onClick={(e) => { e.preventDefault(); if (artwork?.artistId) { if (onNavigate) { onNavigate(`/artists/${artwork.artistId}`); } else { window.location.href = `/artists/${artwork.artistId}`; } } }}
                   className="w-14 h-14 rounded-full overflow-hidden border border-[var(--border)] bg-[var(--surface-2)] flex-shrink-0 hover:ring-2 hover:ring-[var(--blue)] transition-all cursor-pointer"
                 >
                   {artistProfile?.profilePhotoUrl ? (
@@ -258,7 +259,7 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
                 <div>
                   <a
                     href={artwork?.artistId ? `/artists/${artwork.artistId}` : '#'}
-                    onClick={(e) => { e.preventDefault(); if (artwork?.artistId) window.location.href = `/artists/${artwork.artistId}`; }}
+                    onClick={(e) => { e.preventDefault(); if (artwork?.artistId) { if (onNavigate) { onNavigate(`/artists/${artwork.artistId}`); } else { window.location.href = `/artists/${artwork.artistId}`; } } }}
                     className="text-sm text-[var(--text)] font-semibold hover:text-[var(--blue)] hover:underline transition-colors cursor-pointer"
                   >
                     {artistProfile?.name || artwork?.artistName || 'Artist'}
@@ -273,7 +274,7 @@ export function PurchasePage({ artworkId, onBack }: PurchasePageProps) {
                     {artwork?.artistId && (
                       <a
                         href={`/artists/${artwork.artistId}`}
-                        onClick={(e) => { e.preventDefault(); window.location.href = `/artists/${artwork.artistId}`; }}
+                        onClick={(e) => { e.preventDefault(); if (onNavigate) { onNavigate(`/artists/${artwork.artistId}`); } else { window.location.href = `/artists/${artwork.artistId}`; } }}
                         className="text-xs text-[var(--accent)] underline"
                       >
                         View artist profile

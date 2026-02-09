@@ -156,6 +156,34 @@ export function PublicArtistPage({ slugOrId, uid: uidProp, viewMode: viewProp, o
         }
       }
 
+      // ── Attempt 3: RPC functions (security definer, bypasses RLS) ──
+      if (!artistRow) {
+        try {
+          debug.attempts.push('rpc-resolver');
+          const { data: rpcArtist, error: rpcErr } = await supabase.rpc('get_public_artist_profile', { p_identifier: decoded });
+          if (!rpcErr && rpcArtist && rpcArtist.length > 0) {
+            artistRow = rpcArtist[0];
+            resolvedBy = 'rpc';
+
+            const { data: rpcArtworks } = await supabase.rpc('get_public_artist_artworks', { p_identifier: decoded });
+            artworkRows = (rpcArtworks || []).map((aw: any) => ({
+              id: aw.id,
+              title: aw.title,
+              status: aw.status,
+              priceCents: aw.price_cents || 0,
+              currency: aw.currency || 'usd',
+              imageUrl: aw.image_url,
+              venueName: aw.venue_name || null,
+              venueCity: aw.venue_city ? `${aw.venue_city}${aw.venue_state ? `, ${aw.venue_state}` : ''}` : null,
+            }));
+          } else if (rpcErr) {
+            debug.rpcError = rpcErr.message;
+          }
+        } catch (rpcErr: any) {
+          debug.rpcCatchError = rpcErr?.message || String(rpcErr);
+        }
+      }
+
       debug.resolvedBy = resolvedBy;
       debug.found = !!artistRow;
       setDebugInfo(debug);
@@ -179,9 +207,15 @@ export function PublicArtistPage({ slugOrId, uid: uidProp, viewMode: viewProp, o
         instagramHandle: artistRow.instagramHandle ?? artistRow.instagram_handle,
         cityPrimary: artistRow.cityPrimary ?? artistRow.city_primary,
         citySecondary: artistRow.citySecondary ?? artistRow.city_secondary,
-        artTypes: artistRow.artTypes ?? artistRow.art_types,
+        artTypes: artistRow.artTypes ?? artistRow.art_types ?? [],
       };
       setArtist(artistData);
+
+      // Canonicalize URL: if we resolved by UUID but have a slug, redirect to slug-based URL
+      if (artistData.slug && isUuid && typeof window !== 'undefined' && window.location.pathname.startsWith('/artists/')) {
+        const canonicalPath = `/artists/${encodeURIComponent(artistData.slug)}`;
+        window.history.replaceState({}, '', canonicalPath);
+      }
 
       const cards: ArtworkCardData[] = (artworkRows || []).map((row: any) => ({
         id: row.id,
@@ -211,12 +245,10 @@ export function PublicArtistPage({ slugOrId, uid: uidProp, viewMode: viewProp, o
     // Clear /artists/ URL first so the useEffect in App.tsx doesn't
     // re-force us back to public-artist-profile
     window.history.replaceState({}, '', '/');
-    if (onNavigate) {
-      onNavigate('artist-profile');
-      return;
-    }
     if (window.history.length > 1) {
       window.history.back();
+    } else if (onNavigate) {
+      onNavigate('artist-profile');
     } else {
       window.location.href = '/';
     }
@@ -299,6 +331,16 @@ export function PublicArtistPage({ slugOrId, uid: uidProp, viewMode: viewProp, o
                 )}
 
                 {artist.bio && <p className="text-[var(--text)] mb-4">{artist.bio}</p>}
+
+                {artist.artTypes && artist.artTypes.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {artist.artTypes.map((type) => (
+                      <span key={type} className="px-3 py-1 bg-[var(--surface-3)] text-[var(--text-muted)] border border-[var(--border)] rounded-full text-xs font-medium">
+                        {type}
+                      </span>
+                    ))}
+                  </div>
+                )}
 
                 <div className="flex items-center gap-4">
                   {artist.websiteUrl && (

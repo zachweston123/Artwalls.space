@@ -724,8 +724,8 @@ export default function App() {
 
   // Check if this is a purchase page (QR code flow)
   if (currentPage.startsWith('purchase-')) {
-    const artworkId = currentPage.split('-')[1];
-    return <PurchasePage artworkId={artworkId} onBack={() => setCurrentPage('login')} />;
+    const artworkId = currentPage.replace(/^purchase-/, '');
+    return <PurchasePage artworkId={artworkId} onBack={() => setCurrentPage('login')} onNavigate={handleNavigate} />;
   }
 
   if (!currentUser) {
