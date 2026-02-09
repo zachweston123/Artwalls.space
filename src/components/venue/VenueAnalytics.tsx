@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
-import { TrendingUp, ShoppingBag, DollarSign, BarChart3 } from 'lucide-react';
+import { TrendingUp, ShoppingBag, DollarSign, BarChart3, QrCode, Eye } from 'lucide-react';
 import type { User } from '../../App';
 
 type TimeRange = '7d' | '30d' | '90d';
@@ -10,6 +10,8 @@ interface SummaryCard {
   revenueCents: number;
   earningsCents: number;
   conversionPct: number;
+  scans: number;
+  views: number;
 }
 
 interface ArtworkRow {
@@ -19,6 +21,8 @@ interface ArtworkRow {
   orders: number;
   revenueCents: number;
   earningsCents: number;
+  scans: number;
+  views: number;
 }
 
 interface VenueAnalyticsProps {
@@ -27,7 +31,7 @@ interface VenueAnalyticsProps {
 
 export function VenueAnalytics({ user }: VenueAnalyticsProps) {
   const [range, setRange] = useState<TimeRange>('30d');
-  const [summary, setSummary] = useState<SummaryCard>({ orders: 0, revenueCents: 0, earningsCents: 0, conversionPct: 0 });
+  const [summary, setSummary] = useState<SummaryCard>({ orders: 0, revenueCents: 0, earningsCents: 0, conversionPct: 0, scans: 0, views: 0 });
   const [topArtworks, setTopArtworks] = useState<ArtworkRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -58,24 +62,46 @@ export function VenueAnalytics({ user }: VenueAnalyticsProps) {
       const totalRevenue = orderList.reduce((s, o) => s + (o.amount_cents || 0), 0);
       const totalEarnings = orderList.reduce((s, o) => s + (o.venue_commission_cents || 0), 0);
 
-      // Fetch scan events for conversion calculation
+      // Fetch scan/view events for engagement tracking
+      let totalScans = 0;
+      let totalViews = 0;
       let conversionPct = 0;
+      const scansByArtwork = new Map<string, number>();
+      const viewsByArtwork = new Map<string, number>();
       try {
-        const { count: scanCount } = await supabase
+        const { data: scanRows } = await supabase
           .from('events')
-          .select('id', { count: 'exact', head: true })
+          .select('id, artwork_id')
           .eq('venue_id', user.id)
-          .in('event_type', ['view_artwork', 'qr_scan'])
+          .eq('event_type', 'qr_scan')
           .gte('created_at', since);
 
-        if (scanCount && scanCount > 0 && totalOrders > 0) {
-          conversionPct = Math.round((totalOrders / scanCount) * 100);
+        const { data: viewRows } = await supabase
+          .from('events')
+          .select('id, artwork_id')
+          .eq('venue_id', user.id)
+          .eq('event_type', 'view_artwork')
+          .gte('created_at', since);
+
+        totalScans = scanRows?.length || 0;
+        totalViews = viewRows?.length || 0;
+
+        for (const row of scanRows || []) {
+          if (row.artwork_id) scansByArtwork.set(row.artwork_id, (scansByArtwork.get(row.artwork_id) || 0) + 1);
+        }
+        for (const row of viewRows || []) {
+          if (row.artwork_id) viewsByArtwork.set(row.artwork_id, (viewsByArtwork.get(row.artwork_id) || 0) + 1);
+        }
+
+        const totalEngagement = totalScans + totalViews;
+        if (totalEngagement > 0 && totalOrders > 0) {
+          conversionPct = Math.round((totalOrders / totalEngagement) * 100);
         }
       } catch {
         // events table may not have data yet — that's fine
       }
 
-      setSummary({ orders: totalOrders, revenueCents: totalRevenue, earningsCents: totalEarnings, conversionPct });
+      setSummary({ orders: totalOrders, revenueCents: totalRevenue, earningsCents: totalEarnings, conversionPct, scans: totalScans, views: totalViews });
 
       // Build per-artwork breakdown
       const artworkMap = new Map<string, { orders: number; revenueCents: number; earningsCents: number }>();
@@ -88,8 +114,10 @@ export function VenueAnalytics({ user }: VenueAnalyticsProps) {
         artworkMap.set(aid, existing);
       }
 
-      // Fetch artwork titles and artist names
-      const artworkIds = [...artworkMap.keys()].filter(id => id !== 'unknown');
+      // Collect all artwork IDs (from orders + events)
+      const allArtworkIds = new Set([...artworkMap.keys(), ...scansByArtwork.keys(), ...viewsByArtwork.keys()]);
+      allArtworkIds.delete('unknown');
+      const artworkIds = [...allArtworkIds];
       let artworkInfo = new Map<string, { title: string; artistName: string }>();
       if (artworkIds.length > 0) {
         const { data: artworks } = await supabase
@@ -101,6 +129,13 @@ export function VenueAnalytics({ user }: VenueAnalyticsProps) {
         }
       }
 
+      // Merge scans/views for artworks that had events but no orders
+      for (const aid of [...scansByArtwork.keys(), ...viewsByArtwork.keys()]) {
+        if (!artworkMap.has(aid)) {
+          artworkMap.set(aid, { orders: 0, revenueCents: 0, earningsCents: 0 });
+        }
+      }
+
       const rows: ArtworkRow[] = [...artworkMap.entries()]
         .map(([artworkId, stats]) => {
           const info = artworkInfo.get(artworkId);
@@ -109,9 +144,11 @@ export function VenueAnalytics({ user }: VenueAnalyticsProps) {
             title: info?.title || artworkId.slice(0, 8) + '…',
             artistName: info?.artistName || 'Unknown',
             ...stats,
+            scans: scansByArtwork.get(artworkId) || 0,
+            views: viewsByArtwork.get(artworkId) || 0,
           };
         })
-        .sort((a, b) => b.orders - a.orders)
+        .sort((a, b) => (b.scans + b.views + b.orders) - (a.scans + a.views + a.orders))
         .slice(0, 10);
 
       setTopArtworks(rows);
@@ -176,7 +213,25 @@ export function VenueAnalytics({ user }: VenueAnalyticsProps) {
       {!loading && !error && (
         <>
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
+            <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-lg p-5">
+              <div className="w-10 h-10 bg-[color:color-mix(in_srgb,var(--purple,#8b5cf6)_12%,transparent)] rounded-md flex items-center justify-center mb-3">
+                <QrCode className="w-5 h-5 text-[var(--purple,#8b5cf6)]" />
+              </div>
+              <p className="text-xs text-[var(--text-muted)] mb-1">QR Scans</p>
+              <p className="text-2xl font-bold">{summary.scans.toLocaleString()}</p>
+              <p className="text-xs text-[var(--text-muted)] mt-1">Times someone scanned a QR code</p>
+            </div>
+
+            <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-lg p-5">
+              <div className="w-10 h-10 bg-[color:color-mix(in_srgb,var(--blue)_12%,transparent)] rounded-md flex items-center justify-center mb-3">
+                <Eye className="w-5 h-5 text-[var(--blue)]" />
+              </div>
+              <p className="text-xs text-[var(--text-muted)] mb-1">Artwork Views</p>
+              <p className="text-2xl font-bold">{summary.views.toLocaleString()}</p>
+              <p className="text-xs text-[var(--text-muted)] mt-1">Artwork detail page loads</p>
+            </div>
+
             <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-lg p-5">
               <div className="w-10 h-10 bg-[color:color-mix(in_srgb,var(--blue)_12%,transparent)] rounded-md flex items-center justify-center mb-3">
                 <ShoppingBag className="w-5 h-5 text-[var(--blue)]" />
@@ -205,21 +260,22 @@ export function VenueAnalytics({ user }: VenueAnalyticsProps) {
               <div className="w-10 h-10 bg-[color:color-mix(in_srgb,var(--blue)_12%,transparent)] rounded-md flex items-center justify-center mb-3">
                 <BarChart3 className="w-5 h-5 text-[var(--blue)]" />
               </div>
-              <p className="text-xs text-[var(--text-muted)] mb-1">Conversion</p>
+              <p className="text-xs text-[var(--text-muted)] mb-1">Scan → Purchase</p>
               <p className="text-2xl font-bold">{summary.conversionPct}%</p>
+              <p className="text-xs text-[var(--text-muted)] mt-1">Conversion rate</p>
             </div>
           </div>
 
           {/* Top Artworks Table */}
           <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-lg p-5">
             <h2 className="text-lg font-bold text-[var(--text)] mb-1">Top Artworks</h2>
-            <p className="text-sm text-[var(--text-muted)] mb-4">Best-performing pieces at your venue by sales in the selected period.</p>
+            <p className="text-sm text-[var(--text-muted)] mb-4">Pieces at your venue ranked by total engagement (scans + views + sales).</p>
 
             {topArtworks.length === 0 ? (
               <div className="text-center py-10">
-                <ShoppingBag className="w-10 h-10 text-[var(--text-muted)] mx-auto mb-3 opacity-40" />
-                <p className="text-sm text-[var(--text-muted)]">No sales data yet for this period.</p>
-                <p className="text-xs text-[var(--text-muted)] mt-1">Sales will appear here once artwork at your venue is purchased.</p>
+                <QrCode className="w-10 h-10 text-[var(--text-muted)] mx-auto mb-3 opacity-40" />
+                <p className="text-sm text-[var(--text-muted)]">No activity yet for this period.</p>
+                <p className="text-xs text-[var(--text-muted)] mt-1">Scans, views, and sales will appear here once people interact with artwork at your venue.</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -228,6 +284,8 @@ export function VenueAnalytics({ user }: VenueAnalyticsProps) {
                     <tr className="border-b border-[var(--border)]">
                       <th className="text-left py-2 pr-4 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Artwork</th>
                       <th className="text-left py-2 px-4 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Artist</th>
+                      <th className="text-right py-2 px-4 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Scans</th>
+                      <th className="text-right py-2 px-4 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Views</th>
                       <th className="text-right py-2 px-4 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Orders</th>
                       <th className="text-right py-2 px-4 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Revenue</th>
                       <th className="text-right py-2 pl-4 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Commission</th>
@@ -238,6 +296,8 @@ export function VenueAnalytics({ user }: VenueAnalyticsProps) {
                       <tr key={row.artworkId} className="border-b border-[var(--border)] last:border-b-0">
                         <td className="py-3 pr-4 font-medium">{row.title}</td>
                         <td className="py-3 px-4 text-[var(--text-muted)]">{row.artistName}</td>
+                        <td className="py-3 px-4 text-right text-[var(--text-muted)]">{row.scans}</td>
+                        <td className="py-3 px-4 text-right text-[var(--text-muted)]">{row.views}</td>
                         <td className="py-3 px-4 text-right text-[var(--text-muted)]">{row.orders}</td>
                         <td className="py-3 px-4 text-right text-[var(--text-muted)]">{fmt(row.revenueCents)}</td>
                         <td className="py-3 pl-4 text-right font-medium text-[var(--green)]">{fmt(row.earningsCents)}</td>
