@@ -125,7 +125,7 @@ export function PublicArtistPage({ slugOrId, uid: uidProp, viewMode: viewProp, o
 
       const artistData: ArtistData = {
         id: artist.id,
-        slug: artist.slug,
+        slug: artist.handle,
         name: artist.name || 'Artist',
         bio: artist.bio,
         profilePhotoUrl: artist.profile_photo_url,
@@ -247,7 +247,7 @@ export function PublicArtistPage({ slugOrId, uid: uidProp, viewMode: viewProp, o
               </div>
               <div className="flex-1">
                 <h1 className="text-3xl font-bold text-[var(--text)] mb-1">{artist.name}</h1>
-                {artist.slug && <p className="text-sm text-[var(--text-muted)] mb-3">@{artist.slug}</p>}
+                {artist.handle && <p className="text-sm text-[var(--text-muted)] mb-3">@{artist.handle}</p>}
                 
                 {cityLine && (
                   <div className="flex items-center gap-2 text-sm text-[var(--text-muted)] mb-3">
