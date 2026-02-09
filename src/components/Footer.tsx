@@ -93,14 +93,14 @@ export function Footer({ onNavigate }: FooterProps) {
               {(!userRole || userRole === 'artist') && (
                 <li>
                   <button onClick={() => navigateToTop('why-artwalls-artist')} className="hover:text-[var(--text)] transition-colors">
-                    Why Artwalls (Artists)
+                    {userRole ? 'Why Artwalls' : 'For Artists'}
                   </button>
                 </li>
               )}
               {(!userRole || userRole === 'venue') && (
                 <li>
                   <button onClick={() => navigateToTop('venues')} className="hover:text-[var(--text)] transition-colors">
-                    Why Artwalls (Venues)
+                    {userRole ? 'Why Artwalls' : 'For Venues'}
                   </button>
                 </li>
               )}

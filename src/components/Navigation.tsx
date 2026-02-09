@@ -66,8 +66,8 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
 
   if (!user) {
     const learnLinks = [
-      { id: 'why-artwalls-artist', label: 'Why Artwalls (Artists)' },
-      { id: 'venues', label: 'Why Artwalls (Venues)' },
+      { id: 'why-artwalls-artist', label: 'For Artists' },
+      { id: 'venues', label: 'For Venues' },
       { id: 'plans-pricing', label: 'Plans & Pricing' },
     ];
 
@@ -185,12 +185,12 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
 
   const learnLinks = isArtist
     ? [
-        { id: 'why-artwalls-artist', label: 'Why Artwalls (Artists)' },
+        { id: 'why-artwalls-artist', label: 'Why Artwalls' },
         { id: 'artist-referrals', label: 'Referrals' },
         { id: 'plans-pricing', label: 'Plans & Pricing' },
       ]
     : [
-        { id: 'venues', label: 'Why Artwalls (Venues)' },
+        { id: 'venues', label: 'Why Artwalls' },
         { id: 'venue-partner-kit', label: 'Success Guide' },
       ];
 
