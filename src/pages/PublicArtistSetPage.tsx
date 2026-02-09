@@ -97,7 +97,7 @@ export function PublicArtistSetPage({ slugOrId, setId }: PublicArtistSetPageProp
   }, [setId, slugOrId]);
 
   const handleBack = () => {
-    const fallback = `/artists/${artist?.slug || artist?.id || slugOrId}`;
+    const fallback = `/p/artist/${artist?.slug || artist?.id || slugOrId}`;
     if (window.history.length > 1) window.history.back();
     else window.location.href = fallback;
   };
@@ -207,7 +207,7 @@ export function PublicArtistSetPage({ slugOrId, setId }: PublicArtistSetPageProp
                 )}
                 <div className="flex flex-wrap gap-3">
                   <button
-                    onClick={() => (window.location.href = `/artists/${artist?.slug || artist?.id || slugOrId}`)}
+                    onClick={() => (window.location.href = `/p/artist/${artist?.slug || artist?.id || slugOrId}`)}
                     className="px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-3)] text-sm text-[var(--text)] hover:bg-[var(--surface-1)] transition"
                   >
                     View artist profile

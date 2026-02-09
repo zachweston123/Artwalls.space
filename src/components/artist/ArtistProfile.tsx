@@ -218,7 +218,7 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
     // Prefer slug for clean URLs; fall back to userId (always available)
     const identifier = (slug?.trim() || userId || '').trim();
     if (!identifier) return null;
-    return `/artists/${encodeURIComponent(identifier)}`;
+    return `/p/artist/${encodeURIComponent(identifier)}`;
   };
 
   async function handleSave() {

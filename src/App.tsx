@@ -52,6 +52,7 @@ import { TermsOfService } from './components/legal/TermsOfService';
 import { Footer } from './components/Footer';
 import { PricingPage } from './components/pricing/PricingPage';
 import { PurchasePage } from './components/PurchasePage';
+import { PublicArtistProfilePage } from './pages/public/PublicArtistProfilePage';
 import { ProfileCompletion } from './components/ProfileCompletion';
 import { AdminSidebar } from './components/admin/AdminSidebar';
 import { AdminAccessDenied } from './components/admin/AdminAccessDenied';
@@ -192,6 +193,16 @@ export default function App() {
     const callId = parts[1] || '';
     const isApply = parts[2] === 'apply';
     return isApply ? <CallApplyPage callId={callId} /> : <CallPublicPage callId={callId} />;
+  }
+
+  // ── /p/artist/:slug — guaranteed-public artist profile ──
+  // Completely outside auth gates. Uses its own layout (no sidebar/dashboard).
+  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/p/artist/')) {
+    const parts = window.location.pathname.split('/').filter(Boolean);
+    const slug = parts[2] || '';
+    if (slug) {
+      return <PublicArtistProfilePage slug={slug} />;
+    }
   }
 
   if (typeof window !== 'undefined' && window.location.pathname.startsWith('/artists/')) {
@@ -646,6 +657,12 @@ export default function App() {
   };
 
   const handleNavigate = (page: string, params?: any) => {
+    // Handle /p/artist/ navigation — full page load to the public profile
+    if (page.startsWith('/p/artist/')) {
+      window.location.href = page;
+      return;
+    }
+
     // Handle URL-based navigation
     if (page.startsWith('/artists/')) {
       const url = new URL(page, window.location.origin);

@@ -217,8 +217,8 @@ export function PurchasePage({ artworkId, onBack, onNavigate }: PurchasePageProp
                 <User className="w-5 h-5" />
                 {artwork?.artistId ? (
                   <a
-                    href={`/artists/${artwork.artistId}`}
-                    onClick={(e) => { e.preventDefault(); if (onNavigate) { onNavigate(`/artists/${artwork.artistId}`); } else { window.location.href = `/artists/${artwork.artistId}`; } }}
+                    href={`/p/artist/${artwork.artistId}`}
+                    onClick={(e) => { e.preventDefault(); if (onNavigate) { onNavigate(`/p/artist/${artwork.artistId}`); } else { window.location.href = `/p/artist/${artwork.artistId}`; } }}
                     className="text-base sm:text-lg hover:text-[var(--text)] hover:underline transition-colors cursor-pointer"
                   >
                     by {artwork.artistName || 'Artist'}
@@ -246,8 +246,8 @@ export function PurchasePage({ artworkId, onBack, onNavigate }: PurchasePageProp
               <h2 className="text-lg font-semibold text-[var(--text)] mb-2">About the artist</h2>
               <div className="flex items-start gap-4">
                 <a
-                  href={artwork?.artistId ? `/artists/${artwork.artistId}` : '#'}
-                  onClick={(e) => { e.preventDefault(); if (artwork?.artistId) { if (onNavigate) { onNavigate(`/artists/${artwork.artistId}`); } else { window.location.href = `/artists/${artwork.artistId}`; } } }}
+                  href={artwork?.artistId ? `/p/artist/${artwork.artistId}` : '#'}
+                  onClick={(e) => { e.preventDefault(); if (artwork?.artistId) { if (onNavigate) { onNavigate(`/p/artist/${artwork.artistId}`); } else { window.location.href = `/p/artist/${artwork.artistId}`; } } }}
                   className="w-14 h-14 rounded-full overflow-hidden border border-[var(--border)] bg-[var(--surface-2)] flex-shrink-0 hover:ring-2 hover:ring-[var(--blue)] transition-all cursor-pointer"
                 >
                   {artistProfile?.profilePhotoUrl ? (
@@ -258,8 +258,8 @@ export function PurchasePage({ artworkId, onBack, onNavigate }: PurchasePageProp
                 </a>
                 <div>
                   <a
-                    href={artwork?.artistId ? `/artists/${artwork.artistId}` : '#'}
-                    onClick={(e) => { e.preventDefault(); if (artwork?.artistId) { if (onNavigate) { onNavigate(`/artists/${artwork.artistId}`); } else { window.location.href = `/artists/${artwork.artistId}`; } } }}
+                    href={artwork?.artistId ? `/p/artist/${artwork.artistId}` : '#'}
+                    onClick={(e) => { e.preventDefault(); if (artwork?.artistId) { if (onNavigate) { onNavigate(`/p/artist/${artwork.artistId}`); } else { window.location.href = `/p/artist/${artwork.artistId}`; } } }}
                     className="text-sm text-[var(--text)] font-semibold hover:text-[var(--blue)] hover:underline transition-colors cursor-pointer"
                   >
                     {artistProfile?.name || artwork?.artistName || 'Artist'}
@@ -273,8 +273,8 @@ export function PurchasePage({ artworkId, onBack, onNavigate }: PurchasePageProp
                   <div className="flex items-center gap-3 mt-2">
                     {artwork?.artistId && (
                       <a
-                        href={`/artists/${artwork.artistId}`}
-                        onClick={(e) => { e.preventDefault(); if (onNavigate) { onNavigate(`/artists/${artwork.artistId}`); } else { window.location.href = `/artists/${artwork.artistId}`; } }}
+                        href={`/p/artist/${artwork.artistId}`}
+                        onClick={(e) => { e.preventDefault(); if (onNavigate) { onNavigate(`/p/artist/${artwork.artistId}`); } else { window.location.href = `/p/artist/${artwork.artistId}`; } }}
                         className="text-xs text-[var(--accent)] underline"
                       >
                         View artist profile
