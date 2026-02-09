@@ -1,3 +1,4 @@
+import { supabase } from '../lib/supabase';
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { MapPin, ExternalLink, Instagram, ArrowLeft, Loader2 } from 'lucide-react';
 import { apiGet } from '../lib/api';
