@@ -167,26 +167,41 @@ export function PublicArtistProfilePage({ slug }: Props) {
         try {
           (debugLog.attempts as string[]).push('direct:supabase-select');
 
-          // Try by slug first, then by id
-          let { data: rows, error: qErr } = await supabase
-            .from('artists')
-            .select('id, slug, name, bio, profile_photo_url, portfolio_url, website_url, instagram_handle, city_primary, city_secondary, art_types')
-            .eq('slug', decoded)
-            .limit(1);
+          // Use select('*') so the query works regardless of which optional
+          // columns (slug, is_public, art_types) exist in the table.
+          // The identifier from the URL is a UUID in this case.
+          const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(decoded);
 
-          if (qErr) debugLog.directSlugError = qErr.message;
+          let rows: any[] | null = null;
 
-          // If slug didn't match, try by UUID
-          if (!rows?.length) {
-            const uuidResult = await supabase
+          if (isUuid) {
+            // Direct id lookup — always works
+            const res = await supabase
               .from('artists')
-              .select('id, slug, name, bio, profile_photo_url, portfolio_url, website_url, instagram_handle, city_primary, city_secondary, art_types')
+              .select('*')
               .eq('id', decoded)
               .limit(1);
-            if (!uuidResult.error && uuidResult.data?.length) {
-              rows = uuidResult.data;
-            } else if (uuidResult.error) {
-              debugLog.directIdError = uuidResult.error.message;
+            if (res.error) debugLog.directIdError = res.error.message;
+            rows = res.data;
+          } else {
+            // Try slug, but slug column may not exist
+            const slugRes = await supabase
+              .from('artists')
+              .select('*')
+              .eq('slug', decoded)
+              .limit(1);
+            if (slugRes.error) {
+              debugLog.directSlugError = slugRes.error.message;
+              // slug column doesn't exist — try name match as last resort
+              const nameRes = await supabase
+                .from('artists')
+                .select('*')
+                .ilike('name', decoded)
+                .limit(1);
+              if (nameRes.error) debugLog.directNameError = nameRes.error.message;
+              rows = nameRes.data;
+            } else {
+              rows = slugRes.data;
             }
           }
 
@@ -209,7 +224,7 @@ export function PublicArtistProfilePage({ slug }: Props) {
 
             const { data: awRows } = await supabase
               .from('artworks')
-              .select('id, title, status, price_cents, currency, image_url, venue_id')
+              .select('*')
               .eq('artist_id', row.id)
               .in('status', ['available', 'active', 'published'])
               .is('archived_at', null);

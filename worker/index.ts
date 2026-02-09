@@ -1617,20 +1617,34 @@ export default {
       const identifier = decodeURIComponent(slugOrId);
       const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(identifier);
       
-      let matchFilter = isUuid ? { id: identifier } : { slug: identifier }; // CANONICAL_COPY
+      // Use select('*') so the query works regardless of which optional columns
+      // (slug, is_public, art_types) exist in the artists table.
+      let artistRow: any = null;
+      let artistError: any = null;
 
-      let { data: artistRow, error: artistError } = await supabaseAdmin // CANONICAL
-        .from('artists')
-        .select('id,slug,name,bio,profile_photo_url,portfolio_url,website_url,instagram_handle,city_primary,city_secondary,art_types,is_public')
-        .match(matchFilter)
-        .maybeSingle();
+      if (isUuid) {
+        const res = await supabaseAdmin.from('artists').select('*').eq('id', identifier).maybeSingle();
+        artistRow = res.data;
+        artistError = res.error;
+      } else {
+        // Try slug first
+        const slugRes = await supabaseAdmin.from('artists').select('*').eq('slug', identifier).maybeSingle();
+        if (slugRes.data) {
+          artistRow = slugRes.data;
+        } else {
+          // slug column may not exist — try matching by name as fallback
+          const nameRes = await supabaseAdmin.from('artists').select('*').ilike('name', identifier).maybeSingle();
+          artistRow = nameRes.data;
+          artistError = nameRes.error;
+        }
+      }
 
       // If not found by slug/id, and a UID is provided, try finding by UID.
       // artists.id IS the auth user id in this schema.
       if (!artistRow && uid) {
         const { data: artistByUid, error: uidError } = await supabaseAdmin
           .from('artists')
-          .select('id,slug,name,bio,profile_photo_url,portfolio_url,website_url,instagram_handle,city_primary,city_secondary,art_types,is_public')
+          .select('*')
           .eq('id', uid)
           .maybeSingle();
         
