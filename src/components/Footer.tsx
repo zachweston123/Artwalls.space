@@ -16,6 +16,11 @@ export function Footer({ onNavigate }: FooterProps) {
     });
   }, []);
 
+  const navigateToTop = (page: string) => {
+    onNavigate(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <footer className="bg-[var(--surface-2)] border-t border-[var(--border)] mt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
@@ -39,17 +44,17 @@ export function Footer({ onNavigate }: FooterProps) {
               <h3 className="text-sm mb-3 text-[var(--text)]">For Artists</h3>
               <ul className="space-y-2 text-sm text-[var(--text-muted)]">
                 <li>
-                  <button onClick={() => onNavigate('artist-venues')} className="hover:text-[var(--text)] transition-colors">
+                  <button onClick={() => navigateToTop('artist-venues')} className="hover:text-[var(--text)] transition-colors">
                     Browse Venues
                   </button>
                 </li>
                 <li>
-                  <button onClick={() => onNavigate('artist-artworks')} className="hover:text-[var(--text)] transition-colors">
+                  <button onClick={() => navigateToTop('artist-artworks')} className="hover:text-[var(--text)] transition-colors">
                     Manage Artwork
                   </button>
                 </li>
                 <li>
-                  <button onClick={() => onNavigate('artist-sales')} className="hover:text-[var(--text)] transition-colors">
+                  <button onClick={() => navigateToTop('artist-sales')} className="hover:text-[var(--text)] transition-colors">
                     Track Sales
                   </button>
                 </li>
@@ -63,17 +68,17 @@ export function Footer({ onNavigate }: FooterProps) {
               <h3 className="text-sm mb-3 text-[var(--text)]">For Venues</h3>
               <ul className="space-y-2 text-sm text-[var(--text-muted)]">
                 <li>
-                  <button onClick={() => onNavigate('venue-walls')} className="hover:text-[var(--text)] transition-colors">
+                  <button onClick={() => navigateToTop('venue-walls')} className="hover:text-[var(--text)] transition-colors">
                     Wall Spaces
                   </button>
                 </li>
                 <li>
-                  <button onClick={() => onNavigate('venue-applications')} className="hover:text-[var(--text)] transition-colors">
+                  <button onClick={() => navigateToTop('venue-applications')} className="hover:text-[var(--text)] transition-colors">
                     Review Applications
                   </button>
                 </li>
                 <li>
-                  <button onClick={() => onNavigate('venue-current')} className="hover:text-[var(--text)] transition-colors">
+                  <button onClick={() => navigateToTop('venue-current')} className="hover:text-[var(--text)] transition-colors">
                     Current Artwork
                   </button>
                 </li>
@@ -87,28 +92,28 @@ export function Footer({ onNavigate }: FooterProps) {
             <ul className="space-y-2 text-sm text-[var(--text-muted)]">
               {(!userRole || userRole === 'artist') && (
                 <li>
-                  <button onClick={() => onNavigate('why-artwalls-artist')} className="hover:text-[var(--text)] transition-colors">
+                  <button onClick={() => navigateToTop('why-artwalls-artist')} className="hover:text-[var(--text)] transition-colors">
                     Why Artwalls (Artists)
                   </button>
                 </li>
               )}
               {(!userRole || userRole === 'venue') && (
                 <li>
-                  <button onClick={() => onNavigate('venues')} className="hover:text-[var(--text)] transition-colors">
+                  <button onClick={() => navigateToTop('venues')} className="hover:text-[var(--text)] transition-colors">
                     Why Artwalls (Venues)
                   </button>
                 </li>
               )}
               {(!userRole || userRole === 'artist') && (
                 <li>
-                  <button onClick={() => onNavigate('plans-pricing')} className="hover:text-[var(--text)] transition-colors">
+                  <button onClick={() => navigateToTop('plans-pricing')} className="hover:text-[var(--text)] transition-colors">
                     Plans & Pricing
                   </button>
                 </li>
               )}
               {!userRole && (
                 <li>
-                  <button onClick={() => onNavigate('venues')} className="hover:text-[var(--text)] transition-colors">
+                  <button onClick={() => navigateToTop('venues')} className="hover:text-[var(--text)] transition-colors">
                     Venues
                   </button>
                 </li>
@@ -123,7 +128,7 @@ export function Footer({ onNavigate }: FooterProps) {
               <li>
                 <a
                   href="/policies"
-                  onClick={(e) => { e.preventDefault(); onNavigate('policies'); }}
+                  onClick={(e) => { e.preventDefault(); navigateToTop('policies'); }}
                   className="hover:text-[var(--text)] transition-colors"
                 >
                   Policies & Agreements
@@ -132,7 +137,7 @@ export function Footer({ onNavigate }: FooterProps) {
               <li>
                 <a
                   href="/artist-agreement"
-                  onClick={(e) => { e.preventDefault(); onNavigate('artist-agreement'); }}
+                  onClick={(e) => { e.preventDefault(); navigateToTop('artist-agreement'); }}
                   className="hover:text-[var(--text)] transition-colors"
                 >
                   Artist Agreement
@@ -141,7 +146,7 @@ export function Footer({ onNavigate }: FooterProps) {
               <li>
                 <a
                   href="/venue-agreement"
-                  onClick={(e) => { e.preventDefault(); onNavigate('venue-agreement'); }}
+                  onClick={(e) => { e.preventDefault(); navigateToTop('venue-agreement'); }}
                   className="hover:text-[var(--text)] transition-colors"
                 >
                   Venue Agreement
@@ -164,14 +169,14 @@ export function Footer({ onNavigate }: FooterProps) {
           <div className="flex items-center gap-6 text-sm text-[var(--text-muted)]">
             <a
               href="/privacy-policy"
-              onClick={(e) => { e.preventDefault(); onNavigate('privacy-policy'); }}
+              onClick={(e) => { e.preventDefault(); navigateToTop('privacy-policy'); }}
               className="hover:text-[var(--text)] transition-colors"
             >
               Privacy Policy
             </a>
             <a
               href="/terms-of-service"
-              onClick={(e) => { e.preventDefault(); onNavigate('terms-of-service'); }}
+              onClick={(e) => { e.preventDefault(); navigateToTop('terms-of-service'); }}
               className="hover:text-[var(--text)] transition-colors"
             >
               Terms of Service

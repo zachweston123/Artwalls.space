@@ -662,6 +662,13 @@ export default function App() {
     }
 
     const nextPage = normalizePage(page);
+
+    // Block venue users from accessing artist-only pages
+    if (nextPage === 'plans-pricing' && currentUser?.role === 'venue') {
+      setCurrentPage('venue-dashboard');
+      return;
+    }
+
     setCurrentPage(nextPage);
     if (params?.userId) setSelectedArtistId(params.userId);
     if (params?.venueId) setSelectedVenueId(params.venueId);
