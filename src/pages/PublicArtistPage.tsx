@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { MapPin, ExternalLink, Instagram, ArrowLeft, Loader2 } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { apiGet } from '../lib/api';
 
 type ArtworkCardData = {
   id: string;
@@ -71,90 +71,52 @@ export function PublicArtistPage({ slugOrId, uid: uidProp, viewMode: viewProp, o
       setError(null);
 
       const decoded = decodeURIComponent(identifier);
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(decoded);
+      
+      // Call the public worker endpoint which handles auth properly
+      let url = `/api/public/artists/${encodeURIComponent(decoded)}`;
+      if (uid) url += `?uid=${encodeURIComponent(uid)}`;
 
-      // 1. Find the artist row — by id or slug
-      let artistRow: any = null;
-
-      if (isUuid) {
-        const { data } = await supabase
-          .from('artists')
-          .select('id, slug, name, bio, profile_photo_url, portfolio_url, website_url, instagram_handle, city_primary, city_secondary, art_types')
-          .eq('id', decoded)
-          .maybeSingle();
-        artistRow = data;
-      } else {
-        const { data } = await supabase
-          .from('artists')
-          .select('id, slug, name, bio, profile_photo_url, portfolio_url, website_url, instagram_handle, city_primary, city_secondary, art_types')
-          .eq('slug', decoded)
-          .maybeSingle();
-        artistRow = data;
-      }
-
-      // Fallback: try uid if primary lookup failed
-      if (!artistRow && uid) {
-        const { data } = await supabase
-          .from('artists')
-          .select('id, slug, name, bio, profile_photo_url, portfolio_url, website_url, instagram_handle, city_primary, city_secondary, art_types')
-          .eq('id', uid)
-          .maybeSingle();
-        artistRow = data;
-      }
-
-      if (!artistRow) {
+      const response = await apiGet<any>(url);
+      
+      if (!response?.artist) {
         setError('Artist not found');
         setArtist(null);
         setArtworks([]);
         return;
       }
 
+      const artistRow = response.artist;
+      const artworkRows = response.forSale || [];
+
       const artistData: ArtistData = {
         id: artistRow.id,
         slug: artistRow.slug,
         name: artistRow.name || 'Artist',
         bio: artistRow.bio,
-        profilePhotoUrl: artistRow.profile_photo_url,
-        portfolioUrl: artistRow.portfolio_url,
-        websiteUrl: artistRow.website_url,
-        instagramHandle: artistRow.instagram_handle,
-        cityPrimary: artistRow.city_primary,
-        citySecondary: artistRow.city_secondary,
-        artTypes: artistRow.art_types,
+        profilePhotoUrl: artistRow.profilePhotoUrl,
+        portfolioUrl: artistRow.portfolioUrl,
+        websiteUrl: artistRow.websiteUrl,
+        instagramHandle: artistRow.instagramHandle,
+        cityPrimary: artistRow.cityPrimary,
+        citySecondary: artistRow.citySecondary,
+        artTypes: artistRow.artTypes,
       };
       setArtist(artistData);
 
-      // 2. Fetch public artworks for this artist
-      const { data: artworkRows, error: artErr } = await supabase
-        .from('artworks')
-        .select('id, title, status, price_cents, currency, image_url, venue_id, venue_name, venue:venues(name, city, state)')
-        .eq('artist_id', artistRow.id)
-        .eq('is_public', true)
-        .is('archived_at', null)
-        .in('status', PUBLIC_STATUSES)
-        .order('published_at', { ascending: false })
-        .limit(60);
-
-      if (artErr) {
-        console.warn('Artworks query error:', artErr.message);
-      }
-
-      const cards: ArtworkCardData[] = (artworkRows || []).map((row: any) => {
-        const venue = row.venue as any;
-        return {
-          id: row.id,
-          title: row.title || 'Untitled',
-          status: row.status || 'available',
-          priceCents: row.price_cents || 0,
-          currency: row.currency || 'usd',
-          imageUrl: row.image_url,
-          venueName: venue?.name || row.venue_name || null,
-          venueCity: venue?.city ? `${venue.city}${venue.state ? `, ${venue.state}` : ''}` : null,
-        };
-      });
+      const cards: ArtworkCardData[] = (artworkRows || []).map((row: any) => ({
+        id: row.id,
+        title: row.title || 'Untitled',
+        status: row.status || 'available',
+        priceCents: row.priceCents || 0,
+        currency: row.currency || 'usd',
+        imageUrl: row.imageUrl,
+        venueName: row.venueName || null,
+        venueCity: row.venueCity ? `${row.venueCity}${row.venueState ? `, ${row.venueState}` : ''}` : null,
+      }));
 
       setArtworks(cards);
     } catch (e: any) {
+      console.error('Error loading public artist profile:', e);
       setError(e?.message || 'Unable to load artist profile');
     } finally {
       setLoading(false);
