@@ -1,4 +1,3 @@
-import { supabase } from '../lib/supabase';
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { MapPin, ExternalLink, Instagram, ArrowLeft, Loader2 } from 'lucide-react';
 import { apiGet } from '../lib/api';
@@ -72,69 +71,49 @@ export function PublicArtistPage({ slugOrId, uid: uidProp, viewMode: viewProp, o
       setLoading(true);
       setError(null);
 
-      const identifier = decodeURIComponent(slugOrId);
-      
-      const { data: artist, error } = await supabase.rpc('get_public_artist_profile', { p_identifier: identifier });
+      const decoded = decodeURIComponent(identifier);
 
-      if (error) {
-        console.error('Error fetching artist profile:', error);
-        setError(error.message);
-        setArtist(null);
-        setArtworks([]);
-        setDebugInfo({
-          routeParam: identifier,
-          isLoggedIn: !!uid,
-          currentUserId: uid,
-          lookupMethod: 'rpc: get_public_artist_profile',
-          response: null,
-          error: error,
-        });
-        return;
-      }
+      // Call the public worker endpoint which uses supabaseAdmin (bypasses RLS)
+      let url = `/api/public/artists/${encodeURIComponent(decoded)}`;
+      if (uid) url += `?uid=${encodeURIComponent(uid)}`;
 
-      if (!artist) {
-        setError('Artist not found');
-        setArtist(null);
-        setArtworks([]);
-        setDebugInfo({
-          routeParam: identifier,
-          isLoggedIn: !!uid,
-          currentUserId: uid,
-          lookupMethod: 'rpc: get_public_artist_profile',
-          response: 'not found',
-          error: null,
-        });
-        return;
-      }
-
-      const { data: artworkRows, error: artworksError } = await supabase.rpc('get_public_artist_artworks', { p_identifier: identifier });
+      const response = await apiGet<any>(url);
 
       setDebugInfo({
         routeParam: identifier,
+        decodedParam: decoded,
         isLoggedIn: !!uid,
         currentUserId: uid,
-        lookupMethod: 'rpc: get_public_artist_profile',
-        response: { artist, artworks: artworkRows },
-        error: artworksError,
+        lookupUrl: url,
+        responseKeys: response ? Object.keys(response) : null,
+        hasArtist: !!response?.artist,
+        hasForSale: !!response?.forSale,
+        artistId: response?.artist?.id,
+        artistSlug: response?.artist?.slug,
       });
 
-      if (artworksError) {
-        console.error('Error fetching artist artworks:', artworksError);
-        // We can still show the artist profile even if artworks fail to load
+      if (!response?.artist) {
+        setError('Artist not found');
+        setArtist(null);
+        setArtworks([]);
+        return;
       }
 
+      const artistRow = response.artist;
+      const artworkRows = response.forSale || [];
+
       const artistData: ArtistData = {
-        id: artist.id,
-        slug: artist.handle,
-        name: artist.name || 'Artist',
-        bio: artist.bio,
-        profilePhotoUrl: artist.profile_photo_url,
-        portfolioUrl: artist.portfolio_url,
-        websiteUrl: artist.website_url,
-        instagramHandle: artist.instagram_handle,
-        cityPrimary: artist.city_primary,
-        citySecondary: artist.city_secondary,
-        artTypes: artist.art_types,
+        id: artistRow.id,
+        slug: artistRow.slug,
+        name: artistRow.name || 'Artist',
+        bio: artistRow.bio,
+        profilePhotoUrl: artistRow.profilePhotoUrl,
+        portfolioUrl: artistRow.portfolioUrl,
+        websiteUrl: artistRow.websiteUrl,
+        instagramHandle: artistRow.instagramHandle,
+        cityPrimary: artistRow.cityPrimary,
+        citySecondary: artistRow.citySecondary,
+        artTypes: artistRow.artTypes,
       };
       setArtist(artistData);
 
@@ -142,11 +121,11 @@ export function PublicArtistPage({ slugOrId, uid: uidProp, viewMode: viewProp, o
         id: row.id,
         title: row.title || 'Untitled',
         status: row.status || 'available',
-        priceCents: row.price_cents || 0,
+        priceCents: row.priceCents || 0,
         currency: row.currency || 'usd',
-        imageUrl: row.image_url,
-        venueName: row.venue_name || null,
-        venueCity: row.venue_city ? `${row.venue_city}${row.venue_state ? `, ${row.venue_state}` : ''}` : null,
+        imageUrl: row.imageUrl,
+        venueName: row.venueName || null,
+        venueCity: row.venueCity ? `${row.venueCity}${row.venueState ? `, ${row.venueState}` : ''}` : null,
       }));
 
       setArtworks(cards);
@@ -158,8 +137,7 @@ export function PublicArtistPage({ slugOrId, uid: uidProp, viewMode: viewProp, o
         isLoggedIn: !!uid,
         currentUserId: uid,
         lookupMethod: 'catch_block',
-        response: null,
-        error: e,
+        error: String(e?.message || e),
       });
     } finally {
       setLoading(false);
@@ -247,7 +225,7 @@ export function PublicArtistPage({ slugOrId, uid: uidProp, viewMode: viewProp, o
               </div>
               <div className="flex-1">
                 <h1 className="text-3xl font-bold text-[var(--text)] mb-1">{artist.name}</h1>
-                {artist.handle && <p className="text-sm text-[var(--text-muted)] mb-3">@{artist.handle}</p>}
+                {artist.slug && <p className="text-sm text-[var(--text-muted)] mb-3">@{artist.slug}</p>}
                 
                 {cityLine && (
                   <div className="flex items-center gap-2 text-sm text-[var(--text-muted)] mb-3">

@@ -1626,12 +1626,12 @@ export default {
         .maybeSingle();
 
       // If not found by slug/id, and a UID is provided, try finding by UID.
-      // This handles cases where the primary link might be stale but the user context is valid.
+      // artists.id IS the auth user id in this schema.
       if (!artistRow && uid) {
         const { data: artistByUid, error: uidError } = await supabaseAdmin
           .from('artists')
           .select('id,slug,name,bio,profile_photo_url,portfolio_url,website_url,instagram_handle,city_primary,city_secondary,is_public')
-          .eq('user_id', uid)
+          .eq('id', uid)
           .maybeSingle();
         
         if (uidError) {
