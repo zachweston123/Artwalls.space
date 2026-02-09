@@ -47,6 +47,7 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
 
   // Student fields
   const [isStudent, setIsStudent] = useState(false);
+  const [pronouns, setPronouns] = useState('');
   const [schoolId, setSchoolId] = useState<string>('');
   const [schoolName, setSchoolName] = useState('');
   const [studentEmail, setStudentEmail] = useState('');
@@ -112,6 +113,7 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
           setArtTypes((row.art_types as string[]) || []);
           setInstagramHandle((row.instagram_handle as string) || '');
           setIsStudent((row.is_student as boolean) || false);
+          setPronouns((row.pronouns as string) || '');
           setSchoolId((row.school_id as string) || '');
           setSchoolName((row.school_name as string) || '');
           setIsStudentVerified((row.is_student_verified as boolean) || false);

@@ -69,68 +69,167 @@ export function PublicArtistProfilePage({ slug }: Props) {
       const decoded = decodeURIComponent(slug);
       debugLog.decoded = decoded;
 
-      // ── Step 1: fetch artist via RPC ──
-      (debugLog.attempts as string[]).push('rpc:get_public_artist_profile');
-      const { data: profileRows, error: profileErr } = await supabase
-        .rpc('get_public_artist_profile', { p_identifier: decoded });
+      let artistData: ArtistData | null = null;
+      let artworkCards: ArtworkCard[] = [];
 
-      if (profileErr) {
-        debugLog.rpcProfileError = profileErr.message;
-        throw new Error(`Profile lookup failed: ${profileErr.message}`);
+      // ── Attempt 1: RPC functions (preferred — SECURITY DEFINER, bypasses RLS) ──
+      try {
+        (debugLog.attempts as string[]).push('rpc:get_public_artist_profile');
+        const { data: profileRows, error: profileErr } = await supabase
+          .rpc('get_public_artist_profile', { p_identifier: decoded });
+
+        if (profileErr) throw profileErr;
+
+        const row = Array.isArray(profileRows) ? profileRows[0] : profileRows;
+        if (row) {
+          debugLog.resolvedVia = 'rpc';
+          artistData = {
+            id: row.id,
+            slug: row.slug ?? null,
+            name: row.name ?? 'Artist',
+            bio: row.bio ?? null,
+            profilePhotoUrl: row.profile_photo_url ?? null,
+            portfolioUrl: row.portfolio_url ?? null,
+            websiteUrl: row.website_url ?? null,
+            instagramHandle: row.instagram_handle ?? null,
+            cityPrimary: row.city_primary ?? null,
+            citySecondary: row.city_secondary ?? null,
+            artTypes: row.art_types ?? [],
+          };
+
+          // Fetch artworks via RPC
+          (debugLog.attempts as string[]).push('rpc:get_public_artist_artworks');
+          const { data: awRows } = await supabase
+            .rpc('get_public_artist_artworks', { p_identifier: decoded });
+
+          artworkCards = (awRows ?? []).map((aw: any) => ({
+            id: aw.id,
+            title: aw.title ?? 'Untitled',
+            status: aw.status ?? 'available',
+            priceCents: aw.price_cents ?? 0,
+            currency: aw.currency ?? 'usd',
+            imageUrl: aw.image_url ?? null,
+            venueName: aw.venue_name ?? null,
+            venueCity: aw.venue_city ?? null,
+            venueState: aw.venue_state ?? null,
+          }));
+        }
+      } catch (rpcErr: any) {
+        debugLog.rpcError = rpcErr?.message;
+        console.warn('[PublicArtistProfilePage] RPC failed, trying worker API fallback:', rpcErr?.message);
       }
 
-      const row = Array.isArray(profileRows) ? profileRows[0] : profileRows;
-      if (!row) {
+      // ── Attempt 2: Worker API fallback (uses service-role key server-side) ──
+      if (!artistData) {
+        try {
+          (debugLog.attempts as string[]).push('worker:/api/public/artists/');
+          const apiBase = typeof window !== 'undefined' ? window.location.origin : '';
+          const resp = await fetch(`${apiBase}/api/public/artists/${encodeURIComponent(decoded)}`);
+          if (resp.ok) {
+            const payload = await resp.json();
+            const a = payload.artist || payload;
+            debugLog.resolvedVia = 'worker-api';
+            artistData = {
+              id: a.id,
+              slug: a.slug ?? null,
+              name: a.name ?? 'Artist',
+              bio: a.bio ?? null,
+              profilePhotoUrl: a.profilePhotoUrl ?? a.profile_photo_url ?? null,
+              portfolioUrl: a.portfolioUrl ?? a.portfolio_url ?? null,
+              websiteUrl: a.websiteUrl ?? a.website_url ?? null,
+              instagramHandle: a.instagramHandle ?? a.instagram_handle ?? null,
+              cityPrimary: a.cityPrimary ?? a.city_primary ?? null,
+              citySecondary: a.citySecondary ?? a.city_secondary ?? null,
+              artTypes: a.artTypes ?? a.art_types ?? [],
+            };
+            artworkCards = (payload.artworks ?? []).map((aw: any) => ({
+              id: aw.id,
+              title: aw.title ?? 'Untitled',
+              status: aw.status ?? 'available',
+              priceCents: aw.priceCents ?? aw.price_cents ?? 0,
+              currency: aw.currency ?? 'usd',
+              imageUrl: aw.imageUrl ?? aw.image_url ?? null,
+              venueName: aw.venueName ?? aw.venue_name ?? null,
+              venueCity: aw.venueCity ?? aw.venue_city ?? null,
+              venueState: aw.venueState ?? aw.venue_state ?? null,
+            }));
+          } else {
+            debugLog.workerStatus = resp.status;
+          }
+        } catch (apiErr: any) {
+          debugLog.workerError = apiErr?.message;
+          console.warn('[PublicArtistProfilePage] Worker API also failed:', apiErr?.message);
+        }
+      }
+
+      // ── Attempt 3: Direct Supabase query (relies on RLS policy) ──
+      if (!artistData) {
+        try {
+          (debugLog.attempts as string[]).push('direct:supabase-select');
+          const { data: rows } = await supabase
+            .from('artists')
+            .select('id, slug, name, bio, profile_photo_url, portfolio_url, website_url, instagram_handle, city_primary, city_secondary, art_types')
+            .or(`slug.eq.${decoded},id.eq.${decoded}`)
+            .eq('is_public', true)
+            .limit(1);
+
+          const row = rows?.[0];
+          if (row) {
+            debugLog.resolvedVia = 'direct-query';
+            artistData = {
+              id: row.id,
+              slug: row.slug ?? null,
+              name: row.name ?? 'Artist',
+              bio: row.bio ?? null,
+              profilePhotoUrl: row.profile_photo_url ?? null,
+              portfolioUrl: row.portfolio_url ?? null,
+              websiteUrl: row.website_url ?? null,
+              instagramHandle: row.instagram_handle ?? null,
+              cityPrimary: row.city_primary ?? null,
+              citySecondary: row.city_secondary ?? null,
+              artTypes: row.art_types ?? [],
+            };
+
+            const { data: awRows } = await supabase
+              .from('artworks')
+              .select('id, title, status, price_cents, currency, image_url, venue_id')
+              .eq('artist_id', row.id)
+              .eq('is_public', true)
+              .in('status', ['available', 'active', 'published'])
+              .is('archived_at', null);
+
+            artworkCards = (awRows ?? []).map((aw: any) => ({
+              id: aw.id,
+              title: aw.title ?? 'Untitled',
+              status: aw.status ?? 'available',
+              priceCents: aw.price_cents ?? 0,
+              currency: aw.currency ?? 'usd',
+              imageUrl: aw.image_url ?? null,
+              venueName: null,
+              venueCity: null,
+              venueState: null,
+            }));
+          }
+        } catch (directErr: any) {
+          debugLog.directError = directErr?.message;
+        }
+      }
+
+      if (!artistData) {
         debugLog.found = false;
         setError('Artist not found');
         return;
       }
-      debugLog.found = true;
-      debugLog.resolvedId = row.id;
 
-      const artistData: ArtistData = {
-        id: row.id,
-        slug: row.slug ?? null,
-        name: row.name ?? 'Artist',
-        bio: row.bio ?? null,
-        profilePhotoUrl: row.profile_photo_url ?? null,
-        portfolioUrl: row.portfolio_url ?? null,
-        websiteUrl: row.website_url ?? null,
-        instagramHandle: row.instagram_handle ?? null,
-        cityPrimary: row.city_primary ?? null,
-        citySecondary: row.city_secondary ?? null,
-        artTypes: row.art_types ?? [],
-      };
+      debugLog.found = true;
+      debugLog.resolvedId = artistData.id;
       setArtist(artistData);
+      setArtworks(artworkCards);
 
       // Canonicalize URL → prefer slug over UUID
       if (artistData.slug && decoded !== artistData.slug) {
         window.history.replaceState({}, '', `/p/artist/${encodeURIComponent(artistData.slug)}`);
       }
-
-      // ── Step 2: fetch artworks via RPC ──
-      (debugLog.attempts as string[]).push('rpc:get_public_artist_artworks');
-      const { data: awRows, error: awErr } = await supabase
-        .rpc('get_public_artist_artworks', { p_identifier: decoded });
-
-      if (awErr) {
-        debugLog.rpcArtworksError = awErr.message;
-        // Non-fatal: show profile without artworks
-        console.warn('Artwork lookup failed:', awErr.message);
-      }
-
-      const cards: ArtworkCard[] = (awRows ?? []).map((aw: any) => ({
-        id: aw.id,
-        title: aw.title ?? 'Untitled',
-        status: aw.status ?? 'available',
-        priceCents: aw.price_cents ?? 0,
-        currency: aw.currency ?? 'usd',
-        imageUrl: aw.image_url ?? null,
-        venueName: aw.venue_name ?? null,
-        venueCity: aw.venue_city ?? null,
-        venueState: aw.venue_state ?? null,
-      }));
-      setArtworks(cards);
 
       // Check auth status for debug panel
       const { data: sessionData } = await supabase.auth.getSession();
