@@ -311,7 +311,7 @@ export default {
       return json(data);
     }
 
-    async function upsertVenue(venue: { id: string; email?: string | null; name?: string | null; type?: string | null; phoneNumber?: string | null; city?: string | null; stripeAccountId?: string | null; defaultVenueFeeBps?: number | null; labels?: any; suspended?: boolean | null; bio?: string | null; coverPhotoUrl?: string | null; address?: string | null; addressLat?: number | null; addressLng?: number | null; }): Promise<Response> {
+    async function upsertVenue(venue: { id: string; email?: string | null; name?: string | null; type?: string | null; phoneNumber?: string | null; city?: string | null; stripeAccountId?: string | null; defaultVenueFeeBps?: number | null; labels?: any; suspended?: boolean | null; bio?: string | null; coverPhotoUrl?: string | null; address?: string | null; addressLat?: number | null; addressLng?: number | null; website?: string | null; instagramHandle?: string | null; }): Promise<Response> {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured - check SUPABASE_SERVICE_ROLE_KEY secret' }, { status: 500 });
       const payload: Record<string, any> = {
         id: venue.id,
@@ -343,6 +343,14 @@ export default {
       }
       if (venue.addressLng !== undefined && venue.addressLng !== null) {
         payload.address_lng = venue.addressLng;
+      }
+      // Only include website if provided
+      if (venue.website !== undefined && venue.website !== null) {
+        payload.website = venue.website;
+      }
+      // Only include instagram_handle if provided
+      if (venue.instagramHandle !== undefined && venue.instagramHandle !== null) {
+        payload.instagram_handle = venue.instagramHandle;
       }
       const { data, error } = await supabaseAdmin.from('venues').upsert(payload, { onConflict: 'id' }).select('*').single();
       if (error) {
@@ -1905,6 +1913,38 @@ export default {
         cityPrimary: (data as any).city_primary || null,
         citySecondary: (data as any).city_secondary || null,
         artTypes: (data as any).art_types || [],
+      });
+    }
+
+    // Public: single venue profile by id
+    if (url.pathname.match(/^\/api\/venues\/[0-9a-f-]+$/) && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const parts = url.pathname.split('/');
+      const venueId = parts[3];
+      if (!venueId) return json({ error: 'Missing venue id' }, { status: 400 });
+
+      const { data, error } = await supabaseAdmin
+        .from('venues')
+        .select('id,name,type,cover_photo_url,address,city,bio,labels,verified,founded_year,website,instagram_handle')
+        .eq('id', venueId)
+        .maybeSingle();
+
+      if (error) return json({ error: error.message }, { status: 500 });
+      if (!data) return json({ error: 'Not found' }, { status: 404 });
+
+      return json({
+        id: data.id,
+        name: data.name,
+        type: data.type || null,
+        coverPhotoUrl: data.cover_photo_url || null,
+        address: data.address || null,
+        city: data.city || null,
+        bio: data.bio || null,
+        labels: data.labels || [],
+        verified: Boolean(data.verified),
+        foundedYear: data.founded_year || null,
+        websiteUrl: data.website || null,
+        instagramHandle: data.instagram_handle || null,
       });
     }
 

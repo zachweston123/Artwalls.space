@@ -6,6 +6,7 @@ import { VENUE_HIGHLIGHTS } from '../../data/highlights';
 import { apiGet, getVenueSchedule } from '../../lib/api';
 import type { User } from '../../App';
 import { supabase } from '../../lib/supabase';
+import { SocialLinks } from '../shared/SocialLinks';
 
 interface VenueProfileViewProps {
   isOwnProfile: boolean;
@@ -30,6 +31,8 @@ type VenueProfileData = {
   currentArtists: number;
   installWindow: string;
   verified: boolean;
+  website: string;
+  instagramHandle: string;
 };
 
 export function VenueProfileView({ 
@@ -52,6 +55,8 @@ export function VenueProfileView({
     currentArtists: 0,
     installWindow: 'Install window not set yet',
     verified: false,
+    website: '',
+    instagramHandle: '',
   });
 
   const formatTime = (time: string) => {
@@ -79,7 +84,7 @@ export function VenueProfileView({
         const [venueResp, scheduleResp] = await Promise.all([
           supabase
             .from('venues')
-            .select('id,name,cover_photo_url,address,city,bio,labels,verified,founded_year')
+            .select('id,name,cover_photo_url,address,city,bio,labels,verified,founded_year,website,instagram_handle')
             .eq('id', venueId)
             .single(),
           getVenueSchedule(venueId).catch(() => ({ schedule: null })),
@@ -98,6 +103,8 @@ export function VenueProfileView({
           labels: venueRow?.labels || prev.labels,
           verified: Boolean(venueRow?.verified ?? prev.verified),
           foundedYear: venueRow?.founded_year || prev.foundedYear,
+          website: venueRow?.website || prev.website,
+          instagramHandle: venueRow?.instagram_handle || prev.instagramHandle,
         }));
 
         if (scheduleResp?.schedule) {
@@ -139,6 +146,8 @@ export function VenueProfileView({
           labels: v?.labels ?? prev.labels,
           verified: typeof v?.verified === 'boolean' ? v.verified : prev.verified,
           foundedYear: v?.founded_year ?? prev.foundedYear,
+          website: v?.website ?? prev.website,
+          instagramHandle: v?.instagram_handle ?? prev.instagramHandle,
         }));
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'wallspaces', filter: `venue_id=eq.${venueId}` }, () => {
@@ -216,6 +225,16 @@ export function VenueProfileView({
       <div className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)] mb-6">
         <h2 className="text-xl mb-3">About</h2>
         <p className="text-[var(--text-muted)] leading-relaxed">{venue.bio}</p>
+
+        {/* Social links (deduplicated) */}
+        {(venue.instagramHandle || venue.website) && (
+          <div className="mt-4 pt-3 border-t border-[var(--border)]">
+            <SocialLinks
+              instagramHandle={venue.instagramHandle}
+              websiteUrl={venue.website}
+            />
+          </div>
+        )}
       </div>
 
       {/* Venue Labels */}

@@ -27,6 +27,8 @@ export interface VenueProfileData {
   address?: string;
   addressLat?: number;
   addressLng?: number;
+  website?: string;
+  instagramHandle?: string;
 }
 
 export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfileEditProps) {
@@ -43,6 +45,8 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
     address: (initialData as any)?.address ?? '',
     addressLat: (initialData as any)?.addressLat,
     addressLng: (initialData as any)?.addressLng,
+    website: initialData?.website ?? '',
+    instagramHandle: initialData?.instagramHandle ?? '',
   });
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -300,6 +304,37 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
                   placeholder="e.g. +15551234567"
                 />
                 <p className="text-xs text-[var(--text-muted)]">Sale notifications will be sent to this number.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Social / Web */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-[var(--text)]">Social &amp; Web</p>
+              <span className="text-xs text-[var(--text-muted)]">Show visitors where to follow you</span>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <label className="block text-sm text-[var(--text-muted)]">Instagram Handle</label>
+                <input
+                  type="text"
+                  value={formData.instagramHandle}
+                  onChange={(e) => setFormData({ ...formData, instagramHandle: e.target.value })}
+                  className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
+                  placeholder="@yourvenue"
+                />
+                <p className="text-xs text-[var(--text-muted)]">Just the handle, e.g. @yourvenue</p>
+              </div>
+              <div className="space-y-2">
+                <label className="block text-sm text-[var(--text-muted)]">Website</label>
+                <input
+                  type="url"
+                  value={formData.website}
+                  onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                  className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
+                  placeholder="https://yourvenue.com"
+                />
               </div>
             </div>
           </div>

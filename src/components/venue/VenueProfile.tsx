@@ -1,10 +1,11 @@
 import { useEffect, useState, useRef } from 'react';
-import { Store, Mail, Phone, MapPin, Clock, DollarSign, Instagram, Edit2, X, Check } from 'lucide-react';
+import { Store, Mail, Phone, MapPin, Clock, DollarSign, Instagram, ExternalLink, Edit2, X, Check } from 'lucide-react';
 import { VenueProfileEdit, type VenueProfileData } from './VenueProfileEdit';
 import { apiPost, getVenueSchedule } from '../../lib/api';
 import { supabase } from '../../lib/supabase';
 import { PageHeader } from '../PageHeader';
 import { formatCurrency } from '../../utils/format';
+import { SocialLinks } from '../shared/SocialLinks';
 
 interface VenueProfileProps {
   onNavigate: (page: string) => void;
@@ -38,6 +39,7 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
     addressLat?: number;
     addressLng?: number;
     instagram: string;
+    website: string;
     coverPhoto: string;
     city?: string;
     bio: string;
@@ -55,6 +57,7 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
     addressLat: undefined,
     addressLng: undefined,
     instagram: '',
+    website: '',
     coverPhoto: '',
     city: '',
     bio: '',
@@ -88,7 +91,7 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
       try {
         const { data: venueData } = await supabase
           .from('venues')
-          .select('cover_photo_url, city, bio, labels, address, address_lat, address_lng')
+          .select('cover_photo_url, city, bio, labels, address, address_lat, address_lng, website, instagram_handle')
           .eq('id', user.id)
           .single();
         
@@ -102,6 +105,8 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
             address: venueData.address || prev.address,
             addressLat: venueData.address_lat || prev.addressLat,
             addressLng: venueData.address_lng || prev.addressLng,
+            website: venueData.website || prev.website,
+            instagram: venueData.instagram_handle || prev.instagram,
           }));
         }
 
@@ -147,6 +152,8 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
           address: data.address,
           addressLat: data.addressLat,
           addressLng: data.addressLng,
+          website: data.website,
+          instagramHandle: data.instagramHandle,
         });
       } catch (apiErr) {
         console.warn('API update failed, falling back to direct database update:', apiErr);
@@ -180,6 +187,12 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
       }
       if (data.addressLng !== undefined) {
         updateData.address_lng = data.addressLng;
+      }
+      if (data.website !== undefined) {
+        updateData.website = data.website;
+      }
+      if (data.instagramHandle !== undefined) {
+        updateData.instagram_handle = data.instagramHandle;
       }
       
       if (Object.keys(updateData).length > 0) {
@@ -218,6 +231,8 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
         address: data.address || prev.address,
         addressLat: data.addressLat || prev.addressLat,
         addressLng: data.addressLng || prev.addressLng,
+        website: data.website || prev.website,
+        instagram: data.instagramHandle || prev.instagram,
       }));
       setIsEditing(false);
     } catch (err: any) {
@@ -480,19 +495,17 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
                 </div>
               </div>
 
-              {profile.instagram && (
-                <a
-                  href={`https://instagram.com/${profile.instagram.replace('@', '')}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-start gap-3 p-4 bg-[var(--surface-1)] rounded-lg border border-[var(--border)] hover:bg-[var(--surface-3)] transition-colors group"
-                >
-                  <Instagram className="w-5 h-5 text-[var(--text-muted)] mt-0.5 group-hover:text-[var(--blue)]" />
+              {(profile.instagram || profile.website) && (
+                <div className="flex items-start gap-3 p-4 bg-[var(--surface-1)] rounded-lg border border-[var(--border)]">
+                  <Instagram className="w-5 h-5 text-[var(--text-muted)] mt-0.5" />
                   <div className="flex-1">
-                    <label className="block text-sm text-[var(--text-muted)] mb-1">Instagram</label>
-                    <p className="text-[var(--text)] group-hover:text-[var(--blue)]">{profile.instagram}</p>
+                    <label className="block text-sm text-[var(--text-muted)] mb-1">Social &amp; Web</label>
+                    <SocialLinks
+                      instagramHandle={profile.instagram}
+                      websiteUrl={profile.website}
+                    />
                   </div>
-                </a>
+                </div>
               )}
 
               <div className="flex items-start gap-3 p-4 bg-[var(--surface-1)] rounded-lg border border-[var(--border)]">
@@ -627,6 +640,8 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
             address: profile.address,
             addressLat: profile.addressLat,
             addressLng: profile.addressLng,
+            website: profile.website,
+            instagramHandle: profile.instagram,
           }}
           onSave={handleSave}
           onCancel={() => setIsEditing(false)}

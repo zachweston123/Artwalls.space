@@ -11,7 +11,7 @@
  */
 
 import { MapPin } from 'lucide-react';
-import { ArtistSocialLinks } from './ArtistSocialLinks';
+import { SocialLinks } from './SocialLinks';
 
 // ── Shared artist-data shape (camelCase, already normalised) ─
 
@@ -121,7 +121,7 @@ export function ArtistProfilePublicView(props: ArtistProfilePublicViewProps) {
                 </button>
               )}
 
-              <ArtistSocialLinks
+              <SocialLinks
                 instagramHandle={artist.instagramHandle}
                 portfolioUrl={artist.portfolioUrl}
                 websiteUrl={artist.websiteUrl}
@@ -187,7 +187,7 @@ export function ArtistProfilePublicView(props: ArtistProfilePublicViewProps) {
           )}
 
           {/* Social links (deduplicated) */}
-          <ArtistSocialLinks
+          <SocialLinks
             instagramHandle={artist.instagramHandle}
             portfolioUrl={artist.portfolioUrl}
             websiteUrl={artist.websiteUrl}

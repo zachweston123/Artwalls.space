@@ -4,6 +4,7 @@ import { ArtworkReactions } from './ArtworkReactions';
 import { CHECKOUT_COPY } from '../lib/feeCopy';
 import { trackQrScan, trackArtworkView, trackCheckoutStart } from '../lib/trackEvent';
 import { ArtistProfilePublicView, type ArtistPublicData } from './shared/ArtistProfilePublicView';
+import { VenueProfilePublicView, type VenuePublicData } from './shared/VenueProfilePublicView';
 
 type Artwork = {
   id: string;
@@ -31,6 +32,7 @@ interface PurchasePageProps {
 export function PurchasePage({ artworkId, onBack, onNavigate }: PurchasePageProps) {
   const [artwork, setArtwork] = useState<Artwork | null>(null);
   const [artistProfile, setArtistProfile] = useState<ArtistPublicData | null>(null);
+  const [venueProfile, setVenueProfile] = useState<VenuePublicData | null>(null);
   const [loading, setLoading] = useState(true);
   const [buying, setBuying] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -131,6 +133,30 @@ export function PurchasePage({ artworkId, onBack, onNavigate }: PurchasePageProp
               }
             } catch {
               if (!cancelled) setArtistProfile(null);
+            }
+          }
+          // Fetch venue profile for "About the venue" card
+          if (normalized.venueId) {
+            try {
+              const vRaw = await apiGet<any>(`/api/venues/${encodeURIComponent(normalized.venueId)}`);
+              if (!cancelled && vRaw) {
+                setVenueProfile({
+                  id: vRaw.id ?? normalized.venueId,
+                  name: vRaw.name ?? normalized.venueName ?? 'Venue',
+                  bio: vRaw.bio ?? null,
+                  coverPhotoUrl: vRaw.coverPhotoUrl ?? vRaw.cover_photo_url ?? null,
+                  city: vRaw.city ?? null,
+                  address: vRaw.address ?? null,
+                  type: vRaw.type ?? null,
+                  labels: vRaw.labels ?? [],
+                  verified: Boolean(vRaw.verified),
+                  foundedYear: vRaw.foundedYear ?? vRaw.founded_year ?? null,
+                  websiteUrl: vRaw.websiteUrl ?? vRaw.website ?? null,
+                  instagramHandle: vRaw.instagramHandle ?? vRaw.instagram_handle ?? null,
+                });
+              }
+            } catch {
+              if (!cancelled) setVenueProfile(null);
             }
           }
         }
@@ -279,6 +305,31 @@ export function PurchasePage({ artworkId, onBack, onNavigate }: PurchasePageProp
                   </p>
                 </div>
               )}
+            </div>
+
+            {/* About the venue card */}
+            <div className="mb-6">
+              {venueProfile ? (
+                <VenueProfilePublicView
+                  venue={venueProfile}
+                  variant="compact"
+                  onViewProfile={() => {
+                    const target = `/venues/${artwork?.venueId}`;
+                    if (onNavigate) {
+                      onNavigate(target);
+                    } else {
+                      window.location.href = target;
+                    }
+                  }}
+                />
+              ) : artwork?.venueName ? (
+                <div className="bg-[var(--surface-3)] rounded-xl p-4 sm:p-6 border border-[var(--border)]">
+                  <h2 className="text-lg font-semibold text-[var(--text)] mb-2">About the venue</h2>
+                  <p className="text-sm text-[var(--text-muted)]">
+                    Currently on display at {artwork.venueName}
+                  </p>
+                </div>
+              ) : null}
             </div>
 
             <div className="bg-[var(--surface-3)] rounded-xl p-4 sm:p-6 mb-6 border border-[var(--border)]">
