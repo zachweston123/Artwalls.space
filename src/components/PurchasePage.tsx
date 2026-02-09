@@ -3,6 +3,7 @@ import { ShoppingCart, MapPin, User, ArrowLeft, Loader2 } from 'lucide-react';
 import { ArtworkReactions } from './ArtworkReactions';
 import { CHECKOUT_COPY } from '../lib/feeCopy';
 import { trackQrScan, trackArtworkView, trackCheckoutStart } from '../lib/trackEvent';
+import { ArtistProfilePublicView, type ArtistPublicData } from './shared/ArtistProfilePublicView';
 
 type Artwork = {
   id: string;
@@ -29,7 +30,7 @@ interface PurchasePageProps {
 
 export function PurchasePage({ artworkId, onBack, onNavigate }: PurchasePageProps) {
   const [artwork, setArtwork] = useState<Artwork | null>(null);
-  const [artistProfile, setArtistProfile] = useState<{ name?: string; bio?: string | null; profilePhotoUrl?: string | null; portfolioUrl?: string | null; cityPrimary?: string | null } | null>(null);
+  const [artistProfile, setArtistProfile] = useState<ArtistPublicData | null>(null);
   const [loading, setLoading] = useState(true);
   const [buying, setBuying] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -112,8 +113,22 @@ export function PurchasePage({ artworkId, onBack, onNavigate }: PurchasePageProp
           setArtwork(normalized);
           if (normalized.artistId) {
             try {
-              const artist = await apiGet<any>(`/api/artists/${encodeURIComponent(normalized.artistId)}`);
-              if (!cancelled) setArtistProfile(artist || null);
+              const raw = await apiGet<any>(`/api/artists/${encodeURIComponent(normalized.artistId)}`);
+              if (!cancelled && raw) {
+                setArtistProfile({
+                  id: raw.id ?? normalized.artistId,
+                  name: raw.name ?? normalized.artistName ?? 'Artist',
+                  slug: raw.slug ?? null,
+                  bio: raw.bio ?? null,
+                  profilePhotoUrl: raw.profilePhotoUrl ?? raw.profile_photo_url ?? null,
+                  portfolioUrl: raw.portfolioUrl ?? raw.portfolio_url ?? null,
+                  websiteUrl: raw.websiteUrl ?? raw.website_url ?? null,
+                  instagramHandle: raw.instagramHandle ?? raw.instagram_handle ?? null,
+                  cityPrimary: raw.cityPrimary ?? raw.city_primary ?? null,
+                  citySecondary: raw.citySecondary ?? raw.city_secondary ?? null,
+                  artTypes: raw.artTypes ?? raw.art_types ?? [],
+                });
+              }
             } catch {
               if (!cancelled) setArtistProfile(null);
             }
@@ -242,57 +257,28 @@ export function PurchasePage({ artworkId, onBack, onNavigate }: PurchasePageProp
               <p className="text-[var(--text)] leading-relaxed">{artwork?.description || 'No description provided.'}</p>
             </div>
 
-            <div className="bg-[var(--surface-3)] rounded-xl p-4 sm:p-6 mb-6 border border-[var(--border)]">
-              <h2 className="text-lg font-semibold text-[var(--text)] mb-2">About the artist</h2>
-              <div className="flex items-start gap-4">
-                <a
-                  href={artwork?.artistId ? `/p/artist/${artwork.artistId}` : '#'}
-                  onClick={(e) => { e.preventDefault(); if (artwork?.artistId) { if (onNavigate) { onNavigate(`/p/artist/${artwork.artistId}`); } else { window.location.href = `/p/artist/${artwork.artistId}`; } } }}
-                  className="w-14 h-14 rounded-full overflow-hidden border border-[var(--border)] bg-[var(--surface-2)] flex-shrink-0 hover:ring-2 hover:ring-[var(--blue)] transition-all cursor-pointer"
-                >
-                  {artistProfile?.profilePhotoUrl ? (
-                    <img src={artistProfile.profilePhotoUrl} alt={artistProfile?.name || 'Artist'} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-xs text-[var(--text-muted)]">Artist</div>
-                  )}
-                </a>
-                <div>
-                  <a
-                    href={artwork?.artistId ? `/p/artist/${artwork.artistId}` : '#'}
-                    onClick={(e) => { e.preventDefault(); if (artwork?.artistId) { if (onNavigate) { onNavigate(`/p/artist/${artwork.artistId}`); } else { window.location.href = `/p/artist/${artwork.artistId}`; } } }}
-                    className="text-sm text-[var(--text)] font-semibold hover:text-[var(--blue)] hover:underline transition-colors cursor-pointer"
-                  >
-                    {artistProfile?.name || artwork?.artistName || 'Artist'}
-                  </a>
-                  {artistProfile?.cityPrimary && (
-                    <p className="text-xs text-[var(--text-muted)]">Based in {artistProfile.cityPrimary}</p>
-                  )}
-                  <p className="text-sm text-[var(--text-muted)] mt-2">
-                    {artistProfile?.bio || 'Learn more about the artist behind this piece.'}
+            <div className="mb-6">
+              {artistProfile ? (
+                <ArtistProfilePublicView
+                  artist={artistProfile}
+                  variant="compact"
+                  onViewProfile={() => {
+                    const target = `/p/artist/${artwork?.artistId}`;
+                    if (onNavigate) {
+                      onNavigate(target);
+                    } else {
+                      window.location.href = target;
+                    }
+                  }}
+                />
+              ) : (
+                <div className="bg-[var(--surface-3)] rounded-xl p-4 sm:p-6 border border-[var(--border)]">
+                  <h2 className="text-lg font-semibold text-[var(--text)] mb-2">About the artist</h2>
+                  <p className="text-sm text-[var(--text-muted)]">
+                    {artwork?.artistName ? `By ${artwork.artistName}` : 'Learn more about the artist behind this piece.'}
                   </p>
-                  <div className="flex items-center gap-3 mt-2">
-                    {artwork?.artistId && (
-                      <a
-                        href={`/p/artist/${artwork.artistId}`}
-                        onClick={(e) => { e.preventDefault(); if (onNavigate) { onNavigate(`/p/artist/${artwork.artistId}`); } else { window.location.href = `/p/artist/${artwork.artistId}`; } }}
-                        className="text-xs text-[var(--accent)] underline"
-                      >
-                        View artist profile
-                      </a>
-                    )}
-                    {artistProfile?.portfolioUrl && (
-                      <a
-                        href={artistProfile.portfolioUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-xs text-[var(--accent)] underline"
-                      >
-                        View portfolio
-                      </a>
-                    )}
-                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             <div className="bg-[var(--surface-3)] rounded-xl p-4 sm:p-6 mb-6 border border-[var(--border)]">

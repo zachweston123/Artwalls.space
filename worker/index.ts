@@ -1887,7 +1887,7 @@ export default {
       const matchFilter = isUuid ? { id: identifier } : { slug: identifier };
       const { data, error } = await supabaseAdmin
         .from('artists')
-        .select('id,slug,name,bio,profile_photo_url,portfolio_url,website_url,city_primary,city_secondary,is_public')
+        .select('id,slug,name,bio,profile_photo_url,portfolio_url,website_url,instagram_handle,city_primary,city_secondary,art_types,is_public')
         .match(matchFilter)
         .eq('is_public', true)
         .maybeSingle();
@@ -1901,8 +1901,10 @@ export default {
         profilePhotoUrl: (data as any).profile_photo_url || null,
         portfolioUrl: (data as any).portfolio_url || null,
         websiteUrl: (data as any).website_url || null,
+        instagramHandle: (data as any).instagram_handle || null,
         cityPrimary: (data as any).city_primary || null,
         citySecondary: (data as any).city_secondary || null,
+        artTypes: (data as any).art_types || [],
       });
     }
 

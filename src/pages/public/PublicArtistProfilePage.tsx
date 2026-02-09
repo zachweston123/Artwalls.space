@@ -9,25 +9,14 @@
  */
 
 import { useEffect, useState, useCallback } from 'react';
-import { MapPin, ExternalLink, Instagram, Loader2, Palette } from 'lucide-react';
+import { Loader2, Palette } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { apiGet } from '../../lib/api';
+import { ArtistProfilePublicView, type ArtistPublicData } from '../../components/shared/ArtistProfilePublicView';
 
 // ── Types ────────────────────────────────────────────────────
 
-interface ArtistData {
-  id: string;
-  slug: string | null;
-  name: string;
-  bio: string | null;
-  profilePhotoUrl: string | null;
-  portfolioUrl: string | null;
-  websiteUrl: string | null;
-  instagramHandle: string | null;
-  cityPrimary: string | null;
-  citySecondary: string | null;
-  artTypes: string[];
-}
+// ArtistPublicData is imported from shared/ArtistProfilePublicView
 
 interface ArtworkCard {
   id: string;
@@ -55,7 +44,7 @@ const isDev = typeof import.meta !== 'undefined' && (import.meta as any).env?.DE
 // ── Component ────────────────────────────────────────────────
 
 export function PublicArtistProfilePage({ slug }: Props) {
-  const [artist, setArtist] = useState<ArtistData | null>(null);
+  const [artist, setArtist] = useState<ArtistPublicData | null>(null);
   const [artworks, setArtworks] = useState<ArtworkCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -70,7 +59,7 @@ export function PublicArtistProfilePage({ slug }: Props) {
       const decoded = decodeURIComponent(slug);
       debugLog.decoded = decoded;
 
-      let artistData: ArtistData | null = null;
+      let artistData: ArtistPublicData | null = null;
       let artworkCards: ArtworkCard[] = [];
 
       // ── Attempt 1: Worker API (most reliable — uses service-role key, no migration needed) ──
@@ -277,13 +266,6 @@ export function PublicArtistProfilePage({ slug }: Props) {
 
   useEffect(() => { loadProfile(); }, [loadProfile]);
 
-  // ── City line helper ──
-  const cityLine = artist?.cityPrimary
-    ? artist.citySecondary
-      ? `${artist.cityPrimary} · ${artist.citySecondary}`
-      : artist.cityPrimary
-    : artist?.citySecondary ?? '';
-
   // ── Render ─────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
@@ -310,7 +292,7 @@ export function PublicArtistProfilePage({ slug }: Props) {
 
         {/* Error / Not Found */}
         {!loading && error && (
-          <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl p-10 text-center max-w-md mx-auto">
+          <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-xl p-10 text-center max-w-md mx-auto">
             <p className="text-[var(--text)] font-semibold text-lg mb-2">Artist not found</p>
             <p className="text-[var(--text-muted)] text-sm mb-6">{error}</p>
             {debug && (
@@ -333,93 +315,12 @@ export function PublicArtistProfilePage({ slug }: Props) {
         {/* ── Artist Profile ── */}
         {!loading && artist && (
           <>
-            {/* Header card */}
-            <section className="bg-[var(--surface-2)] border border-[var(--border)] rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row gap-6 shadow-lg">
-              {/* Avatar */}
-              <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden bg-[var(--surface-3)] border-4 border-[var(--border)] flex-shrink-0 mx-auto sm:mx-0">
-                {artist.profilePhotoUrl ? (
-                  <img src={artist.profilePhotoUrl} alt={artist.name} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-3xl font-bold text-[var(--text-muted)]">
-                    {artist.name.charAt(0).toUpperCase()}
-                  </div>
-                )}
-              </div>
-
-              {/* Info */}
-              <div className="flex-1 text-center sm:text-left">
-                <h1 className="text-3xl font-bold text-[var(--text)] mb-1">{artist.name}</h1>
-                {artist.slug && (
-                  <p className="text-sm text-[var(--text-muted)] mb-3">@{artist.slug}</p>
-                )}
-
-                {cityLine && (
-                  <div className="flex items-center justify-center sm:justify-start gap-2 text-sm text-[var(--text-muted)] mb-3">
-                    <MapPin className="w-4 h-4" />
-                    <span>{cityLine}</span>
-                  </div>
-                )}
-
-                {artist.bio && (
-                  <p className="text-[var(--text)] mb-4 whitespace-pre-line">{artist.bio}</p>
-                )}
-
-                {/* Art type tags */}
-                {artist.artTypes.length > 0 && (
-                  <div className="flex flex-wrap justify-center sm:justify-start gap-2 mb-4">
-                    {artist.artTypes.map((t) => (
-                      <span
-                        key={t}
-                        className="px-3 py-1 bg-[var(--surface-3)] text-[var(--text-muted)] border border-[var(--border)] rounded-full text-xs font-medium"
-                      >
-                        {t}
-                      </span>
-                    ))}
-                  </div>
-                )}
-
-                {/* Links */}
-                <div className="flex items-center justify-center sm:justify-start gap-4">
-                  {artist.websiteUrl && (
-                    <a
-                      href={artist.websiteUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 text-sm text-[var(--blue)] hover:underline"
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                      Website
-                    </a>
-                  )}
-                  {artist.portfolioUrl && artist.portfolioUrl !== artist.websiteUrl && (
-                    <a
-                      href={artist.portfolioUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 text-sm text-[var(--blue)] hover:underline"
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                      Portfolio
-                    </a>
-                  )}
-                  {artist.instagramHandle && (
-                    <a
-                      href={`https://instagram.com/${artist.instagramHandle.replace(/^@/, '')}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 text-sm text-[var(--blue)] hover:underline"
-                    >
-                      <Instagram className="w-4 h-4" />
-                      Instagram
-                    </a>
-                  )}
-                </div>
-              </div>
-            </section>
+            {/* Shared profile header card (matches in-app profile style) */}
+            <ArtistProfilePublicView artist={artist} variant="full" />
 
             {/* ── On Display Now ── */}
-            <section className="mt-12">
-              <h2 className="text-2xl font-bold text-[var(--text)] mb-6">On Display Now</h2>
+            <section className="mt-10">
+              <h2 className="text-2xl mb-6 text-[var(--text)]">On Display Now</h2>
 
               {artworks.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -427,7 +328,7 @@ export function PublicArtistProfilePage({ slug }: Props) {
                     <a
                       key={aw.id}
                       href={`/#/purchase-${aw.id}`}
-                      className="group bg-[var(--surface-2)] rounded-lg overflow-hidden border border-[var(--border)] hover:border-[var(--blue)] transition-all duration-300 shadow-md hover:shadow-xl"
+                      className="group bg-[var(--surface-1)] rounded-xl overflow-hidden border border-[var(--border)] hover:border-[var(--blue)] transition-all duration-300"
                     >
                       <div className="w-full aspect-[4/3] bg-[var(--surface-3)] overflow-hidden">
                         {aw.imageUrl ? (
@@ -465,7 +366,7 @@ export function PublicArtistProfilePage({ slug }: Props) {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-14 bg-[var(--surface-2)] border border-dashed border-[var(--border)] rounded-lg">
+                <div className="text-center py-14 bg-[var(--surface-1)] border border-dashed border-[var(--border)] rounded-xl">
                   <p className="text-[var(--text-muted)]">No works currently on display.</p>
                 </div>
               )}
