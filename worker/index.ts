@@ -352,6 +352,102 @@ export default {
       return json(data);
     }
 
+    // ── Helper: authenticate venue user from request ──
+    async function requireVenue(req: Request): Promise<any | null> {
+      const user = await getSupabaseUserFromRequest(req);
+      if (!user) return null;
+      if (user.user_metadata?.role !== 'venue') return null;
+      return user;
+    }
+
+    // ── Helper: authenticate artist user from request ──
+    async function requireArtist(req: Request): Promise<any | null> {
+      const user = await getSupabaseUserFromRequest(req);
+      if (!user) return null;
+      if (user.user_metadata?.role === 'venue') return null; // not an artist
+      return user;
+    }
+
+    // ── Public artwork statuses & shaping helpers ──
+    const PUBLIC_ARTWORK_STATUSES = ['available', 'active', 'published'];
+
+    function shapePublicArtwork(a: any) {
+      if (!a) return null;
+      return {
+        id: a.id,
+        title: a.title,
+        status: a.status,
+        price: typeof a.price_cents === 'number' ? Math.round(a.price_cents / 100) : null,
+        priceCents: a.price_cents ?? null,
+        currency: a.currency || 'usd',
+        imageUrl: a.image_url,
+        imageUrls: Array.isArray(a.image_urls) ? a.image_urls : (a.image_url ? [a.image_url] : []),
+        artistId: a.artist_id,
+        artistName: a.artist_name,
+        venueId: a.venue_id,
+        venueName: a.venue_name || (a.venue as any)?.name || null,
+        description: a.description || null,
+        medium: a.medium || null,
+        dimensionsWidth: a.dimensions_width ?? null,
+        dimensionsHeight: a.dimensions_height ?? null,
+        dimensionsDepth: a.dimensions_depth ?? null,
+        dimensionsUnit: a.dimensions_unit || null,
+        condition: a.condition || null,
+        editionType: a.edition_type || null,
+        editionSize: a.edition_size ?? null,
+        archivedAt: a.archived_at || null,
+        setId: a.set_id || null,
+        venueCity: (a.venue as any)?.city || null,
+        venueNeighborhood: (a.venue as any)?.neighborhood || null,
+        venueSlug: (a.venue as any)?.slug || null,
+      };
+    }
+
+    function shapePublicArtworkDetail(a: any) {
+      const base = shapePublicArtwork(a);
+      if (!base) return null;
+      return {
+        ...base,
+        knownFlaws: a.known_flaws || null,
+        materials: a.materials || null,
+        shippingTimeEstimate: a.shipping_time_estimate || null,
+        inSpacePhotoUrl: a.in_space_photo_url || null,
+        colorAccuracyAck: !!a.color_accuracy_ack,
+        purchaseUrl: a.purchase_url || null,
+        qrSvg: a.qr_svg || null,
+        stripeProductId: a.stripe_product_id || null,
+        stripePriceId: a.stripe_price_id || null,
+      };
+    }
+
+    // ── Artwork limit helpers ──
+    async function getArtistArtworkLimit(artistId: string): Promise<number> {
+      if (!supabaseAdmin) return 1;
+      const { data: artist } = await supabaseAdmin
+        .from('artists')
+        .select('subscription_tier,subscription_status,pro_until')
+        .eq('id', artistId)
+        .maybeSingle();
+      if (!artist) return 1;
+      const proUntil = artist.pro_until ? new Date(artist.pro_until).getTime() : 0;
+      const hasProOverride = !!proUntil && proUntil > Date.now();
+      const tier = normalizeArtistTier(hasProOverride ? 'pro' : (artist.subscription_tier || 'free'));
+      const status = String(hasProOverride ? 'active' : (artist.subscription_status || '')).toLowerCase();
+      const isActive = status === 'active';
+      return getArtworkLimit(tier as any, isActive);
+    }
+
+    async function getArtistActiveArtworkCount(artistId: string): Promise<number> {
+      if (!supabaseAdmin) return 0;
+      const { count, error } = await supabaseAdmin
+        .from('artworks')
+        .select('id', { count: 'exact', head: true })
+        .eq('artist_id', artistId)
+        .in('status', ['available', 'active', 'published']);
+      if (error) return 0;
+      return count || 0;
+    }
+
     if (url.pathname === '/api/health') {
       return json({ ok: true });
     }
@@ -940,6 +1036,472 @@ export default {
       return json({ artists });
     }
 
+    // ── Stripe Routes ──────────────────────────────────────────────
+
+    // Stripe webhook – verify signature with Web Crypto, then handle event
+    if (url.pathname === '/api/stripe/webhook' && method === 'POST') {
+      try {
+        const body = await request.text();
+        const sig = request.headers.get('stripe-signature') || '';
+        const event = await verifyAndParseStripeEvent(body, sig, env.STRIPE_WEBHOOK_SECRET);
+        if (!event) return json({ error: 'Invalid signature' }, { status: 400 });
+
+        // Idempotency check
+        if (supabaseAdmin) {
+          const { data: existing } = await supabaseAdmin
+            .from('stripe_webhook_events')
+            .select('id')
+            .eq('event_id', event.id)
+            .maybeSingle();
+          if (existing) return json({ received: true, duplicate: true });
+        }
+
+        // ── Handle event types ──
+
+        if (event.type === 'checkout.session.completed') {
+          const session = event.data?.object;
+
+          // Subscription checkout completed
+          if (session?.mode === 'subscription') {
+            const artistId = session?.metadata?.artistId;
+            const tier = session?.metadata?.tier || 'free';
+            const subscriptionId = session.subscription;
+            const customerId = session.customer;
+            if (artistId && subscriptionId && typeof subscriptionId === 'string') {
+              await upsertArtist({
+                id: artistId,
+                stripeCustomerId: typeof customerId === 'string' ? customerId : null,
+                stripeSubscriptionId: subscriptionId,
+                subscriptionTier: tier,
+                subscriptionStatus: 'active',
+              });
+              console.log('✅ Artist subscription activated', { artistId, tier, subscriptionId });
+            }
+          }
+
+          // Marketplace payment checkout completed
+          if (session?.mode === 'payment') {
+            const orderId = session?.metadata?.orderId;
+            const artworkId = session?.metadata?.artworkId;
+            if (orderId && supabaseAdmin) {
+              const { data: order } = await supabaseAdmin
+                .from('orders')
+                .select('*')
+                .eq('id', orderId)
+                .maybeSingle();
+              if (order && order.status !== 'paid') {
+                await supabaseAdmin
+                  .from('orders')
+                  .update({ status: 'paid', updated_at: new Date().toISOString() })
+                  .eq('id', orderId);
+                if (artworkId) {
+                  await supabaseAdmin
+                    .from('artworks')
+                    .update({ status: 'sold', updated_at: new Date().toISOString() })
+                    .eq('id', artworkId);
+                }
+                console.log('✅ Marketplace order paid', { orderId });
+              }
+            }
+          }
+        }
+
+        if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.deleted') {
+          const sub = event.data?.object;
+          const artistId = sub?.metadata?.artistId;
+          const tier = sub?.metadata?.tier || 'free';
+          if (artistId) {
+            await upsertArtist({
+              id: artistId,
+              stripeSubscriptionId: sub?.id || null,
+              subscriptionTier: tier,
+              subscriptionStatus: sub?.status === 'active' ? 'active' : (sub?.status || 'inactive'),
+            });
+            console.log('✅ Artist subscription updated', { artistId, status: sub?.status });
+          }
+        }
+
+        if (event.type === 'account.updated') {
+          const account = event.data?.object;
+          if (account?.id && supabaseAdmin) {
+            const nowIso = new Date().toISOString();
+            const updates = {
+              stripe_charges_enabled: !!account.charges_enabled,
+              stripe_payouts_enabled: !!account.payouts_enabled,
+              stripe_details_submitted: !!account.details_submitted,
+              updated_at: nowIso,
+            };
+            await supabaseAdmin.from('artists').update(updates).eq('stripe_account_id', account.id);
+            await supabaseAdmin.from('venues').update(updates).eq('stripe_account_id', account.id);
+            console.log('✅ Connect account updated', account.id);
+          }
+        }
+
+        // Record for idempotency
+        if (supabaseAdmin) {
+          await supabaseAdmin.from('stripe_webhook_events').insert({
+            event_id: event.id,
+            event_type: event.type,
+            processed_at: new Date().toISOString(),
+          }).then(() => {}).catch(() => {});
+        }
+
+        return json({ received: true });
+      } catch (err: any) {
+        console.error('Stripe webhook error:', err?.message);
+        return json({ error: err?.message || 'Webhook processing failed' }, { status: 400 });
+      }
+    }
+
+    // ── Stripe Connect: Artist ──
+
+    // Create Connect Express account for artist
+    if (url.pathname === '/api/stripe/connect/artist/create-account' && method === 'POST') {
+      const user = await getSupabaseUserFromRequest(request);
+      if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
+      if (user.user_metadata?.role !== 'artist') return json({ error: 'Artist role required' }, { status: 403 });
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+
+      // Check if already has account
+      const { data: artist } = await supabaseAdmin.from('artists').select('stripe_account_id,email,name').eq('id', user.id).maybeSingle();
+      if (artist?.stripe_account_id) return json({ accountId: artist.stripe_account_id, alreadyExists: true });
+
+      try {
+        const resp = await stripeFetch('/v1/accounts', {
+          method: 'POST',
+          body: toForm({
+            type: 'express',
+            email: artist?.email || user.email || undefined,
+            'capabilities[card_payments][requested]': 'true',
+            'capabilities[transfers][requested]': 'true',
+            'metadata[artistId]': user.id,
+          }),
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        });
+        const account = await resp.json();
+        if (!resp.ok) throw new Error(account?.error?.message || 'Account creation failed');
+
+        await upsertArtist({ id: user.id, email: artist?.email, name: artist?.name, role: 'artist', stripeAccountId: account.id });
+        return json({ accountId: account.id, alreadyExists: false });
+      } catch (err: any) {
+        return json({ error: err?.message || 'Stripe Connect error' }, { status: 500 });
+      }
+    }
+
+    // Create account link for artist onboarding
+    if (url.pathname === '/api/stripe/connect/artist/account-link' && method === 'POST') {
+      const user = await getSupabaseUserFromRequest(request);
+      if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
+      if (user.user_metadata?.role !== 'artist') return json({ error: 'Artist role required' }, { status: 403 });
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+
+      const { data: artist } = await supabaseAdmin.from('artists').select('stripe_account_id').eq('id', user.id).maybeSingle();
+      if (!artist?.stripe_account_id) return json({ error: 'No Stripe account. Call /create-account first.' }, { status: 400 });
+
+      const pagesOrigin = env.PAGES_ORIGIN || 'https://artwalls.space';
+      try {
+        const resp = await stripeFetch('/v1/account_links', {
+          method: 'POST',
+          body: toForm({
+            account: artist.stripe_account_id,
+            refresh_url: `${pagesOrigin}/#/artist-dashboard`,
+            return_url: `${pagesOrigin}/#/artist-dashboard`,
+            type: 'account_onboarding',
+          }),
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        });
+        const link = await resp.json();
+        if (!resp.ok) throw new Error(link?.error?.message || 'Account link failed');
+        return json({ url: link.url });
+      } catch (err: any) {
+        return json({ error: err?.message || 'Stripe account link error' }, { status: 500 });
+      }
+    }
+
+    // Login link for artist Connect dashboard
+    if (url.pathname === '/api/stripe/connect/artist/login-link' && method === 'POST') {
+      const user = await getSupabaseUserFromRequest(request);
+      if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+
+      const { data: artist } = await supabaseAdmin.from('artists').select('stripe_account_id').eq('id', user.id).maybeSingle();
+      if (!artist?.stripe_account_id) return json({ error: 'No Stripe account yet' }, { status: 400 });
+
+      try {
+        const resp = await stripeFetch(`/v1/accounts/${artist.stripe_account_id}/login_links`, {
+          method: 'POST',
+          body: '',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        });
+        const link = await resp.json();
+        if (!resp.ok) throw new Error(link?.error?.message || 'Login link failed');
+        return json({ url: link.url });
+      } catch (err: any) {
+        return json({ error: err?.message || 'Stripe login link error' }, { status: 500 });
+      }
+    }
+
+    // Artist Connect status
+    if (url.pathname === '/api/stripe/connect/artist/status' && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const artistId = url.searchParams.get('artistId');
+      if (!artistId) return json({ error: 'Missing artistId' }, { status: 400 });
+
+      const { data: artist } = await supabaseAdmin.from('artists').select('stripe_account_id').eq('id', artistId).maybeSingle();
+      if (!artist?.stripe_account_id) return json({ hasAccount: false });
+
+      try {
+        const resp = await stripeFetch(`/v1/accounts/${artist.stripe_account_id}`, { method: 'GET' });
+        const account = await resp.json();
+        if (!resp.ok) throw new Error(account?.error?.message || 'Status fetch failed');
+        return json({
+          hasAccount: true,
+          accountId: artist.stripe_account_id,
+          charges_enabled: account.charges_enabled,
+          payouts_enabled: account.payouts_enabled,
+          details_submitted: account.details_submitted,
+          chargesEnabled: account.charges_enabled,
+          payoutsEnabled: account.payouts_enabled,
+          detailsSubmitted: account.details_submitted,
+          requirements: account.requirements,
+        });
+      } catch (err: any) {
+        return json({ error: err?.message || 'Stripe status error' }, { status: 500 });
+      }
+    }
+
+    // ── Stripe Connect: Venue ──
+
+    // Create Connect Express account for venue
+    if (url.pathname === '/api/stripe/connect/venue/create-account' && method === 'POST') {
+      const user = await getSupabaseUserFromRequest(request);
+      if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
+      if (user.user_metadata?.role !== 'venue') return json({ error: 'Venue role required' }, { status: 403 });
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+
+      const { data: venue } = await supabaseAdmin.from('venues').select('stripe_account_id,email,name,default_venue_fee_bps').eq('id', user.id).maybeSingle();
+      if (venue?.stripe_account_id) return json({ accountId: venue.stripe_account_id, alreadyExists: true });
+
+      try {
+        const resp = await stripeFetch('/v1/accounts', {
+          method: 'POST',
+          body: toForm({
+            type: 'express',
+            email: venue?.email || user.email || undefined,
+            'capabilities[card_payments][requested]': 'true',
+            'capabilities[transfers][requested]': 'true',
+            'metadata[venueId]': user.id,
+          }),
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        });
+        const account = await resp.json();
+        if (!resp.ok) throw new Error(account?.error?.message || 'Account creation failed');
+
+        await upsertVenue({ id: user.id, email: venue?.email, name: venue?.name, stripeAccountId: account.id, defaultVenueFeeBps: venue?.default_venue_fee_bps ?? 1000 });
+        return json({ accountId: account.id, alreadyExists: false });
+      } catch (err: any) {
+        return json({ error: err?.message || 'Stripe Connect error' }, { status: 500 });
+      }
+    }
+
+    // Create account link for venue onboarding
+    if (url.pathname === '/api/stripe/connect/venue/account-link' && method === 'POST') {
+      const user = await getSupabaseUserFromRequest(request);
+      if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
+      if (user.user_metadata?.role !== 'venue') return json({ error: 'Venue role required' }, { status: 403 });
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+
+      const { data: venue } = await supabaseAdmin.from('venues').select('stripe_account_id').eq('id', user.id).maybeSingle();
+      if (!venue?.stripe_account_id) return json({ error: 'No Stripe account. Call /create-account first.' }, { status: 400 });
+
+      const pagesOrigin = env.PAGES_ORIGIN || 'https://artwalls.space';
+      try {
+        const resp = await stripeFetch('/v1/account_links', {
+          method: 'POST',
+          body: toForm({
+            account: venue.stripe_account_id,
+            refresh_url: `${pagesOrigin}/#/venue-dashboard`,
+            return_url: `${pagesOrigin}/#/venue-dashboard`,
+            type: 'account_onboarding',
+          }),
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        });
+        const link = await resp.json();
+        if (!resp.ok) throw new Error(link?.error?.message || 'Account link failed');
+        return json({ url: link.url });
+      } catch (err: any) {
+        return json({ error: err?.message || 'Stripe account link error' }, { status: 500 });
+      }
+    }
+
+    // Login link for venue Connect dashboard
+    if (url.pathname === '/api/stripe/connect/venue/login-link' && method === 'POST') {
+      const user = await getSupabaseUserFromRequest(request);
+      if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+
+      const { data: venue } = await supabaseAdmin.from('venues').select('stripe_account_id').eq('id', user.id).maybeSingle();
+      if (!venue?.stripe_account_id) return json({ error: 'No Stripe account yet' }, { status: 400 });
+
+      try {
+        const resp = await stripeFetch(`/v1/accounts/${venue.stripe_account_id}/login_links`, {
+          method: 'POST',
+          body: '',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        });
+        const link = await resp.json();
+        if (!resp.ok) throw new Error(link?.error?.message || 'Login link failed');
+        return json({ url: link.url });
+      } catch (err: any) {
+        return json({ error: err?.message || 'Stripe login link error' }, { status: 500 });
+      }
+    }
+
+    // Venue Connect status
+    if (url.pathname === '/api/stripe/connect/venue/status' && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const venueId = url.searchParams.get('venueId');
+      if (!venueId) return json({ error: 'Missing venueId' }, { status: 400 });
+
+      const { data: venue } = await supabaseAdmin.from('venues').select('stripe_account_id').eq('id', venueId).maybeSingle();
+      if (!venue?.stripe_account_id) return json({ hasAccount: false });
+
+      try {
+        const resp = await stripeFetch(`/v1/accounts/${venue.stripe_account_id}`, { method: 'GET' });
+        const account = await resp.json();
+        if (!resp.ok) throw new Error(account?.error?.message || 'Status fetch failed');
+        return json({
+          hasAccount: true,
+          accountId: venue.stripe_account_id,
+          charges_enabled: account.charges_enabled,
+          payouts_enabled: account.payouts_enabled,
+          details_submitted: account.details_submitted,
+          chargesEnabled: account.charges_enabled,
+          payoutsEnabled: account.payouts_enabled,
+          detailsSubmitted: account.details_submitted,
+          requirements: account.requirements,
+        });
+      } catch (err: any) {
+        return json({ error: err?.message || 'Stripe status error' }, { status: 500 });
+      }
+    }
+
+    // ── Stripe Billing ──
+
+    // Create subscription checkout session
+    if (url.pathname === '/api/stripe/billing/create-subscription-session' && method === 'POST') {
+      const user = await getSupabaseUserFromRequest(request);
+      if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
+      if (user.user_metadata?.role === 'venue') return json({ error: 'Only artists can subscribe' }, { status: 403 });
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+
+      const body = await request.json().catch(() => ({}));
+      const tier = String(body?.tier || '').toLowerCase();
+      if (!['starter', 'growth', 'pro'].includes(tier)) return json({ error: 'Invalid tier' }, { status: 400 });
+
+      const priceMap: Record<string, string | undefined> = {
+        starter: env.STRIPE_PRICE_ID_STARTER || env.STRIPE_SUB_PRICE_STARTER,
+        growth: env.STRIPE_PRICE_ID_GROWTH || env.STRIPE_SUB_PRICE_GROWTH,
+        pro: env.STRIPE_PRICE_ID_PRO || env.STRIPE_SUB_PRICE_PRO,
+      };
+      const priceId = priceMap[tier];
+      if (!priceId) return json({ error: `Price ID not configured for ${tier}` }, { status: 500 });
+
+      // Ensure Stripe customer
+      const { data: artist } = await supabaseAdmin.from('artists').select('stripe_customer_id,email,name').eq('id', user.id).maybeSingle();
+      let customerId = artist?.stripe_customer_id;
+      if (!customerId) {
+        const custResp = await stripeFetch('/v1/customers', {
+          method: 'POST',
+          body: toForm({
+            email: artist?.email || user.email || undefined,
+            name: artist?.name || undefined,
+            'metadata[artistId]': user.id,
+          }),
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        });
+        const cust = await custResp.json();
+        if (!custResp.ok) return json({ error: cust?.error?.message || 'Customer creation failed' }, { status: 500 });
+        customerId = cust.id;
+        await upsertArtist({ id: user.id, stripeCustomerId: customerId });
+      }
+
+      const pagesOrigin = env.PAGES_ORIGIN || 'https://artwalls.space';
+      try {
+        const sessResp = await stripeFetch('/v1/checkout/sessions', {
+          method: 'POST',
+          body: toForm({
+            mode: 'subscription',
+            success_url: `${pagesOrigin}/#/artist-dashboard?sub=success`,
+            cancel_url: `${pagesOrigin}/#/artist-dashboard?sub=cancel`,
+            customer: customerId,
+            'line_items[0][price]': priceId,
+            'line_items[0][quantity]': '1',
+            'metadata[artistId]': user.id,
+            'metadata[tier]': tier,
+            'subscription_data[metadata][artistId]': user.id,
+            'subscription_data[metadata][tier]': tier,
+          }),
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        });
+        const sess = await sessResp.json();
+        if (!sessResp.ok) throw new Error(sess?.error?.message || 'Checkout session failed');
+        return json({ url: sess.url });
+      } catch (err: any) {
+        return json({ error: err?.message || 'Unable to start subscription checkout' }, { status: 500 });
+      }
+    }
+
+    // Create billing portal session
+    if (url.pathname === '/api/stripe/billing/create-portal-session' && method === 'POST') {
+      const user = await getSupabaseUserFromRequest(request);
+      if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+
+      const { data: artist } = await supabaseAdmin.from('artists').select('stripe_customer_id,email,name').eq('id', user.id).maybeSingle();
+      let customerId = artist?.stripe_customer_id;
+      if (!customerId) {
+        const custResp = await stripeFetch('/v1/customers', {
+          method: 'POST',
+          body: toForm({
+            email: artist?.email || user.email || undefined,
+            name: artist?.name || undefined,
+            'metadata[artistId]': user.id,
+          }),
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        });
+        const cust = await custResp.json();
+        if (!custResp.ok) return json({ error: cust?.error?.message || 'Customer creation failed' }, { status: 500 });
+        customerId = cust.id;
+        await upsertArtist({ id: user.id, stripeCustomerId: customerId });
+      }
+
+      const pagesOrigin = env.PAGES_ORIGIN || 'https://artwalls.space';
+      try {
+        const portalResp = await stripeFetch('/v1/billing_portal/sessions', {
+          method: 'POST',
+          body: toForm({
+            customer: customerId,
+            return_url: `${pagesOrigin}/#/artist-dashboard`,
+          }),
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        });
+        const portal = await portalResp.json();
+        if (!portalResp.ok) throw new Error(portal?.error?.message || 'Billing portal error');
+        return json({ url: portal.url });
+      } catch (err: any) {
+        return json({ error: err?.message || 'Billing portal error' }, { status: 500 });
+      }
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // Public routes (artwork browsing, artist profiles, sets)
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // NOTE: The following public route handlers (through the end of the
+    // venue POST upsert) are the CANONICAL copies. Any duplicate blocks
+    // that follow are stale copies that should be removed.
+
     // Public: single artist with public artworks, display locations, and sets (lookup by slug or id)
     if (url.pathname.startsWith('/api/public/artists/') && method === 'GET') {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
@@ -951,9 +1513,9 @@ export default {
       const identifier = decodeURIComponent(slugOrId);
       const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(identifier);
       
-      let matchFilter = isUuid ? { id: identifier } : { slug: identifier };
+      let matchFilter = isUuid ? { id: identifier } : { slug: identifier }; // CANONICAL_COPY
 
-      let { data: artistRow, error: artistError } = await supabaseAdmin
+      let { data: artistRow, error: artistError } = await supabaseAdmin // CANONICAL
         .from('artists')
         .select('id,slug,name,bio,profile_photo_url,portfolio_url,website_url,instagram_handle,city_primary,city_secondary,is_public')
         .match(matchFilter)
