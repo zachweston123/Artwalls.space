@@ -1631,7 +1631,7 @@ export default {
         const { data: artistByUid, error: uidError } = await supabaseAdmin
           .from('artists')
           .select('id,slug,name,bio,profile_photo_url,portfolio_url,website_url,instagram_handle,city_primary,city_secondary,is_public')
-          .eq('id', uid)
+          .eq('user_id', uid)
           .maybeSingle();
         
         if (uidError) {
