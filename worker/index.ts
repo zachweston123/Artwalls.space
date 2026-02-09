@@ -1036,6 +1036,109 @@ export default {
       return json({ artists });
     }
 
+    // ── Analytics Routes ───────────────────────────────────────────
+
+    // Analytics: Artist — aggregate scan/view/checkout/purchase data
+    if (url.pathname === '/api/analytics/artist' && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const user = await getSupabaseUserFromRequest(request);
+      const artistId = url.searchParams.get('artistId') || user?.id;
+      if (!artistId) return json({ error: 'Missing artistId' }, { status: 400 });
+
+      const now = new Date();
+      const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+      // Get all artworks by this artist
+      const { data: artworks } = await supabaseAdmin
+        .from('artworks')
+        .select('id')
+        .eq('artist_id', artistId);
+      const artworkIds = (artworks || []).map((a: any) => a.id);
+
+      if (artworkIds.length === 0) {
+        return json({ cards: { scansWeek: 0, scansMonth: 0, conversion: 0 }, perArtwork: {} });
+      }
+
+      const { data: events } = await supabaseAdmin
+        .from('events')
+        .select('event_type,artwork_id,created_at')
+        .in('artwork_id', artworkIds)
+        .gte('created_at', monthAgo)
+        .order('created_at', { ascending: false })
+        .limit(5000);
+
+      const rows = events || [];
+      let scansWeek = 0, scansMonth = 0, totalCheckouts = 0, totalPurchases = 0;
+      const perArtwork: Record<string, { scans: number; views: number; checkouts: number; purchases: number }> = {};
+
+      for (const e of rows) {
+        const aid = e.artwork_id || 'unknown';
+        if (!perArtwork[aid]) perArtwork[aid] = { scans: 0, views: 0, checkouts: 0, purchases: 0 };
+        if (e.event_type === 'qr_scan') {
+          scansMonth++;
+          if (e.created_at >= weekAgo) scansWeek++;
+          perArtwork[aid].scans++;
+        } else if (e.event_type === 'view_artwork') {
+          perArtwork[aid].views++;
+        } else if (e.event_type === 'start_checkout') {
+          totalCheckouts++;
+          perArtwork[aid].checkouts++;
+        } else if (e.event_type === 'purchase') {
+          totalPurchases++;
+          perArtwork[aid].purchases++;
+        }
+      }
+
+      const conversion = totalCheckouts > 0 ? Math.round((totalPurchases / totalCheckouts) * 100) : 0;
+      return json({ cards: { scansWeek, scansMonth, conversion }, perArtwork });
+    }
+
+    // Analytics: Venue — aggregate scan/view/checkout/purchase data
+    if (url.pathname === '/api/analytics/venue' && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const user = await getSupabaseUserFromRequest(request);
+      const venueId = url.searchParams.get('venueId') || user?.id;
+      if (!venueId) return json({ error: 'Missing venueId' }, { status: 400 });
+
+      const now = new Date();
+      const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+      const { data: events } = await supabaseAdmin
+        .from('events')
+        .select('event_type,artwork_id,created_at')
+        .eq('venue_id', venueId)
+        .gte('created_at', monthAgo)
+        .order('created_at', { ascending: false })
+        .limit(5000);
+
+      const rows = events || [];
+      let scansWeek = 0, scansMonth = 0, totalCheckouts = 0, totalPurchases = 0;
+      const perArtwork: Record<string, { scans: number; views: number; checkouts: number; purchases: number }> = {};
+
+      for (const e of rows) {
+        const aid = e.artwork_id || 'unknown';
+        if (!perArtwork[aid]) perArtwork[aid] = { scans: 0, views: 0, checkouts: 0, purchases: 0 };
+        if (e.event_type === 'qr_scan') {
+          scansMonth++;
+          if (e.created_at >= weekAgo) scansWeek++;
+          perArtwork[aid].scans++;
+        } else if (e.event_type === 'view_artwork') {
+          perArtwork[aid].views++;
+        } else if (e.event_type === 'start_checkout') {
+          totalCheckouts++;
+          perArtwork[aid].checkouts++;
+        } else if (e.event_type === 'purchase') {
+          totalPurchases++;
+          perArtwork[aid].purchases++;
+        }
+      }
+
+      const conversion = totalCheckouts > 0 ? Math.round((totalPurchases / totalCheckouts) * 100) : 0;
+      return json({ cards: { scansWeek, scansMonth, conversion }, perArtwork });
+    }
+
     // ── Stripe Routes ──────────────────────────────────────────────
 
     // Stripe webhook – verify signature with Web Crypto, then handle event
