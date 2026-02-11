@@ -232,7 +232,7 @@ export default {
     // Authenticated fetch against the Stripe REST API
     async function stripeFetch(path: string, init: RequestInit): Promise<Response> {
       const key = env.STRIPE_SECRET_KEY;
-      if (!key) throw new Error('STRIPE_SECRET_KEY not configured');
+      if (!key) throw new Error('STRIPE_SECRET_KEY not configured — run: wrangler secret put STRIPE_SECRET_KEY');
       const headers = new Headers(init.headers);
       headers.set('Authorization', `Bearer ${key}`);
       if (!headers.has('Content-Type')) {
@@ -1319,8 +1319,8 @@ export default {
     // Artist Connect status
     if (url.pathname === '/api/stripe/connect/artist/status' && method === 'GET') {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
-      const artistId = url.searchParams.get('artistId');
-      if (!artistId) return json({ error: 'Missing artistId' }, { status: 400 });
+      const artistId = url.searchParams.get('artistId') || url.searchParams.get('userId');
+      if (!artistId) return json({ error: 'Missing artistId or userId' }, { status: 400 });
 
       const { data: artist } = await supabaseAdmin.from('artists').select('stripe_account_id').eq('id', artistId).maybeSingle();
       if (!artist?.stripe_account_id) return json({ hasAccount: false });
@@ -1441,8 +1441,8 @@ export default {
     // Venue Connect status
     if (url.pathname === '/api/stripe/connect/venue/status' && method === 'GET') {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
-      const venueId = url.searchParams.get('venueId');
-      if (!venueId) return json({ error: 'Missing venueId' }, { status: 400 });
+      const venueId = url.searchParams.get('venueId') || url.searchParams.get('userId');
+      if (!venueId) return json({ error: 'Missing venueId or userId' }, { status: 400 });
 
       const { data: venue } = await supabaseAdmin.from('venues').select('stripe_account_id').eq('id', venueId).maybeSingle();
       if (!venue?.stripe_account_id) return json({ hasAccount: false });
