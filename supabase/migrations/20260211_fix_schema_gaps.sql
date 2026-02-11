@@ -30,4 +30,16 @@ ALTER TABLE public.wallspaces
 ALTER TABLE public.orders
   ADD COLUMN IF NOT EXISTS venue_commission_cents integer DEFAULT 0;
 
+-- ── 5. orders: economics snapshot columns ──────────────────────────────────
+-- These columns freeze the pricing breakdown at checkout time so payouts
+-- always use the snapshot, not recomputed values.
+ALTER TABLE public.orders
+  ADD COLUMN IF NOT EXISTS list_price_cents integer,
+  ADD COLUMN IF NOT EXISTS buyer_fee_cents integer DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS buyer_total_cents integer,
+  ADD COLUMN IF NOT EXISTS venue_amount_cents integer,
+  ADD COLUMN IF NOT EXISTS artist_amount_cents integer,
+  ADD COLUMN IF NOT EXISTS platform_gross_before_stripe_cents integer,
+  ADD COLUMN IF NOT EXISTS artist_plan_id_at_purchase text;
+
 COMMIT;

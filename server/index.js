@@ -319,85 +319,19 @@ app.post('/api/stripe/billing/create-subscription-session', async (req, res) => 
 });
 
 // -----------------------------
-// Health + Debug (no secrets)
+// Health (no secrets)
 // -----------------------------
 app.get('/api/health', (_req, res) => {
   return res.json({ ok: true });
 });
 
+// Debug endpoints removed for security (P0)
 app.get('/api/debug/env', (_req, res) => {
-  try {
-    return res.json({
-      ok: true,
-      env: {
-        nodeEnv: process.env.NODE_ENV || null,
-        appUrl: APP_URL || null,
-        corsOrigin: CORS_ORIGIN,
-        stripe: {
-          secretKey: !!process.env.STRIPE_SECRET_KEY,
-          webhookSecret: !!process.env.STRIPE_WEBHOOK_SECRET,
-        },
-      },
-    });
-  } catch (e) {
-    return res.status(500).json({ ok: false, error: e?.message || 'debug error' });
-  }
+  return res.status(404).json({ error: 'Not found' });
 });
 
-// Supabase connection test endpoint
-app.get('/api/debug/supabase', async (_req, res) => {
-  try {
-    const rawUrl = process.env.SUPABASE_URL || '';
-    const rawKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-    const cleanUrl = rawUrl.trim().replace(/\/+$/, '');
-    
-    // Show partial URL for debugging (hide sensitive parts)
-    const urlPreview = cleanUrl ? cleanUrl.substring(0, 40) + '...' : 'MISSING';
-    const keyPreview = rawKey ? `${rawKey.substring(0, 20)}...${rawKey.substring(rawKey.length - 10)}` : 'MISSING';
-    
-    // Test basic connection by querying a simple table
-    const { data: artistsTest, error: artistsError } = await supabaseAdmin
-      .from('artists')
-      .select('id')
-      .limit(1);
-
-    const { data: venuesTest, error: venuesError } = await supabaseAdmin
-      .from('venues')
-      .select('id')
-      .limit(1);
-
-    return res.json({
-      ok: !artistsError && !venuesError,
-      config: {
-        supabaseUrl: urlPreview,
-        serviceRoleKey: keyPreview,
-        urlValid: cleanUrl.includes('.supabase.co'),
-        keyLength: rawKey.length,
-      },
-      artists: {
-        ok: !artistsError,
-        count: artistsTest?.length ?? 0,
-        error: artistsError?.message || null,
-        code: artistsError?.code || null,
-        hint: artistsError?.hint || null,
-        details: artistsError?.details || null,
-      },
-      venues: {
-        ok: !venuesError,
-        count: venuesTest?.length ?? 0,
-        error: venuesError?.message || null,
-        code: venuesError?.code || null,
-        hint: venuesError?.hint || null,
-        details: venuesError?.details || null,
-      },
-    });
-  } catch (e) {
-    return res.status(500).json({ 
-      ok: false, 
-      error: e?.message || 'Supabase test error',
-      stack: process.env.NODE_ENV !== 'production' ? e?.stack : undefined,
-    });
-  }
+app.get('/api/debug/supabase', (_req, res) => {
+  return res.status(404).json({ error: 'Not found' });
 });
 
 // Email verification sign-up flow (custom template)

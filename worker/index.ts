@@ -72,7 +72,7 @@ export default {
         status: 204,
         headers: {
           'Access-Control-Allow-Origin': allowOrigin,
-          'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+          'Access-Control-Allow-Methods': 'GET,POST,PATCH,OPTIONS',
           'Access-Control-Allow-Headers': 'authorization, content-type, x-client-info, apikey',
           'Access-Control-Max-Age': '86400',
           Vary: 'Origin',
@@ -84,7 +84,7 @@ export default {
       const headers = new Headers(init?.headers);
       headers.set('Content-Type', 'application/json');
       headers.set('Access-Control-Allow-Origin', allowOrigin);
-      headers.set('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+      headers.set('Access-Control-Allow-Methods', 'GET,POST,PATCH,OPTIONS');
       headers.set('Access-Control-Allow-Headers', 'authorization, content-type, x-client-info, apikey');
       headers.set('Vary', 'Origin');
       const body = JSON.stringify(obj);
@@ -95,7 +95,7 @@ export default {
       const headers = new Headers(init?.headers);
       headers.set('Content-Type', 'text/plain; charset=utf-8');
       headers.set('Access-Control-Allow-Origin', allowOrigin);
-      headers.set('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+      headers.set('Access-Control-Allow-Methods', 'GET,POST,PATCH,OPTIONS');
       headers.set('Access-Control-Allow-Headers', 'authorization, content-type, x-client-info, apikey');
       headers.set('Vary', 'Origin');
       return new Response(body, { status: init?.status ?? 200, headers });
@@ -528,157 +528,13 @@ export default {
       return json({ ok: true });
     }
 
-    // Debug auth endpoint - test if authorization header is being passed correctly
-    if (url.pathname === '/api/debug/auth' && method === 'GET') {
-      const authHeader = request.headers.get('authorization') || '';
-      const hasAuth = authHeader.startsWith('Bearer ');
-      const tokenPreview = hasAuth ? authHeader.substring(7, 27) + '...' : 'NONE';
-      
-      if (!hasAuth) {
-        return json({
-          ok: false,
-          error: 'No Authorization header',
-          authHeader: authHeader || 'EMPTY',
-        }, { status: 401 });
-      }
-      
-      const user = await getSupabaseUserFromRequest(request);
-      if (!user) {
-        return json({
-          ok: false,
-          error: 'Invalid or expired token',
-          tokenPreview,
-          supabaseConfigured: !!supabaseAdmin,
-        }, { status: 401 });
-      }
-      
-      return json({
-        ok: true,
-        userId: user.id,
-        email: user.email,
-        role: user.user_metadata?.role || 'artist',
-        tokenPreview,
-      });
+    // Debug/env endpoints removed for security (P0)
+    if (url.pathname === '/api/debug/auth' || url.pathname === '/api/env/check' || url.pathname === '/api/debug/supabase') {
+      return json({ error: 'Not found' }, { status: 404 });
     }
 
     if (url.pathname === '/') {
       return text('Artwalls API OK');
-    }
-
-    // Env check: verify required configuration without leaking secrets
-    if (url.pathname === '/api/env/check' && method === 'GET') {
-      return json({
-        ok: true,
-        vars: {
-          STRIPE_WEBHOOK_SECRET: Boolean(env.STRIPE_WEBHOOK_SECRET),
-          STRIPE_SECRET_KEY: Boolean(env.STRIPE_SECRET_KEY),
-          SUPABASE_URL: Boolean(env.SUPABASE_URL),
-          SUPABASE_SERVICE_ROLE_KEY: Boolean(env.SUPABASE_SERVICE_ROLE_KEY),
-          API_BASE_URL: env.API_BASE_URL || null,
-          PAGES_ORIGIN: env.PAGES_ORIGIN || 'https://artwalls.space',
-        },
-        debug: {
-          supabaseUrlLength: (env.SUPABASE_URL || '').length,
-          serviceKeyLength: (env.SUPABASE_SERVICE_ROLE_KEY || '').length,
-          serviceKeyPrefix: (env.SUPABASE_SERVICE_ROLE_KEY || '').substring(0, 10),
-          supabaseClientCreated: !!supabaseAdmin,
-        },
-      });
-    }
-
-    // Supabase debug: test connection and table access
-    if (url.pathname === '/api/debug/supabase' && method === 'GET') {
-      const keyLen = rawServiceKey.length;
-      const keyPrefix = rawServiceKey.substring(0, 15);
-      const keySuffix = rawServiceKey.substring(rawServiceKey.length - 10);
-      
-      if (!supabaseAdmin) {
-        return json({
-          ok: false,
-          error: 'Supabase client not created',
-          diagnosis: {
-            urlConfigured: !!rawSupabaseUrl,
-            urlValue: rawSupabaseUrl || 'MISSING',
-            keyConfigured: !!rawServiceKey,
-            keyLength: keyLen,
-            keyPrefix: keyPrefix || 'EMPTY',
-            keySuffix: keySuffix || 'EMPTY',
-            keyLooksValid: keyLen > 100 && keyPrefix.startsWith('eyJ'),
-          },
-        }, { status: 500 });
-      }
-
-      try {
-        const { data: artistsTest, error: artistsError } = await supabaseAdmin
-          .from('artists')
-          .select('id')
-          .limit(1);
-
-        const { data: venuesTest, error: venuesError } = await supabaseAdmin
-          .from('venues')
-          .select('id')
-          .limit(1);
-
-        return json({
-          ok: !artistsError && !venuesError,
-          config: {
-            supabaseUrl: rawSupabaseUrl,
-            keyLength: keyLen,
-            keyPrefix: keyPrefix,
-            keySuffix: keySuffix,
-            keyLooksValid: keyLen > 100 && keyPrefix.startsWith('eyJ'),
-          },
-          artists: {
-            ok: !artistsError,
-            count: artistsTest?.length ?? 0,
-            error: artistsError?.message || null,
-            code: artistsError?.code || null,
-            hint: (artistsError as any)?.hint || null,
-            details: (artistsError as any)?.details || null,
-          },
-          venues: {
-            ok: !venuesError,
-            count: venuesTest?.length ?? 0,
-            error: venuesError?.message || null,
-            code: venuesError?.code || null,
-            hint: (venuesError as any)?.hint || null,
-            details: (venuesError as any)?.details || null,
-          },
-        });
-      } catch (e: unknown) {
-        return json({
-          ok: false,
-          error: getErrorMessage(e),
-          stack: e instanceof Error ? e.stack?.substring(0, 500) ?? null : null,
-        }, { status: 500 });
-      }
-    }
-
-    // Debug: test auth token
-    if (url.pathname === '/api/debug/auth' && method === 'GET') {
-      const authHeader = request.headers.get('authorization') || '';
-      const [scheme, token] = authHeader.split(' ');
-      if (!scheme || scheme.toLowerCase() !== 'bearer' || !token) {
-        return json({ ok: false, error: 'Missing or invalid Authorization header', scheme, hasToken: !!token });
-      }
-      if (!supabaseAdmin) {
-        return json({ ok: false, error: 'Supabase not configured' });
-      }
-      try {
-        const { data, error } = await supabaseAdmin.auth.getUser(token);
-        if (error) {
-          return json({ ok: false, error: error.message, code: (error as any).code });
-        }
-        return json({ 
-          ok: true, 
-          userId: data.user?.id, 
-          email: data.user?.email,
-          role: data.user?.user_metadata?.role,
-          metadata: data.user?.user_metadata,
-        });
-      } catch (e: unknown) {
-        return json({ ok: false, error: getErrorMessage(e) });
-      }
     }
 
 
@@ -2703,6 +2559,231 @@ export default {
         defaultVenueFeeBps: typeof payload?.defaultVenueFeeBps === 'number' ? payload.defaultVenueFeeBps : 1000,
       });
       return resp;
+    }
+
+    // ── Support System Routes ──────────────────────────────────────────────
+
+    // POST /api/support/messages — public contact form submission
+    if (url.pathname === '/api/support/messages' && method === 'POST') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const rl = rateLimitByIp(getClientIp(request), 5, 60_000);
+      if (!rl.ok) return json({ error: 'Rate limit exceeded' }, { status: 429 });
+
+      const payload = await request.json().catch(() => ({}));
+      const email = clampStr(payload?.email, 254)?.trim() || '';
+      const message = clampStr(payload?.message, 5000)?.trim() || '';
+      const roleContext = clampStr(payload?.role_context, 50) || 'other';
+      const pageSource = clampStr(payload?.page_source, 100) || 'unknown';
+      const honeypot = payload?.honeypot || payload?.website || '';
+
+      if (!email || !isValidEmail(email)) return json({ error: 'Valid email required' }, { status: 400 });
+      if (!message || message.length < 10) return json({ error: 'Message must be at least 10 characters' }, { status: 400 });
+
+      // Honeypot check — silently succeed but don't store
+      if (honeypot) return json({ ok: true });
+
+      const { data, error: insertErr } = await supabaseAdmin
+        .from('support_messages')
+        .insert({
+          email,
+          message,
+          role_context: roleContext,
+          page_source: pageSource,
+          status: 'new',
+        })
+        .select('id')
+        .single();
+
+      if (insertErr) return json({ error: insertErr.message }, { status: 500 });
+      return json({ ok: true, id: data?.id });
+    }
+
+    // GET /api/admin/support-tickets — list tickets (grouped from support_messages by email+page_source)
+    if (url.pathname === '/api/admin/support-tickets' && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const user = await getSupabaseUserFromRequest(request);
+      if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
+      const { data: artist } = await supabaseAdmin.from('artists').select('role').eq('id', user.id).maybeSingle();
+      if (artist?.role !== 'admin') return json({ error: 'Forbidden' }, { status: 403 });
+
+      const statusFilter = url.searchParams.get('status') || '';
+
+      // Fetch all messages and group client-side into "tickets"
+      let query = supabaseAdmin
+        .from('support_messages')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(500);
+
+      if (statusFilter && ['new', 'open', 'closed'].includes(statusFilter)) {
+        query = query.eq('status', statusFilter);
+      }
+
+      const { data: messages, error: fetchErr } = await query;
+      if (fetchErr) return json({ error: fetchErr.message }, { status: 500 });
+
+      // Group by email + page_source to compute tickets
+      const ticketMap = new Map<string, any>();
+      for (const msg of (messages || [])) {
+        const key = `${msg.email}::${msg.page_source}`;
+        if (!ticketMap.has(key)) {
+          // Stable ticket ID derived from first message in group
+          ticketMap.set(key, {
+            id: key,
+            email: msg.email,
+            pageSource: msg.page_source,
+            roleContext: msg.role_context,
+            subject: `${msg.role_context} inquiry from ${msg.page_source}`,
+            description: msg.message.substring(0, 200),
+            status: msg.status,
+            severity: 'medium',
+            userId: msg.email,
+            messageCount: 0,
+            latestMessageId: msg.id,
+            createdAt: msg.created_at,
+            updatedAt: msg.updated_at,
+          });
+        }
+        const ticket = ticketMap.get(key)!;
+        ticket.messageCount++;
+        // Escalate severity if any message is new
+        if (msg.status === 'new') ticket.severity = 'high';
+        // Ticket status = worst status
+        if (msg.status === 'new' && ticket.status !== 'new') ticket.status = 'new';
+      }
+
+      return json(Array.from(ticketMap.values()));
+    }
+
+    // GET /api/admin/support-tickets/:id/messages — messages for a ticket group
+    if (url.pathname.match(/^\/api\/admin\/support-tickets\/(.+)\/messages$/) && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const user = await getSupabaseUserFromRequest(request);
+      if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
+      const { data: artist } = await supabaseAdmin.from('artists').select('role').eq('id', user.id).maybeSingle();
+      if (artist?.role !== 'admin') return json({ error: 'Forbidden' }, { status: 403 });
+
+      const ticketId = decodeURIComponent(url.pathname.split('/support-tickets/')[1].split('/messages')[0]);
+      const [email, pageSource] = ticketId.split('::');
+
+      let query = supabaseAdmin
+        .from('support_messages')
+        .select('*')
+        .eq('email', email || '')
+        .eq('page_source', pageSource || '')
+        .order('created_at', { ascending: true });
+
+      const { data: messages, error: fetchErr } = await query;
+      if (fetchErr) return json({ error: fetchErr.message }, { status: 500 });
+
+      return json({ messages: messages || [] });
+    }
+
+    // GET /api/admin/support/messages — list messages with filters (for SupportInbox)
+    if (url.pathname === '/api/admin/support/messages' && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const user = await getSupabaseUserFromRequest(request);
+      if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
+      const { data: artist } = await supabaseAdmin.from('artists').select('role').eq('id', user.id).maybeSingle();
+      if (artist?.role !== 'admin') return json({ error: 'Forbidden' }, { status: 403 });
+
+      const limit = Math.min(parseInt(url.searchParams.get('limit') || '20', 10), 100);
+      const offset = parseInt(url.searchParams.get('offset') || '0', 10);
+      const statusFilter = url.searchParams.get('status') || '';
+      const searchEmail = url.searchParams.get('searchEmail') || '';
+      const searchMessage = url.searchParams.get('searchMessage') || '';
+
+      let query = supabaseAdmin
+        .from('support_messages')
+        .select('*', { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (statusFilter && ['new', 'open', 'closed'].includes(statusFilter)) {
+        query = query.eq('status', statusFilter);
+      }
+      if (searchEmail) {
+        query = query.ilike('email', `%${searchEmail}%`);
+      }
+      if (searchMessage) {
+        query = query.ilike('message', `%${searchMessage}%`);
+      }
+
+      const { data: messages, count, error: fetchErr } = await query;
+      if (fetchErr) return json({ error: fetchErr.message }, { status: 500 });
+
+      // Map to camelCase for frontend compatibility
+      const mapped = (messages || []).map((m: any) => ({
+        id: m.id,
+        email: m.email,
+        message: m.message,
+        roleContext: m.role_context,
+        pageSource: m.page_source,
+        status: m.status,
+        createdAt: m.created_at,
+        updatedAt: m.updated_at,
+      }));
+
+      return json({ messages: mapped, total: count || 0 });
+    }
+
+    // GET /api/admin/support/messages/:id — single message detail
+    if (url.pathname.match(/^\/api\/admin\/support\/messages\/[^/]+$/) && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const user = await getSupabaseUserFromRequest(request);
+      if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
+      const { data: artist } = await supabaseAdmin.from('artists').select('role').eq('id', user.id).maybeSingle();
+      if (artist?.role !== 'admin') return json({ error: 'Forbidden' }, { status: 403 });
+
+      const msgId = url.pathname.split('/messages/')[1];
+      if (!isUUID(msgId)) return json({ error: 'Invalid message ID' }, { status: 400 });
+
+      const { data: msg, error: fetchErr } = await supabaseAdmin
+        .from('support_messages')
+        .select('*')
+        .eq('id', msgId)
+        .maybeSingle();
+
+      if (fetchErr) return json({ error: fetchErr.message }, { status: 500 });
+      if (!msg) return json({ error: 'Not found' }, { status: 404 });
+
+      return json({
+        id: msg.id,
+        email: msg.email,
+        message: msg.message,
+        roleContext: msg.role_context,
+        pageSource: msg.page_source,
+        status: msg.status,
+        createdAt: msg.created_at,
+        updatedAt: msg.updated_at,
+      });
+    }
+
+    // PATCH /api/admin/support/messages/:id/status — update message status
+    if (url.pathname.match(/^\/api\/admin\/support\/messages\/[^/]+\/status$/) && method === 'PATCH') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const user = await getSupabaseUserFromRequest(request);
+      if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
+      const { data: artist } = await supabaseAdmin.from('artists').select('role').eq('id', user.id).maybeSingle();
+      if (artist?.role !== 'admin') return json({ error: 'Forbidden' }, { status: 403 });
+
+      const parts = url.pathname.split('/messages/')[1].split('/status');
+      const msgId = parts[0];
+      if (!isUUID(msgId)) return json({ error: 'Invalid message ID' }, { status: 400 });
+
+      const payload = await request.json().catch(() => ({}));
+      const newStatus = String(payload?.status || '').trim();
+      if (!['new', 'open', 'closed'].includes(newStatus)) {
+        return json({ error: 'Status must be new, open, or closed' }, { status: 400 });
+      }
+
+      const { error: updateErr } = await supabaseAdmin
+        .from('support_messages')
+        .update({ status: newStatus, updated_at: new Date().toISOString() })
+        .eq('id', msgId);
+
+      if (updateErr) return json({ error: updateErr.message }, { status: 500 });
+      return json({ ok: true, status: newStatus });
     }
 
     // ── Fallback: 404 for unmatched API routes ──

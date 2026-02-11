@@ -216,23 +216,24 @@ export function ArtistAgreement({ onNavigate, onAccept, hasAccepted = false }: A
                   be updated from time to time.
                 </p>
 
-                <h3 className="text-base mb-2 mt-4 text-[var(--text)]">Platform fee on sales</h3>
+                <h3 className="text-base mb-2 mt-4 text-[var(--text)]">Artist take-home by plan</h3>
                 <p className="text-[var(--text)] leading-relaxed mb-2">
-                  For sales processed through Artwalls, Artwalls charges a platform fee that depends on your plan:
+                  For sales processed through Artwalls, your take-home percentage of the list price depends on your plan:
                 </p>
                 <ul className="list-disc list-inside space-y-2 text-[var(--text)] leading-relaxed mb-3">
-                  <li>Free: 15% platform fee</li>
-                  <li>Starter: 10% platform fee</li>
-                  <li>Growth: 8% platform fee</li>
-                  <li>Pro: 6% platform fee</li>
+                  <li>Free: Take home 60%</li>
+                  <li>Starter: Take home 80%</li>
+                  <li>Growth: Take home 83%</li>
+                  <li>Pro: Take home 85%</li>
                 </ul>
 
                 <h3 className="text-base mb-2 mt-4 text-[var(--text)]">Revenue split on completed sales</h3>
                 <p className="text-[var(--text)] leading-relaxed mb-2">
-                  Artist take-home varies by plan, venues receive 15%, and Artwalls retains the remainder (with plan-based fee adjustments as shown above).
+                  Venues receive 15% of the list price on every sale. A 4.5% buyer support fee is added at checkout (paid by the buyer). 
+                  The remainder after artist and venue payouts covers platform and payment processing costs ("Platform + Processing").
                 </p>
                 <p className="text-[var(--text)] leading-relaxed mb-3">
-                  Payment processing fees may apply as disclosed at checkout or in your dashboard.
+                  All sales are final. No returns or refunds.
                 </p>
 
                 <h3 className="text-base mb-2 mt-4 text-[var(--text)]">Active displays and overage pricing</h3>

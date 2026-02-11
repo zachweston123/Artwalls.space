@@ -217,21 +217,22 @@ export function VenueAgreement({ onNavigate, onAccept, hasAccepted = false }: Ve
                   For completed sales processed through Artwalls:
                 </p>
                 <ul className="list-disc list-inside space-y-2 text-[var(--text)] leading-relaxed">
-                  <li>Artist payout: 80% of sale price</li>
-                  <li>Venue share: 15% of sale price</li>
-                  <li>Artwalls fee: remainder after artist and venue shares</li>
+                  <li>Venue share: 15% of list price (all plans)</li>
+                  <li>Artist take-home: varies by plan (Free 60%, Starter 80%, Growth 83%, Pro 85% of list price)</li>
+                  <li>Buyer support fee: 4.5% added at checkout (paid by buyer)</li>
+                  <li>Platform + Processing: remainder after venue and artist payouts</li>
                 </ul>
                 <p className="text-[var(--text)] leading-relaxed mt-3">
-                  You agree not to interfere with QR labels or purchase links and not to misrepresent pricing 
-                  to customers.
+                  All sales are final. You agree not to interfere with QR labels or purchase links and not to misrepresent pricing 
+                  to customers. Do not promise refunds or returns on behalf of Artists or Artwalls.
                 </p>
               </section>
 
               <section id="customer">
                 <h2 className="text-xl mb-3 text-[var(--text)]">8. Customer Sales Policy</h2>
                 <p className="text-[var(--text)] leading-relaxed">
-                  All sales are final. Venues should encourage customers to view artwork in person before purchase. 
-                  Venues should not promise refunds or returns on behalf of Artists or Artwalls.
+                  All sales are final. No returns, refunds, or cancellations are offered. Venues should encourage 
+                  customers to view artwork in person before purchase.
                 </p>
               </section>
 

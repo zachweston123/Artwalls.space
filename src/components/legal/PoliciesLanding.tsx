@@ -27,9 +27,10 @@ export function PoliciesLanding({ onNavigate }: PoliciesLandingProps) {
           <h2 className="text-xl mb-2 text-[var(--text)]">Pricing & Plans</h2>
           <p className="text-sm text-[var(--text-muted)] mb-4">
             Artwalls offers a Free plan plus paid subscriptions: Starter ($9/mo), Growth ($19/mo), and Pro ($39/mo). 
-            Plans differ by active displays included (Free 1, Starter 4, Growth 10, Pro unlimited), platform fee on sales 
-            (Free 15%, Starter 10%, Growth 8%, Pro 6%), and payout timing (Free weekly payouts; paid plans standard/faster). 
-            Additional active displays may incur monthly overage charges as shown on the Plans & Pricing page.
+            Artists take home a percentage of each sale: Free 60%, Starter 80%, Growth 83%, Pro 85%. 
+            Venues earn 15% of every sale. A 4.5% buyer support fee is added at checkout. 
+            Platform + processing costs come from the remainder. Plans differ by active displays 
+            (Free 1, Starter 4, Growth 10, Pro unlimited) and payout timing.
           </p>
           <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
             <span>View Plans & Pricing</span>
