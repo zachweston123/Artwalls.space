@@ -41,32 +41,18 @@ export class ErrorBoundary extends Component<Props, State> {
     return (
       <div
         role="alert"
-        style={{
-          maxWidth: 520,
-          margin: '4rem auto',
-          padding: '2rem',
-          textAlign: 'center',
-          fontFamily: 'system-ui, sans-serif',
-        }}
+        className="max-w-lg mx-auto mt-16 p-8 text-center"
       >
-        <h2 style={{ fontSize: '1.25rem', marginBottom: '0.75rem' }}>
+        <h2 className="text-xl font-semibold mb-3 text-[var(--text)]">
           Something went wrong
         </h2>
-        <p style={{ color: '#666', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+        <p className="text-sm text-[var(--text-muted)] mb-6">
           {error.message || 'An unexpected error occurred.'}
         </p>
         <button
           type="button"
           onClick={this.reset}
-          style={{
-            padding: '0.5rem 1.25rem',
-            borderRadius: 6,
-            border: '1px solid #ccc',
-            background: '#111',
-            color: '#fff',
-            cursor: 'pointer',
-            fontSize: '0.875rem',
-          }}
+          className="px-5 py-2 rounded-md border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] text-sm cursor-pointer hover:bg-[var(--surface-3)] transition-colors"
         >
           Try again
         </button>

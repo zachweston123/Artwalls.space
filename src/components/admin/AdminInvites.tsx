@@ -80,7 +80,7 @@ export function AdminInvites() {
 
         {summary?.byDay?.length ? (
           <div className="mb-6">
-            <h2 className="text-sm font-semibold text-[var(--text)] mb-3">Invites by day (last 7)</h2>
+            <h2 className="text-base font-semibold text-[var(--text)] mb-3">Invites by day (last 7)</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {summary.byDay.slice(-7).map((day: InviteDayEntry) => (
                 <div key={day.date} className="bg-[var(--surface-2)] border border-[var(--border)] rounded-lg p-3">

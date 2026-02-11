@@ -45,7 +45,7 @@ export function AdminSidebar({ currentPage, onNavigate, onLogout, userName, user
             <Shield className="w-5 h-5 text-[var(--on-blue)]" />
           </div>
           <div>
-            <h2 className="text-sm text-[var(--text)]">Admin Console</h2>
+            <h2 className="text-base font-semibold text-[var(--text)]">Admin Console</h2>
             <p className="text-xs text-[var(--text-muted)]">Internal</p>
           </div>
         </div>

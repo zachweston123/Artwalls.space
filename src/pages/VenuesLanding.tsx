@@ -258,7 +258,7 @@ export function VenuesLandingPage({ onNavigate, onLogin, viewerRole = null }: Ve
           <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_.8fr] gap-6 items-center">
             <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-2xl p-6 sm:p-8 shadow-sm">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--surface-2)] border border-[var(--border)] text-[var(--green)] mb-3">Curated sets</div>
-              <h2 className="text-2xl sm:text-3xl font-bold mb-3 text-[var(--text)]">Pick a ready-to-hang wall in minutes</h2>
+              <h2 className="text-xl sm:text-2xl font-bold mb-3 text-[var(--text)]">Pick a ready-to-hang wall in minutes</h2>
               <p className="text-[var(--text-muted)] mb-4">Artists bundle 3–6 pieces that fit your vibe. Availability is auto-checked, so you skip the back-and-forth and schedule one install.</p>
               <ul className="space-y-2 text-sm text-[var(--text-muted)] mb-6">
                 <li>• 3–6 pieces, curated for one wall</li>
@@ -298,7 +298,7 @@ export function VenuesLandingPage({ onNavigate, onLogin, viewerRole = null }: Ve
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-2xl p-6 sm:p-8">
-              <h2 className="text-2xl sm:text-3xl font-bold mb-3 text-[var(--text)]">Why venues use Artwalls (instead of random artist DMs)</h2>
+              <h2 className="text-xl sm:text-2xl font-bold mb-3 text-[var(--text)]">Why venues use Artwalls (instead of random artist DMs)</h2>
               <p className="text-[var(--text-muted)] mb-6">Because the “old way” is chaotic:</p>
               <ul className="list-disc pl-6 space-y-3 text-[var(--text-muted)]">
                 <li>constant messages from artists (hard to vet fast)</li>
@@ -327,7 +327,7 @@ export function VenuesLandingPage({ onNavigate, onLogin, viewerRole = null }: Ve
       <section className="py-12 sm:py-16 px-4 bg-[var(--surface)] border-y border-[var(--border)]">
         <div className="max-w-6xl mx-auto">
           <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-2xl p-6 sm:p-8">
-            <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-[var(--text)]">What’s in it for my venue?</h2>
+            <h2 className="text-xl sm:text-2xl font-bold mb-4 text-[var(--text)]">What's in it for my venue?</h2>
             <ul className="list-disc pl-6 space-y-3 text-[var(--text-muted)]">
               <li>Your space looks more unique (people literally talk about the walls)</li>
               <li>You support local community (customers love that)</li>
@@ -342,7 +342,7 @@ export function VenuesLandingPage({ onNavigate, onLogin, viewerRole = null }: Ve
       <section className="py-12 sm:py-16 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-2xl p-6 sm:p-8">
-            <h2 className="text-2xl sm:text-3xl font-bold mb-8 text-[var(--text)]">How it works</h2>
+            <h2 className="text-xl sm:text-2xl font-bold mb-8 text-[var(--text)]">How it works</h2>
             <ol className="space-y-4 text-[var(--text-muted)]">
               <li><span className="font-semibold text-[var(--text)]">1)</span> Create a venue profile + add wall details</li>
               <li><span className="font-semibold text-[var(--text)]">2)</span> Review artists / accept invites</li>

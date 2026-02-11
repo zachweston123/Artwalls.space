@@ -830,7 +830,7 @@ export default function App() {
 
             <div className="relative z-10">
               <div className="text-center mb-12">
-                <h1 className="text-5xl font-bold text-[var(--text)] mb-4">Welcome to Artwalls!</h1>
+                <h1 className="text-3xl sm:text-4xl font-bold text-[var(--text)] mb-4">Welcome to Artwalls!</h1>
                 <p className="text-xl text-[var(--text-muted)]">Tell us about yourself to get started</p>
               </div>
 

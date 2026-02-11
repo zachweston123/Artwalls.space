@@ -45,7 +45,7 @@ export function FindArtHub({ onNavigate }: FindArtHubProps) {
     <div className="min-h-screen bg-[var(--bg)]">
       <div className="bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/80 px-4 sm:px-6 py-16">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl font-bold text-[var(--accent-contrast)] mb-4">Find Art Venues</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold text-[var(--accent-contrast)] mb-4">Find Art Venues</h1>
           <p className="text-[var(--accent-contrast)]/90 mb-8">Discover galleries and spaces hosting emerging artists</p>
 
           <div className="relative">

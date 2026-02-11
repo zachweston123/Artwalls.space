@@ -110,7 +110,7 @@ export default function StripeOnboardingReturn() {
       <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
         <div className="flex flex-col items-center text-center space-y-4">
           {getIcon()}
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-3xl font-bold text-[var(--text)]">
             {getTitle()}
           </h1>
           <p className="text-gray-600 dark:text-gray-300">

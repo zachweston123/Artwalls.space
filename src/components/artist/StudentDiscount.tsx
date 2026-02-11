@@ -97,7 +97,7 @@ export function StudentDiscount({ onNavigate }: StudentDiscountProps) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Current Status */}
         <div className="bg-[var(--surface-1)] rounded-xl border border-[var(--border)] p-6">
-          <h2 className="text-lg font-medium mb-4 text-[var(--text)]">Your Status</h2>
+          <h2 className="text-xl font-semibold mb-4 text-[var(--text)]">Your Status</h2>
           
           <div className="space-y-4">
             {/* Student Status */}
@@ -175,7 +175,7 @@ export function StudentDiscount({ onNavigate }: StudentDiscountProps) {
 
         {/* Available Benefits */}
         <div className="lg:col-span-2 bg-[var(--surface-1)] rounded-xl border border-[var(--border)] p-6">
-          <h2 className="text-lg font-medium mb-4 text-[var(--text)]">Student Benefits</h2>
+          <h2 className="text-xl font-semibold mb-4 text-[var(--text)]">Student Benefits</h2>
 
           <div className="space-y-4">
             {/* Starter Tier Upgrade */}
@@ -183,7 +183,7 @@ export function StudentDiscount({ onNavigate }: StudentDiscountProps) {
               <div className="flex items-start justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <Zap className="w-5 h-5 text-[var(--blue)]" />
-                  <h3 className="font-medium text-[var(--text)]">Free Starter Plan</h3>
+                  <h3 className="text-lg font-semibold text-[var(--text)]">Free Starter Plan</h3>
                 </div>
                 {benefits?.isVerified && (
                   <span className="px-2 py-1 bg-[var(--green)]/10 text-[var(--green)] text-xs rounded-full">
@@ -221,7 +221,7 @@ export function StudentDiscount({ onNavigate }: StudentDiscountProps) {
               <div className="flex items-start justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <Gift className="w-5 h-5 text-[var(--green)]" />
-                  <h3 className="font-medium text-[var(--text)]">Growth Plan - 25% Off</h3>
+                  <h3 className="text-lg font-semibold text-[var(--text)]">Growth Plan - 25% Off</h3>
                 </div>
                 {benefits?.isVerified && (
                   <span className="px-2 py-1 bg-[var(--green)]/10 text-[var(--green)] text-xs rounded-full">
@@ -249,7 +249,7 @@ export function StudentDiscount({ onNavigate }: StudentDiscountProps) {
               <div className="flex items-start justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <Zap className="w-5 h-5 text-[var(--blue)]" />
-                  <h3 className="font-medium text-[var(--text)]">Pro Plan - 25% Off</h3>
+                  <h3 className="text-lg font-semibold text-[var(--text)]">Pro Plan - 25% Off</h3>
                 </div>
                 {benefits?.isVerified && (
                   <span className="px-2 py-1 bg-[var(--blue)]/10 text-[var(--blue)] text-xs rounded-full">
@@ -308,14 +308,14 @@ export function StudentDiscount({ onNavigate }: StudentDiscountProps) {
 
       {/* FAQ Section */}
       <div className="mt-8 bg-[var(--surface-1)] rounded-xl border border-[var(--border)] p-6">
-        <h2 className="text-lg font-medium mb-6 text-[var(--text)]">How It Works</h2>
+        <h2 className="text-xl font-semibold mb-6 text-[var(--text)]">How It Works</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
             <div className="w-8 h-8 bg-[var(--blue)] text-[var(--on-blue)] rounded-full flex items-center justify-center font-bold mb-3">
               1
             </div>
-            <h3 className="font-medium text-[var(--text)] mb-2">Mark as Student</h3>
+            <h3 className="text-lg font-semibold text-[var(--text)] mb-2">Mark as Student</h3>
             <p className="text-sm text-[var(--text-muted)]">
               Go to your profile and check "I am a student"
             </p>
@@ -325,7 +325,7 @@ export function StudentDiscount({ onNavigate }: StudentDiscountProps) {
             <div className="w-8 h-8 bg-[var(--blue)] text-[var(--on-blue)] rounded-full flex items-center justify-center font-bold mb-3">
               2
             </div>
-            <h3 className="font-medium text-[var(--text)] mb-2">Select Your School</h3>
+            <h3 className="text-lg font-semibold text-[var(--text)] mb-2">Select Your School</h3>
             <p className="text-sm text-[var(--text-muted)]">
               Search and select your school/university
             </p>
@@ -335,7 +335,7 @@ export function StudentDiscount({ onNavigate }: StudentDiscountProps) {
             <div className="w-8 h-8 bg-[var(--blue)] text-[var(--on-blue)] rounded-full flex items-center justify-center font-bold mb-3">
               3
             </div>
-            <h3 className="font-medium text-[var(--text)] mb-2">Get Verified</h3>
+            <h3 className="text-lg font-semibold text-[var(--text)] mb-2">Get Verified</h3>
             <p className="text-sm text-[var(--text-muted)]">
               Automatic verification via school email domain or manual review
             </p>
@@ -343,7 +343,7 @@ export function StudentDiscount({ onNavigate }: StudentDiscountProps) {
         </div>
 
         <div className="mt-6 pt-6 border-t border-[var(--border)]">
-          <h3 className="font-medium text-[var(--text)] mb-3">Verification Methods</h3>
+          <h3 className="text-lg font-semibold text-[var(--text)] mb-3">Verification Methods</h3>
           <ul className="space-y-2 text-sm text-[var(--text-muted)]">
             <li>
               <strong>Email Domain:</strong> If your school is in our verified list and uses an institutional email domain, you'll be verified instantly

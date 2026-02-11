@@ -156,7 +156,7 @@ export function ArtistProfilePublicView(props: ArtistProfilePublicViewProps) {
 
         {/* Info block */}
         <div className="flex-1 text-center sm:text-left">
-          <h1 className="text-2xl mb-1 text-[var(--text)]">{artist.name}</h1>
+          <h1 className="text-3xl font-bold mb-1 text-[var(--text)]">{artist.name}</h1>
           {artist.slug && (
             <p className="text-sm text-[var(--text-muted)] mb-3">@{artist.slug}</p>
           )}

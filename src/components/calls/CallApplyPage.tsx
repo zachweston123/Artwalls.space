@@ -77,7 +77,7 @@ export function CallApplyPage({ callId }: CallApplyPageProps) {
 
   return (
     <div className="bg-[var(--bg)] text-[var(--text)]">
-      <h1 className="text-2xl mb-2">Apply to Show</h1>
+      <h1 className="text-3xl font-bold mb-2 text-[var(--text)]">Apply to Show</h1>
       <p className="text-[var(--text-muted)] mb-4">{call?.title || 'Call for Art'}</p>
       {error && <p className="text-sm text-[var(--danger)] mb-4">{error}</p>}
 

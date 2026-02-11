@@ -257,7 +257,7 @@ export function Settings({ onNavigate, user: currentUser }: SettingsProps) {
     <div className="max-w-4xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl mb-2 text-[var(--text)]">Settings</h1>
+        <h1 className="text-3xl font-bold mb-2 text-[var(--text)]">Settings</h1>
         <p className="text-[var(--text-muted)]">
           Manage your account, subscription, and preferences
         </p>

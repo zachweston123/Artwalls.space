@@ -264,7 +264,7 @@ export function ArtistAnalytics({ user }: ArtistAnalyticsProps) {
 
           {/* Top Artworks Table */}
           <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-lg p-5">
-            <h2 className="text-lg font-bold text-[var(--text)] mb-1">Top Artworks</h2>
+            <h2 className="text-xl font-semibold text-[var(--text)] mb-1">Top Artworks</h2>
             <p className="text-sm text-[var(--text-muted)] mb-4">Your pieces ranked by total engagement (scans + views + sales).</p>
 
             {topArtworks.length === 0 ? (

@@ -68,7 +68,7 @@ export function WhyArtwallsArtistsPage({ onNavigate, viewerRole = null }: WhyArt
       {/* Hero */}
       <section className="py-12 sm:py-20 px-4 border-b border-[var(--border)]">
         <div className="max-w-5xl mx-auto text-center">
-          <h1 className="text-4xl sm:text-5xl font-bold mb-4 text-[var(--text)]">
+          <h1 className="text-3xl sm:text-4xl font-bold mb-4 text-[var(--text)]">
             Get your art on real walls — without doing the most.
           </h1>
           <p className="text-lg sm:text-xl text-[var(--text-muted)] mb-8 max-w-3xl mx-auto">
@@ -111,7 +111,7 @@ export function WhyArtwallsArtistsPage({ onNavigate, viewerRole = null }: WhyArt
       <section className="py-12 sm:py-16 px-4">
         <div className="max-w-5xl mx-auto">
           <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-2xl p-6 sm:p-8">
-            <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-[var(--text)]">The problem with doing it solo</h2>
+            <h2 className="text-xl sm:text-2xl font-bold mb-4 text-[var(--text)]">The problem with doing it solo</h2>
             <ul className="list-disc pl-6 space-y-3 text-[var(--text-muted)]">
               <li>awkward walk-ins + DMs + “email my manager”</li>
               <li>no way to track who you talked to / when to follow up</li>
@@ -126,7 +126,7 @@ export function WhyArtwallsArtistsPage({ onNavigate, viewerRole = null }: WhyArt
       <section className="py-12 sm:py-16 px-4 bg-[var(--surface)] border-y border-[var(--border)]">
         <div className="max-w-5xl mx-auto">
           <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-2xl p-6 sm:p-8">
-            <h2 className="text-2xl sm:text-3xl font-bold mb-3 text-[var(--text)]">What Artwalls does for you</h2>
+            <h2 className="text-xl sm:text-2xl font-bold mb-3 text-[var(--text)]">What Artwalls does for you</h2>
             <p className="text-[var(--text-muted)] mb-6">Artwalls is the system behind your venue placements.</p>
             <ul className="list-disc pl-6 space-y-3 text-[var(--text-muted)]">
               <li>Venue discovery + applications (so you’re not guessing who’s open to art)</li>
@@ -144,7 +144,7 @@ export function WhyArtwallsArtistsPage({ onNavigate, viewerRole = null }: WhyArt
       {/* Why subscribers win */}
       <section className="py-12 sm:py-16 px-4">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-3 text-[var(--text)]">Why subscribers win (real talk)</h2>
+          <h2 className="text-xl sm:text-2xl font-bold mb-3 text-[var(--text)]">Why subscribers win (real talk)</h2>
           <p className="text-[var(--text-muted)] mb-8">
             If you’re actively trying to grow, the paid tiers are basically: more walls, more listings, more chances to get placed, and you keep more of each sale.
           </p>
@@ -182,7 +182,7 @@ export function WhyArtwallsArtistsPage({ onNavigate, viewerRole = null }: WhyArt
       <section className="py-12 sm:py-16 px-4 bg-[var(--surface)] border-y border-[var(--border)]">
         <div className="max-w-5xl mx-auto">
           <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-2xl p-6 sm:p-8">
-            <h2 className="text-2xl sm:text-3xl font-bold mb-3 text-[var(--text)]">Optional damage protection</h2>
+            <h2 className="text-xl sm:text-2xl font-bold mb-3 text-[var(--text)]">Optional damage protection</h2>
             <p className="text-[var(--text-muted)]">
               If you’re placing physical art in public spaces, protection helps you sleep. Coverage scales by plan (ex: $100 → $150 → $200 max coverage per claim as tiers go up)
             </p>
@@ -193,7 +193,7 @@ export function WhyArtwallsArtistsPage({ onNavigate, viewerRole = null }: WhyArt
       {/* Quick comparison */}
       <section className="py-12 sm:py-16 px-4">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-8 text-[var(--text)]">Quick comparison</h2>
+          <h2 className="text-xl sm:text-2xl font-bold mb-8 text-[var(--text)]">Quick comparison</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-2xl p-6">
               <h3 className="text-lg font-semibold mb-3 text-[var(--text)]">Without Artwalls:</h3>

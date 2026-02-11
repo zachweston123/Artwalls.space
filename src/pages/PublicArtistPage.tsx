@@ -399,7 +399,7 @@ export function PublicArtistPage({ slugOrId, uid: uidProp, viewMode: viewProp, o
                         {artwork.imageUrl && <img src={artwork.imageUrl} alt={artwork.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />}
                       </div>
                       <div className="p-4">
-                        <h3 className="font-semibold text-[var(--text)] truncate">{artwork.title}</h3>
+                        <h3 className="text-lg font-semibold text-[var(--text)] truncate">{artwork.title}</h3>
                         {artwork.venueName && <p className="text-sm text-[var(--text-muted)] truncate">{artwork.venueName}</p>}
                         {artwork.venueCity && <p className="text-xs text-[var(--text-muted)] truncate">{artwork.venueCity}</p>}
                         <p className="text-sm font-bold text-[var(--text)] mt-2">{fmtPrice(artwork.priceCents)}</p>

@@ -50,7 +50,7 @@ export function ProfileCompletion({
           <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-[var(--blue-muted)] flex items-center justify-center">
             <Phone className="w-7 h-7 text-[var(--blue)]" />
           </div>
-          <h1 className="text-2xl font-bold text-[var(--text)] mb-2">One More Step</h1>
+          <h1 className="text-3xl font-bold text-[var(--text)] mb-2">One More Step</h1>
           <p className="text-[var(--text-muted)] text-sm">
             Please provide your phone number so we can keep you updated about your artwork and venue partnerships.
           </p>

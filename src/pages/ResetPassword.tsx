@@ -123,7 +123,7 @@ export function ResetPassword({ onSuccess, onBackToLogin }: ResetPasswordProps) 
               <Lock className="w-6 h-6 text-[var(--blue)]" />
             </div>
             <div>
-              <h1 className="text-2xl font-semibold text-[var(--text)]">Create New Password</h1>
+              <h1 className="text-3xl font-bold text-[var(--text)]">Create New Password</h1>
               <p className="text-sm text-[var(--text-muted)]">Choose a strong password for your account</p>
             </div>
           </div>

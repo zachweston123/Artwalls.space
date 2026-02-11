@@ -80,10 +80,10 @@ export function VenueCalls({ user, onViewCall }: VenueCallsProps) {
 
   return (
     <div className="bg-[var(--bg)] text-[var(--text)]">
-      <h1 className="text-2xl mb-4">Calls for Art</h1>
+      <h1 className="text-3xl font-bold mb-4 text-[var(--text)]">Calls for Art</h1>
 
       <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl p-4 mb-6">
-        <h2 className="text-lg mb-3">Create a call</h2>
+        <h2 className="text-xl font-semibold mb-3">Create a call</h2>
         {error && <p className="text-sm text-[var(--danger)] mb-2">{error}</p>}
         <div className="space-y-3">
           <input

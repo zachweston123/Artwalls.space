@@ -66,7 +66,7 @@ export function ForgotPassword({ onBack }: ForgotPasswordProps) {
               <ArrowLeft className="w-5 h-5 text-[var(--text)]" />
             </button>
             <div>
-              <h1 className="text-2xl font-semibold text-[var(--text)]">Reset Password</h1>
+              <h1 className="text-3xl font-bold text-[var(--text)]">Reset Password</h1>
               <p className="text-sm text-[var(--text-muted)]">Enter your email to receive a reset link</p>
             </div>
           </div>

@@ -67,7 +67,7 @@ export function ReferralProgram({ onNavigate }: ReferralProgramProps) {
       {/* Header */}
       <div className="bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/80 py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 text-[var(--accent-contrast)]">
-          <h1 className="text-4xl sm:text-5xl font-bold mb-4">Referral Program</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold mb-4">Referral Program</h1>
           <p className="text-xl opacity-90">Know someone who'd love to host art? Refer them and earn rewards.</p>
         </div>
       </div>
@@ -76,7 +76,7 @@ export function ReferralProgram({ onNavigate }: ReferralProgramProps) {
         {/* How It Works */}
         {step === 1 && (
           <div>
-            <h2 className="text-3xl font-bold text-[var(--text)] mb-12">How It Works</h2>
+            <h2 className="text-2xl font-semibold text-[var(--text)] mb-12">How It Works</h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 mb-16">
               <div className="text-center">

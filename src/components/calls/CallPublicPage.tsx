@@ -31,7 +31,7 @@ export function CallPublicPage({ callId }: CallPublicPageProps) {
 
   return (
     <div className="bg-[var(--bg)] text-[var(--text)]">
-      <h1 className="text-2xl mb-2">{call?.title || 'Call for Art'}</h1>
+      <h1 className="text-3xl font-bold mb-2 text-[var(--text)]">{call?.title || 'Call for Art'}</h1>
       <p className="text-[var(--text-muted)] mb-4">{call?.description || 'Details coming soon.'}</p>
       <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl p-4 mb-4">
         <p className="text-sm">Submission fee: ${(call?.submission_fee_cents || 0) / 100}</p>

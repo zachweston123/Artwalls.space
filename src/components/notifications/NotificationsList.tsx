@@ -71,7 +71,7 @@ export function NotificationsList() {
   return (
     <div className="bg-[var(--bg)] text-[var(--text)]">
       <div className="mb-8">
-        <h1 className="text-3xl mb-2 text-[var(--text)]">Notifications</h1>
+        <h1 className="text-3xl font-bold mb-2 text-[var(--text)]">Notifications</h1>
         <p className="text-[var(--text-muted)]">
           {items.filter(n => !n.isRead).length} unread notifications
         </p>
@@ -81,7 +81,7 @@ export function NotificationsList() {
         {/* Today */}
         {groupedNotifications.today.length > 0 && (
           <div>
-            <h2 className="text-sm text-[var(--text-muted)] mb-3">Today</h2>
+            <h2 className="text-base font-semibold text-[var(--text-muted)] mb-3">Today</h2>
             <div className="space-y-2">
               {groupedNotifications.today.map((notification) => (
                 <div
@@ -123,7 +123,7 @@ export function NotificationsList() {
         {/* Earlier */}
         {groupedNotifications.earlier.length > 0 && (
           <div>
-            <h2 className="text-sm text-[var(--text-muted)] mb-3">Earlier</h2>
+            <h2 className="text-base font-semibold text-[var(--text-muted)] mb-3">Earlier</h2>
             <div className="space-y-2">
               {groupedNotifications.earlier.map((notification) => (
                 <div
@@ -138,7 +138,7 @@ export function NotificationsList() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-3 mb-1">
-                        <h3 className="text-base text-[var(--text)]">
+                        <h3 className="text-lg text-[var(--text)]">
                           {notification.title}
                           {!notification.isRead && (
                             <span className="ml-2 inline-block w-2 h-2 bg-[var(--blue)] rounded-full"></span>

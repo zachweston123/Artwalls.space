@@ -120,7 +120,7 @@ export function VenuePartnerKit({ onNavigate }: VenuePartnerKitProps) {
       {/* Header */}
       <div className="bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/80 py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 text-[var(--accent-contrast)]">
-          <h1 className="text-4xl sm:text-5xl font-bold mb-4">Become a Venue Partner</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold mb-4">Become a Venue Partner</h1>
           <p className="text-xl opacity-90">Display rotating artworks and earn 15% from every sale</p>
         </div>
       </div>

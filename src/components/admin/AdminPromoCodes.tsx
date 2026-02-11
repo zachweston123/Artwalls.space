@@ -101,7 +101,7 @@ export function AdminPromoCodes() {
     <div className="bg-[var(--bg)]">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl mb-2 text-[var(--text)]">Promo Codes</h1>
+          <h1 className="text-3xl font-bold mb-2 text-[var(--text)]">Promo Codes</h1>
           <p className="text-[var(--text-muted)]">
             Create and manage subscription discount codes
           </p>

@@ -60,7 +60,7 @@ export function AdminReturns() {
 
   return (
     <div className="bg-[var(--bg)] text-[var(--text)]">
-      <h1 className="text-2xl mb-4">Returns & Disputes</h1>
+      <h1 className="text-3xl font-bold mb-4 text-[var(--text)]">Returns & Disputes</h1>
       <div className="mb-4 flex items-center gap-3">
         <select
           value={statusFilter}
@@ -104,7 +104,7 @@ export function AdminReturns() {
         <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl p-4">
           {selected ? (
             <div className="space-y-3">
-              <h2 className="text-lg">Case details</h2>
+              <h2 className="text-xl font-semibold text-[var(--text)]">Case details</h2>
               <p className="text-sm text-[var(--text-muted)]">{selected.id}</p>
               <p className="text-sm">Status: {selected.status}</p>
               <div className="flex gap-2 flex-wrap">

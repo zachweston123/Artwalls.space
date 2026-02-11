@@ -76,7 +76,7 @@ export function WhyArtwalls({ userRole, onNavigate, onBack }: WhyArtwalksProps) 
       {/* Hero Section */}
       <section className="py-12 sm:py-20 px-4 border-b border-[var(--border)]">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl sm:text-5xl font-bold mb-4 text-[var(--text)]">
+          <h1 className="text-3xl sm:text-4xl font-bold mb-4 text-[var(--text)]">
             Why Artwalls
           </h1>
           <p className="text-lg sm:text-xl text-[var(--text-muted)] mb-6 max-w-2xl mx-auto">
@@ -143,7 +143,7 @@ export function WhyArtwalls({ userRole, onNavigate, onBack }: WhyArtwalksProps) 
           <div className={`rounded-lg border border-[var(--border)] p-8 ${
             isArtist ? 'bg-[var(--blue-muted)]' : 'bg-[var(--green-muted)]'
           }`}>
-            <h2 className={`text-3xl font-bold mb-4 ${
+            <h2 className={`text-2xl font-bold mb-4 ${
               isArtist ? 'text-[var(--blue)]' : 'text-[var(--green)]'
             }`}>
               {isArtist 
@@ -302,7 +302,7 @@ export function WhyArtwalls({ userRole, onNavigate, onBack }: WhyArtwalksProps) 
                     </div>
                   </div>
                   <div className="pt-6 border-t border-[var(--border)]">
-                    <h3 className="font-semibold text-base mb-3 text-[var(--text)]">
+                    <h3 className="font-semibold text-lg mb-3 text-[var(--text)]">
                       How It's Split
                     </h3>
                     <div className="space-y-2 text-sm">
@@ -340,7 +340,7 @@ export function WhyArtwalls({ userRole, onNavigate, onBack }: WhyArtwalksProps) 
                     </div>
                   </div>
                   <div className="pt-6 border-t border-[var(--border)]">
-                    <h3 className="font-semibold text-base mb-3 text-[var(--text)]">
+                    <h3 className="font-semibold text-lg mb-3 text-[var(--text)]">
                       How It's Split
                     </h3>
                     <div className="space-y-2 text-sm">
