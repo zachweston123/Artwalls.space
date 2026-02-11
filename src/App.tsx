@@ -187,8 +187,10 @@ export default function App() {
 
   const userFromSupabase = (supaUser: SupabaseUser | null | undefined): User | null => {
     if (!supaUser?.id) return null;
-    const role = (supaUser.user_metadata?.role as UserRole) || null;
-    if (role !== 'artist' && role !== 'venue' && role !== 'admin') return null;
+    const rawRole = (supaUser.user_metadata?.role as string | undefined | null);
+    // Default to 'artist' when role metadata is missing (e.g. Google OAuth sign-up).
+    // Only 'venue' and 'admin' need to be explicitly set.
+    const role: UserRole = (rawRole === 'venue' || rawRole === 'admin') ? rawRole : 'artist';
     return {
       id: supaUser.id,
       name:

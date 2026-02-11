@@ -1797,7 +1797,7 @@ app.get('/api/curated-sets', async (req, res) => {
   try {
     const authUser = await getSupabaseUserFromRequest(req);
     if (!authUser) return res.status(401).json({ error: 'Unauthorized' });
-    if (authUser.user_metadata?.role !== 'artist') return res.status(403).json({ error: 'Artist role required' });
+    if (authUser.user_metadata?.role === 'venue') return res.status(403).json({ error: 'Artist role required' });
 
     const artistId = (typeof req.query?.artistId === 'string' && req.query.artistId) ? req.query.artistId : authUser.id;
     if (artistId !== authUser.id) return res.status(403).json({ error: 'Can only view your own sets' });
@@ -1818,7 +1818,7 @@ app.post('/api/curated-sets', async (req, res) => {
   try {
     const authUser = await getSupabaseUserFromRequest(req);
     if (!authUser) return res.status(401).json({ error: 'Unauthorized' });
-    if (authUser.user_metadata?.role !== 'artist') return res.status(403).json({ error: 'Artist role required' });
+    if (authUser.user_metadata?.role === 'venue') return res.status(403).json({ error: 'Artist role required' });
 
     const { title, description, tags } = req.body || {};
     if (!title || String(title).trim().length === 0) return res.status(400).json({ error: 'Title is required' });
@@ -1848,7 +1848,7 @@ app.post('/api/curated-sets/:id', async (req, res) => {
   try {
     const authUser = await getSupabaseUserFromRequest(req);
     if (!authUser) return res.status(401).json({ error: 'Unauthorized' });
-    if (authUser.user_metadata?.role !== 'artist') return res.status(403).json({ error: 'Artist role required' });
+    if (authUser.user_metadata?.role === 'venue') return res.status(403).json({ error: 'Artist role required' });
 
     const setId = req.params.id;
     const set = await getArtworkSetWithItems(setId);
@@ -1872,7 +1872,7 @@ app.post('/api/curated-sets/:id/publish', async (req, res) => {
   try {
     const authUser = await getSupabaseUserFromRequest(req);
     if (!authUser) return res.status(401).json({ error: 'Unauthorized' });
-    if (authUser.user_metadata?.role !== 'artist') return res.status(403).json({ error: 'Artist role required' });
+    if (authUser.user_metadata?.role === 'venue') return res.status(403).json({ error: 'Artist role required' });
 
     const setId = req.params.id;
     const set = await getArtworkSetWithItems(setId);
@@ -1899,7 +1899,7 @@ app.post('/api/curated-sets/:id/archive', async (req, res) => {
   try {
     const authUser = await getSupabaseUserFromRequest(req);
     if (!authUser) return res.status(401).json({ error: 'Unauthorized' });
-    if (authUser.user_metadata?.role !== 'artist') return res.status(403).json({ error: 'Artist role required' });
+    if (authUser.user_metadata?.role === 'venue') return res.status(403).json({ error: 'Artist role required' });
 
     const setId = req.params.id;
     const set = await getArtworkSetWithItems(setId);
@@ -1918,7 +1918,7 @@ app.post('/api/curated-sets/:id/add-item', async (req, res) => {
   try {
     const authUser = await getSupabaseUserFromRequest(req);
     if (!authUser) return res.status(401).json({ error: 'Unauthorized' });
-    if (authUser.user_metadata?.role !== 'artist') return res.status(403).json({ error: 'Artist role required' });
+    if (authUser.user_metadata?.role === 'venue') return res.status(403).json({ error: 'Artist role required' });
 
     const setId = req.params.id;
     const { artworkId, sortOrder } = req.body || {};
@@ -1951,7 +1951,7 @@ app.post('/api/curated-sets/:id/remove-item', async (req, res) => {
   try {
     const authUser = await getSupabaseUserFromRequest(req);
     if (!authUser) return res.status(401).json({ error: 'Unauthorized' });
-    if (authUser.user_metadata?.role !== 'artist') return res.status(403).json({ error: 'Artist role required' });
+    if (authUser.user_metadata?.role === 'venue') return res.status(403).json({ error: 'Artist role required' });
 
     const setId = req.params.id;
     const { artworkId } = req.body || {};
@@ -1973,7 +1973,7 @@ app.post('/api/curated-sets/:id/reorder', async (req, res) => {
   try {
     const authUser = await getSupabaseUserFromRequest(req);
     if (!authUser) return res.status(401).json({ error: 'Unauthorized' });
-    if (authUser.user_metadata?.role !== 'artist') return res.status(403).json({ error: 'Artist role required' });
+    if (authUser.user_metadata?.role === 'venue') return res.status(403).json({ error: 'Artist role required' });
 
     const setId = req.params.id;
     const set = await getArtworkSetWithItems(setId);
@@ -2158,8 +2158,10 @@ async function requireArtist(req, res) {
 
   // Preferred path: Supabase JWT
   if (authUser) {
-    if (authRole !== 'artist') {
-      res.status(403).json({ error: 'Forbidden: artist role required' });
+    // Permissive: only reject explicit venue role.
+    // Users with undefined/null/empty role (e.g. Google OAuth) are treated as artists.
+    if (authRole === 'venue') {
+      res.status(403).json({ error: 'Forbidden: artist role required (venue accounts cannot use this endpoint)' });
       return null;
     }
     const artistId = authUser.id;
@@ -2825,7 +2827,7 @@ app.post('/api/artists', async (req, res) => {
     const authUser = await getSupabaseUserFromRequest(req);
     if (String(process.env.NODE_ENV || '').toLowerCase() === 'production') {
       if (!authUser) return res.status(401).json({ error: 'Missing or invalid Authorization bearer token' });
-      if (authUser.user_metadata?.role !== 'artist') {
+      if (authUser.user_metadata?.role === 'venue') {
         return res.status(403).json({ error: 'Forbidden: artist role required' });
       }
     }

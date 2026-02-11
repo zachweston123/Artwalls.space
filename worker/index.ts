@@ -1312,13 +1312,14 @@ export default {
       const user = await getSupabaseUserFromRequest(request);
       const authErr = requireAuthOrFail(request, user);
       if (authErr) return authErr;
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
       // Venues are explicitly excluded; all other roles (artist, undefined, null) are treated as artist
-      if (user.user_metadata?.role === 'venue') return json({ error: 'Artist role required (venue accounts cannot use this endpoint)' }, { status: 403 });
+      if (user!.user_metadata?.role === 'venue') return json({ error: 'Artist role required (venue accounts cannot use this endpoint)' }, { status: 403 });
       const rl = rateLimitByIp(getClientIp(request), 5, 60_000);
       if (!rl.ok) return json({ error: 'Rate limit exceeded' }, { status: 429 });
 
       // Check if already has account
-      const { data: artist } = await supabaseAdmin.from('artists').select('stripe_account_id,email,name').eq('id', user.id).maybeSingle();
+      const { data: artist } = await supabaseAdmin.from('artists').select('stripe_account_id,email,name').eq('id', user!.id).maybeSingle();
       if (artist?.stripe_account_id) return json({ accountId: artist.stripe_account_id, alreadyExists: true });
 
       try {
@@ -1326,17 +1327,17 @@ export default {
           method: 'POST',
           body: toForm({
             type: 'express',
-            email: artist?.email || user.email || undefined,
+            email: artist?.email || user!.email || undefined,
             'capabilities[card_payments][requested]': 'true',
             'capabilities[transfers][requested]': 'true',
-            'metadata[artistId]': user.id,
+            'metadata[artistId]': user!.id,
           }),
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         });
         const account = await resp.json();
         if (!resp.ok) throw new Error(account?.error?.message || 'Account creation failed');
 
-        await upsertArtist({ id: user.id, email: artist?.email, name: artist?.name, role: 'artist', stripeAccountId: account.id });
+        await upsertArtist({ id: user!.id, email: artist?.email, name: artist?.name, role: 'artist', stripeAccountId: account.id });
         return json({ accountId: account.id, alreadyExists: false });
       } catch (err: unknown) {
         return json({ error: getErrorMessage(err) }, { status: 500 });
@@ -1348,11 +1349,12 @@ export default {
       const user = await getSupabaseUserFromRequest(request);
       const authErr = requireAuthOrFail(request, user);
       if (authErr) return authErr;
-      if (user.user_metadata?.role === 'venue') return json({ error: 'Artist role required (venue accounts cannot use this endpoint)' }, { status: 403 });
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      if (user!.user_metadata?.role === 'venue') return json({ error: 'Artist role required (venue accounts cannot use this endpoint)' }, { status: 403 });
       const rl = rateLimitByIp(getClientIp(request), 10, 60_000);
       if (!rl.ok) return json({ error: 'Rate limit exceeded' }, { status: 429 });
 
-      const { data: artist } = await supabaseAdmin.from('artists').select('stripe_account_id').eq('id', user.id).maybeSingle();
+      const { data: artist } = await supabaseAdmin.from('artists').select('stripe_account_id').eq('id', user!.id).maybeSingle();
       if (!artist?.stripe_account_id) return json({ error: 'No Stripe account. Call /create-account first.' }, { status: 400 });
 
       const pagesOrigin = env.PAGES_ORIGIN || 'https://artwalls.space';
@@ -1380,10 +1382,11 @@ export default {
       const user = await getSupabaseUserFromRequest(request);
       const authErr = requireAuthOrFail(request, user);
       if (authErr) return authErr;
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
       const rl = rateLimitByIp(getClientIp(request), 10, 60_000);
       if (!rl.ok) return json({ error: 'Rate limit exceeded' }, { status: 429 });
 
-      const { data: artist } = await supabaseAdmin.from('artists').select('stripe_account_id').eq('id', user.id).maybeSingle();
+      const { data: artist } = await supabaseAdmin.from('artists').select('stripe_account_id').eq('id', user!.id).maybeSingle();
       if (!artist?.stripe_account_id) return json({ error: 'No Stripe account yet' }, { status: 400 });
 
       try {
@@ -1437,11 +1440,12 @@ export default {
       const user = await getSupabaseUserFromRequest(request);
       const authErr = requireAuthOrFail(request, user);
       if (authErr) return authErr;
-      if (user.user_metadata?.role !== 'venue') return json({ error: 'Venue role required' }, { status: 403 });
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      if (user!.user_metadata?.role !== 'venue') return json({ error: 'Venue role required' }, { status: 403 });
       const rl = rateLimitByIp(getClientIp(request), 5, 60_000);
       if (!rl.ok) return json({ error: 'Rate limit exceeded' }, { status: 429 });
 
-      const { data: venue } = await supabaseAdmin.from('venues').select('stripe_account_id,email,name,default_venue_fee_bps').eq('id', user.id).maybeSingle();
+      const { data: venue } = await supabaseAdmin.from('venues').select('stripe_account_id,email,name,default_venue_fee_bps').eq('id', user!.id).maybeSingle();
       if (venue?.stripe_account_id) return json({ accountId: venue.stripe_account_id, alreadyExists: true });
 
       try {
@@ -1449,17 +1453,17 @@ export default {
           method: 'POST',
           body: toForm({
             type: 'express',
-            email: venue?.email || user.email || undefined,
+            email: venue?.email || user!.email || undefined,
             'capabilities[card_payments][requested]': 'true',
             'capabilities[transfers][requested]': 'true',
-            'metadata[venueId]': user.id,
+            'metadata[venueId]': user!.id,
           }),
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         });
         const account = await resp.json();
         if (!resp.ok) throw new Error(account?.error?.message || 'Account creation failed');
 
-        await upsertVenue({ id: user.id, email: venue?.email, name: venue?.name, stripeAccountId: account.id, defaultVenueFeeBps: venue?.default_venue_fee_bps ?? 1000 });
+        await upsertVenue({ id: user!.id, email: venue?.email, name: venue?.name, stripeAccountId: account.id, defaultVenueFeeBps: venue?.default_venue_fee_bps ?? 1000 });
         return json({ accountId: account.id, alreadyExists: false });
       } catch (err: unknown) {
         return json({ error: getErrorMessage(err) }, { status: 500 });
@@ -1471,11 +1475,12 @@ export default {
       const user = await getSupabaseUserFromRequest(request);
       const authErr = requireAuthOrFail(request, user);
       if (authErr) return authErr;
-      if (user.user_metadata?.role !== 'venue') return json({ error: 'Venue role required' }, { status: 403 });
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      if (user!.user_metadata?.role !== 'venue') return json({ error: 'Venue role required' }, { status: 403 });
       const rl = rateLimitByIp(getClientIp(request), 10, 60_000);
       if (!rl.ok) return json({ error: 'Rate limit exceeded' }, { status: 429 });
 
-      const { data: venue } = await supabaseAdmin.from('venues').select('stripe_account_id').eq('id', user.id).maybeSingle();
+      const { data: venue } = await supabaseAdmin.from('venues').select('stripe_account_id').eq('id', user!.id).maybeSingle();
       if (!venue?.stripe_account_id) return json({ error: 'No Stripe account. Call /create-account first.' }, { status: 400 });
 
       const pagesOrigin = env.PAGES_ORIGIN || 'https://artwalls.space';
@@ -1503,10 +1508,11 @@ export default {
       const user = await getSupabaseUserFromRequest(request);
       const authErr = requireAuthOrFail(request, user);
       if (authErr) return authErr;
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
       const rl = rateLimitByIp(getClientIp(request), 10, 60_000);
       if (!rl.ok) return json({ error: 'Rate limit exceeded' }, { status: 429 });
 
-      const { data: venue } = await supabaseAdmin.from('venues').select('stripe_account_id').eq('id', user.id).maybeSingle();
+      const { data: venue } = await supabaseAdmin.from('venues').select('stripe_account_id').eq('id', user!.id).maybeSingle();
       if (!venue?.stripe_account_id) return json({ error: 'No Stripe account yet' }, { status: 400 });
 
       try {

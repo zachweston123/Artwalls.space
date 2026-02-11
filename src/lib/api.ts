@@ -19,9 +19,16 @@ const API_BASE = import.meta.env?.VITE_API_BASE_URL || DEFAULT_API_BASE;
 const SAME_ORIGIN_BASE = typeof window !== 'undefined' ? window.location.origin : '';
 
 async function fetchWithFallback(input: string, init: RequestInit, allowSameOriginRetry = false) {
+  // Only retry on same-origin for safe (idempotent) methods.
+  // POST/PATCH/PUT/DELETE must never silently retry — they could hit the
+  // wrong server (Express instead of Worker) or create duplicate resources.
+  const method = (init.method || 'GET').toUpperCase();
+  const isSafeMethod = method === 'GET' || method === 'HEAD' || method === 'OPTIONS';
+  const canRetry = allowSameOriginRetry && isSafeMethod;
+
   try {
     const res = await fetch(input, init);
-    if (!allowSameOriginRetry) return res;
+    if (!canRetry) return res;
 
     const shouldRetrySameOrigin =
       SAME_ORIGIN_BASE &&
@@ -36,7 +43,7 @@ async function fetchWithFallback(input: string, init: RequestInit, allowSameOrig
     return await fetch(fallbackUrl, init);
   } catch (err) {
     const shouldFallback =
-      allowSameOriginRetry &&
+      canRetry &&
       SAME_ORIGIN_BASE &&
       API_BASE &&
       API_BASE !== SAME_ORIGIN_BASE &&
@@ -72,9 +79,17 @@ export async function apiGet<T>(path: string): Promise<T> {
     throw new Error(`Network error: ${fetchErr instanceof Error ? fetchErr.message : 'Failed to fetch'}`);
   }
   if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    console.error('[apiGet] Server error:', res.status, text);
-    throw new Error(text || `Request failed: ${res.status}`);
+    let errorMsg = `Request failed: ${res.status}`;
+    try {
+      const errorData = await res.json();
+      const extracted = errorData?.error ?? errorData?.message ?? errorMsg;
+      errorMsg = typeof extracted === 'string' ? extracted : JSON.stringify(extracted);
+    } catch {
+      const text = await res.text().catch(() => '');
+      errorMsg = text || errorMsg;
+    }
+    console.error('[apiGet] Server error:', res.status, errorMsg);
+    throw new Error(errorMsg);
   }
   const contentType = res.headers.get('content-type') || '';
   if (!contentType.includes('application/json')) {
