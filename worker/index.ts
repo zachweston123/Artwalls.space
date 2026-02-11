@@ -801,12 +801,11 @@ export default {
       const venueId = url.searchParams.get('venueId');
       if (!venueId) return json({ error: 'Missing venueId' }, { status: 400 });
 
-      const [{ data: venue }, { count: totalWallSpaces }, { count: occupiedWallSpaces }, { count: pendingInvitations }] = await Promise.all([
+      const [{ data: venue }, { count: totalWallSpaces }, { count: occupiedWallSpaces }] = await Promise.all([
         supabaseAdmin.from('venues').select('subscription_tier,subscription_status').eq('id', venueId).maybeSingle(),
-        supabaseAdmin.from('wall_spaces').select('id', { count: 'exact', head: true }).eq('venue_id', venueId),
-        supabaseAdmin.from('wall_spaces').select('id', { count: 'exact', head: true }).eq('venue_id', venueId).not('current_artwork_id', 'is', null),
-        supabaseAdmin.from('invitations').select('id', { count: 'exact', head: true }).eq('venue_id', venueId).eq('status', 'pending'),
-      ]).then((results: any) => results);
+        supabaseAdmin.from('wallspaces').select('id', { count: 'exact', head: true }).eq('venue_id', venueId),
+        supabaseAdmin.from('wallspaces').select('id', { count: 'exact', head: true }).eq('venue_id', venueId).not('current_artwork_id', 'is', null),
+      ]).then((results: unknown[]) => results as { data: unknown; count: number | null }[]);
 
       const now = new Date();
       const past30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
@@ -823,7 +822,7 @@ export default {
         .gte('created_at', past30)
         .order('created_at', { ascending: false })
         .limit(1000);
-      const totalVenueCommissionCents = (ordersMonth || []).reduce((sum: number, o: any) => sum + (o.venue_commission_cents || 0), 0);
+      const totalVenueCommissionCents = (ordersMonth || []).reduce((sum: number, o: Record<string, unknown>) => sum + (Number(o.venue_commission_cents) || 0), 0);
 
       return json({
         venueId,
@@ -833,7 +832,7 @@ export default {
           available: (totalWallSpaces || 0) - (occupiedWallSpaces || 0),
         },
         applications: {
-          pending: pendingInvitations || 0,
+          pending: 0,
         },
         sales: {
           total: totalSales || 0,
