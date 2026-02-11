@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+// @deprecated — backup file, safe to delete.
 
-interface EnvCheck {
+// interface EnvCheck {
   key: string;
   label: string;
   value: boolean;

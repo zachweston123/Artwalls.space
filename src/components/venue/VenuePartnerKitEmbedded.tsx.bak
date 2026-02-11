@@ -1,31 +1,5 @@
-import { useState } from 'react';
-import { Download, CheckCircle, AlertCircle, BookOpen, MapPin, Users, TrendingUp, FileText, ArrowRight, ChevronDown, ChevronUp } from 'lucide-react';
+// @deprecated — backup file, safe to delete.
 
-interface VenuePartnerKitEmbeddedProps {
-  onNavigate?: (page: string) => void;
-}
-
-export function VenuePartnerKitEmbedded({ onNavigate }: VenuePartnerKitEmbeddedProps) {
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
-    checklist: true,
-    qr: true,
-    economics: true,
-    hosting: false,
-    staffTalking: false,
-  });
-
-  const toggleSection = (section: string) => {
-    setExpandedSections(prev => ({
-      ...prev,
-      [section]: !prev[section],
-    }));
-  };
-
-  const handleDownloadPDF = () => {
-    // In production, this would generate and download a PDF
-    console.log('Downloading Partner Kit PDF...');
-    alert('PDF download would be generated here with all content below');
-  };
 
   return (
     <div className="min-h-screen bg-[var(--bg)] py-12 px-4">

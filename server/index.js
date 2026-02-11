@@ -1,48 +1,18 @@
-import express from 'express';
-import cors from 'cors';
-import Stripe from 'stripe';
-import crypto from 'node:crypto';
-import QRCode from 'qrcode';
-import https from 'https';
-import fs from 'fs';
+// ============================================================================
+// ⚠️  DEPRECATED — DO NOT USE
+// ============================================================================
+// This Express server has been fully replaced by the Cloudflare Worker at
+// worker/index.ts.  All API routes are now served from api.artwalls.space
+// via that Worker.
+//
+// This file is kept temporarily for reference only.  It should be deleted
+// from the repository once the migration is fully verified.
+//
+// DO NOT start, deploy, or import from this file.
+// ============================================================================
+throw new Error('server/index.js is deprecated. Use worker/index.ts instead.');
 
-import { supabaseAdmin } from './supabaseClient.js';
-import { generateTimeOptions } from '../shared/timeOptions.js';
-
-import {
-  upsertArtist,
-  getArtist,
-  listArtists,
-  upsertVenue,
-  getVenue,
-  listVenues,
-  createArtwork,
-  updateArtwork,
-  listArtworksByArtist,
-  getArtwork,
-  createOrder,
-  updateOrder,
-  findOrderById,
-  markArtworkSold,
-  wasEventProcessed,
-  markEventProcessed,
-  getArtistSetLimitInfo,
-  createArtworkSetRecord,
-  updateArtworkSetRecord,
-  publishArtworkSetRecord,
-  archiveArtworkSetRecord,
-  addArtworkToSet,
-  removeArtworkFromSet,
-  reorderArtworkSetItems,
-  listArtworkSetsByArtist,
-  listPublishedArtworkSets,
-  getArtworkSetWithItems,
-  getArtworkSetPublic,
-  recordVenueSetSelection,
-  listVenueSetSelectionsForVenue,
-  recordEvent,
-  listWallspacesByVenue,
-  createWallspace,
+/* --- Original 3,000+ lines removed — see git history for reference --- */
   updateWallspace,
   deleteWallspace,
   updateArtistStatus,

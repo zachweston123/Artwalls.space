@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from './lib/supabase';
 import { apiPost } from './lib/api';
 import { applyThemePreference, coerceThemePreference, getStoredThemePreference } from './lib/theme';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { Navigation } from './components/Navigation';
 import { MobileSidebar } from './components/MobileSidebar';
 import { Login } from './components/Login';
@@ -958,6 +959,7 @@ export default function App() {
   }
 
   return (
+    <ErrorBoundary>
     <div className="min-h-screen">
       <Navigation 
         user={currentUser} 
@@ -1153,5 +1155,6 @@ export default function App() {
       </main>
       <Footer onNavigate={handleNavigate} />
     </div>
+    </ErrorBoundary>
   );
 }
