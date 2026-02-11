@@ -2221,7 +2221,123 @@ export default {
       });
     }
 
-    // Public: single artwork
+    // Artwork purchase link + QR (must be before the catch-all artwork GET)
+    if (url.pathname.startsWith('/api/artworks/') && method === 'GET' && url.pathname.endsWith('/link')) {
+      const parts = url.pathname.split('/');
+      const id = parts[3];
+      if (!id) return json({ error: 'Missing artwork id' }, { status: 400 });
+      const purchaseUrl = `${pagesOrigin}/#/purchase-${id}`;
+      const qrSvg = await generateQrSvg(purchaseUrl, 300);
+      if (supabaseAdmin) {
+        await supabaseAdmin.from('artworks').update({ purchase_url: purchaseUrl, qr_svg: qrSvg, updated_at: new Date().toISOString() }).eq('id', id);
+      }
+      return json({ purchaseUrl, qrSvg });
+    }
+
+    // QR Code SVG endpoint — returns inline SVG for any artwork
+    if (url.pathname.startsWith('/api/artworks/') && method === 'GET' && url.pathname.endsWith('/qrcode.svg')) {
+      const parts = url.pathname.split('/');
+      const id = parts[3];
+      if (!id) return text('Missing artwork id', { status: 400 });
+      if (supabaseAdmin) {
+        const { data: art } = await supabaseAdmin.from('artworks').select('id').eq('id', id).maybeSingle();
+        if (!art) return text('Artwork not found', { status: 404 });
+      }
+      const widthParam = url.searchParams.get('w');
+      const width = widthParam && Number(widthParam) > 0 ? Number(widthParam) : 300;
+      const purchaseUrl = `${pagesOrigin}/#/purchase-${id}`;
+      const svgString = await generateQrSvg(purchaseUrl, width);
+      const headers = new Headers();
+      headers.set('Content-Type', 'image/svg+xml');
+      headers.set('Cache-Control', 'public, max-age=3600');
+      headers.set('Access-Control-Allow-Origin', allowOrigin);
+      headers.set('Vary', 'Origin');
+      return new Response(svgString, { status: 200, headers });
+    }
+
+    // QR Code PNG endpoint — returns downloadable PNG for any artwork
+    if (url.pathname.startsWith('/api/artworks/') && method === 'GET' && url.pathname.endsWith('/qrcode.png')) {
+      const parts = url.pathname.split('/');
+      const id = parts[3];
+      if (!id) return text('Missing artwork id', { status: 400 });
+      if (supabaseAdmin) {
+        const { data: art } = await supabaseAdmin.from('artworks').select('id').eq('id', id).maybeSingle();
+        if (!art) return text('Artwork not found', { status: 404 });
+      }
+      const widthParam = url.searchParams.get('w');
+      const width = widthParam && Number(widthParam) > 0 ? Number(widthParam) : 1024;
+      const marginParam = url.searchParams.get('margin');
+      const margin = marginParam && Number(marginParam) >= 0 ? Number(marginParam) : 1;
+      const purchaseUrl = `${pagesOrigin}/#/purchase-${id}`;
+      try {
+        const buf = await QRCode.toBuffer(purchaseUrl, { type: 'png', margin, width } as any);
+        const headers = new Headers();
+        headers.set('Content-Type', 'image/png');
+        headers.set('Content-Disposition', `attachment; filename="artwork-${id}-qr.png"`);
+        headers.set('Cache-Control', 'public, max-age=3600');
+        headers.set('Access-Control-Allow-Origin', allowOrigin);
+        headers.set('Vary', 'Origin');
+        return new Response(buf, { status: 200, headers });
+      } catch (e) {
+        // Fallback: return SVG if PNG generation fails (e.g. missing canvas in Workers)
+        const svgString = await generateQrSvg(purchaseUrl, width);
+        const headers = new Headers();
+        headers.set('Content-Type', 'image/svg+xml');
+        headers.set('Access-Control-Allow-Origin', allowOrigin);
+        headers.set('Vary', 'Origin');
+        return new Response(svgString, { status: 200, headers });
+      }
+    }
+
+    // QR poster endpoint — returns printable HTML poster
+    if (url.pathname.startsWith('/api/artworks/') && method === 'GET' && url.pathname.endsWith('/qr-poster')) {
+      const parts = url.pathname.split('/');
+      const id = parts[3];
+      if (!id) return text('Missing artwork id', { status: 400 });
+      let art: any = null;
+      if (supabaseAdmin) {
+        const { data } = await supabaseAdmin.from('artworks').select('id,title,artist_name,venue_name,price_cents,currency,image_url').eq('id', id).maybeSingle();
+        if (!data) return text('Artwork not found', { status: 404 });
+        art = data;
+      }
+      const purchaseUrl = `${pagesOrigin}/#/purchase-${id}`;
+      const qrSvg = await generateQrSvg(purchaseUrl, 400);
+      const title = art?.title || 'Artwork';
+      const artist = art?.artist_name || '';
+      const venue = art?.venue_name || '';
+      const price = art?.price_cents ? `$${(art.price_cents / 100).toFixed(2)}` : '';
+      const html = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>QR Poster — ${title}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: system-ui, sans-serif; text-align: center; padding: 2rem; max-width: 600px; margin: 0 auto; }
+    h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
+    .meta { color: #666; font-size: 0.9rem; margin-bottom: 1rem; }
+    .qr { margin: 1.5rem auto; }
+    .price { font-size: 1.25rem; font-weight: bold; margin-top: 1rem; }
+    .url { font-size: 0.75rem; color: #999; word-break: break-all; margin-top: 0.5rem; }
+    @media print { body { padding: 1rem; } }
+  </style>
+</head>
+<body>
+  <h1>${title}</h1>
+  <div class="meta">${[artist, venue].filter(Boolean).join(' · ')}</div>
+  <div class="qr">${qrSvg}</div>
+  ${price ? `<div class="price">${price}</div>` : ''}
+  <div class="url">Scan to view &amp; purchase</div>
+</body>
+</html>`;
+      const posterHeaders = new Headers();
+      posterHeaders.set('Content-Type', 'text/html; charset=utf-8');
+      posterHeaders.set('Access-Control-Allow-Origin', allowOrigin);
+      posterHeaders.set('Vary', 'Origin');
+      return new Response(html, { status: 200, headers: posterHeaders });
+    }
+
+    // Public: single artwork (catch-all — must come AFTER specific /link, /qrcode.svg, /qrcode.png, /qr-poster endpoints)
     if (url.pathname.startsWith('/api/artworks/') && method === 'GET') {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
       const parts = url.pathname.split('/');
@@ -2271,19 +2387,6 @@ export default {
       }
 
       return json({ ...artwork, otherWorks });
-    }
-
-    // Artwork purchase link + QR
-    if (url.pathname.startsWith('/api/artworks/') && method === 'GET' && url.pathname.endsWith('/link')) {
-      const parts = url.pathname.split('/');
-      const id = parts[3];
-      if (!id) return json({ error: 'Missing artwork id' }, { status: 400 });
-      const purchaseUrl = `${pagesOrigin}/#/purchase-${id}`;
-      const qrSvg = await generateQrSvg(purchaseUrl, 300);
-      if (supabaseAdmin) {
-        await supabaseAdmin.from('artworks').update({ purchase_url: purchaseUrl, qr_svg: qrSvg, updated_at: new Date().toISOString() }).eq('id', id);
-      }
-      return json({ purchaseUrl, qrSvg });
     }
 
     // Create artwork (artist)
@@ -2419,6 +2522,12 @@ export default {
       };
       const { data, error } = await supabaseAdmin.from('artworks').insert(insert).select('*').single();
       if (error) return json({ error: error.message }, { status: 500 });
+
+      // Generate QR code + purchase URL for every new artwork
+      const purchaseUrl = `${pagesOrigin}/#/purchase-${data.id}`;
+      const qrSvg = await generateQrSvg(purchaseUrl, 300);
+      await supabaseAdmin.from('artworks').update({ purchase_url: purchaseUrl, qr_svg: qrSvg }).eq('id', data.id);
+
       const shaped = {
         id: data.id,
         title: data.title,
@@ -2429,6 +2538,8 @@ export default {
         artistName: data.artist_name,
         venueName: data.venue_name,
         description: data.description,
+        purchaseUrl,
+        qrSvg,
       };
       return json(shaped, { status: 201 });
     }

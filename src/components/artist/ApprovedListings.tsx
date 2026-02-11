@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
+import { API_BASE } from '../../lib/api';
 import { QrCode, Download, Eye, EyeOff, Copy, Check } from 'lucide-react';
 
 interface Artwork {
   id: string;
   title: string;
   image_url: string;
-  approval_status: 'approved';
+  status: 'active';
   venue_id: string;
   venue_name: string;
   install_time_option?: 'quick' | 'standard' | 'flexible';
@@ -36,14 +37,14 @@ export function ApprovedListings() {
           id,
           title,
           image_url,
-          approval_status,
+          status,
           venue_id,
           install_time_option,
           created_at,
           venues(name)
         `)
         .eq('artist_id', user.user.id)
-        .eq('approval_status', 'approved')
+        .eq('status', 'active')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -69,7 +70,7 @@ export function ApprovedListings() {
   };
 
   const copyQrUrl = (id: string) => {
-    const qrUrl = `${window.location.origin}/api/artworks/${id}/qrcode.svg`;
+    const qrUrl = `${API_BASE}/api/artworks/${id}/qrcode.svg`;
     navigator.clipboard.writeText(qrUrl);
     setCopyStates(prev => ({ ...prev, [id]: true }));
     setTimeout(() => {
@@ -79,7 +80,7 @@ export function ApprovedListings() {
 
   const downloadQrCode = async (id: string) => {
     try {
-      const response = await fetch(`/api/artworks/${id}/qrcode.png`);
+      const response = await fetch(`${API_BASE}/api/artworks/${id}/qrcode.png`);
       if (!response.ok) {
         const error = await response.json().catch(() => ({ error: 'Unknown error' }));
         throw new Error(error.error || `HTTP ${response.status}`);
@@ -102,7 +103,7 @@ export function ApprovedListings() {
 
   const downloadPoster = async (id: string) => {
     try {
-      const response = await fetch(`/api/artworks/${id}/qr-poster`);
+      const response = await fetch(`${API_BASE}/api/artworks/${id}/qr-poster`);
       if (!response.ok) {
         const error = await response.json().catch(() => ({ error: 'Unknown error' }));
         throw new Error(error.error || `HTTP ${response.status}`);
@@ -245,7 +246,7 @@ export function ApprovedListings() {
                     )}
                     {!qrLoadingStates[artwork.id] && !qrErrorStates[artwork.id] && (
                       <img 
-                        src={`/api/artworks/${artwork.id}/qrcode.svg`}
+                        src={`${API_BASE}/api/artworks/${artwork.id}/qrcode.svg`}
                         alt="QR Code"
                         className="h-48 w-48"
                         onLoadStart={() => setQrLoadingStates(prev => ({ ...prev, [artwork.id]: true }))}

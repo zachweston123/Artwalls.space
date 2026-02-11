@@ -5,7 +5,7 @@ import type { Application } from '../../data/mockData';
 import { TimeSlotPicker } from '../scheduling/TimeSlotPicker';
 import { DurationBadge } from '../scheduling/DisplayDurationSelector';
 import { DisplayDurationSelector } from '../scheduling/DisplayDurationSelector';
-import { createVenueBooking } from '../../lib/api';
+import { createVenueBooking, API_BASE } from '../../lib/api';
 import { supabase } from '../../lib/supabase';
 
 interface ApplicationsAndInvitationsProps {
@@ -18,7 +18,7 @@ interface Artwork {
   id: string;
   title: string;
   image_url: string;
-  approval_status: 'approved';
+  status: 'active';
   venue_id: string;
   venue_name: string;
   install_time_option?: 'quick' | 'standard' | 'flexible';
@@ -105,14 +105,14 @@ export function ApplicationsAndInvitations({ userRole, onBack, defaultTab = 'app
           id,
           title,
           image_url,
-          approval_status,
+          status,
           venue_id,
           install_time_option,
           created_at,
           venues(name)
         `)
         .eq('artist_id', user.user.id)
-        .eq('approval_status', 'approved')
+        .eq('status', 'active')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -136,7 +136,7 @@ export function ApplicationsAndInvitations({ userRole, onBack, defaultTab = 'app
   };
 
   const copyQrUrl = (id: string) => {
-    const qrUrl = `${window.location.origin}/api/artworks/${id}/qrcode.svg`;
+    const qrUrl = `${API_BASE}/api/artworks/${id}/qrcode.svg`;
     navigator.clipboard.writeText(qrUrl);
     setCopyStates(prev => ({ ...prev, [id]: true }));
     setTimeout(() => {
@@ -146,7 +146,7 @@ export function ApplicationsAndInvitations({ userRole, onBack, defaultTab = 'app
 
   const downloadQrCode = async (id: string) => {
     try {
-      const response = await fetch(`/api/artworks/${id}/qrcode.png`);
+      const response = await fetch(`${API_BASE}/api/artworks/${id}/qrcode.png`);
       if (!response.ok) {
         const error = await response.json().catch(() => ({ error: 'Unknown error' }));
         throw new Error(error.error || `HTTP ${response.status}`);
@@ -676,7 +676,7 @@ export function ApplicationsAndInvitations({ userRole, onBack, defaultTab = 'app
                           {qrStates[artwork.id] && (
                             <div className="mb-4 p-4 bg-white rounded-lg text-center">
                               <img
-                                src={`/api/artworks/${artwork.id}/qrcode.svg`}
+                                src={`${API_BASE}/api/artworks/${artwork.id}/qrcode.svg`}
                                 alt="QR Code"
                                 className="w-40 h-40 mx-auto"
                               />

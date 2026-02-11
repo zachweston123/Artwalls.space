@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { QrCode, MapPin, Calendar, X } from 'lucide-react';
 import { mockInstalledArtworks } from '../../data/mockData';
 import type { InstalledArtwork } from '../../data/mockData';
+import { API_BASE } from '../../lib/api';
 
 export function VenueCurrentArt() {
   const [artworks, setArtworks] = useState<InstalledArtwork[]>(mockInstalledArtworks);
@@ -321,7 +322,7 @@ export function VenueCurrentArt() {
               <p className="text-[var(--text-muted)]">Use this QR for customer purchase and info.</p>
               <div className="flex items-center justify-center">
                 <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(`${window.location.origin}/purchase/${qrArtwork.id}`)}`}
+                  src={`${API_BASE}/api/artworks/${qrArtwork.id}/qrcode.svg?w=240`}
                   alt="QR Code"
                   className="w-60 h-60 border border-[var(--border)] rounded-lg bg-[var(--surface-2)]"
                 />
