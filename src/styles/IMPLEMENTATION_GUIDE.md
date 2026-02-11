@@ -1,8 +1,4 @@
-# Artwalls Cohesive Design System - Implementation Guide
-
-## Quick Summary: Design Direction
-
-**Goal**: Create a **calm, premium SaaS dashboard** that feels cohesive across light and dark modes.
+# @deprecated — Orphaned design system doc. Active theme lives in theme.css.
 
 **What Changed**:
 - ✅ **One token system** supporting both light and dark modes (no theme forking)

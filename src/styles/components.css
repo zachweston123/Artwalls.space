@@ -1,13 +1,4 @@
-/**
- * ═════════════════════════════════════════════════════════════════════════════
- * ARTWALLS COMPONENT STYLING GUIDE
- * Practical examples for common UI patterns
- * ═════════════════════════════════════════════════════════════════════════════
- */
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   1. NAVIGATION & HEADER
-   ───────────────────────────────────────────────────────────────────────────── */
+/* @deprecated — orphaned reference CSS. Components use Tailwind classes. */
 
 .nav {
   background: var(--surface-1);

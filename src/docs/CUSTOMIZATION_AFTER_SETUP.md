@@ -1,8 +1,4 @@
-# Venue Portal Customization - After Setup Reference
-
-## Concept
-
-After venues complete the recommended setup, they can customize everything in the Venue Portal. Each setting section shows what the recommended defaults were and allows resetting to them if desired.
+# @deprecated — Internal documentation. Moved to project wiki.
 
 ## Portal Structure
 

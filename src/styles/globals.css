@@ -1,11 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-@layer base {
-  /* ═══════════════════════════════════════════════════════════
-     SYSTEM DARK MODE DETECTION + ROOT BACKGROUND
-     ═══════════════════════════════════════════════════════════ */
+/* @deprecated — orphaned. Tailwind directives and dark mode live in src/index.css + theme.css. */
   
   /* Always ensure html/body has correct background color */
   html {

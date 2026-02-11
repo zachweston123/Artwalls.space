@@ -1,8 +1,4 @@
-# Artwalls Marketplace - Ready for Handoff Checklist
-
-## ✅ COMPLETE DESIGN SYSTEM DELIVERED
-
----
+# @deprecated — Internal documentation. Moved to project wiki.
 
 ## Deliverables Summary
 

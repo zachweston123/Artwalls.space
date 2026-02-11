@@ -1,8 +1,4 @@
---- a/worker/index.ts
-+++ b/worker/index.ts
-@@ -1509,6 +1509,33 @@ export default {
-       return json({ ok: true });
-     }
+Stale patch — already applied and deduplication done.
  
 +    // Admin password verification endpoint
 +    if (url.pathname === '/api/admin/verify' && method === 'POST') {

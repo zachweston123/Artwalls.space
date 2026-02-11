@@ -1,13 +1,6 @@
-import { supabaseAdmin } from './supabaseClient.js';
-
-// Server-side DB adapter (Supabase Postgres).
-// Uses service-role key, so keep all access on the server.
-
-function nowIso() {
-  return new Date().toISOString();
-}
-
-function toIntOrNull(v) {
+// @deprecated — Express server is retired. All DB logic lives in worker/index.ts.
+// This file and the entire server/ directory can be safely deleted.
+throw new Error('server/db.js is deprecated — use worker/index.ts');
   if (v === undefined || v === null) return null;
   const n = Number(v);
   return Number.isFinite(n) ? Math.trunc(n) : null;

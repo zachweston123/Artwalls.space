@@ -1,8 +1,5 @@
-/**
- * Subscription Plans Configuration
- * Single source of truth for all subscription tier definitions.
- * 
- * ========================================================
+// @deprecated — Plan config lives in worker/index.ts.
+throw new Error('server/plans.js is deprecated');
  * NEW BUSINESS MODEL (SOURCE OF TRUTH)
  * ========================================================
  * 

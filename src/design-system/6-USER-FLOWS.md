@@ -1,8 +1,4 @@
-# Artwalls - User Flows & Prototyping
-
-## Core User Flows
-
----
+# @deprecated — Internal documentation. Moved to project wiki.
 
 ## Flow 1: Artist Onboarding & First Artwork
 

@@ -1,11 +1,4 @@
-/* ============================================================================
-   ADMIN APPROVALS STYLES
-   ============================================================================ */
-
-.admin-approvals,
-.admin-approval-detail {
-  padding: 24px;
-  max-width: 1400px;
+/* @deprecated — orphaned CSS, never imported. AdminVenueApprovals.tsx was gutted. */
   margin: 0 auto;
   background-color: var(--bg);
   color: var(--text);

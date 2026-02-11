@@ -1,8 +1,4 @@
-# Dark Mode Implementation - Complete
-
-## ✅ Fully Updated Components
-
-### Core Navigation & Layout
+# @deprecated — Internal documentation. Moved to project wiki.
 - ✅ **Navigation.tsx** - Top navbar with role-specific accents, notification badge
 - ✅ **MobileSidebar.tsx** - Mobile drawer navigation
 - ✅ **Footer.tsx** - Footer links and branding

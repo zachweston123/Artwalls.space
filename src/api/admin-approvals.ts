@@ -1,11 +1,5 @@
-/**
- * Admin Approval Workflow API
- * Handles venue setup approval/rejection for admin users
- */
-
-import { Router, Request, Response } from 'express';
-import { supabase } from '../lib/supabase';
-import { AdminContext, VenueSetupData } from '../types/index';
+/** @deprecated Dead Express stub — all admin APIs live in worker/index.ts. */
+throw new Error('Dead file: use worker/index.ts');
 
 const router = Router();
 

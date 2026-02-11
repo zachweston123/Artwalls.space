@@ -1,8 +1,4 @@
-// INTEGRATION GUIDE: Adding Setup Health Checklist to VenueDashboard
-// This shows how to add the checklist to the top of the VenueDashboard component
-
-import { SetupHealthChecklist } from './SetupHealthChecklist';
-import { generateHealthChecklistItems } from '../../types/venueSetup';
+# @deprecated — Internal documentation. Moved to project wiki.
 
 /**
  * HOW TO INTEGRATE INTO VenueDashboard:

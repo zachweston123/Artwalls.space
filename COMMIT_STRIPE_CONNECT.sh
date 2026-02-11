@@ -1,13 +1,6 @@
 #!/bin/bash
-# Script to copy Stripe Connect files from VS Code workspace and commit
-
-echo "📋 Copying Stripe Connect files..."
-
-# Note: Files will be copied manually from vscode-vfs workspace
-# This script is a placeholder - files need to be saved from VS Code first
-
-echo "⚠️  ACTION REQUIRED:"
-echo ""
+# @deprecated — one-time commit helper, no longer needed.
+echo 'Dead script' && exit 1
 echo "The Stripe Connect files exist in VS Code's virtual GitHub view but"
 echo "haven't been saved to disk yet."
 echo ""

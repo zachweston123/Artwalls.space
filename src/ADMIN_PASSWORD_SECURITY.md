@@ -1,8 +1,4 @@
-# Admin Access Security Implementation
-
-## Overview
-The Admin Console now has password protection to prevent unauthorized access. The demo "Sign in as Admin" button has been removed from the login screen, and the console can only be accessed with the correct admin password.
-
+# @deprecated — Internal documentation. Moved to project wiki.
 ## How to Access Admin Console
 
 ### Method 1: Keyboard Shortcut (Recommended)

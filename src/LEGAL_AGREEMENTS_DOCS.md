@@ -1,8 +1,4 @@
-# Artwalls Legal Agreements System
-
-## Overview
-Complete legal agreements system for the Artwalls marketplace with separate Artist and Venue agreements. Includes policies landing page, full agreement pages with table of contents, acceptance workflow, and integration throughout the application.
-
+# @deprecated — Internal documentation. Moved to project wiki.
 ---
 
 ## Pages Implemented

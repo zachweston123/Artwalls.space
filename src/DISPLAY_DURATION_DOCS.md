@@ -1,8 +1,4 @@
-# Artwalls Display Duration System
-
-## Overview
-The display duration system allows venues to specify how long artwork will be displayed when approving artist applications. This provides structure for rotating artwork, managing wall spaces, and setting clear expectations for both artists and venues.
-
+# @deprecated — Internal documentation. Moved to project wiki.
 ---
 
 ## Duration Options

@@ -1,8 +1,4 @@
-# Artwalls - Admin Console Screen Specifications
-
-## Desktop Breakpoint: 1280px | Mobile Breakpoint: 390px
-
-**Note:** Admin console is optimized for desktop use (internal staff tool). Mobile support is functional but desktop is primary.
+# @deprecated — Internal documentation. Moved to project wiki.
 
 ---
 

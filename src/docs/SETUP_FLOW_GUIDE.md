@@ -1,8 +1,4 @@
-# Recommended Venue Setup Flow - Complete Implementation Guide
-
-## Overview
-
-This document outlines the complete "Recommended Venue Setup" feature that guides new venues through an onboarding experience using the Partner Kit and Setup Wizard, while allowing full customization later in the Venue Portal.
+# @deprecated — Internal documentation. Moved to project wiki.
 
 ## User Journey
 

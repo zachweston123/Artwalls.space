@@ -1,8 +1,4 @@
-# Artwalls Marketplace - Admin Screens
-
-## Desktop: 1280px | Mobile: 390px
-
----
+# @deprecated — Internal documentation. Moved to project wiki.
 
 ## Admin Layout Pattern
 

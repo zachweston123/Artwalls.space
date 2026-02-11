@@ -1,0 +1,1 @@
+# @deprecated — Internal documentation. Moved to project wiki.

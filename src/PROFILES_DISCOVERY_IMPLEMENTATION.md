@@ -1,8 +1,4 @@
-# Artwalls Profiles & Discovery System - Complete Implementation
-
-## 🎨 Overview
-
-This update adds comprehensive profile pages, discovery features, and a structured invitation system to the Artwalls marketplace, enabling venues to find and invite artists, and artists to discover suitable venues.
+# @deprecated — Internal documentation. Moved to project wiki.
 
 ## ✅ Components Created
 

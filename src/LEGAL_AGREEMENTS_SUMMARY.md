@@ -1,8 +1,4 @@
-# Artwalls Legal Agreements - Implementation Summary
-
-## ✅ What Was Built
-
-### Core Pages (3)
+# @deprecated — Internal documentation. Moved to project wiki.
 1. **Policies & Agreements Landing** - Hub for all legal documents
 2. **Artist Agreement** - Full 12-section legal agreement with acceptance workflow
 3. **Venue Agreement** - Full 12-section legal agreement with acceptance workflow

@@ -1,13 +1,5 @@
-/**
- * Stripe Connect Service
- * Handles all Stripe Connect Express account operations:
- * - Account creation and onboarding
- * - Account status synchronization
- * - Account link generation
- * - Transfer creation for payouts
- */
-
-import Stripe from 'stripe';
+// @deprecated — Stripe Connect logic lives in worker/index.ts.
+throw new Error('server/stripeConnect.js is deprecated');
 
 let stripeClient;
 

@@ -1,8 +1,4 @@
-# Dark Mode Implementation Status
-
-## ✅ FULLY COMPLETE - Production Ready
-
-### Core Infrastructure (100%)
+# @deprecated — Internal documentation. Moved to project wiki.
 - ✅ `/styles/globals.css` - Complete color token system with CSS variables
 - ✅ `/App.tsx` - Main app container with dark mode support
 

@@ -1,11 +1,4 @@
-/* ============================================================================
-   VENUE SETTINGS STYLES
-   ============================================================================ */
-
-.venue-settings {
-  padding: 24px;
-  max-width: 1400px;
-  margin: 0 auto;
+/* @deprecated — orphaned. Only importer (components/VenueSettings.tsx) was gutted. */
   background-color: var(--bg);
   color: var(--text);
 }

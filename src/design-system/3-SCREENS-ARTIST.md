@@ -1,8 +1,4 @@
-# Artwalls - Artist Screen Specifications
-
-## Desktop Breakpoint: 1280px | Mobile Breakpoint: 390px
-
----
+# @deprecated — Internal documentation. Moved to project wiki.
 
 ## 1. Artist Dashboard (`/artist/dashboard`)
 

@@ -1,8 +1,4 @@
-# Artwalls Design System - Handoff Checklist
-
-## ✅ READY FOR HANDOFF
-
-This document summarizes what has been fixed, spec'd, and delivered for engineering implementation.
+# @deprecated — Internal documentation. Moved to project wiki.
 
 ---
 

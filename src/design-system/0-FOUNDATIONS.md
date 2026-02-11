@@ -1,8 +1,4 @@
-# Artwalls Marketplace - Design System Foundations
-
-## Product Overview
-
-Artwalls is a marketplace connecting artists with venues to sell physical artwork displayed on venue walls. Each approved listing generates a printable QR code that customers scan to purchase via Stripe Checkout, with revenue automatically split between Artist, Venue, and Artwalls based on the artist's subscription tier.
+# @deprecated — Internal documentation. Moved to project wiki.
 
 ---
 

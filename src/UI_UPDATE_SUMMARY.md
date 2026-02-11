@@ -1,8 +1,4 @@
-# UI Update Summary - Dark Mode & Role Accent System
-
-## ✅ Completed Tasks
-
-### A) Role Accent Styling System
+# @deprecated — Internal documentation. Moved to project wiki.
 **Status: Implemented**
 - Created `/components/ui/role-button.tsx` - Reusable button component with Artist (blue) / Venue (green) variants
 - Created `/components/ui/role-badge.tsx` - Reusable badge component with role-specific colors

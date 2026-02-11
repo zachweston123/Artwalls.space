@@ -1,8 +1,4 @@
-# Artwalls Design System - Validation & QA Checklist
-
-## Executive Summary
-
-This checklist ensures **cohesion, accessibility, and premium quality** across all pages and components. Use this **before every page launch** to catch issues early.
+# @deprecated — Orphaned design system checklist. No longer maintained.
 
 ---
 

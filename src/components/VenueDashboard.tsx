@@ -1,13 +1,5 @@
-/**
- * VenueDashboard - Enhanced with Setup Health Checklist
- * Main dashboard view for venue partners showing setup progress and key metrics
- */
-
-import React, { useState, useEffect } from 'react';
-// react-router-dom removed — this app uses custom SPA routing
-import SetupHealthChecklist from './SetupHealthChecklist';
-import VenuePartnerKitEmbedded from './VenuePartnerKitEmbedded';
-import { useVenueData } from '../hooks/useVenueData';
+/** @deprecated — orphaned duplicate. Active version: venue/VenueDashboard.tsx */
+export {};
 import { apiGet } from '../lib/api';
 import '../styles/venue-dashboard.css';
 

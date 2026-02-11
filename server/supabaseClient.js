@@ -1,12 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
-
-// Trim and validate environment variables
-const rawUrl = process.env.SUPABASE_URL || '';
-const rawKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-
-// Clean URL: trim whitespace, remove trailing slashes
-const url = rawUrl.trim().replace(/\/+$/, '');
-const serviceKey = rawKey.trim();
+// @deprecated — Express server is retired. Supabase client lives in worker/index.ts.
+throw new Error('server/supabaseClient.js is deprecated');
 
 if (!url) {
   throw new Error('Missing SUPABASE_URL in environment');

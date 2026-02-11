@@ -1,13 +1,6 @@
 #!/bin/bash
-# SUBSCRIPTION MODEL REFACTOR - IMPLEMENTATION & TESTING GUIDE
-# Run this after deploying code changes
-
-set -e
-
-echo "🎨 Artwalls Subscription Model Refactor - Deployment Guide"
-echo "========================================================"
-echo ""
-echo "STEP 1: Deploy Code Changes"
+# @deprecated — deployment now handled by .github/workflows/deploy.yml.
+echo 'Dead script: use GitHub Actions deploy workflow' && exit 1
 echo "  - Merge PR with updated plans.js, PricingPage.tsx, and server changes"
 echo "  - Ensure all files are deployed to production"
 echo ""

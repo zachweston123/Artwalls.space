@@ -1,8 +1,4 @@
-# Artwalls Admin Console - Complete Implementation Guide
-
-## 🎯 Overview
-
-The Admin Console is an internal-use tooling system for Artwalls staff to manage users, troubleshoot issues, create announcements, and manage subscription promo codes. It features a clean, professional interface with full light/dark mode support and matches the existing Artwalls design language.
+# @deprecated — Internal documentation. Moved to project wiki.
 
 ## ✅ Components Created (11 files)
 

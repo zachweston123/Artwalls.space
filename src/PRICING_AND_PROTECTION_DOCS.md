@@ -1,8 +1,4 @@
-# Artwalls Pricing & Protection Plan System
-
-## Overview
-Complete pricing tiers with **active display caps**, **overage pricing**, Artwork Protection Plan, and updated legal agreements reflecting subscription-based revenue model with tiered benefits and optional/included protection coverage.
-
+# @deprecated — Internal documentation. Moved to project wiki.
 ---
 
 ## Subscription Tiers

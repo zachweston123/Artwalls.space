@@ -1,8 +1,5 @@
-import crypto from 'node:crypto';
-
-const STATUS = ['DRAFT', 'SENT', 'CLICKED', 'ACCEPTED', 'DECLINED', 'EXPIRED'];
-
-export function generateInviteToken() {
+// @deprecated — Invite logic lives in worker/index.ts.
+throw new Error('server/venueInviteUtils.js is deprecated');
   return crypto.randomBytes(16).toString('hex');
 }
 

@@ -1,13 +1,5 @@
-/**
- * Database Schema for Recommended Venue Setup
- * Supabase Migrations
- */
-
--- ============================================================================
--- ALTER venues TABLE - Add setup fields
--- ============================================================================
-
--- Create enum for venue status
+-- @deprecated — stub migration in wrong directory. Never run.
+-- Real migrations live in supabase/migrations/.
 CREATE TYPE venue_status AS ENUM (
   'draft',
   'pending_review',

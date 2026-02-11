@@ -1,8 +1,4 @@
-# Artwalls Design System - Component Library
-
-## 1. Buttons
-
-### Variants
+# @deprecated — Internal documentation. Moved to project wiki.
 
 #### Primary Button
 ```tsx

@@ -1,9 +1,5 @@
-/**
- * Setup Analytics Events Service
- * Track and log analytics events for venue setup workflow
- */
-
-import { supabase } from '../lib/supabase';
+/** @deprecated Dead service stub — analytics not implemented. */
+throw new Error('Dead file: setup-analytics never wired');
 
 // ============================================================================
 // Event Types

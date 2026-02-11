@@ -1,13 +1,4 @@
-/**
- * ═══════════════════════════════════════════════════════════════════════════════
- * ARTWALLS COHESIVE DESIGN SYSTEM
- * Premium SaaS Dashboard + Artist/Venue Marketplace
- * 
- * Token System: Light Mode + Dark Mode
- * Philosophy: Calm, modern, art-forward. Premium feel without unnecessary complexity.
- * 
- * Key Principles:
- * 1. One accent color (blue) + semantic colors (success/warn/danger)
+/* @deprecated — orphaned design tokens. Active tokens live in theme.css. */
  * 2. 3-tier surface elevation (base, card, elevated)
  * 3. Consistent contrast: 4.5:1 body text, 3:1 large text (WCAG AA)
  * 4. All colors defined as tokens; no arbitrary grays or one-offs

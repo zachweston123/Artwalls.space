@@ -39,8 +39,6 @@ export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     const method = request.method.toUpperCase();
-    console.log(`Request: ${method} ${url.pathname}`);
-    if (url.pathname.startsWith('/api/stripe')) console.log(`Stripe request: ${method} ${url.pathname}`);
     
     // Determine allowed origin - accept requests from the frontend origin
     const requestOrigin = request.headers.get('origin') || '';
@@ -2580,7 +2578,6 @@ export default {
         let id = String(payload?.artistId || '').trim();
         if (!id) {
           const user = await getSupabaseUserFromRequest(request);
-          console.log('[POST /api/artists] Auth user:', user?.id, 'role:', user?.user_metadata?.role);
           if (user && (user.user_metadata?.role === 'artist' || !user.user_metadata?.role)) {
             id = user.id;
           }
@@ -2590,8 +2587,6 @@ export default {
           return json({ error: 'Missing artistId or Authorization token' }, { status: 400 });
         }
         if (!isUUID(id)) return json({ error: 'Invalid artistId format' }, { status: 400 });
-        
-        console.log('[POST /api/artists] Upserting artist:', id, 'payload:', JSON.stringify(payload));
         const resp = await upsertArtist({
           id,
           email: clampStr(payload?.email, 254) || null,

@@ -1,3 +1,2 @@
-// Load environment variables before any other imports
-import dotenv from 'dotenv';
-dotenv.config();
+// @deprecated — Worker uses env bindings, not dotenv.
+throw new Error('server/env.js is deprecated');

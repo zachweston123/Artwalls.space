@@ -1,9 +1,4 @@
-# Worker File Deduplication Instructions
-
-The file `worker/index.ts` contains 5 duplicate copies of a ~917-line route handler block.
-The file is also truncated at the end (line 6289), causing a syntax error.
-
-## What's in the file now:
+# @deprecated — Deduplication completed. worker/index.ts is clean (6451→2637 lines).
 - **Lines 1-2422**: Good code (imports, helpers, Stripe routes, and ONE copy of public route handlers)
 - **Lines 2423-6289**: FIVE duplicate copies of the same route handlers (dead code) + truncated ending
 

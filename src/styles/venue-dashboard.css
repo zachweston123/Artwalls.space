@@ -1,11 +1,4 @@
-/* ============================================================================
-   VENUE DASHBOARD STYLES
-   ============================================================================ */
-
-.venue-dashboard {
-  padding: 24px;
-  max-width: 1400px;
-  margin: 0 auto;
+/* @deprecated — orphaned. Only importer (components/VenueDashboard.tsx) was gutted. */
   background-color: var(--bg);
   color: var(--text);
 }

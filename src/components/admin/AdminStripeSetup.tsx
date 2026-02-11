@@ -1,11 +1,5 @@
-import { useState, useEffect } from 'react';
-
-interface EnvCheck {
-  key: string;
-  label: string;
-  value: boolean;
-  required: boolean;
-}
+/** @deprecated — orphaned component. Stripe admin managed in Stripe Dashboard. */
+export default function AdminStripeSetup() { return null; }
 
 interface PendingPayout {
   orderId: string;

@@ -1,8 +1,4 @@
-# Artwalls Venue Installation Guide
-
-> **For:** Artists approved by venues to display their artwork  
-> **Purpose:** Step-by-step instructions to safely install artwork and verify QR code functionality
-
+# @deprecated — Internal documentation. Moved to project wiki.
 ---
 
 ## 📋 Quick Overview

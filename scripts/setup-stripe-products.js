@@ -1,9 +1,5 @@
-const fs = require('fs');
-const path = require('path');
-const https = require('https');
-
-// Read .dev.vars
-const varsPath = path.join(__dirname, '../.dev.vars');
+/** @deprecated — one-time setup script, already run. Stripe products configured in dashboard. */
+throw new Error('Dead script: Stripe products already configured');
 let content = '';
 try {
   content = fs.readFileSync(varsPath, 'utf8');

@@ -1,7 +1,5 @@
-import { Router, Request, Response } from 'express';
-import { supabase } from '../lib/supabase';
-
-const router = Router();
+/** @deprecated Dead Express stub — all venue APIs live in worker/index.ts. */
+throw new Error('Dead file: use worker/index.ts');
 
 /**
  * POST /api/venues/setup

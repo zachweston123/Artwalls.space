@@ -1,13 +1,5 @@
-import nodemailer from 'nodemailer';
-
-let transporter = null;
-const defaultFrom = process.env.FROM_EMAIL || 'no-reply@artwalls.space';
-
-function getTransporter() {
-  if (transporter) return transporter;
-  const host = process.env.SMTP_HOST;
-  const port = Number(process.env.SMTP_PORT || 587);
-  const user = process.env.SMTP_USER;
+// @deprecated — Email functionality TBD in worker. Nodemailer cannot run in Workers.
+throw new Error('server/mail.js is deprecated');
   const pass = process.env.SMTP_PASS;
   if (!host || !user || !pass) return null;
   transporter = nodemailer.createTransport({

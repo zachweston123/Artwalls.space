@@ -1,8 +1,4 @@
-# Artwalls - Weekly Install/Pickup Scheduling System
-
-## Overview
-The Artwalls marketplace now includes a streamlined weekly scheduling system that eliminates back-and-forth messaging between venues and artists. Each venue defines a single recurring weekly time window for all installations and pickups.
-
+# @deprecated — Internal documentation. Moved to project wiki.
 ## Key Features Implemented
 
 ### 1. Venue Settings - Install & Pickup Window Configuration

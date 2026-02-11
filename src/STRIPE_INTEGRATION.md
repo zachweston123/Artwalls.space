@@ -1,8 +1,4 @@
-# Stripe Payment Integration - Admin Portal
-
-## Overview
-
-The admin portal now includes a complete Stripe payment setup interface that allows administrators to:
+# @deprecated — Internal documentation. Moved to project wiki.
 - Connect and manage Stripe API credentials
 - View payment connection status
 - Switch between test and live modes

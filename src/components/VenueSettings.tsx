@@ -1,12 +1,5 @@
-/**
- * Venue Settings Pages
- * Customization pages for venue partners to update settings
- */
-
-import React, { useState, useEffect } from 'react';
-// react-router-dom removed — this app uses custom SPA routing
-import { useVenueData } from '../hooks/useVenueData';
-import '../styles/venue-settings.css';
+/** @deprecated — orphaned duplicate. Active version: venue/VenueSettingsWithEmptyState.tsx */
+export {};
 
 // ============================================================================
 // VenueSettings - Main settings container

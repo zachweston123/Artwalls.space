@@ -1,8 +1,4 @@
-# Artwalls QR Code & Installation Workflow - Technical Documentation
-
-> **Status:** Complete Implementation  
-> **Last Updated:** January 7, 2026  
-> **Audience:** Artists, Venue Staff, Platform Team
+# @deprecated — Internal documentation. Moved to project wiki.
 
 ---
 

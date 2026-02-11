@@ -1,7 +1,5 @@
-import fs from 'node:fs';
-import path from 'node:path';
-
-const STORE_PATH = path.join(process.cwd(), 'store.json');
+// @deprecated — Express server is retired. Delete this file.
+throw new Error('server/store.js is deprecated');
 
 function safeJsonParse(text, fallback) {
   try {

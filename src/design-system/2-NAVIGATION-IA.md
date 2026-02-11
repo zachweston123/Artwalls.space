@@ -1,8 +1,4 @@
-# Artwalls - Navigation & Information Architecture
-
-## Complete Route Map
-
-### Public Routes (No Authentication Required)
+# @deprecated — Internal documentation. Moved to project wiki.
 
 | Route | Screen | Desktop | Mobile | Description |
 |-------|--------|---------|--------|-------------|

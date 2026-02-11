@@ -1,9 +1,5 @@
-/**
- * Setup Email Notifications Service
- * Handles email notifications for venue setup workflow
- */
-
-import nodemailer from 'nodemailer';
+/** @deprecated Dead service stub — emails not implemented. */
+throw new Error('Dead file: setup-emails never wired');
 
 // ============================================================================
 // Email Templates

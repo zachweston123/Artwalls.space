@@ -1,9 +1,6 @@
 #!/bin/bash
-
-# Stripe Subscription Integration - Quick Test Script
-# This script helps you verify your Stripe subscription setup
-
-set -e
+# @deprecated — one-time test script, no longer needed.
+echo 'Dead script: Stripe setup already verified' && exit 1
 
 echo "🎨 Artwalls Stripe Subscription Setup Tester"
 echo "=============================================="

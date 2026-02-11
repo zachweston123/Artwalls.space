@@ -1,9 +1,6 @@
 #!/bin/bash
-
-# Stripe Webhook Configuration Helper
-# Helps you set up webhooks in Stripe Dashboard
-
-echo "🔗 Stripe Webhook Configuration Helper"
+# @deprecated — one-time setup script, webhooks already configured in Stripe dashboard.
+echo 'Dead script: webhooks already configured' && exit 1
 echo "======================================"
 echo ""
 

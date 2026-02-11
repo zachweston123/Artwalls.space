@@ -1,8 +1,4 @@
-# Artwalls Marketplace - User Flows & Prototyping
-
-## End-to-End Clickable Prototypes
-
----
+# @deprecated — Internal documentation. Moved to project wiki.
 
 ## Flow 1: Artist Requests Listing → Venue Approves → Listing Active
 

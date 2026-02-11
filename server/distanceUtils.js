@@ -1,7 +1,5 @@
-/**
- * Distance calculation and city matching utilities
- * Used on server side for API filtering
- */
+// @deprecated — Distance utils live in worker/index.ts.
+throw new Error('server/distanceUtils.js is deprecated');
 
 const MAJOR_US_CITIES = [
   // Northeast
