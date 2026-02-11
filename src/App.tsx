@@ -161,87 +161,8 @@ export default function App() {
     }
   }, [currentUser, currentPage, publicArtistSlugOrId]);
 
-  // Direct-route override for email verification page
-  if (typeof window !== 'undefined' && window.location.pathname === '/verify-email') {
-    return <VerifyEmail />;
-  }
-
-  // Direct-route override for password reset page
-  if (typeof window !== 'undefined' && window.location.pathname === '/reset-password') {
-    return (
-      <ResetPassword 
-        onSuccess={() => {
-          setCurrentPage('login');
-          window.history.pushState({}, '', '/');
-        }}
-        onBackToLogin={() => {
-          setCurrentPage('login');
-          window.history.pushState({}, '', '/');
-        }}
-      />
-    );
-  }
-
-  // Direct-route override for venue invite landing page
-  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/v/invite/')) {
-    return <VenueInviteLanding />;
-  }
-
-
-  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/calls/')) {
-    const parts = window.location.pathname.split('/').filter(Boolean);
-    const callId = parts[1] || '';
-    const isApply = parts[2] === 'apply';
-    return isApply ? <CallApplyPage callId={callId} /> : <CallPublicPage callId={callId} />;
-  }
-
-  // ── /p/artist/:slug — guaranteed-public artist profile ──
-  // Completely outside auth gates. Uses its own layout (no sidebar/dashboard).
-  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/p/artist/')) {
-    const parts = window.location.pathname.split('/').filter(Boolean);
-    const slug = parts[2] || '';
-    if (slug) {
-      return <PublicArtistProfilePage slug={slug} />;
-    }
-  }
-
-  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/artists/')) {
-    const parts = window.location.pathname.split('/').filter(Boolean);
-    const slugOrId = parts[1] || '';
-    const isSetDetail = parts[2] === 'sets' && !!parts[3];
-
-    // If user is authenticated, fall through to the authenticated shell.
-    // State sync is handled by the useEffect above.
-    if (currentUser) {
-      // Fall through to the authenticated shell below
-    } else {
-      // Unauthenticated: render with Navigation wrapper for consistent layout
-      if (isSetDetail) {
-        const setId = parts[3];
-        return <PublicArtistSetPage slugOrId={slugOrId} setId={setId} />;
-      }
-      return (
-        <div className="min-h-screen">
-          <Navigation
-            user={null}
-            onNavigate={handleNavigate}
-            onLogout={() => {}}
-            currentPage="public-artist-profile"
-          />
-          <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-            <PublicArtistPage slugOrId={slugOrId} onNavigate={handleNavigate} />
-          </main>
-          <Footer onNavigate={handleNavigate} />
-        </div>
-      );
-    }
-  }
-
-  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/venues/')) {
-    const parts = window.location.pathname.split('/').filter(Boolean);
-    const venueId = parts[1] || '';
-    return <PublicVenuePage venueId={venueId} />;
-  }
+  // Route overrides are now handled after all hooks (see bottom of component)
+  // to avoid React hooks ordering violations.
 
   const userFromSupabase = (supaUser: any): User | null => {
     if (!supaUser?.id) return null;
@@ -481,9 +402,7 @@ export default function App() {
     setCurrentPage(user.role === 'artist' ? 'artist-dashboard' : user.role === 'venue' ? 'venue-dashboard' : 'admin-dashboard');
   };
 
-  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/venue/signup')) {
-    return <VenueSignup onLogin={handleLogin} onNavigate={handleNavigate} />;
-  }
+  // Venue signup early return moved below all hooks (see render section)
 
   // Ensure the user has a corresponding DB record immediately (discoverable in searches)
   useEffect(() => {
@@ -738,6 +657,93 @@ export default function App() {
     window.addEventListener('hashchange', applyHash);
     return () => window.removeEventListener('hashchange', applyHash);
   }, []);
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Route overrides — placed AFTER all hooks to satisfy Rules of Hooks
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+
+  // Direct-route override for email verification page
+  if (pathname === '/verify-email') {
+    return <VerifyEmail />;
+  }
+
+  // Direct-route override for password reset page
+  if (pathname === '/reset-password') {
+    return (
+      <ResetPassword 
+        onSuccess={() => {
+          setCurrentPage('login');
+          window.history.pushState({}, '', '/');
+        }}
+        onBackToLogin={() => {
+          setCurrentPage('login');
+          window.history.pushState({}, '', '/');
+        }}
+      />
+    );
+  }
+
+  // Direct-route override for venue invite landing page
+  if (pathname.startsWith('/v/invite/')) {
+    return <VenueInviteLanding />;
+  }
+
+  // Direct-route override for calls pages
+  if (pathname.startsWith('/calls/')) {
+    const parts = pathname.split('/').filter(Boolean);
+    const callId = parts[1] || '';
+    const isApply = parts[2] === 'apply';
+    return isApply ? <CallApplyPage callId={callId} /> : <CallPublicPage callId={callId} />;
+  }
+
+  // /p/artist/:slug — guaranteed-public artist profile
+  if (pathname.startsWith('/p/artist/')) {
+    const parts = pathname.split('/').filter(Boolean);
+    const slug = parts[2] || '';
+    if (slug) {
+      return <PublicArtistProfilePage slug={slug} />;
+    }
+  }
+
+  // /artists/:slugOrId — public artist pages (unauthenticated)
+  if (pathname.startsWith('/artists/') && !currentUser) {
+    const parts = pathname.split('/').filter(Boolean);
+    const slugOrId = parts[1] || '';
+    const isSetDetail = parts[2] === 'sets' && !!parts[3];
+
+    if (isSetDetail) {
+      const setId = parts[3];
+      return <PublicArtistSetPage slugOrId={slugOrId} setId={setId} />;
+    }
+    return (
+      <div className="min-h-screen">
+        <Navigation
+          user={null}
+          onNavigate={handleNavigate}
+          onLogout={() => {}}
+          currentPage="public-artist-profile"
+        />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+          <PublicArtistPage slugOrId={slugOrId} onNavigate={handleNavigate} />
+        </main>
+        <Footer onNavigate={handleNavigate} />
+      </div>
+    );
+  }
+
+  // /venues/:venueId — public venue page
+  if (pathname.startsWith('/venues/')) {
+    const parts = pathname.split('/').filter(Boolean);
+    const venueId = parts[1] || '';
+    return <PublicVenuePage venueId={venueId} />;
+  }
+
+  // /venue/signup — venue signup page
+  if (pathname.startsWith('/venue/signup')) {
+    return <VenueSignup onLogin={handleLogin} onNavigate={handleNavigate} />;
+  }
 
   // Check if this is a purchase page (QR code flow)
   if (currentPage.startsWith('purchase-')) {

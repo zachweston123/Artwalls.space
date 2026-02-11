@@ -4,7 +4,7 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { supabase } from '../supabase-client';
+import { supabase } from '../lib/supabase';
 import { AdminContext, VenueSetupData } from '../types/index';
 
 const router = Router();

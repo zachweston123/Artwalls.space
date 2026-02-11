@@ -4,8 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { supabase } from '../supabase-client';
+import { supabase } from '../lib/supabase';
 import '../styles/admin-approvals.css';
 
 interface PendingVenue {
@@ -49,7 +48,7 @@ interface ApprovalAction {
 // ============================================================================
 
 const AdminVenueApprovals: React.FC = () => {
-  const navigate = useNavigate();
+  const navigate = (path: string) => { window.location.href = path; };
   const [pendingVenues, setPendingVenues] = useState<PendingVenue[]>([]);
   const [loading, setLoading] = useState(true);
   const [approvalStats, setApprovalStats] = useState({
@@ -177,8 +176,8 @@ const AdminVenueApprovals: React.FC = () => {
 // ============================================================================
 
 const AdminVenueApprovalDetail: React.FC = () => {
-  const { venueId } = useParams<{ venueId: string }>();
-  const navigate = useNavigate();
+  const venueId = new URLSearchParams(window.location.search).get('venueId') || '';
+  const navigate = (path: string) => { window.location.href = path; };
   
   const [venue, setVenue] = useState<VenueDetails | null>(null);
   const [approvalHistory, setApprovalHistory] = useState<ApprovalAction[]>([]);

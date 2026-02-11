@@ -3,7 +3,7 @@
  * Track and log analytics events for venue setup workflow
  */
 
-import { supabase } from '../supabase-client';
+import { supabase } from '../lib/supabase';
 
 // ============================================================================
 // Event Types

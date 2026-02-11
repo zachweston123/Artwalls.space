@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+// react-router-dom removed — this app uses custom SPA routing
 import SetupHealthChecklist from './SetupHealthChecklist';
 import VenuePartnerKitEmbedded from './VenuePartnerKitEmbedded';
 import { useVenueData } from '../hooks/useVenueData';
@@ -25,7 +25,7 @@ interface DashboardMetrics {
 }
 
 const VenueDashboard: React.FC = () => {
-  const navigate = useNavigate();
+  const navigate = (path: string) => { window.location.href = path; };
   const { venue, loading } = useVenueData();
   
   const [activeTab, setActiveTab] = useState<string>('overview');

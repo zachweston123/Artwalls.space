@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+// react-router-dom removed — this app uses custom SPA routing
 import { useVenueData } from '../hooks/useVenueData';
 import '../styles/venue-settings.css';
 
@@ -13,7 +13,7 @@ import '../styles/venue-settings.css';
 // ============================================================================
 
 const VenueSettings: React.FC = () => {
-  const navigate = useNavigate();
+  const navigate = (path: string) => { window.location.href = path; };
   const { venue, loading } = useVenueData();
   const [activeSection, setActiveSection] = useState('basic');
 

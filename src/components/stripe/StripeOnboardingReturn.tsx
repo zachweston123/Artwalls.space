@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { supabase } from '../../lib/supabaseClient';
+import { supabase } from '../../lib/supabase';
 
 const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || 'https://api.artwalls.space';
 
 export default function StripeOnboardingReturn() {
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
+  const searchParams = new URLSearchParams(window.location.search);
   const [status, setStatus] = useState<'checking' | 'success' | 'pending' | 'error'>('checking');
   const [message, setMessage] = useState('');
   const role = searchParams.get('role') as 'artist' | 'venue' | null;
@@ -58,7 +56,7 @@ export default function StripeOnboardingReturn() {
       }
 
       setTimeout(() => {
-        navigate(role === 'artist' ? '/artist-dashboard' : '/venue-dashboard');
+        window.location.href = role === 'artist' ? '/' : '/';
       }, 3000);
     } catch (err) {
       console.error('Failed to check status', err);
@@ -120,7 +118,7 @@ export default function StripeOnboardingReturn() {
           </p>
           {status !== 'checking' && (
             <button
-              onClick={() => navigate(role === 'artist' ? '/artist-dashboard' : '/venue-dashboard')}
+              onClick={() => { window.location.href = '/'; }}
               className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg"
             >
               Go to Dashboard
