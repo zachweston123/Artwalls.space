@@ -31,7 +31,18 @@ export function StripePaymentSetup({ onNavigate }: StripeSetupProps) {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const webhookUrl = `${String(API_BASE).replace(/\/$/, '')}/api/stripe/webhook`;
   const [apiOk, setApiOk] = useState<boolean | null>(null);
-  const [envDebug, setEnvDebug] = useState<{ ok?: boolean; env?: { appUrl?: string | null; corsOrigin?: any; stripe?: { secretKey?: boolean; webhookSecret?: boolean } } } | null>(null);
+  const [envDebug, setEnvDebug] = useState<{
+    ok?: boolean;
+    env?: {
+      appUrl?: string | null;
+      corsOrigin?: any;
+      stripe?: { secretKey?: boolean; webhookSecret?: boolean };
+      supabase?: { url?: boolean; serviceRoleKey?: boolean };
+      workerName?: string;
+      priceIds?: { starter?: boolean; growth?: boolean; pro?: boolean };
+    };
+    error?: string;
+  } | null>(null);
   const siteOrigin = typeof window !== 'undefined' ? window.location.origin : 'https://artwalls.space';
 
   useEffect(() => {
@@ -44,7 +55,7 @@ export function StripePaymentSetup({ onNavigate }: StripeSetupProps) {
         if (mounted) setApiOk(false);
       }
       try {
-        const debug = await apiGet<{ ok: boolean; env: { appUrl?: string | null; corsOrigin?: any; stripe?: { secretKey?: boolean; webhookSecret?: boolean } } }>('\/api\/debug\/env');
+        const debug = await apiGet<typeof envDebug>('\/api\/integration\/status');
         if (mounted) setEnvDebug(debug || null);
       } catch {
         if (mounted) setEnvDebug(null);
@@ -98,29 +109,42 @@ export function StripePaymentSetup({ onNavigate }: StripeSetupProps) {
           <div className="flex items-start gap-3">
             <CheckCircle className={`w-5 h-5 ${envDebug?.env?.stripe?.secretKey ? 'text-[var(--green)]' : 'text-[var(--warning)]'}`} />
             <div>
-              <p className="text-sm text-[var(--text)]">Server Stripe secret key</p>
-              <p className="text-xs text-[var(--text-muted)]">Present: {envDebug?.env?.stripe?.secretKey ? 'Yes' : 'No'} — Set in server environment</p>
+              <p className="text-sm text-[var(--text)]">Worker Stripe secret key</p>
+              <p className="text-xs text-[var(--text-muted)]">Present: {envDebug?.env?.stripe?.secretKey ? 'Yes' : envDebug === null ? 'Checking…' : 'No'} — Set via Worker secrets</p>
             </div>
           </div>
           <div className="flex items-start gap-3">
             <CheckCircle className={`w-5 h-5 ${envDebug?.env?.stripe?.webhookSecret ? 'text-[var(--green)]' : 'text-[var(--warning)]'}`} />
             <div>
-              <p className="text-sm text-[var(--text)]">Server webhook signing secret</p>
-              <p className="text-xs text-[var(--text-muted)]">Present: {envDebug?.env?.stripe?.webhookSecret ? 'Yes' : 'No'} — Set STRIPE_WEBHOOK_SECRET</p>
+              <p className="text-sm text-[var(--text)]">Worker webhook signing secret</p>
+              <p className="text-xs text-[var(--text-muted)]">Present: {envDebug?.env?.stripe?.webhookSecret ? 'Yes' : envDebug === null ? 'Checking…' : 'No'} — Set STRIPE_WEBHOOK_SECRET</p>
             </div>
           </div>
           <div className="flex items-start gap-3">
-            <CheckCircle className={`w-5 h-5 ${envDebug?.env?.corsOrigin && String(envDebug.env.corsOrigin).includes(siteOrigin) || envDebug?.env?.corsOrigin === true ? 'text-[var(--green)]' : 'text-[var(--warning)]'}`} />
+            {(() => {
+              const origins = Array.isArray(envDebug?.env?.corsOrigin) ? envDebug!.env!.corsOrigin : [];
+              const corsOk = origins.includes(siteOrigin) || origins.includes('https://artwalls.space');
+              return <CheckCircle className={`w-5 h-5 ${corsOk ? 'text-[var(--green)]' : 'text-[var(--warning)]'}`} />;
+            })()}
             <div>
-              <p className="text-sm text-[var(--text)]">Server CORS allows site</p>
-              <p className="text-xs text-[var(--text-muted)]">CORS_ORIGIN: {String(envDebug?.env?.corsOrigin ?? 'unknown')} — Site: {siteOrigin}</p>
+              <p className="text-sm text-[var(--text)]">Worker CORS allows site</p>
+              <p className="text-xs text-[var(--text-muted)]">
+                Allowed origins: {Array.isArray(envDebug?.env?.corsOrigin) ? envDebug!.env!.corsOrigin.join(', ') : (envDebug === null ? 'Checking…' : 'unknown')} — Site: {siteOrigin}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <CheckCircle className={`w-5 h-5 ${envDebug?.env?.supabase?.url && envDebug?.env?.supabase?.serviceRoleKey ? 'text-[var(--green)]' : 'text-[var(--warning)]'}`} />
+            <div>
+              <p className="text-sm text-[var(--text)]">Worker Supabase config</p>
+              <p className="text-xs text-[var(--text-muted)]">URL: {envDebug?.env?.supabase?.url ? 'Yes' : 'No'} — Service Role Key: {envDebug?.env?.supabase?.serviceRoleKey ? 'Yes' : 'No'}</p>
             </div>
           </div>
           <div className="flex items-start gap-3">
             <CheckCircle className={`w-5 h-5 text-[var(--blue)]`} />
             <div>
-              <p className="text-sm text-[var(--text)]">Worker webhook secret</p>
-              <p className="text-xs text-[var(--text-muted)]">Set via CLI: <span className="font-mono">wrangler secret put STRIPE_WEBHOOK_SECRET --name artwalls-spacess</span></p>
+              <p className="text-sm text-[var(--text)]">Worker secret setup</p>
+              <p className="text-xs text-[var(--text-muted)]">Set via CLI: <span className="font-mono">wrangler secret put STRIPE_WEBHOOK_SECRET --name artwalls-space</span></p>
             </div>
           </div>
         </div>

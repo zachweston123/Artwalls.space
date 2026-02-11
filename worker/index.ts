@@ -232,7 +232,7 @@ export default {
     // Authenticated fetch against the Stripe REST API
     async function stripeFetch(path: string, init: RequestInit): Promise<Response> {
       const key = env.STRIPE_SECRET_KEY;
-      if (!key) throw new Error('STRIPE_SECRET_KEY not configured — run: wrangler secret put STRIPE_SECRET_KEY');
+      if (!key) throw new Error('STRIPE_SECRET_KEY not configured — run: wrangler secret put STRIPE_SECRET_KEY --name artwalls-space');
       const headers = new Headers(init.headers);
       headers.set('Authorization', `Bearer ${key}`);
       if (!headers.has('Content-Type')) {
@@ -252,17 +252,51 @@ export default {
         })
       : null;
 
+    /**
+     * Validate the Supabase access token from the Authorization header.
+     * Returns the user object on success, or null if:
+     *   - No Authorization header / invalid Bearer scheme
+     *   - supabaseAdmin is not initialised (env misconfigured)
+     *   - Token validation fails (expired, revoked, etc.)
+     *
+     * Callers should distinguish between "no user + supabaseAdmin null"
+     * (→ 500 SUPABASE_ADMIN_MISCONFIG) and "no user + supabaseAdmin ok"
+     * (→ 401 Unauthorized).
+     */
     async function getSupabaseUserFromRequest(req: Request): Promise<any | null> {
       try {
         const auth = req.headers.get('authorization') || '';
         const [scheme, token] = auth.split(' ');
-        if (!scheme || scheme.toLowerCase() !== 'bearer' || !token || !supabaseAdmin) return null;
+        if (!scheme || scheme.toLowerCase() !== 'bearer' || !token) return null;
+        if (!supabaseAdmin) return null;   // caller should check supabaseAdmin separately
         const { data, error } = await supabaseAdmin.auth.getUser(token);
-        if (error) return null;
+        if (error) {
+          console.error('[auth] Token validation failed:', error.message);
+          return null;
+        }
         return data.user || null;
-      } catch {
+      } catch (e) {
+        console.error('[auth] Unexpected error in getSupabaseUserFromRequest:', e instanceof Error ? e.message : e);
         return null;
       }
+    }
+
+    /**
+     * Helper that returns a clear 500 when Supabase env vars are missing,
+     * or 401 when the user simply isn't authenticated.
+     */
+    function requireAuthOrFail(req: Request, user: any | null): Response | null {
+      if (!supabaseAdmin) {
+        return json({
+          error: 'Server misconfiguration: Supabase admin client not initialised',
+          code: 'SUPABASE_ADMIN_MISCONFIG',
+          hint: 'Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY as Worker secrets',
+        }, { status: 500 });
+      }
+      if (!user) {
+        return json({ error: 'Unauthorized — missing or invalid Authorization bearer token' }, { status: 401 });
+      }
+      return null; // success — caller can proceed
     }
 
     async function upsertArtist(artist: { id: string; email?: string | null; name?: string | null; role?: string; phoneNumber?: string | null; cityPrimary?: string | null; citySecondary?: string | null; stripeAccountId?: string | null; stripeCustomerId?: string | null; subscriptionTier?: string | null; subscriptionStatus?: string | null; stripeSubscriptionId?: string | null; platformFeeBps?: number | null; }): Promise<Response> {
@@ -529,8 +563,57 @@ export default {
     }
 
     // Debug/env endpoints removed for security (P0)
-    if (url.pathname === '/api/debug/auth' || url.pathname === '/api/env/check' || url.pathname === '/api/debug/supabase') {
+    if (url.pathname === '/api/debug/auth' || url.pathname === '/api/debug/supabase') {
       return json({ error: 'Not found' }, { status: 404 });
+    }
+
+    // ── Integration status endpoint (for admin Stripe checklist) ──────────
+    // Requires admin auth so it doesn't leak config to the public
+    if (url.pathname === '/api/debug/env' || url.pathname === '/api/integration/status') {
+      // Allow admin-only access
+      const user = await getSupabaseUserFromRequest(request);
+      if (!supabaseAdmin) {
+        return json({
+          ok: false,
+          env: {
+            appUrl: pagesOrigin,
+            corsOrigin: Array.from(allowedOrigins),
+            stripe: { secretKey: false, webhookSecret: false },
+            supabase: { url: false, serviceRoleKey: false },
+            workerName: 'artwalls-space',
+          },
+          error: 'SUPABASE_ADMIN_MISCONFIG — cannot verify admin role',
+        });
+      }
+      if (!user) {
+        return json({ error: 'Unauthorized' }, { status: 401 });
+      }
+      const { data: adminCheck } = await supabaseAdmin.from('artists').select('role').eq('id', user.id).maybeSingle();
+      if (adminCheck?.role !== 'admin') {
+        return json({ error: 'Forbidden' }, { status: 403 });
+      }
+
+      return json({
+        ok: true,
+        env: {
+          appUrl: pagesOrigin,
+          corsOrigin: Array.from(allowedOrigins),
+          stripe: {
+            secretKey: !!env.STRIPE_SECRET_KEY,
+            webhookSecret: !!env.STRIPE_WEBHOOK_SECRET,
+          },
+          supabase: {
+            url: !!env.SUPABASE_URL,
+            serviceRoleKey: !!env.SUPABASE_SERVICE_ROLE_KEY,
+          },
+          workerName: 'artwalls-space',
+          priceIds: {
+            starter: !!(env.STRIPE_SUB_PRICE_STARTER || env.STRIPE_PRICE_ID_STARTER),
+            growth: !!(env.STRIPE_SUB_PRICE_GROWTH || env.STRIPE_PRICE_ID_GROWTH),
+            pro: !!(env.STRIPE_SUB_PRICE_PRO || env.STRIPE_PRICE_ID_PRO),
+          },
+        },
+      });
     }
 
     if (url.pathname === '/') {
@@ -1227,9 +1310,9 @@ export default {
     // Create Connect Express account for artist
     if (url.pathname === '/api/stripe/connect/artist/create-account' && method === 'POST') {
       const user = await getSupabaseUserFromRequest(request);
-      if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
+      const authErr = requireAuthOrFail(request, user);
+      if (authErr) return authErr;
       if (user.user_metadata?.role !== 'artist') return json({ error: 'Artist role required' }, { status: 403 });
-      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
       const rl = rateLimitByIp(getClientIp(request), 5, 60_000);
       if (!rl.ok) return json({ error: 'Rate limit exceeded' }, { status: 429 });
 
@@ -1262,9 +1345,9 @@ export default {
     // Create account link for artist onboarding
     if (url.pathname === '/api/stripe/connect/artist/account-link' && method === 'POST') {
       const user = await getSupabaseUserFromRequest(request);
-      if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
+      const authErr = requireAuthOrFail(request, user);
+      if (authErr) return authErr;
       if (user.user_metadata?.role !== 'artist') return json({ error: 'Artist role required' }, { status: 403 });
-      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
       const rl = rateLimitByIp(getClientIp(request), 10, 60_000);
       if (!rl.ok) return json({ error: 'Rate limit exceeded' }, { status: 429 });
 
@@ -1294,8 +1377,8 @@ export default {
     // Login link for artist Connect dashboard
     if (url.pathname === '/api/stripe/connect/artist/login-link' && method === 'POST') {
       const user = await getSupabaseUserFromRequest(request);
-      if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
-      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const authErr = requireAuthOrFail(request, user);
+      if (authErr) return authErr;
       const rl = rateLimitByIp(getClientIp(request), 10, 60_000);
       if (!rl.ok) return json({ error: 'Rate limit exceeded' }, { status: 429 });
 
@@ -1318,7 +1401,8 @@ export default {
 
     // Artist Connect status
     if (url.pathname === '/api/stripe/connect/artist/status' && method === 'GET') {
-      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      if (!supabaseAdmin) return json({ error: 'Server misconfiguration: Supabase admin client not initialised', code: 'SUPABASE_ADMIN_MISCONFIG' }, { status: 500 });
+      if (!env.STRIPE_SECRET_KEY) return json({ error: 'Server misconfiguration: STRIPE_SECRET_KEY not set', code: 'STRIPE_KEY_MISSING' }, { status: 500 });
       const artistId = url.searchParams.get('artistId') || url.searchParams.get('userId');
       if (!artistId) return json({ error: 'Missing artistId or userId' }, { status: 400 });
 
@@ -1350,9 +1434,9 @@ export default {
     // Create Connect Express account for venue
     if (url.pathname === '/api/stripe/connect/venue/create-account' && method === 'POST') {
       const user = await getSupabaseUserFromRequest(request);
-      if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
+      const authErr = requireAuthOrFail(request, user);
+      if (authErr) return authErr;
       if (user.user_metadata?.role !== 'venue') return json({ error: 'Venue role required' }, { status: 403 });
-      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
       const rl = rateLimitByIp(getClientIp(request), 5, 60_000);
       if (!rl.ok) return json({ error: 'Rate limit exceeded' }, { status: 429 });
 
@@ -1384,9 +1468,9 @@ export default {
     // Create account link for venue onboarding
     if (url.pathname === '/api/stripe/connect/venue/account-link' && method === 'POST') {
       const user = await getSupabaseUserFromRequest(request);
-      if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
+      const authErr = requireAuthOrFail(request, user);
+      if (authErr) return authErr;
       if (user.user_metadata?.role !== 'venue') return json({ error: 'Venue role required' }, { status: 403 });
-      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
       const rl = rateLimitByIp(getClientIp(request), 10, 60_000);
       if (!rl.ok) return json({ error: 'Rate limit exceeded' }, { status: 429 });
 
@@ -1416,8 +1500,8 @@ export default {
     // Login link for venue Connect dashboard
     if (url.pathname === '/api/stripe/connect/venue/login-link' && method === 'POST') {
       const user = await getSupabaseUserFromRequest(request);
-      if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
-      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const authErr = requireAuthOrFail(request, user);
+      if (authErr) return authErr;
       const rl = rateLimitByIp(getClientIp(request), 10, 60_000);
       if (!rl.ok) return json({ error: 'Rate limit exceeded' }, { status: 429 });
 
@@ -1440,7 +1524,8 @@ export default {
 
     // Venue Connect status
     if (url.pathname === '/api/stripe/connect/venue/status' && method === 'GET') {
-      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      if (!supabaseAdmin) return json({ error: 'Server misconfiguration: Supabase admin client not initialised', code: 'SUPABASE_ADMIN_MISCONFIG' }, { status: 500 });
+      if (!env.STRIPE_SECRET_KEY) return json({ error: 'Server misconfiguration: STRIPE_SECRET_KEY not set', code: 'STRIPE_KEY_MISSING' }, { status: 500 });
       const venueId = url.searchParams.get('venueId') || url.searchParams.get('userId');
       if (!venueId) return json({ error: 'Missing venueId or userId' }, { status: 400 });
 

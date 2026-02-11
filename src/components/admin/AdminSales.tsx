@@ -169,7 +169,6 @@ export function AdminSales() {
             <option value="pending">Pending</option>
             <option value="created">Created</option>
             <option value="failed">Failed</option>
-            <option value="refunded">Refunded</option>
           </select>
           <button
             type="submit"

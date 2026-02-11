@@ -4,3 +4,16 @@
   X-XSS-Protection: 1; mode=block
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: geolocation=(), microphone=(), camera=()
+
+# App shell / HTML: never cache so new deploys are picked up immediately
+/index.html
+  Cache-Control: no-store, no-cache, must-revalidate, proxy-revalidate
+  Pragma: no-cache
+
+/
+  Cache-Control: no-store, no-cache, must-revalidate, proxy-revalidate
+  Pragma: no-cache
+
+# Hashed assets are immutable — cache forever
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable

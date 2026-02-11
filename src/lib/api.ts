@@ -1,13 +1,18 @@
 import { supabase } from './supabase';
 
 const DEFAULT_API_BASE = (() => {
-  if (typeof window === 'undefined') return 'https://artwalls.space';
+  if (typeof window === 'undefined') return 'https://api.artwalls.space';
   const { origin, hostname } = window.location;
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
     return 'http://localhost:4242';
   }
-  // Use current origin in production/staging so CORS stays aligned with the hosting domain
-  return origin || 'https://artwalls.space';
+  // In production, the Worker API is on api.artwalls.space.
+  // Derive from the hostname so staging subdomains also work.
+  if (hostname === 'artwalls.space' || hostname === 'www.artwalls.space') {
+    return 'https://api.artwalls.space';
+  }
+  // Cloudflare Pages preview deploys: fall back to production API
+  return 'https://api.artwalls.space';
 })();
 
 const API_BASE = import.meta.env?.VITE_API_BASE_URL || DEFAULT_API_BASE;
