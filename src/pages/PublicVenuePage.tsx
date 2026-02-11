@@ -97,7 +97,7 @@ export function PublicVenuePage({ venueId }: PublicVenuePageProps) {
         ) : (
           <div className="text-center py-24">
             <Store className="w-12 h-12 text-[var(--text-muted)] mx-auto mb-3" />
-            <h2 className="text-xl mb-2">Venue not found</h2>
+            <h2 className="text-xl font-semibold text-[var(--text)] mb-2">Venue not found</h2>
             <p className="text-[var(--text-muted)]">This venue profile may not be available.</p>
           </div>
         )}

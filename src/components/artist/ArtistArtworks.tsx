@@ -325,7 +325,7 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
     <div className="bg-[var(--bg)] text-[var(--text)]">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-3xl mb-1 sm:mb-2">My Artworks</h1>
+          <h1 className="text-2xl sm:text-3xl font-semibold mb-1 sm:mb-2">My Artworks</h1>
           <p className="text-[var(--text-muted)] text-sm">
             {loading ? 'Loading…' : `${artworks.length} pieces in your collection`}
           </p>
@@ -388,7 +388,7 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 sm:p-6">
           <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-2xl p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl sm:text-2xl">Add New Artwork</h2>
+              <h2 className="text-xl sm:text-2xl font-semibold">Add New Artwork</h2>
               <button
                 onClick={() => setShowAddForm(false)}
                 className="p-2 hover:bg-[var(--surface-3)] rounded-lg transition-colors text-[var(--text)]"
@@ -740,7 +740,7 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
           <div className="w-16 h-16 bg-[var(--surface-2)] border border-[var(--border)] rounded-full flex items-center justify-center mx-auto mb-4">
             <Plus className="w-8 h-8 text-[var(--text-muted)]" />
           </div>
-          <h3 className="text-xl mb-2">No artworks yet</h3>
+          <h3 className="text-lg font-semibold mb-2">No artworks yet</h3>
           <p className="text-[var(--text-muted)] mb-6">Start by adding your first piece</p>
           <button
             onClick={() => setShowAddForm(true)}

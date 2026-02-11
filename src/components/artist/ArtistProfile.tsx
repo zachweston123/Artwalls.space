@@ -334,8 +334,8 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
   return (
     <div className="bg-[var(--bg)] text-[var(--text)]">
       <div className="mb-8">
-        <h1 className="text-3xl mb-2">Artist Profile</h1>
-        <p className="text-[var(--text-muted)]">Manage your account information and settings</p>
+        <h1 className="text-2xl sm:text-3xl font-semibold text-[var(--text)] mb-1">Artist Profile</h1>
+        <p className="text-sm text-[var(--text-muted)]">Manage your account information and settings</p>
       </div>
 
       {/* Profile Completeness Widget */}
@@ -596,13 +596,13 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
                     />
                   </div>
                   {uploadError && (
-                    <div className="mt-3 p-3 bg-red-500/10 border border-red-500/30 rounded-lg flex items-start gap-2">
-                      <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
-                      <div className="text-sm text-red-600">
+                    <div className="mt-3 p-3 bg-[var(--danger-muted)] border border-[var(--danger)] rounded-lg flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 text-[var(--danger)] mt-0.5 flex-shrink-0" />
+                      <div className="text-sm text-[var(--danger)]">
                         <p className="font-medium">Upload Failed</p>
                         <p className="mt-1">{uploadError}</p>
                         {uploadError.includes('Bucket not found') || uploadError.includes('not configured') ? (
-                          <p className="mt-2 text-xs text-red-500">
+                          <p className="mt-2 text-xs opacity-80">
                             💡 Create &quot;artist-profiles&quot; bucket in Supabase Storage and set it to Public. See setup guide for details.
                           </p>
                         ) : null}
@@ -813,7 +813,7 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
           </div>
 
           <div className="border-t border-[var(--border)] p-6">
-            <h3 className="text-lg mb-4 text-[var(--text)]">Account Settings</h3>
+            <h3 className="text-lg font-semibold mb-4 text-[var(--text)]">Account Settings</h3>
             <div className="space-y-3">
               <button onClick={() => onNavigate('artist-password-security')} className="w-full text-left px-4 py-3 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] border border-[var(--border)] rounded-lg transition-colors">
                 <p className="text-[var(--text)] mb-1">Password & Security</p>
@@ -834,7 +834,7 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
               <div className="w-12 h-12 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg flex items-center justify-center">
                 <DollarSign className="w-6 h-6 text-[var(--green)]" />
               </div>
-              <h3 className="text-lg text-[var(--text)]">Earnings Summary</h3>
+              <h3 className="text-lg font-semibold text-[var(--text)]">Earnings Summary</h3>
             </div>
 
             <div className="space-y-4">
@@ -859,7 +859,7 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
           </div>
 
           <div className="bg-[var(--surface-1)] rounded-xl border border-[var(--border)] p-6">
-            <h3 className="text-lg mb-3 text-[var(--text)]">Quick Actions</h3>
+            <h3 className="text-lg font-semibold mb-3 text-[var(--text)]">Quick Actions</h3>
             <div className="space-y-2">
               <button 
                 onClick={() => onNavigate('artist-artworks')}

@@ -454,7 +454,7 @@ export function ArtistOnboardingWizard({ user, onComplete, onSkip }: ArtistOnboa
               </div>
             </div>
             {artworkError && (
-              <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-sm text-red-500 flex items-center gap-2">
+              <div className="p-3 bg-[var(--danger-muted)] border border-[var(--danger)]/30 rounded-lg text-sm text-[var(--danger)] flex items-center gap-2">
                 <AlertCircle className="w-4 h-4" /> {artworkError}
               </div>
             )}
@@ -645,7 +645,7 @@ export function ArtistOnboardingWizard({ user, onComplete, onSkip }: ArtistOnboa
         </div>
 
         {error && (
-          <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-300">
+          <div className="p-3 bg-[var(--danger-muted)] border border-[var(--danger)]/30 rounded-lg text-sm text-[var(--danger)]">
             {error}
           </div>
         )}

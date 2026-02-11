@@ -26,10 +26,17 @@
 
   /* semantic */
   --warning: #f59e0b;
+  --warning-muted: rgba(245,158,11,.12);
   --danger: #ef4444;
+  --danger-muted: rgba(239,68,68,.10);
+  --info: var(--blue);
+  --info-muted: var(--blue-muted);
 
   /* focus */
   --focus: rgba(47,107,255,.45);
+
+  /* skeleton / shimmer */
+  --skeleton: var(--surface-3);
 
   /* Back-compat for existing tokenized components */
   --accent: var(--blue);
@@ -37,6 +44,24 @@
   --accent-contrast: var(--on-blue);
   --success: var(--green);
   --success-muted: var(--green-muted);
+
+  /* shadcn/ui token bridge — maps to Tailwind's "bg-card", "text-muted-foreground", etc. */
+  --background: var(--bg);
+  --foreground: var(--text);
+  --card: var(--surface-1);
+  --card-foreground: var(--text);
+  --muted: var(--surface-3);
+  --muted-foreground: var(--text-muted);
+  --primary: var(--blue);
+  --primary-foreground: var(--on-blue);
+  --secondary: var(--surface-3);
+  --secondary-foreground: var(--text);
+  --destructive: var(--danger);
+  --accent-bg: var(--surface-3);
+  --accent-foreground: var(--text);
+  --input: var(--border);
+  --ring: var(--focus);
+  --radius: 0.75rem;
 }
 
 html[data-theme="dark"] {
@@ -59,9 +84,13 @@ html[data-theme="dark"] {
   --green-muted: rgba(52,211,153,.16);
 
   --warning: #fbbf24;
+  --warning-muted: rgba(251,191,36,.14);
   --danger: #f87171;
+  --danger-muted: rgba(248,113,113,.14);
 
   --focus: rgba(59,123,255,.55);
+
+  --skeleton: var(--surface-3);
 }
 
 html[data-theme="light"] {
@@ -251,3 +280,12 @@ html[data-theme="dark"] .border-neutral-300 { border-color: var(--border) !impor
 /* Viewport height utility shims (fix dark mode bars on mobile browsers) */
 .min-h-svh { min-height: 100svh; }
 .h-svh { height: 100svh; }
+
+/* Extra token shims for new design system primitives */
+.bg-\[var\(--warning-muted\)\] { background-color: var(--warning-muted); }
+.bg-\[var\(--danger-muted\)\] { background-color: var(--danger-muted); }
+.bg-\[var\(--info-muted\)\] { background-color: var(--info-muted); }
+.bg-\[var\(--skeleton\)\] { background-color: var(--skeleton); }
+.border-\[var\(--border-hover\)\] { border-color: var(--border-hover); }
+.hover\:border-\[var\(--border-hover\)\]:hover { border-color: var(--border-hover); }
+.text-\[var\(--info\)\] { color: var(--info); }

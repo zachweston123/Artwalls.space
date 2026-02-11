@@ -231,7 +231,7 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
       <div className="min-h-svh bg-[var(--bg)] flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-4xl">
           <div className="text-center mb-8 sm:mb-12">
-            <h1 className="text-3xl sm:text-4xl mb-3 text-[var(--text)] font-bold">Welcome to Artwalls</h1>
+            <h1 className="text-2xl sm:text-3xl mb-3 text-[var(--text)] font-semibold">Welcome to Artwalls</h1>
             <p className="text-[var(--text-muted)] text-sm sm:text-base max-w-md mx-auto">
               Connecting local artists with venues to display and sell physical artworks
             </p>
@@ -247,7 +247,7 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
                   <Palette className="w-7 h-7 sm:w-8 sm:h-8 text-[var(--blue)]" />
                 </div>
                 <div>
-                  <h2 className="text-xl mb-1 sm:mb-2 text-[var(--blue)] font-bold">I'm an Artist</h2>
+                  <h2 className="text-xl mb-1 sm:mb-2 text-[var(--blue)] font-semibold">I'm an Artist</h2>
                   <p className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
                     Share and sell your artwork at local venues and manage your portfolio
                   </p>
@@ -273,7 +273,7 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
                   <Store className="w-7 h-7 sm:w-8 sm:h-8 text-[var(--green)]" />
                 </div>
                 <div>
-                  <h2 className="text-xl mb-1 sm:mb-2 text-[var(--green)] font-bold">I'm a Venue</h2>
+                  <h2 className="text-xl mb-1 sm:mb-2 text-[var(--green)] font-semibold">I'm a Venue</h2>
                   <p className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
                     Support local artists by displaying rotating artworks and earn 15% commission
                   </p>
@@ -305,7 +305,7 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
             ) : (
               <Store className="w-8 h-8 text-[var(--green)]" />
             )}
-            <h1 className="text-3xl text-[var(--text)]">Artwalls</h1>
+            <h1 className="text-3xl font-semibold text-[var(--text)]">Artwalls</h1>
           </div>
           <p className="text-[var(--text-muted)]">
             {isSignup ? 'Create your account' : 'Sign in to continue'}
@@ -431,7 +431,7 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
                 <div className="w-full border-t border-[var(--border)]"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-[var(--surface)] text-[var(--text-muted)]">Or continue with</span>
+                <span className="px-2 bg-[var(--surface-1)] text-[var(--text-muted)]">Or continue with</span>
               </div>
             </div>
 

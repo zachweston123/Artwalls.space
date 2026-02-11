@@ -120,7 +120,7 @@ export function VenueDashboard({ onNavigate, user, hasAcceptedAgreement }: Venue
             <button
               key={stat.label}
               onClick={stat.action}
-              className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)] hover:border-[var(--green)] hover:shadow-md transition-all text-left group"
+              className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)] hover:border-[var(--border-hover)] hover:shadow-sm transition-all text-left group"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="w-12 h-12 bg-[var(--green-muted)] rounded-lg flex items-center justify-center group-hover:bg-[var(--green)] transition-colors">
@@ -137,7 +137,7 @@ export function VenueDashboard({ onNavigate, user, hasAcceptedAgreement }: Venue
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)]">
-          <h2 className="text-xl mb-4 text-[var(--text)]">Recent Activity</h2>
+          <h2 className="text-lg font-semibold mb-4 text-[var(--text)]">Recent Activity</h2>
           <EmptyState
             title="No recent activity yet"
             description="Once you review applications or add wall spaces, activity will show up here."
@@ -149,11 +149,11 @@ export function VenueDashboard({ onNavigate, user, hasAcceptedAgreement }: Venue
         </div>
 
         <div className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)]">
-          <h2 className="text-xl mb-4 text-[var(--text)]">Quick Actions</h2>
+          <h2 className="text-lg font-semibold mb-4 text-[var(--text)]">Quick Actions</h2>
           <div className="space-y-3">
             <button
               onClick={() => onNavigate('venue-applications')}
-              className="w-full px-4 py-3 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-colors flex items-center justify-between"
+              className="w-full px-4 py-3 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-colors flex items-center justify-between font-medium text-sm"
             >
               <span>Review applications</span>
               {pendingApplications > 0 && (

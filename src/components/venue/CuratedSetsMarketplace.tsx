@@ -97,14 +97,14 @@ export function CuratedSetsMarketplace({ onNavigate }: CuratedSetsMarketplacePro
 
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex flex-wrap items-center gap-3 mb-6">
-          <span className="text-sm text-gray-400">Filter by vibe</span>
+          <span className="text-sm text-[var(--text-muted)]">Filter by vibe</span>
           {TAG_FILTERS.map((tag) => (
             <button
               key={tag}
               className={`px-3 py-1 rounded-full border text-sm transition ${
                 activeTag === tag
                   ? 'border-blue-400 text-blue-100 bg-blue-500/10'
-                  : 'border-white/10 text-gray-300 hover:border-white/30'
+                  : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--border-hover)]'
               }`}
               onClick={() => setActiveTag(tag)}
             >
@@ -125,16 +125,16 @@ export function CuratedSetsMarketplace({ onNavigate }: CuratedSetsMarketplacePro
             {visibleSets.map((set) => (
               <div
                 key={set.id}
-                className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-sm backdrop-blur"
+                className="rounded-xl border border-[var(--border)] bg-[var(--surface-1)] p-5 shadow-sm"
               >
                 <div className="flex items-start justify-between gap-3 mb-4">
                   <div>
-                    <div className="inline-flex items-center gap-2 text-xs uppercase tracking-wide text-gray-400">
+                    <div className="inline-flex items-center gap-2 text-xs uppercase tracking-wide text-[var(--text-muted)]">
                       <Sparkles className="h-4 w-4 text-amber-300" />
                       {set.vibe}
                     </div>
-                    <h3 className="text-lg font-semibold mt-1 text-white">{set.title}</h3>
-                    <p className="text-sm text-gray-300">By {set.artist}</p>
+                    <h3 className="text-lg font-semibold mt-1 text-[var(--text)]">{set.title}</h3>
+                    <p className="text-sm text-[var(--text-muted)]">By {set.artist}</p>
                   </div>
                   <button
                     aria-label={savedIds.has(set.id) ? 'Unsave set' : 'Save set'}
@@ -142,7 +142,7 @@ export function CuratedSetsMarketplace({ onNavigate }: CuratedSetsMarketplacePro
                     className={`rounded-full border p-2 transition ${
                       savedIds.has(set.id)
                         ? 'border-pink-300/60 bg-pink-500/10 text-pink-200'
-                        : 'border-white/15 text-gray-300 hover:border-white/40'
+                        : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--border-hover)]'
                     }`}
                   >
                     <Heart className="h-5 w-5" fill={savedIds.has(set.id) ? 'currentColor' : 'none'} />
@@ -153,7 +153,7 @@ export function CuratedSetsMarketplace({ onNavigate }: CuratedSetsMarketplacePro
                   {set.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="px-2.5 py-1 rounded-full text-xs bg-white/5 border border-white/10 text-gray-200"
+                      className="px-2.5 py-1 rounded-full text-xs bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text-muted)]"
                     >
                       {tag}
                     </span>
@@ -165,17 +165,17 @@ export function CuratedSetsMarketplace({ onNavigate }: CuratedSetsMarketplacePro
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 text-sm text-gray-200 mb-4">
-                  <div className="rounded-lg border border-white/10 bg-white/5 p-3">
-                    <div className="text-gray-400 text-xs">Walls ready</div>
+                <div className="grid grid-cols-2 gap-3 text-sm text-[var(--text)] mb-4">
+                  <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-3">
+                    <div className="text-[var(--text-muted)] text-xs">Walls ready</div>
                     <div className="text-base font-semibold">{set.walls} walls</div>
                   </div>
-                  <div className="rounded-lg border border-white/10 bg-white/5 p-3">
-                    <div className="text-gray-400 text-xs">Artworks</div>
+                  <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-3">
+                    <div className="text-[var(--text-muted)] text-xs">Artworks</div>
                     <div className="text-base font-semibold">{set.artworks} pieces</div>
                   </div>
-                  <div className="rounded-lg border border-white/10 bg-white/5 p-3 col-span-2">
-                    <div className="text-gray-400 text-xs">Typical investment</div>
+                  <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-3 col-span-2">
+                    <div className="text-[var(--text-muted)] text-xs">Typical investment</div>
                     <div className="text-base font-semibold">{set.priceRange}</div>
                   </div>
                 </div>
@@ -183,13 +183,13 @@ export function CuratedSetsMarketplace({ onNavigate }: CuratedSetsMarketplacePro
                 <div className="flex items-center justify-between gap-3">
                   <button
                     onClick={() => onNavigate('venue-dashboard')}
-                    className="px-3 py-2 rounded-lg border border-white/15 text-sm text-gray-200 hover:border-white/40 transition"
+                    className="px-3 py-2 rounded-lg border border-[var(--border)] text-sm text-[var(--text)] hover:border-[var(--border-hover)] transition"
                   >
                     View artist
                   </button>
                   <button
                     onClick={() => onNavigate('venue-walls')}
-                    className="px-3 py-2 rounded-lg bg-blue-500 text-white text-sm font-semibold hover:bg-blue-600 transition"
+                    className="px-3 py-2 rounded-lg bg-[var(--blue)] text-[var(--on-blue)] text-sm font-semibold hover:bg-[var(--blue-hover)] transition"
                   >
                     Add to walls
                   </button>

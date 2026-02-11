@@ -244,10 +244,10 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
       <div className="border-b border-[var(--border)] mb-8 pb-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div className="flex-1">
-            <h1 className="text-3xl sm:text-4xl font-bold text-[var(--text)] mb-2">
+            <h1 className="text-2xl sm:text-3xl font-semibold text-[var(--text)] mb-1">
               Welcome back, {user?.name?.split(' ')[0] || 'Artist'}
             </h1>
-            <p className="text-[var(--text-muted)] text-sm sm:text-base">
+            <p className="text-sm text-[var(--text-muted)]">
               Here's what's happening with your artwork
             </p>
           </div>
@@ -298,14 +298,14 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
       {/* ════════════════════════════════════════════════════════════
           SEARCH MODULE (Compact, Clear Input + Primary Button)
           ════════════════════════════════════════════════════════════ */}
-      <div className="mb-8 bg-[var(--surface-1)] border border-[var(--border)] rounded-lg p-4">
+      <div className="mb-8 bg-[var(--surface-1)] border border-[var(--border)] rounded-xl p-4 sm:p-5">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-3">
           <div className="flex-1 relative">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[var(--text-muted)] pointer-events-none" />
             <input
               type="text"
               placeholder="Search venues by name, location, or style..."
-              className="w-full pl-12 pr-4 py-2.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-md text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)] focus:border-transparent transition-all text-sm sm:text-base"
+              className="w-full pl-12 pr-4 py-2.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)] focus:border-transparent transition-all text-sm"
             />
           </div>
           <button
@@ -331,10 +331,10 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
             <button
               key={stat.label}
               onClick={stat.action}
-              className="group bg-[var(--surface-1)] border border-[var(--border)] rounded-lg p-5 transition-all hover:bg-[var(--surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)] text-left"
+              className="group bg-[var(--surface-1)] border border-[var(--border)] rounded-xl p-5 transition-all hover:border-[var(--border-hover)] hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)] text-left"
             >
               {/* Icon - Reduced weight/size */}
-              <div className="w-10 h-10 bg-[color:color-mix(in_srgb,var(--blue)_12%,transparent)] rounded-md flex items-center justify-center mb-3 group-hover:bg-[color:color-mix(in_srgb,var(--blue)_20%,transparent)] transition-colors">
+              <div className="w-10 h-10 bg-[var(--blue-muted)] rounded-lg flex items-center justify-center mb-3 transition-colors">
                 <Icon className="w-5 h-5 text-[var(--blue)]" />
               </div>
               
@@ -380,9 +380,9 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
         </div>
 
         {/* Recent Activity Card */}
-        <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-lg p-6">
-          <div className="mb-6">
-            <h2 className="text-lg font-bold text-[var(--text)] mb-1">Recent Activity</h2>
+        <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-xl p-6">
+          <div className="mb-5">
+            <h2 className="text-lg font-semibold text-[var(--text)] mb-1">Recent Activity</h2>
             <p className="text-sm text-[var(--text-muted)]">Latest updates on your artwork</p>
           </div>
           
@@ -416,9 +416,9 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
         </div>
 
         {/* Quick Actions Card */}
-        <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-lg p-6">
-          <div className="mb-6">
-            <h2 className="text-lg font-bold text-[var(--text)] mb-1">Quick Actions</h2>
+        <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-xl p-6">
+          <div className="mb-5">
+            <h2 className="text-lg font-semibold text-[var(--text)] mb-1">Quick Actions</h2>
             <p className="text-sm text-[var(--text-muted)]">Common tasks</p>
           </div>
           
@@ -431,24 +431,25 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
             </button>
             <button
               onClick={() => onNavigate('artist-invite-venue')}
-              className="w-full px-4 py-3 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] text-[var(--text)] font-semibold text-sm rounded-lg border border-[var(--border)] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]"
+              className="w-full px-4 py-3 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] text-[var(--text)] font-medium text-sm rounded-lg border border-[var(--border)] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]"
             >
               Invite a venue
             </button>
             <button
               onClick={() => onNavigate('artist-venues')}
-              className="w-full px-4 py-3 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] text-[var(--text)] font-semibold text-sm rounded-lg border border-[var(--border)] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]"
+              className="w-full px-4 py-3 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] text-[var(--text)] font-medium text-sm rounded-lg border border-[var(--border)] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]"
             >
               Browse Available Venues
             </button>
             <button
               onClick={() => onNavigate('artist-sales')}
-              className="w-full px-4 py-3 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] text-[var(--text-muted)] hover:text-[var(--text)] font-semibold text-sm rounded-lg border border-[var(--border)] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]"
+              className="w-full px-4 py-3 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] text-[var(--text)] font-medium text-sm rounded-lg border border-[var(--border)] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]"
             >
               View Sales Report
-            </button>            <button
+            </button>
+            <button
               onClick={() => onNavigate('why-artwalls-artist')}
-              className="w-full px-4 py-3 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] text-[var(--text-muted)] hover:text-[var(--text)] font-semibold text-sm rounded-lg border border-[var(--border)] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]}"
+              className="w-full px-4 py-3 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] text-[var(--text)] font-medium text-sm rounded-lg border border-[var(--border)] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]"
             >
               Why Artwalls?
             </button>          </div>

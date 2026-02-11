@@ -71,7 +71,7 @@ export const IconInput = forwardRef<HTMLInputElement, IconInputProps>(function I
         <p className="mt-1 text-xs text-[var(--text-muted)]">{helperText}</p>
       )}
       {error && (
-        <p className="mt-1 text-xs text-red-500" role="alert">{error}</p>
+        <p className="mt-1 text-xs text-[var(--danger)]" role="alert">{error}</p>
       )}
       {requiredLabel && (
         <p className="mt-1 text-xs text-[var(--text-muted)]">Required</p>

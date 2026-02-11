@@ -340,16 +340,16 @@ export function PublicArtistPage({ slugOrId, uid: uidProp, viewMode: viewProp, o
         {!loading && artist && (
           <>
             {/* Header card */}
-            <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row gap-6 shadow-lg">
+            <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl p-6 sm:p-8 flex flex-col sm:flex-row gap-6 shadow-md">
               <div className="w-32 h-32 rounded-full overflow-hidden bg-[var(--surface-3)] border-4 border-[var(--border)] flex-shrink-0">
                 {artist.profilePhotoUrl ? (
                   <img src={artist.profilePhotoUrl} alt={artist.name} className="w-full h-full object-cover" />
                 ) : (
-                  <div className="w-full h-full bg-gray-200" />
+                  <div className="w-full h-full bg-[var(--surface-3)]" />
                 )}
               </div>
               <div className="flex-1">
-                <h1 className="text-3xl font-bold text-[var(--text)] mb-1">{artist.name}</h1>
+                <h1 className="text-2xl sm:text-3xl font-semibold text-[var(--text)] mb-1">{artist.name}</h1>
                 {artist.slug && <p className="text-sm text-[var(--text-muted)] mb-3">@{artist.slug}</p>}
                 
                 {cityLine && (
@@ -390,11 +390,11 @@ export function PublicArtistPage({ slugOrId, uid: uidProp, viewMode: viewProp, o
             
             {/* Artworks */}
             <div className="mt-12">
-              <h2 className="text-2xl font-bold text-[var(--text)] mb-6">On Display</h2>
+              <h2 className="text-xl font-semibold text-[var(--text)] mb-6">On Display</h2>
               {artworks.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                   {artworks.map(artwork => (
-                    <div key={artwork.id} onClick={() => openArtwork(artwork.id)} className="cursor-pointer group bg-[var(--surface-2)] rounded-lg overflow-hidden border border-[var(--border)] hover:border-[var(--blue)] transition-all duration-300 shadow-md hover:shadow-xl">
+                    <div key={artwork.id} onClick={() => openArtwork(artwork.id)} className="cursor-pointer group bg-[var(--surface-2)] rounded-xl overflow-hidden border border-[var(--border)] hover:border-[var(--border-hover)] transition-all duration-200 hover:shadow-md">
                       <div className="w-full h-48 bg-[var(--surface-3)] overflow-hidden">
                         {artwork.imageUrl && <img src={artwork.imageUrl} alt={artwork.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />}
                       </div>
@@ -408,8 +408,8 @@ export function PublicArtistPage({ slugOrId, uid: uidProp, viewMode: viewProp, o
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-12 bg-[var(--surface-2)] border border-dashed border-[var(--border)] rounded-lg">
-                  <p className="text-[var(--text-muted)]">No works currently on display.</p>
+                <div className="text-center py-12 bg-[var(--surface-1)] border border-dashed border-[var(--border)] rounded-xl">
+                  <p className="text-sm text-[var(--text-muted)]">No works currently on display.</p>
                 </div>
               )}
             </div>

@@ -25,9 +25,9 @@ export function PageHeader({
   className = '',
 }: PageHeaderProps) {
   const renderAction = (action: ActionConfig, primary = false) => {
-    const base = 'inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors';
-    const primaryClasses = 'bg-[var(--green)] text-[var(--accent-contrast)] hover:opacity-90 focus:ring-2 focus:ring-[var(--focus)] focus:ring-offset-1 focus:ring-offset-[var(--bg)]';
-    const secondaryClasses = 'border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] hover:bg-[var(--surface-2)] focus:ring-2 focus:ring-[var(--focus)] focus:ring-offset-1 focus:ring-offset-[var(--bg)]';
+    const base = 'inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--bg)]';
+    const primaryClasses = 'bg-[var(--blue)] text-[var(--on-blue)] hover:bg-[var(--blue-hover)]';
+    const secondaryClasses = 'border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] hover:bg-[var(--surface-2)]';
 
     const Component = action.href ? 'a' : 'button';
     const props: any = {
@@ -50,7 +50,7 @@ export function PageHeader({
       <div className="space-y-1">
         {breadcrumb && <p className="text-xs uppercase tracking-[0.08em] text-[var(--text-muted)]">{breadcrumb}</p>}
         <div>
-          <h1 className="text-3xl font-semibold text-[var(--text)] leading-tight">{title}</h1>
+          <h1 className="text-2xl sm:text-3xl font-semibold text-[var(--text)] leading-tight">{title}</h1>
           {subtitle && <p className="text-sm text-[var(--text-muted)] mt-1">{subtitle}</p>}
         </div>
       </div>

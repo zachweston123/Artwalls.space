@@ -525,7 +525,7 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
           </div>
 
           <div className="border-t border-[var(--border)] p-6">
-            <h3 className="text-lg mb-4">Wall Space Guidelines</h3>
+            <h3 className="text-lg font-semibold mb-4">Wall Space Guidelines</h3>
             <div className="space-y-3">
               <div className="p-4 bg-[var(--surface-2)] rounded-lg border border-[var(--border)]">
                 <p className="text-sm text-[var(--text-muted)] mb-2">
@@ -548,7 +548,7 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
           </div>
 
           <div className="border-t border-[var(--border)] p-6">
-            <h3 className="text-lg mb-4">Account Settings</h3>
+            <h3 className="text-lg font-semibold mb-4">Account Settings</h3>
             <div className="space-y-3">
               <button onClick={() => onNavigate('venue-password-security')} className="w-full text-left px-4 py-3 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] rounded-lg transition-colors border border-[var(--border)]">
                 <p className="text-[var(--text)] mb-1">Password & Security</p>
@@ -569,7 +569,7 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
               <div className="w-12 h-12 bg-[var(--green-muted)] rounded-lg flex items-center justify-center">
                 <DollarSign className="w-6 h-6 text-[var(--green)]" />
               </div>
-              <h3 className="text-lg">Commission Earnings</h3>
+              <h3 className="text-lg font-semibold">Commission Earnings</h3>
             </div>
 
             <div className="space-y-4">
@@ -601,7 +601,7 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
           </div>
 
           <div className="bg-[var(--surface-1)] rounded-xl border border-[var(--border)] p-6">
-            <h3 className="text-lg mb-3">Quick Actions</h3>
+            <h3 className="text-lg font-semibold mb-3">Quick Actions</h3>
             <div className="space-y-2">
               <button 
                 onClick={() => onNavigate('venue-walls')}
