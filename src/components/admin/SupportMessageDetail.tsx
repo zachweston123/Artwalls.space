@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ChevronLeft, Mail, Clock, User, MapPin } from 'lucide-react';
+import { apiGet, apiPatch } from '../../lib/api';
 
 interface SupportMessage {
   id: string;
@@ -28,11 +29,7 @@ export function SupportMessageDetail({ messageId, onBack }: SupportMessageDetail
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`/api/admin/support/messages/${messageId}`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch message');
-        }
-        const data = await response.json();
+        const data = await apiGet<SupportMessage>(`/api/admin/support/messages/${messageId}`);
         setMessage(data);
       } catch (err: any) {
         setError(err.message || 'Failed to load message');
@@ -50,17 +47,10 @@ export function SupportMessageDetail({ messageId, onBack }: SupportMessageDetail
 
     setUpdating(true);
     try {
-      const response = await fetch(`/api/admin/support/messages/${messageId}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update status');
-      }
-
-      const updatedMessage = await response.json();
+      const updatedMessage = await apiPatch<SupportMessage>(
+        `/api/admin/support/messages/${messageId}/status`,
+        { status: newStatus },
+      );
       setMessage(updatedMessage);
     } catch (err: any) {
       setError(err.message || 'Failed to update status');

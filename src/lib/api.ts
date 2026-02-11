@@ -130,6 +130,43 @@ export async function apiPost<T>(path: string, body: unknown, headers?: Record<s
   return (await res.json()) as T;
 }
 
+export async function apiPatch<T>(path: string, body: unknown): Promise<T> {
+  const authHeader = await getAuthHeader();
+  let res: Response;
+  try {
+    res = await fetchWithFallback(`${API_BASE}${path}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeader,
+      },
+      body: JSON.stringify(body),
+    }, true);
+  } catch (fetchErr: unknown) {
+    const msg = fetchErr instanceof Error ? fetchErr.message : '';
+    throw new Error(`Network error: ${msg || 'Unable to connect to server'}`);
+  }
+
+  if (!res.ok) {
+    let errorMsg = `Request failed: ${res.status}`;
+    try {
+      const errorData = await res.json();
+      const extracted = errorData?.error ?? errorData?.message ?? errorMsg;
+      errorMsg = typeof extracted === 'string' ? extracted : JSON.stringify(extracted);
+    } catch {
+      errorMsg = res.statusText || errorMsg;
+    }
+    throw new Error(errorMsg);
+  }
+
+  const contentType = res.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    const text = await res.text().catch(() => '');
+    throw new Error(text || 'Unexpected response from server.');
+  }
+  return (await res.json()) as T;
+}
+
 export { API_BASE };
 
 // -------- Scheduling --------

@@ -269,7 +269,7 @@ export function VenuePartnerKitEmbedded({ onNavigate }: VenuePartnerKitEmbeddedP
             className="inline-flex items-center gap-2 px-6 py-3 bg-[var(--accent)] text-[var(--accent-contrast)] rounded-lg font-semibold hover:opacity-90 transition"
           >
             <Download className="w-5 h-5" />
-            Download Success Guide
+            Print / Save as PDF
           </button>
         </div>
 

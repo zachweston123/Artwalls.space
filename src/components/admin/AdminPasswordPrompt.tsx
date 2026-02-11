@@ -34,7 +34,11 @@ export function AdminPasswordPrompt({ onVerify, onCancel }: AdminPasswordPromptP
       
       if (response.ok) {
         try {
-          localStorage.setItem('adminPassword', password);
+          // Store a session token, not the raw password. Token expires when tab closes.
+          const token = btoa(`admin:${Date.now()}:${Math.random().toString(36).slice(2)}`);
+          sessionStorage.setItem('adminSessionToken', token);
+          // Clear any legacy raw password storage
+          localStorage.removeItem('adminPassword');
         } catch {}
         setPassword('');
         setIsLoading(false);

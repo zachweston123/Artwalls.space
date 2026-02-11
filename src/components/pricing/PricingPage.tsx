@@ -558,6 +558,51 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                     </div>
                     <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
                       <span className="text-[var(--text-muted)]">Venue Commission (15%)</span>
+                      <span className="font-semibold text-[var(--text)]">${formatCurrency(freeEarnings.venueAmount * 100)}</span>
+                    </div>
+                    <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
+                      <span className="text-[var(--text-muted)]">Monthly Subscription</span>
+                      <span className="font-semibold text-[var(--text)]">$0</span>
+                    </div>
+                    <div className="flex justify-between items-center pt-3 bg-[var(--surface-2)] border border-[var(--border)] p-4 rounded-lg mb-4">
+                      <span className="font-bold text-[var(--text)]">Your per-sale earnings</span>
+                      <span className="font-bold text-[var(--accent)] text-xl">${formatCurrency(freeEarnings.artistAmount * 100)}</span>
+                    </div>
+                    <div className="bg-[var(--surface-3)] p-4 rounded-lg border border-[var(--border)]">
+                      <h4 className="text-sm font-semibold text-[var(--text)] mb-2">After Additional Costs:</h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-[var(--text-muted)]">Monthly Subscription</span>
+                          <span className="text-[var(--text)]">$0</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-[var(--text-muted)]">Protection Plan</span>
+                          <span className="text-[var(--text)]">$3/artwork/mo</span>
+                        </div>
+                        <div className="border-t border-[var(--border)] pt-2 mt-2">
+                          <div className="flex justify-between font-semibold">
+                            <span className="text-[var(--text)]">Est. Net Income / month</span>
+                            <span className="text-[var(--text)]">${formatWhole(freeMonthly.monthlyNet)}</span>
+                          </div>
+                        </div>
+                        {freeMonthly.allowedArtworks < artworksPerMonth && (
+                          <p className="text-xs text-[var(--text-muted)] mt-2">
+                            Limited by plan: Free supports up to {freeMonthly.allowedArtworks} artworks.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {selectedPlanId === 'starter' && (
+                  <>
+                    <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
+                      <span className="text-[var(--text-muted)]">Artist Earnings (80%)</span>
+                      <span className="font-semibold text-[var(--accent)]">${formatCurrency(starterEarnings.artistAmount * 100)}</span>
+                    </div>
+                    <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
+                      <span className="text-[var(--text-muted)]">Venue Commission (15%)</span>
                       <span className="font-semibold text-[var(--text)]">${formatCurrency(starterEarnings.venueAmount * 100)}</span>
                     </div>
                     <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
@@ -587,7 +632,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                         </div>
                         {starterMonthly.allowedArtworks < artworksPerMonth && (
                           <p className="text-xs text-[var(--text-muted)] mt-2">
-                            Limited by plan: Starter supports up to 10 artworks.
+                            Limited by plan: Starter supports up to {starterMonthly.allowedArtworks} artworks.
                           </p>
                         )}
                       </div>
@@ -603,6 +648,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                     </div>
                     <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
                       <span className="text-[var(--text-muted)]">Venue Commission (15%)</span>
+                      <span className="font-semibold text-[var(--text)]">${formatCurrency(growthEarnings.venueAmount * 100)}</span>
                     </div>
                     <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
                       <span className="text-[var(--text-muted)]">Monthly Subscription</span>
@@ -647,6 +693,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                     </div>
                     <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
                       <span className="text-[var(--text-muted)]">Venue Commission (15%)</span>
+                      <span className="font-semibold text-[var(--text)]">${formatCurrency(proEarnings.venueAmount * 100)}</span>
                     </div>
                     <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
                       <span className="text-[var(--text-muted)]">Monthly Subscription</span>

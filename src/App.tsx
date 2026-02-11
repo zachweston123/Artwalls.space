@@ -584,6 +584,7 @@ export default function App() {
         if (isAdmin) {
           localStorage.removeItem('adminPassword');
           sessionStorage.removeItem('adminPassword');
+          sessionStorage.removeItem('adminSessionToken');
         }
       } catch {}
     }

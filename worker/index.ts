@@ -1041,17 +1041,134 @@ export default {
                 .eq('id', orderId)
                 .maybeSingle();
               if (order && order.status !== 'paid') {
+                // Retrieve the PaymentIntent + latest charge for source_transaction
+                const piId = session.payment_intent;
+                let chargeId: string | null = null;
+                if (piId) {
+                  try {
+                    const piResp = await stripeFetch(`/v1/payment_intents/${piId}?expand[]=latest_charge`, { method: 'GET' });
+                    const pi = await piResp.json() as any;
+                    chargeId = typeof pi.latest_charge === 'string'
+                      ? pi.latest_charge
+                      : pi.latest_charge?.id || null;
+                  } catch (e) {
+                    console.warn('Unable to retrieve PaymentIntent charge', e);
+                  }
+                }
+
+                // Create transfers to artist and venue Connect accounts
+                const transfers: Array<{ recipient: string; id: string }> = [];
+                let payoutStatus = 'pending_connect';
+                let payoutError: string | null = null;
+
+                const artistPayoutCents = order.artist_amount_cents || 0;
+                const venuePayoutCents = order.venue_amount_cents || order.venue_commission_cents || 0;
+                const orderCurrency = (order.currency || 'usd').toLowerCase();
+
+                if (artistPayoutCents > 0 && chargeId) {
+                  const { data: artist } = await supabaseAdmin
+                    .from('artists')
+                    .select('stripe_account_id')
+                    .eq('id', order.artist_id)
+                    .maybeSingle();
+                  if (artist?.stripe_account_id) {
+                    try {
+                      const tResp = await stripeFetch('/v1/transfers', {
+                        method: 'POST',
+                        body: toForm({
+                          amount: String(artistPayoutCents),
+                          currency: orderCurrency,
+                          destination: artist.stripe_account_id,
+                          source_transaction: chargeId,
+                          transfer_group: orderId,
+                          'metadata[orderId]': orderId,
+                          'metadata[artworkId]': artworkId || '',
+                          'metadata[recipient]': 'artist',
+                          'metadata[recipientId]': order.artist_id,
+                        }),
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                      });
+                      const t = await tResp.json() as any;
+                      if (tResp.ok) {
+                        transfers.push({ recipient: 'artist', id: t.id });
+                      } else {
+                        console.error('Artist transfer failed', t?.error?.message);
+                        payoutError = `Artist transfer failed: ${t?.error?.message || 'unknown'}`;
+                      }
+                    } catch (e: unknown) {
+                      payoutError = `Artist transfer error: ${getErrorMessage(e)}`;
+                    }
+                  } else {
+                    payoutError = 'Artist stripe_account_id missing';
+                  }
+                }
+
+                if (venuePayoutCents > 0 && order.venue_id && chargeId) {
+                  const { data: venue } = await supabaseAdmin
+                    .from('venues')
+                    .select('stripe_account_id,stripe_payouts_enabled')
+                    .eq('id', order.venue_id)
+                    .maybeSingle();
+                  if (venue?.stripe_account_id && venue?.stripe_payouts_enabled) {
+                    try {
+                      const tResp = await stripeFetch('/v1/transfers', {
+                        method: 'POST',
+                        body: toForm({
+                          amount: String(venuePayoutCents),
+                          currency: orderCurrency,
+                          destination: venue.stripe_account_id,
+                          source_transaction: chargeId,
+                          transfer_group: orderId,
+                          'metadata[orderId]': orderId,
+                          'metadata[artworkId]': artworkId || '',
+                          'metadata[recipient]': 'venue',
+                          'metadata[recipientId]': order.venue_id,
+                        }),
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                      });
+                      const t = await tResp.json() as any;
+                      if (tResp.ok) {
+                        transfers.push({ recipient: 'venue', id: t.id });
+                      } else {
+                        console.error('Venue transfer failed', t?.error?.message);
+                        payoutError = payoutError
+                          ? `${payoutError}; Venue transfer failed: ${t?.error?.message || 'unknown'}`
+                          : `Venue transfer failed: ${t?.error?.message || 'unknown'}`;
+                      }
+                    } catch (e: unknown) {
+                      const msg = `Venue transfer error: ${getErrorMessage(e)}`;
+                      payoutError = payoutError ? `${payoutError}; ${msg}` : msg;
+                    }
+                  } else if (!venue?.stripe_account_id || !venue?.stripe_payouts_enabled) {
+                    const msg = 'Venue payouts disabled or onboarding incomplete';
+                    payoutError = payoutError ? `${payoutError}; ${msg}` : msg;
+                    payoutStatus = 'blocked_pending_onboarding';
+                  }
+                }
+
+                if (!payoutError) payoutStatus = 'paid';
+
+                // Update order with payment + transfer data
                 await supabaseAdmin
                   .from('orders')
-                  .update({ status: 'paid', updated_at: new Date().toISOString() })
+                  .update({
+                    status: 'paid',
+                    stripe_payment_intent_id: piId || null,
+                    stripe_charge_id: chargeId || null,
+                    transfer_ids: transfers.length > 0 ? transfers : null,
+                    payout_status: payoutStatus,
+                    payout_error: payoutError,
+                    updated_at: new Date().toISOString(),
+                  })
                   .eq('id', orderId);
+
                 if (artworkId) {
                   await supabaseAdmin
                     .from('artworks')
                     .update({ status: 'sold', updated_at: new Date().toISOString() })
                     .eq('id', artworkId);
                 }
-                console.log('✅ Marketplace order paid', { orderId });
+                console.log('✅ Marketplace order paid + transfers created', { orderId, transfers, payoutStatus });
               }
             }
           }
@@ -1346,6 +1463,126 @@ export default {
           requirements: account.requirements,
         });
       } catch (err: unknown) {
+        return json({ error: getErrorMessage(err) }, { status: 500 });
+      }
+    }
+
+    // ── Stripe Marketplace Checkout ──
+
+    // Create marketplace checkout session for artwork purchase
+    if (url.pathname === '/api/stripe/create-checkout-session' && method === 'POST') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const rl = rateLimitByIp(getClientIp(request), 10, 60_000);
+      if (!rl.ok) return json({ error: 'Rate limit exceeded' }, { status: 429 });
+
+      const body = await request.json().catch(() => ({}));
+      const artworkId = body?.artworkId;
+      if (!artworkId || !isUUID(artworkId)) return json({ error: 'Invalid artworkId' }, { status: 400 });
+
+      // Look up artwork
+      const { data: artwork, error: artErr } = await supabaseAdmin
+        .from('artworks')
+        .select('id,title,price,currency,status,artist_id,venue_id,image_url')
+        .eq('id', artworkId)
+        .maybeSingle();
+      if (artErr || !artwork) return json({ error: 'Artwork not found' }, { status: 404 });
+      if (artwork.status === 'sold') return json({ error: 'Artwork is no longer available' }, { status: 410 });
+
+      const listPriceDollars = Number(artwork.price);
+      if (!Number.isFinite(listPriceDollars) || listPriceDollars <= 0) {
+        return json({ error: 'Artwork has no valid price' }, { status: 400 });
+      }
+
+      // Look up artist tier for economics
+      const { data: artist } = await supabaseAdmin
+        .from('artists')
+        .select('id,subscription_tier,stripe_account_id')
+        .eq('id', artwork.artist_id)
+        .maybeSingle();
+
+      const artistTier = normalizeArtistTier(artist?.subscription_tier || 'free', 'free');
+      const breakdown = calculatePricingBreakdown(listPriceDollars, artistTier);
+
+      // Generate order ID
+      const orderId = crypto.randomUUID();
+      const nowIso = new Date().toISOString();
+
+      // Insert order with economics snapshot
+      const { error: orderErr } = await supabaseAdmin
+        .from('orders')
+        .insert({
+          id: orderId,
+          artwork_id: artworkId,
+          artist_id: artwork.artist_id,
+          venue_id: artwork.venue_id || null,
+          status: 'pending',
+          currency: (artwork.currency || 'usd').toLowerCase(),
+          list_price_cents: breakdown.listPriceCents,
+          buyer_fee_cents: breakdown.buyerFeeCents,
+          buyer_total_cents: breakdown.customerPaysCents,
+          venue_amount_cents: breakdown.venueCents,
+          venue_commission_cents: breakdown.venueCents,
+          artist_amount_cents: breakdown.artistCents,
+          platform_gross_before_stripe_cents: breakdown.platformRemainderCents,
+          artist_plan_id_at_purchase: artistTier,
+          created_at: nowIso,
+          updated_at: nowIso,
+        });
+
+      if (orderErr) {
+        console.error('Order insert failed', orderErr.message);
+        return json({ error: 'Failed to create order' }, { status: 500 });
+      }
+
+      // Create Stripe Checkout Session
+      const pagesOrigin = env.PAGES_ORIGIN || 'https://artwalls.space';
+      const formData: Record<string, any> = {
+        mode: 'payment',
+        success_url: `${pagesOrigin}/#/purchase/${artworkId}?status=success`,
+        cancel_url: `${pagesOrigin}/#/purchase/${artworkId}?status=cancel`,
+        'line_items[0][price_data][currency]': (artwork.currency || 'usd').toLowerCase(),
+        'line_items[0][price_data][unit_amount]': String(breakdown.customerPaysCents),
+        'line_items[0][price_data][product_data][name]': clampStr(artwork.title || 'Artwork', 200),
+        'line_items[0][quantity]': '1',
+        'metadata[orderId]': orderId,
+        'metadata[artworkId]': artworkId,
+        'payment_intent_data[transfer_group]': orderId,
+      };
+
+      // If artist has a connected account, we'll add them in metadata for the webhook
+      if (artist?.stripe_account_id) {
+        formData['metadata[artistStripeAccountId]'] = artist.stripe_account_id;
+      }
+
+      // Add image if available
+      if (artwork.image_url && isValidUrl(artwork.image_url)) {
+        formData['line_items[0][price_data][product_data][images][0]'] = artwork.image_url;
+      }
+
+      try {
+        const sessResp = await stripeFetch('/v1/checkout/sessions', {
+          method: 'POST',
+          body: toForm(formData),
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        });
+        const sess = await sessResp.json() as any;
+        if (!sessResp.ok) {
+          console.error('Stripe session creation failed', sess?.error?.message);
+          // Clean up the pending order
+          await supabaseAdmin.from('orders').delete().eq('id', orderId);
+          return json({ error: sess?.error?.message || 'Checkout session failed' }, { status: 500 });
+        }
+
+        // Update order with Stripe session ID
+        await supabaseAdmin
+          .from('orders')
+          .update({ stripe_checkout_session_id: sess.id, updated_at: new Date().toISOString() })
+          .eq('id', orderId);
+
+        return json({ url: sess.url });
+      } catch (err: unknown) {
+        // Clean up the pending order
+        await supabaseAdmin.from('orders').delete().eq('id', orderId);
         return json({ error: getErrorMessage(err) }, { status: 500 });
       }
     }
@@ -2783,6 +3020,26 @@ export default {
         .eq('id', msgId);
 
       if (updateErr) return json({ error: updateErr.message }, { status: 500 });
+
+      // Return the updated message so the frontend can reflect it
+      const { data: updated } = await supabaseAdmin
+        .from('support_messages')
+        .select('*')
+        .eq('id', msgId)
+        .maybeSingle();
+
+      if (updated) {
+        return json({
+          id: updated.id,
+          email: updated.email,
+          message: updated.message,
+          roleContext: updated.role_context,
+          pageSource: updated.page_source,
+          status: updated.status,
+          createdAt: updated.created_at,
+          updatedAt: updated.updated_at,
+        });
+      }
       return json({ ok: true, status: newStatus });
     }
 

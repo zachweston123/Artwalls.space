@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Mail, ChevronRight, Search, Filter } from 'lucide-react';
+import { apiGet } from '../../lib/api';
 
 interface SupportMessage {
   id: string;
@@ -39,12 +40,7 @@ export function SupportInbox({ onSelectMessage }: SupportInboxProps) {
         ...(searchMessage && { searchMessage }),
       });
 
-      const response = await fetch(`/api/admin/support/messages?${params}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch messages');
-      }
-
-      const data = await response.json();
+      const data = await apiGet<{ messages: SupportMessage[]; total: number }>(`/api/admin/support/messages?${params}`);
       setMessages(data.messages || []);
       setTotal(data.total || 0);
     } catch (err: any) {
