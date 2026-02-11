@@ -1,6 +1,16 @@
 import { verifyAndParseStripeEvent } from './stripeWebhook';
 import { mergeTransferRecords } from './orderSettlement';
 import {
+  isUUID,
+  clampStr,
+  isValidUrl,
+  isValidEmail,
+  generateInviteToken,
+  generateReferralToken,
+  rateLimitByIp,
+  getClientIp,
+} from './helpers';
+import {
   calculatePricingBreakdown,
   calculateApplicationFeeCents,
   calculatePlatformFeeBps,
@@ -147,54 +157,6 @@ export default {
     const VENUE_INVITE_DUPLICATE_WINDOW_DAYS = Number(env.VENUE_INVITE_DUPLICATE_WINDOW_DAYS || 30);
     const VENUE_INVITE_PUBLIC_RATE_LIMIT = Number(env.VENUE_INVITE_PUBLIC_RATE_LIMIT || 60);
     const REFERRAL_DAILY_LIMIT = Number(env.REFERRAL_DAILY_LIMIT || 5);
-    const inviteRateLimitMap = new Map<string, { count: number; resetAt: number }>();
-
-    function rateLimitByIp(ip: string, limit: number, windowMs: number) {
-      if (!ip) return { ok: true, remaining: limit };
-      const now = Date.now();
-      const entry = inviteRateLimitMap.get(ip) || { count: 0, resetAt: now + windowMs };
-      if (now > entry.resetAt) {
-        entry.count = 0;
-        entry.resetAt = now + windowMs;
-      }
-      entry.count += 1;
-      inviteRateLimitMap.set(ip, entry);
-      return { ok: entry.count <= limit, remaining: Math.max(limit - entry.count, 0), resetAt: entry.resetAt };
-    }
-
-    function getClientIp(req: Request): string {
-      const forwarded = req.headers.get('x-forwarded-for') || '';
-      const cf = req.headers.get('cf-connecting-ip') || '';
-      return (forwarded.split(',')[0] || cf || '').trim();
-    }
-
-    function generateInviteToken(): string {
-      return crypto.randomUUID().replace(/-/g, '');
-    }
-
-    // ── Input-validation helpers ──
-    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    function isUUID(v: unknown): v is string {
-      return typeof v === 'string' && UUID_RE.test(v);
-    }
-    function clampStr(v: unknown, maxLen: number): string {
-      return typeof v === 'string' ? v.slice(0, maxLen).trim() : '';
-    }
-    function isValidUrl(v: unknown): boolean {
-      if (typeof v !== 'string') return false;
-      try { const u = new URL(v); return u.protocol === 'https:' || u.protocol === 'http:'; } catch { return false; }
-    }
-
-    function generateReferralToken(): string {
-      const bytes = new Uint8Array(32);
-      crypto.getRandomValues(bytes);
-      const base64 = btoa(String.fromCharCode(...bytes));
-      return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-    }
-
-    function isValidEmail(email: string): boolean {
-      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || '').trim());
-    }
 
     function applyProOverride(profile: any) {
       if (!profile) return { profile, hasProOverride: false };

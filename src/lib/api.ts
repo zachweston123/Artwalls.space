@@ -10,7 +10,7 @@ const DEFAULT_API_BASE = (() => {
   return origin || 'https://artwalls.space';
 })();
 
-const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || DEFAULT_API_BASE;
+const API_BASE = import.meta.env?.VITE_API_BASE_URL || DEFAULT_API_BASE;
 const SAME_ORIGIN_BASE = typeof window !== 'undefined' ? window.location.origin : '';
 
 async function fetchWithFallback(input: string, init: RequestInit, allowSameOriginRetry = false) {
@@ -44,7 +44,6 @@ async function fetchWithFallback(input: string, init: RequestInit, allowSameOrig
 
 async function getAuthHeader(): Promise<Record<string, string>> {
   try {
-    const { supabase } = await import('./supabase');
     const { data } = await supabase.auth.getSession();
     const token = data.session?.access_token;
     const headers: Record<string, string> = {};
@@ -63,9 +62,9 @@ export async function apiGet<T>(path: string): Promise<T> {
       method: 'GET',
       headers: { 'Content-Type': 'application/json', ...authHeader },
     }, true);
-  } catch (fetchErr: any) {
+  } catch (fetchErr: unknown) {
     console.error('[apiGet] Network error:', fetchErr);
-    throw new Error(`Network error: ${fetchErr?.message || 'Failed to fetch'}`);
+    throw new Error(`Network error: ${fetchErr instanceof Error ? fetchErr.message : 'Failed to fetch'}`);
   }
   if (!res.ok) {
     const text = await res.text().catch(() => '');
@@ -93,10 +92,11 @@ export async function apiPost<T>(path: string, body: unknown, headers?: Record<s
       },
       body: JSON.stringify(body),
     }, true);
-  } catch (fetchErr: any) {
+  } catch (fetchErr: unknown) {
     // Distinguish network/CORS errors from server errors
-    const isCorsError = fetchErr?.message?.includes('Failed to fetch') || 
-                       fetchErr?.message?.includes('CORS');
+    const msg = fetchErr instanceof Error ? fetchErr.message : '';
+    const isCorsError = msg.includes('Failed to fetch') || 
+                       msg.includes('CORS');
     const isOffline = !navigator.onLine;
     
     if (isOffline) {
@@ -105,7 +105,7 @@ export async function apiPost<T>(path: string, body: unknown, headers?: Record<s
     if (isCorsError) {
       throw new Error('Connection blocked by browser security. Please refresh the page and try again.');
     }
-    throw new Error(`Network error: ${fetchErr?.message || 'Unable to connect to server'}`);
+    throw new Error(`Network error: ${msg || 'Unable to connect to server'}`);
   }
   
   if (!res.ok) {
