@@ -101,6 +101,12 @@ export default {
       return new Response(body, { status: init?.status ?? 200, headers });
     }
 
+    // ── Top-level try-catch: ensures every response has CORS headers,
+    //    even on unexpected runtime errors. Without this, unhandled throws
+    //    produce a Cloudflare error page with NO CORS headers, which browsers
+    //    report as "Failed to fetch" / CORS blocked. ──
+    try {
+
     // Twilio SMS helper (available to all routes)
     async function sendSms(to: string, body: string): Promise<void> {
       const sid = env.TWILIO_ACCOUNT_SID || '';
@@ -3137,5 +3143,22 @@ export default {
 
     // ── Fallback: 404 for unmatched API routes ──
     return json({ error: 'Not found' }, { status: 404 });
+
+    } catch (fatalErr: unknown) {
+      // Top-level catch: return a proper CORS-headered JSON response
+      // so the browser doesn't interpret the error as a CORS block.
+      console.error('[FATAL] Unhandled Worker error:', fatalErr instanceof Error ? fatalErr.message : fatalErr);
+      const errHeaders = new Headers({
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': allowOrigin,
+        'Access-Control-Allow-Methods': 'GET,POST,PATCH,OPTIONS',
+        'Access-Control-Allow-Headers': 'authorization, content-type, x-client-info, apikey',
+        'Vary': 'Origin',
+      });
+      return new Response(
+        JSON.stringify({ error: 'Internal server error', code: 'WORKER_UNHANDLED_EXCEPTION' }),
+        { status: 500, headers: errHeaders },
+      );
+    }
   },
 };

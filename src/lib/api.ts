@@ -2,9 +2,11 @@ import { supabase } from './supabase';
 
 const DEFAULT_API_BASE = (() => {
   if (typeof window === 'undefined') return 'https://api.artwalls.space';
-  const { origin, hostname } = window.location;
+  const { hostname } = window.location;
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    return 'http://localhost:4242';
+    // Prefer Wrangler dev (8787) if available, fall back to Express (4242).
+    // VITE_API_BASE_URL env var overrides both (see below).
+    return 'http://localhost:8787';
   }
   // In production, the Worker API is on api.artwalls.space.
   // Derive from the hostname so staging subdomains also work.
