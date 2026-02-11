@@ -1312,7 +1312,8 @@ export default {
       const user = await getSupabaseUserFromRequest(request);
       const authErr = requireAuthOrFail(request, user);
       if (authErr) return authErr;
-      if (user.user_metadata?.role !== 'artist') return json({ error: 'Artist role required' }, { status: 403 });
+      // Venues are explicitly excluded; all other roles (artist, undefined, null) are treated as artist
+      if (user.user_metadata?.role === 'venue') return json({ error: 'Artist role required (venue accounts cannot use this endpoint)' }, { status: 403 });
       const rl = rateLimitByIp(getClientIp(request), 5, 60_000);
       if (!rl.ok) return json({ error: 'Rate limit exceeded' }, { status: 429 });
 
@@ -1347,7 +1348,7 @@ export default {
       const user = await getSupabaseUserFromRequest(request);
       const authErr = requireAuthOrFail(request, user);
       if (authErr) return authErr;
-      if (user.user_metadata?.role !== 'artist') return json({ error: 'Artist role required' }, { status: 403 });
+      if (user.user_metadata?.role === 'venue') return json({ error: 'Artist role required (venue accounts cannot use this endpoint)' }, { status: 403 });
       const rl = rateLimitByIp(getClientIp(request), 10, 60_000);
       if (!rl.ok) return json({ error: 'Rate limit exceeded' }, { status: 429 });
 
