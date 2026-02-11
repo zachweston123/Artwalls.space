@@ -1,19 +1,10 @@
 name = "artwalls-spacess"
+pages_build_output_dir = "dist"
 compatibility_date = "2024-01-01"
-main = "worker/index.ts"
 
 # Required: set your Cloudflare account_id via environment variable or wrangler CLI
 # Do NOT hardcode it here — use: CLOUDFLARE_ACCOUNT_ID env var or `wrangler whoami`
 # account_id = "<set via CLOUDFLARE_ACCOUNT_ID env var>"
-
-# Bind the Worker to the main domain /api/* path
-routes = [
-	{ pattern = "api.artwalls.space/*", zone_name = "artwalls.space" }
-]
-
-[vars]
-API_BASE_URL = "https://artwalls.space"
-PAGES_ORIGIN = "https://artwalls.space"
 
 # Stripe Price IDs — set via `wrangler secret put` or CI secrets, NOT here
 # wrangler secret put STRIPE_SUB_PRICE_STARTER
