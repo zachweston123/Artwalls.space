@@ -103,7 +103,7 @@ export function CuratedSetsMarketplace({ onNavigate }: CuratedSetsMarketplacePro
               key={tag}
               className={`px-3 py-1 rounded-full border text-sm transition ${
                 activeTag === tag
-                  ? 'border-blue-400 text-blue-100 bg-blue-500/10'
+                  ? 'border-[var(--blue)] text-[var(--blue)] bg-[var(--blue-muted)]'
                   : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--border-hover)]'
               }`}
               onClick={() => setActiveTag(tag)}

@@ -71,7 +71,7 @@
 - Heading: added `font-semibold`
 
 ### CuratedSetsMarketplace.tsx (worst dark-mode offender — fully fixed)
-- 10 replacements: all `bg-white/5`, `border-white/10`, `text-gray-*`, `text-white`, `bg-blue-500` migrated to CSS-variable tokens (`--surface-1`, `--border`, `--text-muted`, `--text`, `--blue`, `--on-blue`)
+- 11 replacements: all `bg-white/5`, `border-white/10`, `text-gray-*`, `text-white`, `bg-blue-500`, `border-blue-400 text-blue-100 bg-blue-500/10` (active filter state) migrated to CSS-variable tokens (`--surface-1`, `--border`, `--text-muted`, `--text`, `--blue`, `--blue-muted`, `--on-blue`)
 
 ### ArtistOnboardingWizard.tsx
 - Artwork error alert: `bg-red-500/10 border-red-500/30 text-red-500` → `--danger-muted`/`--danger`
