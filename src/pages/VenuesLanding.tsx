@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Store } from 'lucide-react';
 import { SEO } from '../components/SEO';
 import type { User, UserRole } from '../App';
+import { getErrorMessage } from '../lib/errors';
 import { PageHeader } from '../components/PageHeader';
 
 interface VenuesLandingPageProps {
@@ -64,8 +65,8 @@ export function VenuesLandingPage({ onNavigate, onLogin, viewerRole = null }: Ve
         email: data.user.email || email.trim(),
         role: 'venue',
       });
-    } catch (err: any) {
-      setErrorMessage(err?.message || 'Authentication failed.');
+    } catch (err: unknown) {
+      setErrorMessage(getErrorMessage(err) || 'Authentication failed.');
     } finally {
       setIsLoading(false);
     }
@@ -90,8 +91,8 @@ export function VenuesLandingPage({ onNavigate, onLogin, viewerRole = null }: Ve
       });
 
       if (error) throw error;
-    } catch (err: any) {
-      setErrorMessage(err?.message || 'Google sign-in failed.');
+    } catch (err: unknown) {
+      setErrorMessage(getErrorMessage(err) || 'Google sign-in failed.');
       setIsLoading(false);
     }
   };

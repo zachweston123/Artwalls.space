@@ -14,6 +14,7 @@ import {
   Zap,
 } from 'lucide-react';
 import type { User } from '../../App';
+import { getErrorMessage } from '../../lib/errors';
 import { CitySelect } from '../shared/CitySelect';
 import { LabelChip } from '../LabelChip';
 import { ArtistPayoutsCard } from '../artist/ArtistPayoutsCard';
@@ -83,6 +84,7 @@ export function ArtistOnboardingWizard({ user, onComplete, onSkip }: ArtistOnboa
   const [artworks, setArtworks] = useState<Array<{ id: string; title: string; image_url: string | null; status: string }>>([]);
   const [artworkDraft, setArtworkDraft] = useState<ArtworkDraft>({ title: '', price: '', width: '', height: '', unit: 'in', imageUrl: '' });
   const [artworkError, setArtworkError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [planWorking, setPlanWorking] = useState<string | null>(null);
   const [localPlan, setLocalPlan] = useState<PlanId>('free');
   const totalSteps = 6;
@@ -162,8 +164,8 @@ export function ArtistOnboardingWizard({ user, onComplete, onSkip }: ArtistOnboa
         await logEvent('plan_selected', { plan: 'free' });
       }
       setActiveStep(6);
-    } catch (err: any) {
-      alert(err?.message || 'Unable to start plan flow');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || 'Unable to start plan flow');
     } finally {
       setPlanWorking(null);
     }
@@ -207,8 +209,8 @@ export function ArtistOnboardingWizard({ user, onComplete, onSkip }: ArtistOnboa
       setArtworkError(null);
       const url = await uploadArtworkImage(user.id, file);
       setArtworkDraft((prev) => ({ ...prev, imageUrl: url }));
-    } catch (err: any) {
-      setArtworkError(err?.message || 'Upload failed');
+    } catch (err: unknown) {
+      setArtworkError(getErrorMessage(err) || 'Upload failed');
     }
   };
 
@@ -641,6 +643,12 @@ export function ArtistOnboardingWizard({ user, onComplete, onSkip }: ArtistOnboa
           </div>
           <p className="text-sm text-[var(--text-muted)] mt-1">Step {activeStep} of {totalSteps}</p>
         </div>
+
+        {error && (
+          <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-300">
+            {error}
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
           {[1, 2, 3, 4, 5, 6].map((step) => (

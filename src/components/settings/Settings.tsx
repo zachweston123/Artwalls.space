@@ -18,6 +18,7 @@ import {
 import type { User as AppUser, UserRole } from '../../App';
 import { supabase } from '../../lib/supabase';
 import { apiPost } from '../../lib/api';
+import { getErrorMessage } from '../../lib/errors';
 import type { ThemePreference } from '../../lib/theme';
 import { applyThemePreference, coerceThemePreference, getStoredThemePreference } from '../../lib/theme';
 import { PlanBadge } from '../pricing/PlanBadge';
@@ -101,8 +102,8 @@ export function Settings({ onNavigate, user: currentUser }: SettingsProps) {
         const remoteTheme = coerceThemePreference(row?.theme_preference, storedTheme);
         setThemePreference(remoteTheme);
         applyThemePreference(remoteTheme);
-      } catch (e: any) {
-        if (mounted) setError(e?.message || 'Failed to load settings');
+      } catch (e: unknown) {
+        if (mounted) setError(getErrorMessage(e) || 'Failed to load settings');
       } finally {
         if (mounted) setLoading(false);
       }
@@ -165,8 +166,8 @@ export function Settings({ onNavigate, user: currentUser }: SettingsProps) {
       setOriginalPhone(trimmedPhone);
       setSuccess('Profile updated successfully');
       setTimeout(() => setSuccess(null), 3000);
-    } catch (e: any) {
-      setError(e?.message || 'Failed to save profile');
+    } catch (e: unknown) {
+      setError(getErrorMessage(e) || 'Failed to save profile');
     } finally {
       setSaving(false);
     }
@@ -193,12 +194,13 @@ export function Settings({ onNavigate, user: currentUser }: SettingsProps) {
         {}
       );
       window.location.href = url;
-    } catch (e: any) {
+    } catch (e: unknown) {
       let userMessage = 'Unable to open Billing Portal';
-      if (e.message?.includes('CORS') || e.message?.includes('Failed to fetch')) {
+      const msg = getErrorMessage(e);
+      if (msg.includes('CORS') || msg.includes('Failed to fetch')) {
         userMessage = 'Connection issue. Please refresh the page and try again.';
-      } else if (e.message) {
-        userMessage = e.message;
+      } else if (msg && msg !== 'An unexpected error occurred') {
+        userMessage = msg;
       }
       setError(userMessage);
     } finally {
@@ -230,8 +232,8 @@ export function Settings({ onNavigate, user: currentUser }: SettingsProps) {
       applyThemePreference(preference);
       setSuccess('Theme preference saved');
       setTimeout(() => setSuccess(null), 2500);
-    } catch (e: any) {
-      setError(e?.message || 'Failed to update theme');
+    } catch (e: unknown) {
+      setError(getErrorMessage(e) || 'Failed to update theme');
     } finally {
       setThemeSaving(false);
     }

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { calculateProfileCompleteness } from '../lib/profileCompleteness';
+import { getErrorMessage } from '../lib/errors';
 import type { PlanId } from '../lib/entitlements';
 
 export interface ArtistOnboardingProfile {
@@ -159,9 +160,9 @@ export function useArtistOnboarding(userId?: string) {
         skippedPlanSelection: !!onboardingRow?.skipped_plan_selection,
         requirementsMet: { basics, style, artworks: artworksReady },
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('load onboarding failed', err);
-      setError(err?.message || 'Unable to load onboarding');
+      setError(getErrorMessage(err) || 'Unable to load onboarding');
       setState((prev) => ({ ...prev, loading: false }));
     }
   }, [userId]);

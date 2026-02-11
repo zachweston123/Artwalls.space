@@ -2,12 +2,20 @@ import { useEffect, useState } from 'react';
 import { apiGet } from '../../lib/api';
 import type { User } from '../../App';
 
+interface WallStatsData {
+  cards: {
+    scansWeek: number;
+    scansMonth: number;
+    conversion: number;
+  };
+}
+
 interface VenueWallStatsProps {
   user: User;
 }
 
 export function VenueWallStats({ user }: VenueWallStatsProps) {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<WallStatsData | null>(null);
 
   useEffect(() => {
     (async () => {

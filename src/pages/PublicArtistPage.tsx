@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, useCallback } from 'react';
 import { MapPin, ExternalLink, Instagram, ArrowLeft, Loader2 } from 'lucide-react';
 import { apiGet } from '../lib/api';
 import { supabase } from '../lib/supabase';
+import { getErrorMessage } from '../lib/errors';
 
 type ArtworkCardData = {
   id: string;
@@ -28,13 +29,41 @@ interface ArtistData {
   artTypes?: string[] | null;
 }
 
+interface DebugInfo {
+  routeParam: string;
+  isLoggedIn: boolean;
+  currentUserId: string | null;
+  attempts: string[];
+  [key: string]: unknown;
+}
+
+interface SupabaseArtworkRow {
+  id: string;
+  title: string;
+  status: string;
+  price_cents?: number;
+  currency?: string;
+  image_url?: string | null;
+  venue_id?: string | null;
+  venue_name?: string | null;
+  venue_city?: string | null;
+  venue_state?: string | null;
+  is_public?: boolean;
+  archived_at?: string | null;
+}
+
+interface PublicApiResponse {
+  artist?: Record<string, unknown>;
+  forSale?: SupabaseArtworkRow[];
+}
+
 interface PublicArtistPageProps {
   slugOrId: string;
   /** Optional UID hint (auth user id) passed via query param */
   uid?: string | null;
   /** Optional view mode ('public' = preview-as-visitor) */
   viewMode?: string | null;
-  onNavigate?: (page: string, params?: any) => void;
+  onNavigate?: (page: string, params?: Record<string, unknown>) => void;
 }
 
 const PUBLIC_STATUSES = ['available', 'active', 'published'];
@@ -44,7 +73,7 @@ export function PublicArtistPage({ slugOrId, uid: uidProp, viewMode: viewProp, o
   const [artworks, setArtworks] = useState<ArtworkCardData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [debugInfo, setDebugInfo] = useState<any>(null);
+  const [debugInfo, setDebugInfo] = useState<DebugInfo | null>(null);
 
   // Derive the identifier to look up — prefer props, fall back to URL.
   const { identifier, uid, view } = useMemo(() => {
@@ -68,7 +97,7 @@ export function PublicArtistPage({ slugOrId, uid: uidProp, viewMode: viewProp, o
   const isPublicView = view === 'public';
 
   const loadData = useCallback(async () => {
-    const debug: any = {
+    const debug: DebugInfo = {
       routeParam: identifier,
       isLoggedIn: !!uid,
       currentUserId: uid,
@@ -83,8 +112,8 @@ export function PublicArtistPage({ slugOrId, uid: uidProp, viewMode: viewProp, o
       const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(decoded);
       debug.isUuid = isUuid;
 
-      let artistRow: any = null;
-      let artworkRows: any[] = [];
+      let artistRow: Record<string, unknown> | null = null;
+      let artworkRows: ArtworkCardData[] = [];
       let resolvedBy = '';
 
       // ── Attempt 1: Worker API endpoint ──
@@ -93,15 +122,15 @@ export function PublicArtistPage({ slugOrId, uid: uidProp, viewMode: viewProp, o
         let apiUrl = `/api/public/artists/${encodeURIComponent(decoded)}`;
         if (uid) apiUrl += `?uid=${encodeURIComponent(uid)}`;
         debug.apiUrl = apiUrl;
-        const response = await apiGet<any>(apiUrl);
+        const response = await apiGet<PublicApiResponse>(apiUrl);
         if (response?.artist) {
-          artistRow = response.artist;
-          artworkRows = response.forSale || [];
+          artistRow = response.artist as Record<string, unknown>;
+          artworkRows = (response.forSale || []) as ArtworkCardData[];
           resolvedBy = 'worker-api';
         }
-      } catch (apiErr: any) {
-        debug.workerError = apiErr?.message || String(apiErr);
-        console.warn('Worker API failed, trying direct Supabase:', apiErr?.message);
+      } catch (apiErr: unknown) {
+        debug.workerError = getErrorMessage(apiErr);
+        console.warn('Worker API failed, trying direct Supabase:', getErrorMessage(apiErr));
       }
 
       // ── Attempt 2: Direct Supabase query (fallback) ──
@@ -143,7 +172,7 @@ export function PublicArtistPage({ slugOrId, uid: uidProp, viewMode: viewProp, o
             .is('archived_at', null)
             .in('status', PUBLIC_STATUSES)
             .limit(60);
-          artworkRows = (awData || []).map((aw: any) => ({
+          artworkRows = (awData || []).map((aw: SupabaseArtworkRow) => ({
             id: aw.id,
             title: aw.title,
             status: aw.status,
@@ -166,7 +195,7 @@ export function PublicArtistPage({ slugOrId, uid: uidProp, viewMode: viewProp, o
             resolvedBy = 'rpc';
 
             const { data: rpcArtworks } = await supabase.rpc('get_public_artist_artworks', { p_identifier: decoded });
-            artworkRows = (rpcArtworks || []).map((aw: any) => ({
+            artworkRows = (rpcArtworks || []).map((aw: SupabaseArtworkRow) => ({
               id: aw.id,
               title: aw.title,
               status: aw.status,
@@ -179,8 +208,8 @@ export function PublicArtistPage({ slugOrId, uid: uidProp, viewMode: viewProp, o
           } else if (rpcErr) {
             debug.rpcError = rpcErr.message;
           }
-        } catch (rpcErr: any) {
-          debug.rpcCatchError = rpcErr?.message || String(rpcErr);
+        } catch (rpcErr: unknown) {
+          debug.rpcCatchError = getErrorMessage(rpcErr);
         }
       }
 
@@ -217,7 +246,7 @@ export function PublicArtistPage({ slugOrId, uid: uidProp, viewMode: viewProp, o
         window.history.replaceState({}, '', canonicalPath);
       }
 
-      const cards: ArtworkCardData[] = (artworkRows || []).map((row: any) => ({
+      const cards: ArtworkCardData[] = (artworkRows || []).map((row: Record<string, unknown>) => ({
         id: row.id,
         title: row.title || 'Untitled',
         status: row.status || 'available',
@@ -229,10 +258,10 @@ export function PublicArtistPage({ slugOrId, uid: uidProp, viewMode: viewProp, o
       }));
 
       setArtworks(cards);
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('Error loading public artist profile:', e);
-      setError(e?.message || 'Unable to load artist profile');
-      debug.catchError = String(e?.message || e);
+      setError(getErrorMessage(e) || 'Unable to load artist profile');
+      debug.catchError = getErrorMessage(e);
       setDebugInfo(debug);
     } finally {
       setLoading(false);

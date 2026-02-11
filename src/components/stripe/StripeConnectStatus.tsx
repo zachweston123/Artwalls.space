@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { apiGet, apiPost } from '../../lib/api';
+import { getErrorMessage } from '../../lib/errors';
 
 interface StripeConnectStatusProps {
   role: 'artist' | 'venue';
@@ -23,6 +24,7 @@ export default function StripeConnectStatus({ role, userId }: StripeConnectStatu
   const [status, setStatus] = useState<ConnectStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
@@ -90,12 +92,12 @@ export default function StripeConnectStatus({ role, userId }: StripeConnectStatu
        try {
         await apiPost(`/api/stripe/connect/${role}/create-account`, {});
         await loadStatus();
-      } catch (apiErr: any) {
-        throw new Error(apiErr.message || 'Failed to connect to server');
+      } catch (apiErr: unknown) {
+        throw new Error(getErrorMessage(apiErr) || 'Failed to connect to server');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to create account', err);
-      alert(err.message || 'Failed to create account');
+      setError(getErrorMessage(err) || 'Failed to create account');
     } finally {
       setCreating(false);
     }
@@ -108,12 +110,12 @@ export default function StripeConnectStatus({ role, userId }: StripeConnectStatu
       try {
         const { url } = await apiPost<any>(`/api/stripe/connect/${role}/account-link`, {});
         window.location.href = url;
-      } catch (apiErr: any) {
-        throw new Error(apiErr.message || 'Failed to start onboarding');
+      } catch (apiErr: unknown) {
+        throw new Error(getErrorMessage(apiErr) || 'Failed to start onboarding');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to start onboarding', err);
-      alert(err.message || 'Failed to start onboarding');
+      setError(getErrorMessage(err) || 'Failed to start onboarding');
     } finally {
       setCreating(false);
     }
@@ -200,6 +202,11 @@ export default function StripeConnectStatus({ role, userId }: StripeConnectStatu
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow">
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-300">
+          {error}
+        </div>
+      )}
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
           Payout Status

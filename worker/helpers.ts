@@ -66,3 +66,12 @@ export function getClientIp(req: Request): string {
   const cf = req.headers.get('cf-connecting-ip') || '';
   return (forwarded.split(',')[0] || cf || '').trim();
 }
+
+// ── Error handling ──
+
+/** Extract a human-readable message from an unknown caught value. */
+export function getErrorMessage(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  if (typeof err === 'string') return err;
+  return 'An unexpected error occurred';
+}

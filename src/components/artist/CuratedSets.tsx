@@ -18,6 +18,7 @@ import {
   type SetItem,
 } from '../../lib/curatedSets';
 import { supabase } from '../../lib/supabase';
+import { getErrorMessage } from '../../lib/errors';
 
 interface CuratedSetsProps {
   user: User;
@@ -77,8 +78,8 @@ export function CuratedSets({ user, onNavigate }: CuratedSetsProps) {
       if (res.limit) {
         setLimit({ maxSets: res.limit.maxSets ?? ent.curatedSets, activeCount: res.limit.activeCount ?? 0 });
       }
-    } catch (err: any) {
-      setError(err?.message || 'Failed to load sets');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || 'Failed to load sets');
     } finally {
       setLoading(false);
     }
@@ -125,8 +126,8 @@ export function CuratedSets({ user, onNavigate }: CuratedSetsProps) {
       setNewTitle('');
       setNewDescription('');
       setNewTags('');
-    } catch (err: any) {
-      setError(err?.message || 'Unable to create set');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || 'Unable to create set');
     } finally {
       setSaving(false);
     }
@@ -138,8 +139,8 @@ export function CuratedSets({ user, onNavigate }: CuratedSetsProps) {
       const res = await publishCuratedSet(setId);
       setSets((prev) => prev.map((s) => (s.id === setId ? res.set : s)));
       setLimit({ maxSets: res?.limit?.maxSets ?? limit.maxSets, activeCount: res?.limit?.activeCount ?? limit.activeCount });
-    } catch (err: any) {
-      setError(err?.message || 'Unable to publish set');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || 'Unable to publish set');
     } finally {
       setSaving(false);
     }
@@ -151,8 +152,8 @@ export function CuratedSets({ user, onNavigate }: CuratedSetsProps) {
       const res = await archiveCuratedSet(setId);
       setSets((prev) => prev.map((s) => (s.id === setId ? res.set : s)));
       setLimit((prev) => ({ ...prev, activeCount: Math.max(0, (prev.activeCount || 1) - 1) }));
-    } catch (err: any) {
-      setError(err?.message || 'Unable to archive set');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || 'Unable to archive set');
     } finally {
       setSaving(false);
     }
@@ -163,8 +164,8 @@ export function CuratedSets({ user, onNavigate }: CuratedSetsProps) {
       setSaving(true);
       const res = await updateCuratedSet(setId, patch);
       setSets((prev) => prev.map((s) => (s.id === setId ? res.set : s)));
-    } catch (err: any) {
-      setError(err?.message || 'Unable to update set');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || 'Unable to update set');
     } finally {
       setSaving(false);
     }
@@ -192,8 +193,8 @@ export function CuratedSets({ user, onNavigate }: CuratedSetsProps) {
       const res = await addSetArtwork(setId, artworkId);
       setSets((prev) => prev.map((s) => (s.id === setId ? res.set : s)));
       setSelectedArtwork((prev) => ({ ...prev, [setId]: '' }));
-    } catch (err: any) {
-      setError(err?.message || 'Unable to add artwork');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || 'Unable to add artwork');
     } finally {
       setSaving(false);
     }
@@ -204,8 +205,8 @@ export function CuratedSets({ user, onNavigate }: CuratedSetsProps) {
       setSaving(true);
       const res = await removeSetArtwork(setId, artworkId);
       setSets((prev) => prev.map((s) => (s.id === setId ? res.set : s)));
-    } catch (err: any) {
-      setError(err?.message || 'Unable to remove artwork');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || 'Unable to remove artwork');
     } finally {
       setSaving(false);
     }
@@ -224,8 +225,8 @@ export function CuratedSets({ user, onNavigate }: CuratedSetsProps) {
       setSaving(true);
       const res = await reorderSetItems(setId, reordered);
       setSets((prev) => prev.map((s) => (s.id === setId ? res.set : s)));
-    } catch (err: any) {
-      setError(err?.message || 'Unable to reorder items');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || 'Unable to reorder items');
     } finally {
       setSaving(false);
     }

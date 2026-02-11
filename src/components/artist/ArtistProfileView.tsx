@@ -14,6 +14,19 @@ interface ArtistProfileViewProps {
   currentUser: User;
 }
 
+interface ArtistViewData {
+  id: string;
+  name: string;
+  avatar: string;
+  location: string;
+  bio: string;
+  instagram: string;
+  artTypes: string[];
+  openToNew: boolean;
+  activeDisplays: number;
+  totalSales: number;
+}
+
 export function ArtistProfileView({ 
   artistId,
   isOwnProfile, 
@@ -23,7 +36,7 @@ export function ArtistProfileView({
   currentUser 
 }: ArtistProfileViewProps) {
   // Fetch artist data from API
-  const [artist, setArtist] = useState<any>({
+  const [artist, setArtist] = useState<ArtistViewData>({
     id: '1',
     name: 'Artist',
     avatar: '',

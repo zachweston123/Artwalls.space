@@ -2,16 +2,44 @@ import { Mail, Search, Filter, TrendingUp, Users, CheckCircle } from 'lucide-rea
 import { useEffect, useState } from 'react';
 import { apiGet } from '../../lib/api';
 
+interface InviteTotals {
+  created: number;
+  sent: number;
+  accepted: number;
+}
+
+interface InviteDayEntry {
+  date: string;
+  created?: number;
+  sent?: number;
+  accepted?: number;
+}
+
+interface TopArtistEntry {
+  artistId: string;
+  artistName: string;
+  created: number;
+  accepted: number;
+  conversionRate: number;
+}
+
+interface InviteSummary {
+  rangeDays: number;
+  totals: InviteTotals;
+  byDay: InviteDayEntry[];
+  topArtists: TopArtistEntry[];
+}
+
 export function AdminInvites() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [summary, setSummary] = useState<any>(null);
+  const [summary, setSummary] = useState<InviteSummary | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
     async function load() {
       try {
-        const data = await apiGet<{ rangeDays: number; totals: any; byDay: any[]; topArtists: any[] }>(
+        const data = await apiGet<InviteSummary>(
           '/api/admin/venue-invites/summary?days=30'
         );
         if (mounted) setSummary(data);
@@ -54,7 +82,7 @@ export function AdminInvites() {
           <div className="mb-6">
             <h2 className="text-sm font-semibold text-[var(--text)] mb-3">Invites by day (last 7)</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {summary.byDay.slice(-7).map((day: any) => (
+              {summary.byDay.slice(-7).map((day: InviteDayEntry) => (
                 <div key={day.date} className="bg-[var(--surface-2)] border border-[var(--border)] rounded-lg p-3">
                   <p className="text-xs text-[var(--text-muted)]">{day.date}</p>
                   <div className="text-xs text-[var(--text)] mt-1">
@@ -90,8 +118,8 @@ export function AdminInvites() {
             <h2 className="text-lg font-semibold text-[var(--text)] mb-4">Top artists by conversions</h2>
             <div className="space-y-3">
               {summary.topArtists
-                .filter((a: any) => !searchQuery || a.artistName.toLowerCase().includes(searchQuery.toLowerCase()))
-                .map((artist: any) => (
+                .filter((a: TopArtistEntry) => !searchQuery || a.artistName.toLowerCase().includes(searchQuery.toLowerCase()))
+                .map((artist: TopArtistEntry) => (
                   <div key={artist.artistId} className="flex items-center justify-between bg-[var(--surface-2)] border border-[var(--border)] rounded-lg p-4">
                     <div className="flex items-center gap-3">
                       <Users className="w-4 h-4 text-[var(--text-muted)]" />

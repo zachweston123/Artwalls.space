@@ -955,7 +955,7 @@ export default function App() {
               <AdminUserDetail userId="1" onBack={() => handleNavigate('admin-users')} />
             )}
             {currentPage === 'admin-announcements' && (
-              <AdminAnnouncements onCreateAnnouncement={() => alert('Create Announcement feature coming soon')} />
+              <AdminAnnouncements onCreateAnnouncement={() => { /* TODO: wire up create announcement */ }} />
             )}
             {currentPage === 'admin-promo-codes' && (
               <AdminPromoCodes />
@@ -1143,9 +1143,7 @@ export default function App() {
                   setSelectedArtistId(artistId);
                   handleNavigate('artist-view-profile');
                 }}
-                onInviteArtist={(artistId) => {
-                  alert('Invite sent! The artist will receive a notification.');
-                  console.log('Invited artist:', artistId);
+                onInviteArtist={(_artistId) => {
                   // TODO: API call to send invitation
                 }}
               />
@@ -1156,7 +1154,6 @@ export default function App() {
                 isOwnProfile={false}
                 currentUser={currentUser}
                 onInviteToApply={() => {
-                  alert('Invitation sent! The artist will be notified.');
                   // TODO: API call to send invitation to apply
                 }}
               />
@@ -1172,7 +1169,7 @@ export default function App() {
               <AdminUsers onViewUser={(userId: string) => handleNavigate('admin-user-detail', { userId })} />
             )}
             {currentPage === 'admin-user-detail' && <AdminUserDetail onNavigate={handleNavigate} />}
-            {currentPage === 'admin-announcements' && <AdminAnnouncements onCreateAnnouncement={() => alert('Create Announcement feature coming soon')} />}
+            {currentPage === 'admin-announcements' && <AdminAnnouncements onCreateAnnouncement={() => { /* TODO: wire up create announcement */ }} />}
             {currentPage === 'admin-promo-codes' && <AdminPromoCodes />}
             {currentPage === 'admin-stripe-payments' && <StripePaymentSetup onNavigate={handleNavigate} />}
             {currentPage === 'admin-activity-log' && <AdminActivityLog />}

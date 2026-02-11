@@ -38,6 +38,10 @@ coverage/
 # Local data files
 server/store.json
 
+# Backup files
+*.bak
+*.backup
+
 # Wrangler cache
 .wrangler/
 node_modules/.cache/

@@ -9,6 +9,7 @@ import {
   generateReferralToken,
   rateLimitByIp,
   getClientIp,
+  getErrorMessage,
 } from './helpers';
 import {
   calculatePricingBreakdown,
@@ -644,11 +645,11 @@ export default {
             details: (venuesError as any)?.details || null,
           },
         });
-      } catch (e: any) {
+      } catch (e: unknown) {
         return json({
           ok: false,
-          error: e?.message || 'Supabase test error',
-          stack: e?.stack?.substring(0, 500) || null,
+          error: getErrorMessage(e),
+          stack: e instanceof Error ? e.stack?.substring(0, 500) ?? null : null,
         }, { status: 500 });
       }
     }
@@ -675,8 +676,8 @@ export default {
           role: data.user?.user_metadata?.role,
           metadata: data.user?.user_metadata,
         });
-      } catch (e: any) {
-        return json({ ok: false, error: e?.message || 'Unknown error' });
+      } catch (e: unknown) {
+        return json({ ok: false, error: getErrorMessage(e) });
       }
     }
 
@@ -1243,9 +1244,9 @@ export default {
         }
 
         return json({ received: true });
-      } catch (err: any) {
-        console.error('Stripe webhook error:', err?.message);
-        return json({ error: err?.message || 'Webhook processing failed' }, { status: 400 });
+      } catch (err: unknown) {
+        console.error('Stripe webhook error:', getErrorMessage(err));
+        return json({ error: getErrorMessage(err) }, { status: 400 });
       }
     }
 
@@ -1281,8 +1282,8 @@ export default {
 
         await upsertArtist({ id: user.id, email: artist?.email, name: artist?.name, role: 'artist', stripeAccountId: account.id });
         return json({ accountId: account.id, alreadyExists: false });
-      } catch (err: any) {
-        return json({ error: err?.message || 'Stripe Connect error' }, { status: 500 });
+      } catch (err: unknown) {
+        return json({ error: getErrorMessage(err) }, { status: 500 });
       }
     }
 
@@ -1313,8 +1314,8 @@ export default {
         const link = await resp.json();
         if (!resp.ok) throw new Error(link?.error?.message || 'Account link failed');
         return json({ url: link.url });
-      } catch (err: any) {
-        return json({ error: err?.message || 'Stripe account link error' }, { status: 500 });
+      } catch (err: unknown) {
+        return json({ error: getErrorMessage(err) }, { status: 500 });
       }
     }
 
@@ -1338,8 +1339,8 @@ export default {
         const link = await resp.json();
         if (!resp.ok) throw new Error(link?.error?.message || 'Login link failed');
         return json({ url: link.url });
-      } catch (err: any) {
-        return json({ error: err?.message || 'Stripe login link error' }, { status: 500 });
+      } catch (err: unknown) {
+        return json({ error: getErrorMessage(err) }, { status: 500 });
       }
     }
 
@@ -1367,8 +1368,8 @@ export default {
           detailsSubmitted: account.details_submitted,
           requirements: account.requirements,
         });
-      } catch (err: any) {
-        return json({ error: err?.message || 'Stripe status error' }, { status: 500 });
+      } catch (err: unknown) {
+        return json({ error: getErrorMessage(err) }, { status: 500 });
       }
     }
 
@@ -1403,8 +1404,8 @@ export default {
 
         await upsertVenue({ id: user.id, email: venue?.email, name: venue?.name, stripeAccountId: account.id, defaultVenueFeeBps: venue?.default_venue_fee_bps ?? 1000 });
         return json({ accountId: account.id, alreadyExists: false });
-      } catch (err: any) {
-        return json({ error: err?.message || 'Stripe Connect error' }, { status: 500 });
+      } catch (err: unknown) {
+        return json({ error: getErrorMessage(err) }, { status: 500 });
       }
     }
 
@@ -1435,8 +1436,8 @@ export default {
         const link = await resp.json();
         if (!resp.ok) throw new Error(link?.error?.message || 'Account link failed');
         return json({ url: link.url });
-      } catch (err: any) {
-        return json({ error: err?.message || 'Stripe account link error' }, { status: 500 });
+      } catch (err: unknown) {
+        return json({ error: getErrorMessage(err) }, { status: 500 });
       }
     }
 
@@ -1460,8 +1461,8 @@ export default {
         const link = await resp.json();
         if (!resp.ok) throw new Error(link?.error?.message || 'Login link failed');
         return json({ url: link.url });
-      } catch (err: any) {
-        return json({ error: err?.message || 'Stripe login link error' }, { status: 500 });
+      } catch (err: unknown) {
+        return json({ error: getErrorMessage(err) }, { status: 500 });
       }
     }
 
@@ -1489,8 +1490,8 @@ export default {
           detailsSubmitted: account.details_submitted,
           requirements: account.requirements,
         });
-      } catch (err: any) {
-        return json({ error: err?.message || 'Stripe status error' }, { status: 500 });
+      } catch (err: unknown) {
+        return json({ error: getErrorMessage(err) }, { status: 500 });
       }
     }
 
@@ -1557,8 +1558,8 @@ export default {
         const sess = await sessResp.json();
         if (!sessResp.ok) throw new Error(sess?.error?.message || 'Checkout session failed');
         return json({ url: sess.url });
-      } catch (err: any) {
-        return json({ error: err?.message || 'Unable to start subscription checkout' }, { status: 500 });
+      } catch (err: unknown) {
+        return json({ error: getErrorMessage(err) }, { status: 500 });
       }
     }
 
@@ -1601,8 +1602,8 @@ export default {
         const portal = await portalResp.json();
         if (!portalResp.ok) throw new Error(portal?.error?.message || 'Billing portal error');
         return json({ url: portal.url });
-      } catch (err: any) {
-        return json({ error: err?.message || 'Billing portal error' }, { status: 500 });
+      } catch (err: unknown) {
+        return json({ error: getErrorMessage(err) }, { status: 500 });
       }
     }
 
@@ -2381,8 +2382,8 @@ export default {
         const priceJson = await priceResp.json();
         if (!priceResp.ok) throw new Error(priceJson?.error?.message || 'Stripe price create failed');
         stripePriceId = priceJson.id;
-      } catch (err: any) {
-        return json({ error: err?.message || 'Unable to create Stripe product/price' }, { status: 500 });
+      } catch (err: unknown) {
+        return json({ error: getErrorMessage(err) }, { status: 500 });
       }
 
       const insert = {
@@ -2560,9 +2561,9 @@ export default {
           subscriptionTier: clampStr(payload?.subscriptionTier, 20) || null,
         });
         return resp;
-      } catch (err: any) {
-        console.error('[POST /api/artists] Unhandled error:', err?.message, err?.stack);
-        return json({ error: err?.message || 'Internal server error' }, { status: 500 });
+      } catch (err: unknown) {
+        console.error('[POST /api/artists] Unhandled error:', getErrorMessage(err), err instanceof Error ? err.stack : undefined);
+        return json({ error: getErrorMessage(err) }, { status: 500 });
       }
     }
     // Upsert venue profile (used by app bootstrap)

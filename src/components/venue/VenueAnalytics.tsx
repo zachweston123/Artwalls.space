@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
+import { getErrorMessage } from '../../lib/errors';
 import { TrendingUp, ShoppingBag, DollarSign, BarChart3, QrCode, Eye } from 'lucide-react';
 import type { User } from '../../App';
 
@@ -152,8 +153,8 @@ export function VenueAnalytics({ user }: VenueAnalyticsProps) {
         .slice(0, 10);
 
       setTopArtworks(rows);
-    } catch (err: any) {
-      setError(err?.message || 'Unable to load analytics');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || 'Unable to load analytics');
     } finally {
       setLoading(false);
     }

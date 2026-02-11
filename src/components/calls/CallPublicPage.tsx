@@ -1,21 +1,28 @@
 import { useEffect, useState } from 'react';
 import { apiGet } from '../../lib/api';
 
+interface CallData {
+  title: string;
+  description?: string;
+  submission_fee_cents?: number;
+  submission_deadline?: string;
+}
+
 interface CallPublicPageProps {
   callId: string;
 }
 
 export function CallPublicPage({ callId }: CallPublicPageProps) {
-  const [call, setCall] = useState<any>(null);
+  const [call, setCall] = useState<CallData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
       try {
-        const res = await apiGet<{ call: any }>(`/api/calls/${callId}`);
+        const res = await apiGet<{ call: CallData }>(`/api/calls/${callId}`);
         setCall(res.call);
-      } catch (err: any) {
-        setError(err?.message || 'Unable to load call');
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : 'Unable to load call');
       }
     })();
   }, [callId]);

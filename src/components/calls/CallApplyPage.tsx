@@ -3,13 +3,27 @@ import { apiGet, apiPost } from '../../lib/api';
 import { supabase } from '../../lib/supabase';
 import { uploadCallApplicationImage } from '../../lib/storage';
 
+interface CallData {
+  title: string;
+  description?: string;
+  submission_fee_cents?: number;
+  submission_deadline?: string;
+}
+
+interface ArtworkItem {
+  id: string;
+  title: string;
+  primary_image_url?: string;
+  price?: number;
+}
+
 interface CallApplyPageProps {
   callId: string;
 }
 
 export function CallApplyPage({ callId }: CallApplyPageProps) {
-  const [call, setCall] = useState<any>(null);
-  const [artworks, setArtworks] = useState<any[]>([]);
+  const [call, setCall] = useState<CallData | null>(null);
+  const [artworks, setArtworks] = useState<ArtworkItem[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
   const [statement, setStatement] = useState('');
   const [portfolioUrl, setPortfolioUrl] = useState('');
@@ -24,9 +38,9 @@ export function CallApplyPage({ callId }: CallApplyPageProps) {
         setError('Please sign in as an artist to apply.');
         return;
       }
-      const callRes = await apiGet<{ call: any }>(`/api/calls/${callId}`);
+      const callRes = await apiGet<{ call: CallData }>(`/api/calls/${callId}`);
       setCall(callRes.call);
-      const arts = await apiGet<any>(`/api/artworks?artistId=${encodeURIComponent(userId)}`);
+      const arts = await apiGet<{ artworks?: ArtworkItem[] }>(`/api/artworks?artistId=${encodeURIComponent(userId)}`);
       setArtworks(arts?.artworks || []);
     })();
   }, [callId]);
@@ -49,10 +63,15 @@ export function CallApplyPage({ callId }: CallApplyPageProps) {
       if (res?.url) {
         window.location.href = res.url;
       } else {
-        alert('Application submitted.');
+        setError(null);
+        setStatement('');
+        setSelected([]);
+        setImages([]);
+        // Show success inline instead of alert
+        setError('✅ Application submitted successfully!');
       }
-    } catch (err: any) {
-      setError(err?.message || 'Unable to submit application');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Unable to submit application');
     }
   };
 
