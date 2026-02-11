@@ -6,6 +6,8 @@ import { ActiveDisplaysMeter } from '../pricing/ActiveDisplaysMeter';
 import type { User } from '../../App';
 import { ArtistPayoutsCard } from './ArtistPayoutsCard';
 import { apiGet } from '../../lib/api';
+import { supabase } from '../../lib/supabase';
+import { calculateProfileCompleteness } from '../../lib/profileCompleteness';
 import MomentumBanner from './MomentumBanner';
 
 interface ArtistDashboardProps {
@@ -28,6 +30,41 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
     momentum?: { eligible: boolean; reason: string | null; dismissed: boolean; showBanner: boolean };
   } | null>(null);
   const [momentumDismissed, setMomentumDismissed] = useState(false);
+  // null = still loading (don't flash banner), true/false = resolved
+  const [profileComplete, setProfileComplete] = useState<boolean | null>(null);
+
+  // Fetch artist profile to determine completeness
+  useEffect(() => {
+    let isMounted = true;
+    async function checkProfile() {
+      try {
+        const { data: artist } = await supabase
+          .from('artists')
+          .select('name, profile_photo_url, bio, art_types, city_primary, phone_number, portfolio_url, instagram_handle')
+          .eq('id', user.id)
+          .maybeSingle();
+        if (!isMounted) return;
+        if (!artist) { setProfileComplete(false); return; }
+        const result = calculateProfileCompleteness({
+          name: artist.name ?? undefined,
+          profilePhoto: artist.profile_photo_url ?? undefined,
+          bio: artist.bio ?? undefined,
+          artTypes: artist.art_types ?? undefined,
+          primaryCity: artist.city_primary ?? undefined,
+          phone: artist.phone_number ?? undefined,
+          portfolioUrl: artist.portfolio_url ?? undefined,
+          instagramHandle: artist.instagram_handle ?? undefined,
+        });
+        setProfileComplete(result.isComplete);
+      } catch {
+        if (!isMounted) return;
+        // On error, hide banner rather than flash it
+        setProfileComplete(true);
+      }
+    }
+    checkProfile();
+    return () => { isMounted = false; };
+  }, [user.id]);
 
   useEffect(() => {
     try {
@@ -233,26 +270,30 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
 
       {/* ════════════════════════════════════════════════════════════
           ACTION REQUIRED BANNER (Compact, Clear CTA)
+          Only shown when profile is incomplete. Hidden while loading
+          to avoid flicker.
           ════════════════════════════════════════════════════════════ */}
-      <div className="mb-8 bg-[color:color-mix(in_srgb,var(--warning)_12%,transparent)] border border-[color:color-mix(in_srgb,var(--warning)_25%,transparent)] rounded-lg p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-start gap-3 flex-1">
-          <div className="w-5 h-5 mt-0.5 text-[var(--warning)] flex-shrink-0">
-            <svg fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-            </svg>
+      {profileComplete === false && (
+        <div className="mb-8 bg-[color:color-mix(in_srgb,var(--warning)_12%,transparent)] border border-[color:color-mix(in_srgb,var(--warning)_25%,transparent)] rounded-lg p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3 flex-1">
+            <div className="w-5 h-5 mt-0.5 text-[var(--warning)] flex-shrink-0">
+              <svg fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-[var(--text)]">Complete your artist profile</p>
+              <p className="text-xs text-[var(--text-muted)] mt-0.5">Venues are more likely to invite artists with complete profiles</p>
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-[var(--text)]">Complete your artist profile</p>
-            <p className="text-xs text-[var(--text-muted)] mt-0.5">Venues are more likely to invite artists with complete profiles</p>
-          </div>
+          <button
+            onClick={() => onNavigate('artist-profile')}
+            className="w-full sm:w-auto flex-shrink-0 px-4 py-2 bg-[var(--blue)] hover:bg-[var(--blue-hover)] text-[var(--on-blue)] text-sm font-semibold rounded-lg transition-colors"
+          >
+            Complete Now
+          </button>
         </div>
-        <button
-          onClick={() => onNavigate('artist-profile')}
-          className="w-full sm:w-auto flex-shrink-0 px-4 py-2 bg-[var(--blue)] hover:bg-[var(--blue-hover)] text-[var(--on-blue)] text-sm font-semibold rounded-lg transition-colors"
-        >
-          Complete Now
-        </button>
-      </div>
+      )}
 
       {/* ════════════════════════════════════════════════════════════
           SEARCH MODULE (Compact, Clear Input + Primary Button)
