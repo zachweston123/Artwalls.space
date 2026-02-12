@@ -124,7 +124,7 @@ export function AccountStatusPanel({
     limits.activeDisplays >= 9999 ? 'Unlimited' : `${limits.activeDisplays}`;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* ══════ Plan & Limits Card ══════ */}
       <Card className="bg-[var(--surface-2)] border-[var(--border)]">
         <CardHeader>

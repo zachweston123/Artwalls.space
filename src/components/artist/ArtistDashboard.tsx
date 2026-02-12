@@ -249,7 +249,7 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
           value={activeArtworks}
           subtext={`${totalArtworks} total pieces`}
           icon={<Eye className="w-5 h-5" />}
-          color="blue"
+          accent="blue"
           onClick={() => onNavigate('artist-artworks')}
         />
         <StatCard
@@ -257,7 +257,7 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
           value={`$${totalEarnings.toFixed(0)}`}
           subtext={`${getPayoutPercentage(currentPlan)} of sales`}
           icon={<DollarSign className="w-5 h-5" />}
-          color="green"
+          accent="green"
           onClick={() => onNavigate('artist-sales')}
         />
         <StatCard
@@ -265,7 +265,7 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
           value={recentSales}
           subtext="This month"
           icon={<TrendingUp className="w-5 h-5" />}
-          color="blue"
+          accent="violet"
           onClick={() => onNavigate('artist-sales')}
         />
         <StatCard
@@ -273,7 +273,7 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
           value={stats?.applications?.pending ?? 0}
           subtext="Awaiting approval"
           icon={<Package className="w-5 h-5" />}
-          color="muted"
+          accent="amber"
           onClick={() => onNavigate('artist-applications')}
         />
       </div>
@@ -309,7 +309,7 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
         </div>
 
         {/* RIGHT — Recent Activity (compact) + Quick Actions */}
-        <div className="lg:col-span-3 space-y-5">
+        <div className="lg:col-span-3 space-y-6">
           <RecentActivity userId={user.id} onNavigate={onNavigate} compact />
           <QuickActions onNavigate={onNavigate} />
         </div>
