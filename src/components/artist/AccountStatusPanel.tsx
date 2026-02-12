@@ -177,22 +177,25 @@ export function AccountStatusPanel({
               </div>
             )}
 
-            {/* Upgrade button — matches Pricing CTA style */}
-            {plan !== 'pro' && (
+          </div>
+
+          {/* Upgrade CTA — visually separated from usage metrics */}
+          {plan !== 'pro' && (
+            <div className="border-t border-[var(--border)] pt-5 mt-5">
               <button
                 onClick={() => onNavigate('plans-pricing')}
-                className={`w-full py-3 rounded-xl text-sm font-semibold transition-colors mt-2 ${
+                className={`w-full py-3 rounded-xl text-sm font-semibold transition-colors ${
                   displaysUsed >= limits.activeDisplays || artworksUsed >= limits.artworks
                     ? 'bg-[var(--blue)] text-[var(--on-blue)] hover:bg-[var(--blue-hover)]'
                     : 'border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] hover:bg-[var(--surface-3)]'
                 }`}
               >
                 {displaysUsed >= limits.activeDisplays || artworksUsed >= limits.artworks
-                  ? 'Upgrade — you\u2019ve hit a limit'
+                  ? 'Upgrade \u2014 you\u2019ve hit a limit'
                   : 'Upgrade plan'}
               </button>
-            )}
-          </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -228,17 +231,17 @@ export function AccountStatusPanel({
               Checking status…
             </div>
           ) : (
-            <div className="space-y-4">
+            <>
               {/* 1-line explanation */}
               <p className="text-sm text-[var(--text-muted)] leading-relaxed">
                 {isPayoutReady
-                  ? 'Stripe is connected — you\u2019ll receive payouts automatically when art sells.'
+                  ? 'Stripe is connected \u2014 you\u2019ll receive payouts automatically when art sells.'
                   : 'Complete Stripe onboarding so you can get paid when your art sells.'}
               </p>
 
               {/* Error (hidden behind expandable) */}
               {displayError && (
-                <div>
+                <div className="mt-3">
                   <button
                     onClick={() => setShowErrorDetails((v) => !v)}
                     className="flex items-center gap-1 text-xs text-[var(--danger)] hover:underline"
@@ -264,8 +267,8 @@ export function AccountStatusPanel({
                 </div>
               )}
 
-              {/* CTA — matches Pricing button styles */}
-              <div className="flex gap-3">
+              {/* CTA — visually separated from content above */}
+              <div className="border-t border-[var(--border)] pt-5 mt-5 flex gap-3">
                 {!isPayoutReady ? (
                   <button
                     onClick={startOnboarding}
@@ -302,7 +305,7 @@ export function AccountStatusPanel({
                   <Gauge className="w-4 h-4" />
                 </button>
               </div>
-            </div>
+            </>
           )}
         </CardContent>
       </Card>

@@ -129,7 +129,7 @@ export function RecentActivity({ userId, onNavigate, compact = false }: RecentAc
           </div>
         ) : items.length === 0 ? (
           /* Empty state */
-          <div className="py-4 text-center">
+          <div className="py-8 text-center">
             <div className="w-10 h-10 rounded-full bg-[var(--surface-3)] flex items-center justify-center mx-auto mb-3">
               <Activity className="w-5 h-5 text-[var(--text-muted)]" />
             </div>

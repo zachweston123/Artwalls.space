@@ -28,12 +28,12 @@ export function QuickActions({ onNavigate }: QuickActionsProps) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           {actions.map(({ label, icon: Icon, page }) => (
             <button
               key={label}
               onClick={() => onNavigate(page)}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[var(--text)] bg-[var(--surface-1)] border border-[var(--border)] hover:border-[var(--blue)]/60 hover:bg-[var(--surface-3)] hover:ring-2 hover:ring-[var(--blue)]/25 hover:shadow-sm transition-all duration-200 text-left"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-[var(--text)] bg-[var(--surface-1)] border border-[var(--border)] hover:border-[var(--blue)]/60 hover:bg-[var(--surface-3)] hover:ring-2 hover:ring-[var(--blue)]/25 hover:shadow-sm transition-all duration-200 text-left"
             >
               <Icon className="w-4 h-4 text-[var(--text-muted)] flex-shrink-0" />
               {label}
