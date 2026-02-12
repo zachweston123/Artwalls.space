@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { UserCircle, Image, CreditCard, MapPin, X, CheckCircle2, ChevronRight } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../ui/card';
 
 /**
  * ActionCenter — compact tile-grid of prioritised next steps.
@@ -30,7 +31,7 @@ interface ActionTileProps {
 function ActionTile({ item, onDismiss }: ActionTileProps) {
   return (
     <div
-      className="relative bg-[var(--surface-1)] border border-[var(--border)] rounded-xl p-5 group flex flex-col min-h-[148px] transition-all duration-200 hover:border-[var(--blue)]/55 hover:ring-1 hover:ring-[var(--blue)]/20 hover:bg-[var(--surface-3)]/40"
+      className="relative bg-[var(--surface-1)] border border-[var(--border)] rounded-xl p-5 group flex flex-col min-h-[148px] transition-all duration-200 hover:border-[var(--blue)]/60 hover:ring-2 hover:ring-[var(--blue)]/25 hover:bg-[var(--surface-3)]/50 hover:shadow-sm"
     >
       {/* Dismiss — top-right, appears on hover */}
       <button
@@ -174,17 +175,17 @@ export function ActionCenter({
 
   /* ── Render ──────────────────────────────────────────────────────── */
   return (
-    <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl">
-      <div className="p-6">
-        {/* Header — matches Plan & Limits */}
-        <div className="flex items-center justify-between mb-5">
-          <div>
-            <h2 className="text-base font-semibold text-[var(--text)]">Action Center</h2>
-            <p className="text-sm text-[var(--text-muted)] mt-0.5">
-              Next steps to grow your presence
-            </p>
-          </div>
-        </div>
+    <Card className="bg-[var(--surface-2)] border-[var(--border)]">
+      <CardHeader>
+        <CardTitle className="text-base font-semibold text-[var(--text)]">
+          Action Center
+        </CardTitle>
+        <CardDescription className="text-sm text-[var(--text-muted)]">
+          Next steps to grow your presence
+        </CardDescription>
+      </CardHeader>
+
+      <CardContent>
         {visibleItems.length === 0 ? (
           /* ── All-set state ── */
           <div className="py-6 text-center">
@@ -224,7 +225,7 @@ export function ActionCenter({
             )}
           </>
         )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

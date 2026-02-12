@@ -10,6 +10,7 @@ import {
 import { PlanBadge } from '../pricing/PlanBadge';
 import { apiPost } from '../../lib/api';
 import { supabase } from '../../lib/supabase';
+import { Card, CardHeader, CardTitle, CardAction, CardContent } from '../ui/card';
 
 /**
  * AccountStatusPanel — Right-column status overview for the artist dashboard.
@@ -125,15 +126,17 @@ export function AccountStatusPanel({
   return (
     <div className="space-y-5">
       {/* ══════ Plan & Limits Card ══════ */}
-      <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="text-base font-semibold text-[var(--text)]">
-              Plan & Limits
-            </h2>
+      <Card className="bg-[var(--surface-2)] border-[var(--border)]">
+        <CardHeader>
+          <CardTitle className="text-base font-semibold text-[var(--text)]">
+            Plan & Limits
+          </CardTitle>
+          <CardAction>
             <PlanBadge plan={plan} size="sm" />
-          </div>
+          </CardAction>
+        </CardHeader>
 
+        <CardContent>
           <div className="space-y-3">
             {/* Artworks usage */}
             <div className="flex items-center justify-between py-1">
@@ -190,24 +193,21 @@ export function AccountStatusPanel({
               </button>
             )}
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* ══════ Payouts Status Card ══════ */}
-      <div
-        id="payout-status-section"
-        className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl"
-      >
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-2">
+      <Card id="payout-status-section" className="bg-[var(--surface-2)] border-[var(--border)]">
+        <CardHeader>
+          <CardTitle className="text-base font-semibold text-[var(--text)]">
+            <span className="inline-flex items-center gap-2">
               <CreditCard className="w-4 h-4 text-[var(--text-muted)]" />
-              <h2 className="text-base font-semibold text-[var(--text)]">
-                Payouts
-              </h2>
-            </div>
-            {/* Status badge */}
-            {!payoutLoading && (
+              Payouts
+            </span>
+          </CardTitle>
+          {/* Status badge */}
+          {!payoutLoading && (
+            <CardAction>
               <span
                 className={`text-xs font-medium px-2.5 py-1 rounded-full ${
                   isPayoutReady
@@ -217,9 +217,11 @@ export function AccountStatusPanel({
               >
                 {isPayoutReady ? 'Connected' : 'Action needed'}
               </span>
-            )}
-          </div>
+            </CardAction>
+          )}
+        </CardHeader>
 
+        <CardContent>
           {payoutLoading ? (
             <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -302,8 +304,8 @@ export function AccountStatusPanel({
               </div>
             </div>
           )}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

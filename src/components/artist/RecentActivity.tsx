@@ -10,6 +10,7 @@ import {
   Activity,
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { Card, CardHeader, CardTitle, CardDescription, CardAction, CardContent } from '../ui/card';
 
 /**
  * RecentActivity — lightweight activity feed for the artist dashboard.
@@ -95,25 +96,24 @@ export function RecentActivity({ userId, onNavigate, compact = false }: RecentAc
 
   /* ── Render ──────────────────────────────────────────────────────── */
   return (
-    <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl">
-      <div className="p-6">
-        {/* Header — matches Plan & Limits */}
-        <div className="flex items-center justify-between mb-5">
-          <div>
-            <h2 className="text-base font-semibold text-[var(--text)]">
-              Recent Activity
-            </h2>
-            {!compact && (
-              <p className="text-sm text-[var(--text-muted)] mt-0.5">
-                Latest updates on your artwork
-              </p>
-            )}
-          </div>
-          {items.length > 0 && (
+    <Card className="bg-[var(--surface-2)] border-[var(--border)]">
+      <CardHeader>
+        <CardTitle className="text-base font-semibold text-[var(--text)]">
+          Recent Activity
+        </CardTitle>
+        {!compact && (
+          <CardDescription className="text-sm text-[var(--text-muted)]">
+            Latest updates on your artwork
+          </CardDescription>
+        )}
+        {items.length > 0 && (
+          <CardAction>
             <Activity className="w-4 h-4 text-[var(--text-muted)]" />
-          )}
-        </div>
+          </CardAction>
+        )}
+      </CardHeader>
 
+      <CardContent>
         {loading ? (
           /* Skeleton */
           <div className="space-y-3">
@@ -193,7 +193,7 @@ export function RecentActivity({ userId, onNavigate, compact = false }: RecentAc
             )}
           </>
         )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
