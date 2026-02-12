@@ -95,102 +95,105 @@ export function RecentActivity({ userId, onNavigate, compact = false }: RecentAc
 
   /* ── Render ──────────────────────────────────────────────────────── */
   return (
-    <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl overflow-hidden">
-      <div className={`flex items-center justify-between ${compact ? 'px-5 pt-5 pb-3' : 'px-6 pt-6 pb-4'}`}>
-        <div>
-          <h2 className="text-base font-semibold text-[var(--text)]">
-            Recent Activity
-          </h2>
-          {!compact && (
-            <p className="text-sm text-[var(--text-muted)] mt-1">
-              Latest updates on your artwork
-            </p>
+    <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl">
+      <div className="p-6">
+        {/* Header — matches Plan & Limits */}
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h2 className="text-base font-semibold text-[var(--text)]">
+              Recent Activity
+            </h2>
+            {!compact && (
+              <p className="text-sm text-[var(--text-muted)] mt-0.5">
+                Latest updates on your artwork
+              </p>
+            )}
+          </div>
+          {items.length > 0 && (
+            <Activity className="w-4 h-4 text-[var(--text-muted)]" />
           )}
         </div>
-        {items.length > 0 && (
-          <Activity className="w-4 h-4 text-[var(--text-muted)]" />
+
+        {loading ? (
+          /* Skeleton */
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex items-start gap-3 animate-pulse">
+                <div className="w-7 h-7 rounded-lg bg-[var(--skeleton)]" />
+                <div className="flex-1 space-y-1.5">
+                  <div className="h-3.5 bg-[var(--skeleton)] rounded w-3/4" />
+                  <div className="h-3 bg-[var(--skeleton)] rounded w-1/3" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : items.length === 0 ? (
+          /* Empty state */
+          <div className="py-4 text-center">
+            <div className="w-10 h-10 rounded-full bg-[var(--surface-3)] flex items-center justify-center mx-auto mb-3">
+              <Activity className="w-5 h-5 text-[var(--text-muted)]" />
+            </div>
+            <p className="text-sm font-semibold text-[var(--text)]">
+              No activity yet
+            </p>
+            <p className="text-xs text-[var(--text-muted)] leading-relaxed mt-1 max-w-xs mx-auto">
+              {compact
+                ? 'Activity will appear here as you use the platform.'
+                : 'Upload artwork, generate a QR code, place it at a venue — watch scans and sales roll in.'}
+            </p>
+            {!compact && (
+              <button
+                onClick={() => onNavigate('artist-artworks')}
+                className="mt-4 text-sm font-medium text-[var(--blue)] hover:underline"
+              >
+                Upload your first artwork →
+              </button>
+            )}
+          </div>
+        ) : (
+          /* Activity rows — all neutral icons */
+          <>
+            <div className="divide-y divide-[var(--border)]">
+              {items.map((item) => {
+                const Icon = iconForType[item.type] || Bell;
+                return (
+                  <div
+                    key={item.id}
+                    className={`flex items-start gap-3 ${compact ? 'py-3' : 'py-4'} first:pt-0 last:pb-0`}
+                  >
+                    <div className={`${compact ? 'w-7 h-7' : 'w-8 h-8'} rounded-lg bg-[var(--surface-3)] flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                      <Icon className={`${compact ? 'w-3.5 h-3.5' : 'w-4 h-4'} text-[var(--text-muted)]`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`${compact ? 'text-xs' : 'text-sm'} text-[var(--text)] leading-snug`}>
+                        {item.title}
+                      </p>
+                      {!compact && item.message && (
+                        <p className="text-sm text-[var(--text-muted)] mt-0.5 line-clamp-1">
+                          {item.message}
+                        </p>
+                      )}
+                    </div>
+                    <span className="text-xs text-[var(--text-muted)] flex-shrink-0 pt-0.5">
+                      {timeAgo(item.created_at)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            {compact && (
+              <div className="mt-3 pt-3 border-t border-[var(--border)]">
+                <button
+                  onClick={() => onNavigate('artist-performance')}
+                  className="text-xs font-medium text-[var(--blue)] hover:underline"
+                >
+                  View all activity →
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
-
-      {loading ? (
-        /* Skeleton */
-        <div className={`${compact ? 'px-5 pb-5' : 'px-6 pb-6'} space-y-3`}>
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="flex items-start gap-3 animate-pulse">
-              <div className="w-7 h-7 rounded-lg bg-[var(--skeleton)]" />
-              <div className="flex-1 space-y-1.5">
-                <div className="h-3.5 bg-[var(--skeleton)] rounded w-3/4" />
-                <div className="h-3 bg-[var(--skeleton)] rounded w-1/3" />
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : items.length === 0 ? (
-        /* Empty state */
-        <div className={`${compact ? 'px-5 pb-6 pt-2' : 'px-6 pb-8 pt-4'} text-center`}>
-          <div className="w-10 h-10 rounded-full bg-[var(--surface-3)] flex items-center justify-center mx-auto mb-3">
-            <Activity className="w-5 h-5 text-[var(--text-muted)]" />
-          </div>
-          <p className="text-sm font-semibold text-[var(--text)]">
-            No activity yet
-          </p>
-          <p className="text-xs text-[var(--text-muted)] leading-relaxed mt-1 max-w-xs mx-auto">
-            {compact
-              ? 'Activity will appear here as you use the platform.'
-              : 'Upload artwork, generate a QR code, place it at a venue — watch scans and sales roll in.'}
-          </p>
-          {!compact && (
-            <button
-              onClick={() => onNavigate('artist-artworks')}
-              className="mt-4 text-sm font-medium text-[var(--blue)] hover:underline"
-            >
-              Upload your first artwork →
-            </button>
-          )}
-        </div>
-      ) : (
-        /* Activity rows — all neutral icons */
-        <>
-          <div className="divide-y divide-[var(--border)]">
-            {items.map((item) => {
-              const Icon = iconForType[item.type] || Bell;
-              return (
-                <div
-                  key={item.id}
-                  className={`flex items-start gap-3 ${compact ? 'px-5 py-3' : 'px-6 py-4'}`}
-                >
-                  <div className={`${compact ? 'w-7 h-7' : 'w-8 h-8'} rounded-lg bg-[var(--surface-3)] flex items-center justify-center flex-shrink-0 mt-0.5`}>
-                    <Icon className={`${compact ? 'w-3.5 h-3.5' : 'w-4 h-4'} text-[var(--text-muted)]`} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className={`${compact ? 'text-xs' : 'text-sm'} text-[var(--text)] leading-snug`}>
-                      {item.title}
-                    </p>
-                    {!compact && item.message && (
-                      <p className="text-sm text-[var(--text-muted)] mt-0.5 line-clamp-1">
-                        {item.message}
-                      </p>
-                    )}
-                  </div>
-                  <span className="text-xs text-[var(--text-muted)] flex-shrink-0 pt-0.5">
-                    {timeAgo(item.created_at)}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-          {compact && (
-            <div className="px-5 py-3 border-t border-[var(--border)]">
-              <button
-                onClick={() => onNavigate('artist-performance')}
-                className="text-xs font-medium text-[var(--blue)] hover:underline"
-              >
-                View all activity →
-              </button>
-            </div>
-          )}
-        </>
-      )}
     </div>
   );
 }

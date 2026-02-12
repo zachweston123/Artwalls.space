@@ -30,7 +30,7 @@ interface ActionTileProps {
 function ActionTile({ item, onDismiss }: ActionTileProps) {
   return (
     <div
-      className="relative bg-[var(--surface-1)] border border-[var(--border)] rounded-xl p-5 group flex flex-col min-h-[148px] transition-colors duration-200 hover:border-[var(--blue)]/40 hover:bg-[var(--surface-3)]/30"
+      className="relative bg-[var(--surface-1)] border border-[var(--border)] rounded-xl p-5 group flex flex-col min-h-[148px] transition-all duration-200 hover:border-[var(--blue)]/55 hover:ring-1 hover:ring-[var(--blue)]/20 hover:bg-[var(--surface-3)]/40"
     >
       {/* Dismiss — top-right, appears on hover */}
       <button
@@ -175,17 +175,16 @@ export function ActionCenter({
   /* ── Render ──────────────────────────────────────────────────────── */
   return (
     <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl">
-      {/* Header */}
-      <div className="px-5 pt-5 pb-3 flex items-center justify-between">
-        <div>
-          <h2 className="text-base font-semibold text-[var(--text)]">Action Center</h2>
-          <p className="text-sm text-[var(--text-muted)] mt-0.5">
-            Next steps to grow your presence
-          </p>
+      <div className="p-6">
+        {/* Header — matches Plan & Limits */}
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h2 className="text-base font-semibold text-[var(--text)]">Action Center</h2>
+            <p className="text-sm text-[var(--text-muted)] mt-0.5">
+              Next steps to grow your presence
+            </p>
+          </div>
         </div>
-      </div>
-
-      <div className="px-5 pb-5">
         {visibleItems.length === 0 ? (
           /* ── All-set state ── */
           <div className="py-6 text-center">
