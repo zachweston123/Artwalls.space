@@ -32,7 +32,7 @@ function StatCard({
     <Comp
       onClick={onClick}
       className={cn(
-        "group bg-[var(--surface-2)] border border-[var(--border)] rounded-xl p-6 text-left transition-all duration-200",
+        "group bg-[var(--surface-2)] border border-[var(--border)] rounded-xl p-5 text-left transition-all duration-200",
         onClick &&
           "hover:border-[var(--border-hover)] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]",
         className,
@@ -43,8 +43,8 @@ function StatCard({
           <span className="w-4 h-4 text-[var(--text-muted)]">{icon}</span>
         </div>
       )}
-      <div className="text-3xl font-semibold text-[var(--text)] leading-none mt-4">{value}</div>
-      <div className="text-sm font-medium text-[var(--text-muted)] mt-2">{label}</div>
+      <div className="text-2xl font-semibold text-[var(--text)] leading-none mt-3">{value}</div>
+      <div className="text-sm font-medium text-[var(--text-muted)] mt-1.5">{label}</div>
       {subtext && <div className="text-xs text-[var(--text-muted)] leading-relaxed mt-1">{subtext}</div>}
     </Comp>
   );

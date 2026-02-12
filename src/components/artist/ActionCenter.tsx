@@ -3,15 +3,11 @@ import { UserCircle, Image, CreditCard, MapPin, X, CheckCircle2 } from 'lucide-r
 import type { ReactNode } from 'react';
 
 /**
- * ActionCenter — prioritised next-step checklist for the artist dashboard.
+ * ActionCenter — compact tile-grid of prioritised next steps.
  *
- * Each item is derived from data already available at the dashboard level:
- *   • profileComplete / profilePercentage → from calculateProfileCompleteness()
- *   • artworksCount                       → stats.artworks.total
- *   • payoutsConnected                    → stripe connect status (hasAccount + payoutsEnabled)
- *   • pendingApplications                 → stats.applications.pending
- *
- * Items are dismissible per-session (local state).
+ * Shows up to 4 actions as a 2×2 tile grid on desktop so the dashboard
+ * stays above-the-fold without scrolling. Additional actions are
+ * accessible via a "View all" link.
  */
 
 interface ActionItem {
@@ -58,13 +54,13 @@ export function ActionCenter({
   if (profileComplete === false) {
     items.push({
       id: 'complete-profile',
-      icon: <UserCircle className="w-5 h-5" />,
+      icon: <UserCircle className="w-4 h-4" />,
       title: 'Complete your profile',
-      description: 'Venues are more likely to invite artists with complete profiles.',
+      description: 'Venues prefer artists with full profiles.',
       cta: 'Complete profile',
       onAction: () => onNavigate('artist-profile'),
       progress:
-        profilePercentage != null ? `${profilePercentage}% complete` : undefined,
+        profilePercentage != null ? `${profilePercentage}%` : undefined,
     });
   }
 
@@ -72,15 +68,15 @@ export function ActionCenter({
   if (artworksCount < 3) {
     items.push({
       id: 'add-artworks',
-      icon: <Image className="w-5 h-5" />,
-      title: artworksCount === 0 ? 'Upload your first artwork' : 'Add more artworks',
+      icon: <Image className="w-4 h-4" />,
+      title: artworksCount === 0 ? 'Upload artwork' : 'Add more artworks',
       description:
         artworksCount === 0
-          ? 'Get started by uploading artwork to your portfolio.'
-          : 'Having at least 3 pieces helps venues discover your work.',
+          ? 'Upload your first piece to get started.'
+          : 'At least 3 pieces helps venues find you.',
       cta: 'Manage artworks',
       onAction: () => onNavigate('artist-artworks'),
-      progress: `${artworksCount}/3 artworks`,
+      progress: `${artworksCount}/3`,
     });
   }
 
@@ -88,15 +84,14 @@ export function ActionCenter({
   if (payoutsConnected === false) {
     items.push({
       id: 'connect-payouts',
-      icon: <CreditCard className="w-5 h-5" />,
+      icon: <CreditCard className="w-4 h-4" />,
       title: 'Connect payouts',
-      description: 'Set up Stripe to receive payments when your art sells.',
+      description: 'Set up Stripe to receive payments.',
       cta: 'Set up payouts',
       onAction: () => {
         if (onPayoutSetup) {
           onPayoutSetup();
         } else {
-          // Fallback: scroll to payout section in AccountStatusPanel
           const el = document.getElementById('payout-status-section');
           if (el) el.scrollIntoView({ behavior: 'smooth' });
         }
@@ -108,92 +103,114 @@ export function ActionCenter({
   if (pendingApplications === 0 && artworksCount >= 1) {
     items.push({
       id: 'find-venues',
-      icon: <MapPin className="w-5 h-5" />,
-      title: 'Find venues for your art',
-      description: 'Discover venues looking for artwork or invite one directly.',
+      icon: <MapPin className="w-4 h-4" />,
+      title: 'Find venues',
+      description: 'Discover venues or invite one directly.',
       cta: 'Discover venues',
       onAction: () => onNavigate('artist-venues'),
     });
   }
 
-  const visibleItems = items.filter((item) => !dismissed.has(item.id));
+  const allVisible = items.filter((item) => !dismissed.has(item.id));
+  const visibleItems = allVisible.slice(0, 4);
+  const hasMore = allVisible.length > 4;
 
   /* ── Render ──────────────────────────────────────────────────────── */
   return (
-    <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl overflow-hidden">
+    <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl">
       {/* Header */}
-      <div className="px-6 pt-6 pb-4">
-        <h2 className="text-base font-semibold text-[var(--text)]">Action Center</h2>
-        <p className="text-sm text-[var(--text-muted)] mt-1">
-          Next steps to grow your presence
-        </p>
+      <div className="px-5 pt-5 pb-3 flex items-center justify-between">
+        <div>
+          <h2 className="text-base font-semibold text-[var(--text)]">Action Center</h2>
+          <p className="text-sm text-[var(--text-muted)] mt-0.5">
+            Next steps to grow your presence
+          </p>
+        </div>
       </div>
 
-      {visibleItems.length === 0 ? (
-        /* ── All-set state ── */
-        <div className="px-6 pb-8 pt-4 text-center">
-          <div className="w-10 h-10 rounded-full bg-[var(--surface-3)] flex items-center justify-center mx-auto mb-3">
-            <CheckCircle2 className="w-5 h-5 text-[var(--text-muted)]" />
-          </div>
-          <p className="text-sm font-semibold text-[var(--text)]">You're all set!</p>
-          <p className="text-sm text-[var(--text-muted)] leading-relaxed mt-1 max-w-[260px] mx-auto">
-            Your profile is looking great. Keep creating and connecting with venues.
-          </p>
-          <button
-            onClick={() => onNavigate('artist-venues')}
-            className="mt-4 text-sm font-medium text-[var(--blue)] hover:underline"
-          >
-            Find venues →
-          </button>
-        </div>
-      ) : (
-        /* ── Action rows ── */
-        <div className="divide-y divide-[var(--border)]">
-          {visibleItems.map((item) => (
-            <div
-              key={item.id}
-              className="px-6 py-4 flex items-start gap-4 group"
+      <div className="px-5 pb-5">
+        {visibleItems.length === 0 ? (
+          /* ── All-set state ── */
+          <div className="py-6 text-center">
+            <div className="w-10 h-10 rounded-full bg-[var(--surface-3)] flex items-center justify-center mx-auto mb-3">
+              <CheckCircle2 className="w-5 h-5 text-[var(--text-muted)]" />
+            </div>
+            <p className="text-sm font-semibold text-[var(--text)]">You're all set!</p>
+            <p className="text-sm text-[var(--text-muted)] leading-relaxed mt-1 max-w-[240px] mx-auto">
+              Keep creating and connecting with venues.
+            </p>
+            <button
+              onClick={() => onNavigate('artist-venues')}
+              className="mt-3 text-sm font-medium text-[var(--blue)] hover:underline"
             >
-              {/* Icon — neutral, matching pricing */}
-              <div className="w-9 h-9 rounded-lg bg-[var(--surface-3)] flex items-center justify-center flex-shrink-0 text-[var(--text-muted)] mt-0.5">
-                {item.icon}
-              </div>
+              Find venues →
+            </button>
+          </div>
+        ) : (
+          /* ── Tile grid ── */
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {visibleItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="relative bg-[var(--surface-1)] border border-[var(--border)] rounded-lg p-4 group"
+                >
+                  {/* Dismiss */}
+                  <button
+                    onClick={() => dismiss(item.id)}
+                    className="absolute top-2.5 right-2.5 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity p-1 rounded text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-3)]"
+                    aria-label={`Dismiss ${item.title}`}
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
 
-              {/* Content */}
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-[var(--text)]">
-                  {item.title}
-                </p>
-                <p className="text-sm text-[var(--text-muted)] leading-relaxed mt-0.5">
-                  {item.description}
-                </p>
-                <div className="flex items-center gap-3 mt-2.5">
+                  {/* Icon */}
+                  <div className="w-8 h-8 rounded-lg bg-[var(--surface-3)] flex items-center justify-center text-[var(--text-muted)] mb-2.5">
+                    {item.icon}
+                  </div>
+
+                  {/* Title + progress */}
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium text-[var(--text)] leading-snug">
+                      {item.title}
+                    </p>
+                    {item.progress && (
+                      <span className="text-xs text-[var(--text-muted)] tabular-nums">
+                        {item.progress}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Description (truncated) */}
+                  <p className="text-xs text-[var(--text-muted)] leading-relaxed mt-1 line-clamp-2">
+                    {item.description}
+                  </p>
+
+                  {/* CTA */}
                   <button
                     onClick={item.onAction}
-                    className="text-sm font-medium text-[var(--blue)] hover:underline"
+                    className="mt-2.5 text-xs font-medium text-[var(--blue)] hover:underline"
                   >
                     {item.cta} →
                   </button>
-                  {item.progress && (
-                    <span className="text-xs text-[var(--text-muted)]">
-                      {item.progress}
-                    </span>
-                  )}
                 </div>
-              </div>
-
-              {/* Dismiss */}
-              <button
-                onClick={() => dismiss(item.id)}
-                className="mt-0.5 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity p-1.5 rounded-md text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-3)]"
-                aria-label={`Dismiss ${item.title}`}
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
+              ))}
             </div>
-          ))}
-        </div>
-      )}
+
+            {/* View all link */}
+            {hasMore && (
+              <div className="mt-3 text-center">
+                <button
+                  onClick={() => onNavigate('artist-profile')}
+                  className="text-sm font-medium text-[var(--blue)] hover:underline"
+                >
+                  View all actions →
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }

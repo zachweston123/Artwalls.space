@@ -9,6 +9,7 @@ import MomentumBanner from './MomentumBanner';
 import { ActionCenter } from './ActionCenter';
 import { AccountStatusPanel } from './AccountStatusPanel';
 import { RecentActivity } from './RecentActivity';
+import { QuickActions } from './QuickActions';
 
 /**
  * ConnectStatus — Stripe Connect payout state.
@@ -277,10 +278,10 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
         />
       </div>
 
-      {/* ═══════ TWO-COLUMN: Action Center + Status ═══════ */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6 mb-8">
-        {/* LEFT — Action Center (3/5 width on desktop) */}
-        <div className="lg:col-span-3">
+      {/* ═══════ THREE-COLUMN LAYOUT (12-col grid) ═══════ */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* LEFT — Action Center (tiles) */}
+        <div className="lg:col-span-4">
           <ActionCenter
             profilePercentage={profileResult?.percentage ?? null}
             profileComplete={profileResult?.isComplete ?? null}
@@ -291,8 +292,8 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
           />
         </div>
 
-        {/* RIGHT — Account Status (2/5 width on desktop) */}
-        <div className="lg:col-span-2">
+        {/* MIDDLE — Plan & Limits + Payouts */}
+        <div className="lg:col-span-5">
           <AccountStatusPanel
             plan={currentPlan}
             limits={stats?.subscription?.limits ?? { artworks: 3, activeDisplays: 1 }}
@@ -306,10 +307,13 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
             onPayoutRefresh={refreshPayoutStatus}
           />
         </div>
-      </div>
 
-      {/* ═══════ RECENT ACTIVITY (full-width below) ═══════ */}
-      <RecentActivity userId={user.id} onNavigate={onNavigate} />
+        {/* RIGHT — Recent Activity (compact) + Quick Actions */}
+        <div className="lg:col-span-3 space-y-5">
+          <RecentActivity userId={user.id} onNavigate={onNavigate} compact />
+          <QuickActions onNavigate={onNavigate} />
+        </div>
+      </div>
     </div>
   );
 }
