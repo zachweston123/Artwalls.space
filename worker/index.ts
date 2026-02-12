@@ -7,10 +7,17 @@ import {
   isValidEmail,
   generateInviteToken,
   generateReferralToken,
-  rateLimitByIp,
-  getClientIp,
   getErrorMessage,
 } from './helpers';
+import {
+  checkRateLimit,
+  getClientIp,
+  userIdFromJwt,
+  enforceBodySize,
+  stripeIdempotencyKey,
+  ROUTE_LIMITS,
+  type RateLimitContext,
+} from './rateLimit';
 import {
   calculatePricingBreakdown,
   calculateApplicationFeeCents,
@@ -44,6 +51,9 @@ type Env = {
   STRIPE_PRICE_ID_STARTER?: string;
   STRIPE_PRICE_ID_GROWTH?: string;
   STRIPE_PRICE_ID_PRO?: string;
+  // Rate limiting
+  RATE_LIMIT_ENABLED?: string;
+  RATE_LIMIT_KV?: any;   // KV namespace binding (optional — falls back to in-memory)
 };
 
 export default {
@@ -106,6 +116,44 @@ export default {
     //    produce a Cloudflare error page with NO CORS headers, which browsers
     //    report as "Failed to fetch" / CORS blocked. ──
     try {
+
+    // ── Rate limiting helpers ──
+    const rateLimitEnabled = (env.RATE_LIMIT_ENABLED ?? 'true') !== 'false';
+    const kvStore = env.RATE_LIMIT_KV || null;
+
+    /**
+     * Check rate limits for a given route preset.
+     * Returns null if allowed, or a 429 Response if blocked.
+     * artworkId is optional — only pass for checkout-type endpoints.
+     */
+    async function applyRateLimit(
+      preset: string,
+      req: Request,
+      artworkId?: string | null,
+    ): Promise<Response | null> {
+      if (!rateLimitEnabled) return null;
+      const rules = ROUTE_LIMITS[preset];
+      if (!rules) return null;
+      const ctx: RateLimitContext = {
+        ip: getClientIp(req),
+        userId: userIdFromJwt(req),
+        artworkId: artworkId || null,
+        route: new URL(req.url).pathname,
+      };
+      const result = await checkRateLimit(rules, ctx, kvStore);
+      if (result.allowed) return null;
+      console.log(`[rate-limit] 429 on ${preset} by rule=${result.blockedBy} ip=${ctx.ip.slice(0, 8)}…`);
+      return json(
+        { error: 'rate_limited', retryAfterSec: result.retryAfterSec },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(result.retryAfterSec),
+            'Cache-Control': 'no-store',
+          },
+        },
+      );
+    }
 
     // Twilio SMS helper (available to all routes)
     async function sendSms(to: string, body: string): Promise<void> {
@@ -498,8 +546,8 @@ export default {
       const sessionId = String(payload?.session_id || '').trim();
       if (!sessionId) return json({ error: 'Missing session_id' }, { status: 400 });
 
-      const rate = rateLimitByIp(getClientIp(request), 30, 60_000);
-      if (!rate.ok) return json({ error: 'Rate limit exceeded' }, { status: 429 });
+      const rlTrack = await applyRateLimit('track', request);
+      if (rlTrack) return rlTrack;
 
       const user = await getSupabaseUserFromRequest(request);
 
@@ -553,8 +601,8 @@ export default {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
       const user = await getSupabaseUserFromRequest(request);
       if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
-      const rl = rateLimitByIp(getClientIp(request), 30, 60_000);
-      if (!rl.ok) return json({ error: 'Rate limit exceeded' }, { status: 429 });
+      const rlBanner = await applyRateLimit('misc-write', request);
+      if (rlBanner) return rlBanner;
 
       const { error: updErr } = await supabaseAdmin
         .from('artists')
@@ -793,8 +841,8 @@ export default {
       const user = await getSupabaseUserFromRequest(request);
       if (!user) return json({ error: 'Missing or invalid Authorization bearer token' }, { status: 401 });
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
-      const rl = rateLimitByIp(getClientIp(request), 10, 60_000);
-      if (!rl.ok) return json({ error: 'Rate limit exceeded' }, { status: 429 });
+      const rlProv = await applyRateLimit('profile-provision', request);
+      if (rlProv) return rlProv;
 
       const body = await request.json().catch(() => ({} as any));
       const role = (user.user_metadata?.role as string) || 'artist';
@@ -1321,8 +1369,8 @@ export default {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
       // Venues are explicitly excluded; all other roles (artist, undefined, null) are treated as artist
       if (user!.user_metadata?.role === 'venue') return json({ error: 'Artist role required (venue accounts cannot use this endpoint)' }, { status: 403 });
-      const rl = rateLimitByIp(getClientIp(request), 10, 60_000);
-      if (!rl.ok) return json({ error: 'Rate limit exceeded' }, { status: 429 });
+      const rlCreate = await applyRateLimit('stripe-connect-artist-create', request);
+      if (rlCreate) return rlCreate;
 
       // Check if already has account
       const { data: artist } = await supabaseAdmin.from('artists').select('stripe_account_id,email,name').eq('id', user!.id).maybeSingle();
@@ -1357,8 +1405,8 @@ export default {
       if (authErr) return authErr;
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
       if (user!.user_metadata?.role === 'venue') return json({ error: 'Artist role required (venue accounts cannot use this endpoint)' }, { status: 403 });
-      const rl = rateLimitByIp(getClientIp(request), 10, 60_000);
-      if (!rl.ok) return json({ error: 'Rate limit exceeded' }, { status: 429 });
+      const rlLink = await applyRateLimit('stripe-connect-artist-link', request);
+      if (rlLink) return rlLink;
 
       const { data: artist } = await supabaseAdmin.from('artists').select('stripe_account_id').eq('id', user!.id).maybeSingle();
       if (!artist?.stripe_account_id) return json({ error: 'No Stripe account. Call /create-account first.' }, { status: 400 });
@@ -1389,8 +1437,8 @@ export default {
       const authErr = requireAuthOrFail(request, user);
       if (authErr) return authErr;
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
-      const rl = rateLimitByIp(getClientIp(request), 10, 60_000);
-      if (!rl.ok) return json({ error: 'Rate limit exceeded' }, { status: 429 });
+      const rlLogin = await applyRateLimit('stripe-connect-artist-login', request);
+      if (rlLogin) return rlLogin;
 
       const { data: artist } = await supabaseAdmin.from('artists').select('stripe_account_id').eq('id', user!.id).maybeSingle();
       if (!artist?.stripe_account_id) return json({ error: 'No Stripe account yet' }, { status: 400 });
@@ -1448,8 +1496,8 @@ export default {
       if (authErr) return authErr;
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
       if (user!.user_metadata?.role !== 'venue') return json({ error: 'Venue role required' }, { status: 403 });
-      const rl = rateLimitByIp(getClientIp(request), 10, 60_000);
-      if (!rl.ok) return json({ error: 'Rate limit exceeded' }, { status: 429 });
+      const rlVCreate = await applyRateLimit('stripe-connect-venue-create', request);
+      if (rlVCreate) return rlVCreate;
 
       const { data: venue } = await supabaseAdmin.from('venues').select('stripe_account_id,email,name,default_venue_fee_bps').eq('id', user!.id).maybeSingle();
       if (venue?.stripe_account_id) return json({ accountId: venue.stripe_account_id, alreadyExists: true });
@@ -1483,8 +1531,8 @@ export default {
       if (authErr) return authErr;
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
       if (user!.user_metadata?.role !== 'venue') return json({ error: 'Venue role required' }, { status: 403 });
-      const rl = rateLimitByIp(getClientIp(request), 10, 60_000);
-      if (!rl.ok) return json({ error: 'Rate limit exceeded' }, { status: 429 });
+      const rlVLink = await applyRateLimit('stripe-connect-venue-link', request);
+      if (rlVLink) return rlVLink;
 
       const { data: venue } = await supabaseAdmin.from('venues').select('stripe_account_id').eq('id', user!.id).maybeSingle();
       if (!venue?.stripe_account_id) return json({ error: 'No Stripe account. Call /create-account first.' }, { status: 400 });
@@ -1515,8 +1563,8 @@ export default {
       const authErr = requireAuthOrFail(request, user);
       if (authErr) return authErr;
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
-      const rl = rateLimitByIp(getClientIp(request), 10, 60_000);
-      if (!rl.ok) return json({ error: 'Rate limit exceeded' }, { status: 429 });
+      const rlVLogin = await applyRateLimit('stripe-connect-venue-login', request);
+      if (rlVLogin) return rlVLogin;
 
       const { data: venue } = await supabaseAdmin.from('venues').select('stripe_account_id').eq('id', user!.id).maybeSingle();
       if (!venue?.stripe_account_id) return json({ error: 'No Stripe account yet' }, { status: 400 });
@@ -1570,12 +1618,18 @@ export default {
     // Create marketplace checkout session for artwork purchase
     if (url.pathname === '/api/stripe/create-checkout-session' && method === 'POST') {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
-      const rl = rateLimitByIp(getClientIp(request), 10, 60_000);
-      if (!rl.ok) return json({ error: 'Rate limit exceeded' }, { status: 429 });
+
+      // Enforce body size before parsing
+      const bodySizeErr = await enforceBodySize(request, 32_768);
+      if (bodySizeErr) return json({ error: bodySizeErr.error }, { status: bodySizeErr.status });
 
       const body = await request.json().catch(() => ({}));
       const artworkId = body?.artworkId;
       if (!artworkId || !isUUID(artworkId)) return json({ error: 'Invalid artworkId' }, { status: 400 });
+
+      // Per-route rate limit with artworkId dimension
+      const rlCheckout = await applyRateLimit('stripe-checkout', request, artworkId);
+      if (rlCheckout) return rlCheckout;
 
       // Look up artwork
       const { data: artwork, error: artErr } = await supabaseAdmin
@@ -1658,10 +1712,16 @@ export default {
       }
 
       try {
+        // Deterministic idempotency key prevents duplicate sessions on retries
+        const identity = userIdFromJwt(request) || getClientIp(request);
+        const idempotencyKey = await stripeIdempotencyKey(artworkId, identity);
         const sessResp = await stripeFetch('/v1/checkout/sessions', {
           method: 'POST',
           body: toForm(formData),
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Idempotency-Key': idempotencyKey,
+          },
         });
         const sess = await sessResp.json() as any;
         if (!sessResp.ok) {
@@ -1693,8 +1753,8 @@ export default {
       if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
       if (user.user_metadata?.role === 'venue') return json({ error: 'Only artists can subscribe' }, { status: 403 });
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
-      const rl = rateLimitByIp(getClientIp(request), 5, 60_000);
-      if (!rl.ok) return json({ error: 'Rate limit exceeded' }, { status: 429 });
+      const rlSub = await applyRateLimit('stripe-subscription', request);
+      if (rlSub) return rlSub;
 
       const body = await request.json().catch(() => ({}));
       const tier = String(body?.tier || '').toLowerCase();
@@ -1758,8 +1818,8 @@ export default {
       const user = await getSupabaseUserFromRequest(request);
       if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
-      const rl = rateLimitByIp(getClientIp(request), 10, 60_000);
-      if (!rl.ok) return json({ error: 'Rate limit exceeded' }, { status: 429 });
+      const rlPortal = await applyRateLimit('stripe-portal', request);
+      if (rlPortal) return rlPortal;
 
       const { data: artist } = await supabaseAdmin.from('artists').select('stripe_customer_id,email,name').eq('id', user.id).maybeSingle();
       let customerId = artist?.stripe_customer_id;
@@ -2168,8 +2228,8 @@ export default {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
       const user = await requireVenue(request);
       if (!user) return json({ error: 'Missing or invalid Authorization bearer token (venue required)' }, { status: 401 });
-      const rl = rateLimitByIp(getClientIp(request), 20, 60_000);
-      if (!rl.ok) return json({ error: 'Rate limit exceeded' }, { status: 429 });
+      const rlWsCreate = await applyRateLimit('wallspace-write', request);
+      if (rlWsCreate) return rlWsCreate;
       const parts = url.pathname.split('/');
       const venueId = parts[3];
       if (!venueId) return json({ error: 'Missing venue id' }, { status: 400 });
@@ -2214,8 +2274,8 @@ export default {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
       const user = await requireVenue(request);
       if (!user) return json({ error: 'Missing or invalid Authorization bearer token (venue required)' }, { status: 401 });
-      const rl = rateLimitByIp(getClientIp(request), 30, 60_000);
-      if (!rl.ok) return json({ error: 'Rate limit exceeded' }, { status: 429 });
+      const rlWsUpdate = await applyRateLimit('wallspace-write', request);
+      if (rlWsUpdate) return rlWsUpdate;
       const parts = url.pathname.split('/');
       const wallId = parts[3];
       if (!wallId) return json({ error: 'Missing wallspace id' }, { status: 400 });
@@ -2353,9 +2413,8 @@ export default {
       if (!userId && !sessionId) return json({ error: 'Session ID required for anonymous reactions' }, { status: 400 });
 
       // Rate limit
-      const ip = getClientIp(request);
-      const { ok } = rateLimitByIp(ip, 60, 60000); // 60/min
-      if (!ok) return json({ error: 'Rate limit exceeded' }, { status: 429 });
+      const rlReact = await applyRateLimit('reactions', request);
+      if (rlReact) return rlReact;
 
       // Find existing
       let query = supabaseAdmin.from('artwork_reactions')
@@ -2587,8 +2646,8 @@ export default {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
       const role = (user.user_metadata?.role as string) || 'artist';
       if (role !== 'artist') return json({ error: 'Only artists can create artworks' }, { status: 403 });
-      const rl = rateLimitByIp(getClientIp(request), 20, 60_000);
-      if (!rl.ok) return json({ error: 'Rate limit exceeded' }, { status: 429 });
+      const rlArtCreate = await applyRateLimit('artwork-create', request);
+      if (rlArtCreate) return rlArtCreate;
       const payload = await request.json().catch(() => ({}));
       const priceNumber = Number(payload?.price);
       const price_cents = Number.isFinite(priceNumber) ? Math.round(priceNumber * 100) : 0;
@@ -2747,8 +2806,8 @@ export default {
       const allowed = new Set(['qr_scan', 'view_artwork', 'start_checkout', 'purchase', 'like']);
       if (!allowed.has(eventType)) return json({ error: 'Invalid event_type' }, { status: 400 });
 
-      const rate = rateLimitByIp(getClientIp(request), 60, 60_000);
-      if (!rate.ok) return json({ error: 'Rate limit exceeded' }, { status: 429 });
+      const rlEvents = await applyRateLimit('events', request);
+      if (rlEvents) return rlEvents;
 
       const user = await getSupabaseUserFromRequest(request);
       const artworkId = payload?.artwork_id || null;
@@ -2775,8 +2834,8 @@ export default {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
       const user = await requireVenue(request);
       if (!user) return json({ error: 'Missing or invalid Authorization bearer token (venue required)' }, { status: 401 });
-      const rl = rateLimitByIp(getClientIp(request), 20, 60_000);
-      if (!rl.ok) return json({ error: 'Rate limit exceeded' }, { status: 429 });
+      const rlApprove = await applyRateLimit('artwork-approve', request);
+      if (rlApprove) return rlApprove;
       const parts = url.pathname.split('/');
       const id = parts[3];
       if (!id) return json({ error: 'Missing artwork id' }, { status: 400 });
@@ -2827,8 +2886,8 @@ export default {
     if (url.pathname === '/api/artists' && method === 'POST') {
       try {
         if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
-        const rl = rateLimitByIp(getClientIp(request), 20, 60_000);
-        if (!rl.ok) return json({ error: 'Rate limit exceeded' }, { status: 429 });
+        const rlArtist = await applyRateLimit('profile-upsert', request);
+        if (rlArtist) return rlArtist;
         
         let payload: any = {};
         try {
@@ -2870,8 +2929,8 @@ export default {
     // Upsert venue profile (used by app bootstrap)
     if (url.pathname === '/api/venues' && method === 'POST') {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
-      const rl = rateLimitByIp(getClientIp(request), 20, 60_000);
-      if (!rl.ok) return json({ error: 'Rate limit exceeded' }, { status: 429 });
+      const rlVenue = await applyRateLimit('profile-upsert', request);
+      if (rlVenue) return rlVenue;
       const payload = await request.json().catch(() => ({}));
       const id = String(payload?.venueId || '').trim();
       if (!id) return json({ error: 'Missing venueId' }, { status: 400 });
@@ -2901,8 +2960,8 @@ export default {
     // POST /api/support/messages — public contact form submission
     if (url.pathname === '/api/support/messages' && method === 'POST') {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
-      const rl = rateLimitByIp(getClientIp(request), 5, 60_000);
-      if (!rl.ok) return json({ error: 'Rate limit exceeded' }, { status: 429 });
+      const rlSupport = await applyRateLimit('support', request);
+      if (rlSupport) return rlSupport;
 
       const payload = await request.json().catch(() => ({}));
       const email = clampStr(payload?.email, 254)?.trim() || '';

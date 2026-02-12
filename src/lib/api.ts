@@ -84,9 +84,14 @@ export async function apiGet<T>(path: string): Promise<T> {
     let errorMsg = `Request failed: ${res.status}`;
     try {
       const errorData = await res.json();
+      if (res.status === 429 || errorData?.error === 'rate_limited') {
+        const retryAfter = errorData?.retryAfterSec || res.headers.get('Retry-After') || 60;
+        throw new Error(`Too many requests. Please wait ${retryAfter} seconds and try again.`);
+      }
       const extracted = errorData?.error ?? errorData?.message ?? errorMsg;
       errorMsg = typeof extracted === 'string' ? extracted : JSON.stringify(extracted);
-    } catch {
+    } catch (parseErr) {
+      if (parseErr instanceof Error && parseErr.message.startsWith('Too many requests')) throw parseErr;
       const text = await res.text().catch(() => '');
       errorMsg = text || errorMsg;
     }
@@ -134,10 +139,17 @@ export async function apiPost<T>(path: string, body: unknown, headers?: Record<s
     let errorMsg = `Request failed: ${res.status}`;
     try {
       const errorData = await res.json();
+      // Handle rate limiting with a user-friendly message
+      if (res.status === 429 || errorData?.error === 'rate_limited') {
+        const retryAfter = errorData?.retryAfterSec || res.headers.get('Retry-After') || 60;
+        throw new Error(`Too many requests. Please wait ${retryAfter} seconds and try again.`);
+      }
       const extracted = errorData?.error ?? errorData?.message ?? errorMsg;
       // Guard against non-string values turning into "[object Object]"
       errorMsg = typeof extracted === 'string' ? extracted : JSON.stringify(extracted);
-    } catch {
+    } catch (parseErr) {
+      // Re-throw if it's our rate-limit error
+      if (parseErr instanceof Error && parseErr.message.startsWith('Too many requests')) throw parseErr;
       // If not JSON, use status text
       errorMsg = res.statusText || errorMsg;
     }

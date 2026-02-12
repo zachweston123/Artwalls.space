@@ -14,6 +14,14 @@ routes = [
 [vars]
 API_BASE_URL = "https://artwalls.space"
 PAGES_ORIGIN = "https://artwalls.space"
+RATE_LIMIT_ENABLED = "true"
+
+# KV namespace for durable rate-limit counters.
+# Create it once:  npx wrangler kv namespace create RATE_LIMIT_KV
+# Then paste the id below. Until you do, the worker falls back to in-memory.
+# [[kv_namespaces]]
+# binding = "RATE_LIMIT_KV"
+# id = "<paste id from wrangler kv namespace create>"
 
 # Stripe Price IDs — set via `wrangler secret put` or CI secrets, NOT here
 # wrangler secret put STRIPE_SUB_PRICE_STARTER
