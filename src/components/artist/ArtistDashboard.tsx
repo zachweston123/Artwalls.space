@@ -232,17 +232,17 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
       )}
 
       {/* ═══════ HEADER ═══════ */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-[var(--text)] leading-tight">
+      <div className="mb-8">
+        <h1 className="text-2xl sm:text-3xl font-semibold text-[var(--text)] leading-tight tracking-tight">
           Welcome back, {user?.name?.split(' ')[0] || 'Artist'}
         </h1>
-        <p className="text-sm text-[var(--text-muted)] mt-1">
+        <p className="text-sm text-[var(--text-muted)] leading-relaxed mt-2">
           Here's what's happening with your artwork
         </p>
       </div>
 
       {/* ═══════ KPI STAT CARDS (top row) ═══════ */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mb-8">
         <StatCard
           label="Active Artworks"
           value={activeArtworks}
@@ -278,7 +278,7 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
       </div>
 
       {/* ═══════ TWO-COLUMN: Action Center + Status ═══════ */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-5 mb-8">
         {/* LEFT — Action Center (3/5 width on desktop) */}
         <div className="lg:col-span-3">
           <ActionCenter

@@ -122,26 +122,26 @@ export function ActionCenter({
   return (
     <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-xl overflow-hidden">
       {/* Header */}
-      <div className="px-5 py-4 border-b border-[var(--border)]">
-        <h2 className="text-base font-semibold text-[var(--text)]">Action Center</h2>
-        <p className="text-xs text-[var(--text-muted)] mt-0.5">
+      <div className="px-5 pt-5 pb-4 border-b border-[var(--border)]">
+        <h2 className="text-[15px] font-semibold text-[var(--text)] leading-none">Action Center</h2>
+        <p className="text-xs text-[var(--text-muted)] leading-normal mt-1.5">
           Next steps to grow your presence
         </p>
       </div>
 
       {visibleItems.length === 0 ? (
         /* ── All-set state ── */
-        <div className="px-5 py-8 text-center">
-          <div className="w-10 h-10 rounded-full bg-[var(--green-muted)] flex items-center justify-center mx-auto mb-3">
+        <div className="px-5 py-10 text-center">
+          <div className="w-10 h-10 rounded-full bg-[var(--green-muted)] flex items-center justify-center mx-auto mb-4">
             <CheckCircle2 className="w-5 h-5 text-[var(--green)]" />
           </div>
-          <p className="text-sm font-medium text-[var(--text)]">You're all set!</p>
-          <p className="text-xs text-[var(--text-muted)] mt-1 max-w-[220px] mx-auto">
+          <p className="text-sm font-semibold text-[var(--text)] leading-normal">You're all set!</p>
+          <p className="text-xs text-[var(--text-muted)] leading-relaxed mt-1.5 max-w-[240px] mx-auto">
             Your profile is looking great. Keep creating and connecting with venues.
           </p>
           <button
             onClick={() => onNavigate('artist-venues')}
-            className="mt-3 text-sm text-[var(--blue)] hover:underline font-medium"
+            className="mt-4 text-sm text-[var(--blue)] hover:underline font-medium"
           >
             Find venues →
           </button>
@@ -152,22 +152,22 @@ export function ActionCenter({
           {visibleItems.map((item) => (
             <div
               key={item.id}
-              className="px-5 py-4 flex items-start gap-3 group"
+              className="px-5 py-4 flex items-start gap-3.5 group"
             >
               {/* Icon */}
-              <div className="w-9 h-9 rounded-lg bg-[var(--blue-muted)] flex items-center justify-center flex-shrink-0 text-[var(--blue)]">
+              <div className="w-9 h-9 rounded-lg bg-[var(--blue-muted)] flex items-center justify-center flex-shrink-0 text-[var(--blue)] mt-0.5">
                 {item.icon}
               </div>
 
               {/* Content */}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-[var(--text)]">
+                <p className="text-[13px] font-semibold text-[var(--text)] leading-normal">
                   {item.title}
                 </p>
-                <p className="text-xs text-[var(--text-muted)] mt-0.5">
+                <p className="text-xs text-[var(--text-muted)] leading-relaxed mt-1">
                   {item.description}
                 </p>
-                <div className="flex items-center gap-3 mt-2">
+                <div className="flex items-center gap-3 mt-2.5">
                   <button
                     onClick={item.onAction}
                     className="text-xs font-semibold text-[var(--blue)] hover:underline"
@@ -175,7 +175,7 @@ export function ActionCenter({
                     {item.cta} →
                   </button>
                   {item.progress && (
-                    <span className="text-xs text-[var(--text-muted)]">
+                    <span className="text-[11px] text-[var(--text-muted)] leading-normal">
                       {item.progress}
                     </span>
                   )}
@@ -185,7 +185,7 @@ export function ActionCenter({
               {/* Dismiss */}
               <button
                 onClick={() => dismiss(item.id)}
-                className="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity p-1 rounded text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]"
+                className="mt-0.5 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity p-1.5 rounded-md text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]"
                 aria-label={`Dismiss ${item.title}`}
               >
                 <X className="w-3.5 h-3.5" />

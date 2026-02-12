@@ -103,12 +103,12 @@ export function RecentActivity({ userId, onNavigate }: RecentActivityProps) {
   /* ── Render ──────────────────────────────────────────────────────── */
   return (
     <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-xl overflow-hidden">
-      <div className="px-5 py-4 border-b border-[var(--border)] flex items-center justify-between">
+      <div className="px-5 pt-5 pb-4 border-b border-[var(--border)] flex items-center justify-between">
         <div>
-          <h2 className="text-base font-semibold text-[var(--text)]">
+          <h2 className="text-[15px] font-semibold text-[var(--text)] leading-none">
             Recent Activity
           </h2>
-          <p className="text-xs text-[var(--text-muted)] mt-0.5">
+          <p className="text-xs text-[var(--text-muted)] leading-normal mt-1.5">
             Latest updates on your artwork
           </p>
         </div>
@@ -119,7 +119,7 @@ export function RecentActivity({ userId, onNavigate }: RecentActivityProps) {
 
       {loading ? (
         /* Skeleton */
-        <div className="px-5 py-4 space-y-4">
+        <div className="px-5 py-5 space-y-4">
           {[1, 2, 3].map((i) => (
             <div key={i} className="flex items-start gap-3 animate-pulse">
               <div className="w-8 h-8 rounded-lg bg-[var(--skeleton)]" />
@@ -132,19 +132,19 @@ export function RecentActivity({ userId, onNavigate }: RecentActivityProps) {
         </div>
       ) : items.length === 0 ? (
         /* Empty state */
-        <div className="px-5 py-8 text-center">
-          <div className="w-10 h-10 rounded-full bg-[var(--surface-3)] flex items-center justify-center mx-auto mb-3">
+        <div className="px-5 py-10 text-center">
+          <div className="w-10 h-10 rounded-full bg-[var(--surface-3)] flex items-center justify-center mx-auto mb-4">
             <Activity className="w-5 h-5 text-[var(--text-muted)]" />
           </div>
-          <p className="text-sm font-medium text-[var(--text)]">
+          <p className="text-sm font-semibold text-[var(--text)] leading-normal">
             No activity yet
           </p>
-          <p className="text-xs text-[var(--text-muted)] mt-1 max-w-xs mx-auto">
+          <p className="text-xs text-[var(--text-muted)] leading-relaxed mt-1.5 max-w-xs mx-auto">
             Upload artwork → generate a QR code → place it at a venue → watch scans and sales roll in.
           </p>
           <button
             onClick={() => onNavigate('artist-artworks')}
-            className="mt-3 text-sm text-[var(--blue)] hover:underline font-medium"
+            className="mt-4 text-sm text-[var(--blue)] hover:underline font-medium"
           >
             Upload your first artwork →
           </button>
@@ -158,24 +158,24 @@ export function RecentActivity({ userId, onNavigate }: RecentActivityProps) {
             return (
               <div
                 key={item.id}
-                className="px-5 py-3.5 flex items-start gap-3"
+                className="px-5 py-4 flex items-start gap-3.5"
               >
                 <div
-                  className={`w-8 h-8 rounded-lg ${colors.bg} flex items-center justify-center flex-shrink-0`}
+                  className={`w-8 h-8 rounded-lg ${colors.bg} flex items-center justify-center flex-shrink-0 mt-0.5`}
                 >
                   <Icon className={`w-4 h-4 ${colors.fg}`} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-[var(--text)] leading-snug">
+                  <p className="text-[13px] text-[var(--text)] leading-normal">
                     {item.title}
                   </p>
                   {item.message && (
-                    <p className="text-xs text-[var(--text-muted)] mt-0.5 line-clamp-1">
+                    <p className="text-xs text-[var(--text-muted)] leading-normal mt-0.5 line-clamp-1">
                       {item.message}
                     </p>
                   )}
                 </div>
-                <span className="text-xs text-[var(--text-muted)] flex-shrink-0 pt-0.5">
+                <span className="text-[11px] text-[var(--text-muted)] flex-shrink-0 pt-0.5 leading-normal">
                   {timeAgo(item.created_at)}
                 </span>
               </div>

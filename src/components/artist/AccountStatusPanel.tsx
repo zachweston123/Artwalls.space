@@ -126,34 +126,34 @@ export function AccountStatusPanel({
     <div className="space-y-4">
       {/* ══════ Plan & Limits Card ══════ */}
       <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-xl overflow-hidden">
-        <div className="px-5 py-4 border-b border-[var(--border)] flex items-center justify-between">
-          <h2 className="text-base font-semibold text-[var(--text)]">
+        <div className="px-5 pt-5 pb-4 border-b border-[var(--border)] flex items-center justify-between">
+          <h2 className="text-[15px] font-semibold text-[var(--text)] leading-none">
             Plan & Limits
           </h2>
           <PlanBadge plan={plan} size="sm" />
         </div>
 
-        <div className="px-5 py-4 space-y-3">
+        <div className="px-5 py-5 space-y-3.5">
           {/* Artworks usage */}
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-[var(--text-muted)]">Artworks</span>
-            <span className="text-sm font-medium text-[var(--text)]">
-              {artworksUsed}{' '}
+          <div className="flex items-center justify-between min-h-[28px]">
+            <span className="text-[13px] text-[var(--text-muted)] leading-normal">Artworks</span>
+            <span className="text-[13px] font-medium text-[var(--text)] leading-normal tabular-nums">
+              {artworksUsed}
               <span className="text-[var(--text-muted)] font-normal">
-                / {artworkLimitLabel}
+                {' '}/ {artworkLimitLabel}
               </span>
             </span>
           </div>
 
           {/* Displays usage */}
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-[var(--text-muted)]">
+          <div className="flex items-center justify-between min-h-[28px]">
+            <span className="text-[13px] text-[var(--text-muted)] leading-normal">
               Active Displays
             </span>
-            <span className="text-sm font-medium text-[var(--text)]">
-              {displaysUsed}{' '}
+            <span className="text-[13px] font-medium text-[var(--text)] leading-normal tabular-nums">
+              {displaysUsed}
               <span className="text-[var(--text-muted)] font-normal">
-                / {displayLimitLabel}
+                {' '}/ {displayLimitLabel}
               </span>
             </span>
           </div>
@@ -177,7 +177,7 @@ export function AccountStatusPanel({
           {plan !== 'pro' && (
             <button
               onClick={() => onNavigate('plans-pricing')}
-              className={`w-full text-center text-xs font-medium py-2 rounded-lg transition-colors ${
+              className={`w-full text-center text-xs font-medium py-2.5 rounded-lg transition-colors mt-1 ${
                 displaysUsed >= limits.activeDisplays || artworksUsed >= limits.artworks
                   ? 'bg-[var(--blue)] text-[var(--on-blue)] hover:bg-[var(--blue-hover)]'
                   : 'text-[var(--blue)] hover:bg-[var(--blue-muted)]'
@@ -196,10 +196,10 @@ export function AccountStatusPanel({
         id="payout-status-section"
         className="bg-[var(--surface-1)] border border-[var(--border)] rounded-xl overflow-hidden"
       >
-        <div className="px-5 py-4 border-b border-[var(--border)] flex items-center justify-between">
+        <div className="px-5 pt-5 pb-4 border-b border-[var(--border)] flex items-center justify-between">
           <div className="flex items-center gap-2">
             <CreditCard className="w-4 h-4 text-[var(--text-muted)]" />
-            <h2 className="text-base font-semibold text-[var(--text)]">
+            <h2 className="text-[15px] font-semibold text-[var(--text)] leading-none">
               Payouts
             </h2>
           </div>
@@ -217,16 +217,16 @@ export function AccountStatusPanel({
           )}
         </div>
 
-        <div className="px-5 py-4">
+        <div className="px-5 py-5">
           {payoutLoading ? (
-            <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
+            <div className="flex items-center gap-2 text-sm text-[var(--text-muted)] leading-normal">
               <Loader2 className="w-4 h-4 animate-spin" />
               Checking status…
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {/* 1-line explanation */}
-              <p className="text-sm text-[var(--text-muted)]">
+              <p className="text-[13px] text-[var(--text-muted)] leading-relaxed">
                 {isPayoutReady
                   ? 'Stripe is connected — you\u2019ll receive payouts automatically when art sells.'
                   : 'Complete Stripe onboarding so you can get paid when your art sells.'}
@@ -261,7 +261,7 @@ export function AccountStatusPanel({
               )}
 
               {/* CTA */}
-              <div className="flex gap-2">
+              <div className="flex gap-2.5">
                 {!isPayoutReady ? (
                   <button
                     onClick={startOnboarding}
