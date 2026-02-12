@@ -61,17 +61,6 @@ const iconForType: Record<string, typeof Bell> = {
   view_artwork: Image,
 };
 
-function iconColorForType(type: string) {
-  switch (type) {
-    case 'artwork_approved':
-      return { bg: 'bg-[var(--green-muted)]', fg: 'text-[var(--green)]' };
-    case 'purchase':
-      return { bg: 'bg-[var(--green-muted)]', fg: 'text-[var(--green)]' };
-    default:
-      return { bg: 'bg-[var(--blue-muted)]', fg: 'text-[var(--blue)]' };
-  }
-}
-
 export function RecentActivity({ userId, onNavigate }: RecentActivityProps) {
   const [items, setItems] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -102,13 +91,13 @@ export function RecentActivity({ userId, onNavigate }: RecentActivityProps) {
 
   /* ── Render ──────────────────────────────────────────────────────── */
   return (
-    <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-xl overflow-hidden">
-      <div className="px-5 pt-5 pb-2 flex items-center justify-between">
+    <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl overflow-hidden">
+      <div className="px-6 pt-6 pb-4 flex items-center justify-between">
         <div>
-          <h2 className="text-[15px] font-semibold text-[var(--text)] leading-none">
+          <h2 className="text-base font-semibold text-[var(--text)]">
             Recent Activity
           </h2>
-          <p className="text-xs text-[var(--text-muted)] leading-normal mt-1.5">
+          <p className="text-sm text-[var(--text-muted)] mt-1">
             Latest updates on your artwork
           </p>
         </div>
@@ -119,7 +108,7 @@ export function RecentActivity({ userId, onNavigate }: RecentActivityProps) {
 
       {loading ? (
         /* Skeleton */
-        <div className="px-5 py-5 space-y-4">
+        <div className="px-6 pb-6 space-y-4">
           {[1, 2, 3].map((i) => (
             <div key={i} className="flex items-start gap-3 animate-pulse">
               <div className="w-8 h-8 rounded-lg bg-[var(--skeleton)]" />
@@ -131,51 +120,48 @@ export function RecentActivity({ userId, onNavigate }: RecentActivityProps) {
           ))}
         </div>
       ) : items.length === 0 ? (
-        /* Empty state */
-        <div className="px-5 py-10 text-center">
-          <div className="w-10 h-10 rounded-full bg-[var(--surface-3)] flex items-center justify-center mx-auto mb-4">
+        /* Empty state — clean, pricing-style */
+        <div className="px-6 pb-8 pt-4 text-center">
+          <div className="w-10 h-10 rounded-full bg-[var(--surface-3)] flex items-center justify-center mx-auto mb-3">
             <Activity className="w-5 h-5 text-[var(--text-muted)]" />
           </div>
-          <p className="text-sm font-semibold text-[var(--text)] leading-normal">
+          <p className="text-sm font-semibold text-[var(--text)]">
             No activity yet
           </p>
-          <p className="text-xs text-[var(--text-muted)] leading-relaxed mt-1.5 max-w-xs mx-auto">
-            Upload artwork → generate a QR code → place it at a venue → watch scans and sales roll in.
+          <p className="text-sm text-[var(--text-muted)] leading-relaxed mt-1 max-w-xs mx-auto">
+            Upload artwork, generate a QR code, place it at a venue — watch scans and sales roll in.
           </p>
           <button
             onClick={() => onNavigate('artist-artworks')}
-            className="mt-4 text-sm text-[var(--blue)] hover:underline font-medium"
+            className="mt-4 text-sm font-medium text-[var(--blue)] hover:underline"
           >
             Upload your first artwork →
           </button>
         </div>
       ) : (
-        /* Activity rows */
+        /* Activity rows — all neutral icons */
         <div className="divide-y divide-[var(--border)]">
           {items.map((item) => {
             const Icon = iconForType[item.type] || Bell;
-            const colors = iconColorForType(item.type);
             return (
               <div
                 key={item.id}
-                className="px-5 py-4 flex items-start gap-3.5"
+                className="px-6 py-4 flex items-start gap-3.5"
               >
-                <div
-                  className={`w-8 h-8 rounded-lg ${colors.bg} flex items-center justify-center flex-shrink-0 mt-0.5`}
-                >
-                  <Icon className={`w-4 h-4 ${colors.fg}`} />
+                <div className="w-8 h-8 rounded-lg bg-[var(--surface-3)] flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Icon className="w-4 h-4 text-[var(--text-muted)]" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] text-[var(--text)] leading-normal">
+                  <p className="text-sm text-[var(--text)]">
                     {item.title}
                   </p>
                   {item.message && (
-                    <p className="text-xs text-[var(--text-muted)] leading-normal mt-0.5 line-clamp-1">
+                    <p className="text-sm text-[var(--text-muted)] mt-0.5 line-clamp-1">
                       {item.message}
                     </p>
                   )}
                 </div>
-                <span className="text-[11px] text-[var(--text-muted)] flex-shrink-0 pt-0.5 leading-normal">
+                <span className="text-xs text-[var(--text-muted)] flex-shrink-0 pt-0.5">
                   {timeAgo(item.created_at)}
                 </span>
               </div>

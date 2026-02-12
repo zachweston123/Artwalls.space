@@ -120,28 +120,28 @@ export function ActionCenter({
 
   /* ── Render ──────────────────────────────────────────────────────── */
   return (
-    <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-xl overflow-hidden">
+    <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl overflow-hidden">
       {/* Header */}
-      <div className="px-5 pt-5 pb-2">
-        <h2 className="text-[15px] font-semibold text-[var(--text)] leading-none">Action Center</h2>
-        <p className="text-xs text-[var(--text-muted)] leading-normal mt-1.5">
+      <div className="px-6 pt-6 pb-4">
+        <h2 className="text-base font-semibold text-[var(--text)]">Action Center</h2>
+        <p className="text-sm text-[var(--text-muted)] mt-1">
           Next steps to grow your presence
         </p>
       </div>
 
       {visibleItems.length === 0 ? (
         /* ── All-set state ── */
-        <div className="px-5 py-10 text-center">
-          <div className="w-10 h-10 rounded-full bg-[var(--green-muted)] flex items-center justify-center mx-auto mb-4">
-            <CheckCircle2 className="w-5 h-5 text-[var(--green)]" />
+        <div className="px-6 pb-8 pt-4 text-center">
+          <div className="w-10 h-10 rounded-full bg-[var(--surface-3)] flex items-center justify-center mx-auto mb-3">
+            <CheckCircle2 className="w-5 h-5 text-[var(--text-muted)]" />
           </div>
-          <p className="text-sm font-semibold text-[var(--text)] leading-normal">You're all set!</p>
-          <p className="text-xs text-[var(--text-muted)] leading-relaxed mt-1.5 max-w-[240px] mx-auto">
+          <p className="text-sm font-semibold text-[var(--text)]">You're all set!</p>
+          <p className="text-sm text-[var(--text-muted)] leading-relaxed mt-1 max-w-[260px] mx-auto">
             Your profile is looking great. Keep creating and connecting with venues.
           </p>
           <button
             onClick={() => onNavigate('artist-venues')}
-            className="mt-4 text-sm text-[var(--blue)] hover:underline font-medium"
+            className="mt-4 text-sm font-medium text-[var(--blue)] hover:underline"
           >
             Find venues →
           </button>
@@ -152,30 +152,30 @@ export function ActionCenter({
           {visibleItems.map((item) => (
             <div
               key={item.id}
-              className="px-5 py-5 flex items-start gap-4 group"
+              className="px-6 py-4 flex items-start gap-4 group"
             >
-              {/* Icon */}
-              <div className="w-9 h-9 rounded-lg bg-[var(--blue-muted)] flex items-center justify-center flex-shrink-0 text-[var(--blue)] mt-0.5">
+              {/* Icon — neutral, matching pricing */}
+              <div className="w-9 h-9 rounded-lg bg-[var(--surface-3)] flex items-center justify-center flex-shrink-0 text-[var(--text-muted)] mt-0.5">
                 {item.icon}
               </div>
 
               {/* Content */}
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-semibold text-[var(--text)] leading-normal">
+                <p className="text-sm font-medium text-[var(--text)]">
                   {item.title}
                 </p>
-                <p className="text-xs text-[var(--text-muted)] leading-relaxed mt-1">
+                <p className="text-sm text-[var(--text-muted)] leading-relaxed mt-0.5">
                   {item.description}
                 </p>
-                <div className="flex items-center gap-3 mt-3">
+                <div className="flex items-center gap-3 mt-2.5">
                   <button
                     onClick={item.onAction}
-                    className="text-xs font-semibold text-[var(--blue)] hover:underline"
+                    className="text-sm font-medium text-[var(--blue)] hover:underline"
                   >
                     {item.cta} →
                   </button>
                   {item.progress && (
-                    <span className="text-[11px] text-[var(--text-muted)] leading-normal">
+                    <span className="text-xs text-[var(--text-muted)]">
                       {item.progress}
                     </span>
                   )}
@@ -185,7 +185,7 @@ export function ActionCenter({
               {/* Dismiss */}
               <button
                 onClick={() => dismiss(item.id)}
-                className="mt-0.5 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity p-1.5 rounded-md text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]"
+                className="mt-0.5 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity p-1.5 rounded-md text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-3)]"
                 aria-label={`Dismiss ${item.title}`}
               >
                 <X className="w-3.5 h-3.5" />

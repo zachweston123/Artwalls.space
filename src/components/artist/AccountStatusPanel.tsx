@@ -123,110 +123,112 @@ export function AccountStatusPanel({
     limits.activeDisplays >= 9999 ? 'Unlimited' : `${limits.activeDisplays}`;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* ══════ Plan & Limits Card ══════ */}
-      <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-xl overflow-hidden">
-        <div className="px-5 pt-5 pb-2 flex items-center justify-between">
-          <h2 className="text-[15px] font-semibold text-[var(--text)] leading-none">
-            Plan & Limits
-          </h2>
-          <PlanBadge plan={plan} size="sm" />
-        </div>
-
-        <div className="px-5 pt-4 pb-5 space-y-4">
-          {/* Artworks usage */}
-          <div className="flex items-center justify-between min-h-[36px]">
-            <span className="text-[13px] text-[var(--text-muted)] leading-normal">Artworks</span>
-            <span className="text-[13px] font-medium text-[var(--text)] leading-normal tabular-nums">
-              {artworksUsed}
-              <span className="text-[var(--text-muted)] font-normal">
-                {' '}/ {artworkLimitLabel}
-              </span>
-            </span>
+      <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-base font-semibold text-[var(--text)]">
+              Plan & Limits
+            </h2>
+            <PlanBadge plan={plan} size="sm" />
           </div>
 
-          {/* Displays usage */}
-          <div className="flex items-center justify-between min-h-[36px]">
-            <span className="text-[13px] text-[var(--text-muted)] leading-normal">
-              Active Displays
-            </span>
-            <span className="text-[13px] font-medium text-[var(--text)] leading-normal tabular-nums">
-              {displaysUsed}
-              <span className="text-[var(--text-muted)] font-normal">
-                {' '}/ {displayLimitLabel}
+          <div className="space-y-3">
+            {/* Artworks usage */}
+            <div className="flex items-center justify-between py-1">
+              <span className="text-sm text-[var(--text-muted)]">Artworks</span>
+              <span className="text-sm font-medium text-[var(--text)] tabular-nums">
+                {artworksUsed}
+                <span className="text-[var(--text-muted)] font-normal">
+                  {' '}/ {artworkLimitLabel}
+                </span>
               </span>
-            </span>
-          </div>
-
-          {/* Display usage bar */}
-          {limits.activeDisplays < 9999 && (
-            <div className="w-full bg-[var(--surface-3)] rounded-full h-1.5 overflow-hidden">
-              <div
-                className="h-full bg-[var(--blue)] rounded-full transition-all duration-300"
-                style={{
-                  width: `${Math.min(
-                    (displaysUsed / limits.activeDisplays) * 100,
-                    100,
-                  )}%`,
-                }}
-              />
             </div>
-          )}
 
-          {/* Upgrade link — subtle unless at limit */}
-          {plan !== 'pro' && (
-            <button
-              onClick={() => onNavigate('plans-pricing')}
-              className={`w-full text-center text-xs font-medium py-2.5 rounded-lg transition-colors mt-3 ${
-                displaysUsed >= limits.activeDisplays || artworksUsed >= limits.artworks
-                  ? 'bg-[var(--blue)] text-[var(--on-blue)] hover:bg-[var(--blue-hover)]'
-                  : 'text-[var(--blue)] hover:bg-[var(--blue-muted)]'
-              }`}
-            >
-              {displaysUsed >= limits.activeDisplays || artworksUsed >= limits.artworks
-                ? 'Upgrade — you\u2019ve hit a limit'
-                : 'Upgrade plan'}
-            </button>
-          )}
+            {/* Displays usage */}
+            <div className="flex items-center justify-between py-1">
+              <span className="text-sm text-[var(--text-muted)]">
+                Active Displays
+              </span>
+              <span className="text-sm font-medium text-[var(--text)] tabular-nums">
+                {displaysUsed}
+                <span className="text-[var(--text-muted)] font-normal">
+                  {' '}/ {displayLimitLabel}
+                </span>
+              </span>
+            </div>
+
+            {/* Display usage bar */}
+            {limits.activeDisplays < 9999 && (
+              <div className="w-full bg-[var(--surface-3)] rounded-full h-1.5 overflow-hidden">
+                <div
+                  className="h-full bg-[var(--blue)] rounded-full transition-all duration-300"
+                  style={{
+                    width: `${Math.min(
+                      (displaysUsed / limits.activeDisplays) * 100,
+                      100,
+                    )}%`,
+                  }}
+                />
+              </div>
+            )}
+
+            {/* Upgrade button — matches Pricing CTA style */}
+            {plan !== 'pro' && (
+              <button
+                onClick={() => onNavigate('plans-pricing')}
+                className={`w-full py-3 rounded-xl text-sm font-semibold transition-colors mt-2 ${
+                  displaysUsed >= limits.activeDisplays || artworksUsed >= limits.artworks
+                    ? 'bg-[var(--blue)] text-[var(--on-blue)] hover:bg-[var(--blue-hover)]'
+                    : 'border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] hover:bg-[var(--surface-3)]'
+                }`}
+              >
+                {displaysUsed >= limits.activeDisplays || artworksUsed >= limits.artworks
+                  ? 'Upgrade — you\u2019ve hit a limit'
+                  : 'Upgrade plan'}
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
       {/* ══════ Payouts Status Card ══════ */}
       <div
         id="payout-status-section"
-        className="bg-[var(--surface-1)] border border-[var(--border)] rounded-xl overflow-hidden"
+        className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl"
       >
-        <div className="px-5 pt-5 pb-2 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <CreditCard className="w-4 h-4 text-[var(--text-muted)]" />
-            <h2 className="text-[15px] font-semibold text-[var(--text)] leading-none">
-              Payouts
-            </h2>
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-2">
+              <CreditCard className="w-4 h-4 text-[var(--text-muted)]" />
+              <h2 className="text-base font-semibold text-[var(--text)]">
+                Payouts
+              </h2>
+            </div>
+            {/* Status badge */}
+            {!payoutLoading && (
+              <span
+                className={`text-xs font-medium px-2.5 py-1 rounded-full ${
+                  isPayoutReady
+                    ? 'bg-[var(--green-muted)] text-[var(--green)]'
+                    : 'bg-[var(--warning-muted)] text-[var(--warning)]'
+                }`}
+              >
+                {isPayoutReady ? 'Connected' : 'Action needed'}
+              </span>
+            )}
           </div>
-          {/* Status badge */}
-          {!payoutLoading && (
-            <span
-              className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                isPayoutReady
-                  ? 'bg-[var(--green-muted)] text-[var(--green)]'
-                  : 'bg-[var(--warning-muted)] text-[var(--warning)]'
-              }`}
-            >
-              {isPayoutReady ? 'Connected' : 'Action needed'}
-            </span>
-          )}
-        </div>
 
-        <div className="px-5 pt-4 pb-5">
           {payoutLoading ? (
-            <div className="flex items-center gap-2 text-sm text-[var(--text-muted)] leading-normal">
+            <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
               <Loader2 className="w-4 h-4 animate-spin" />
               Checking status…
             </div>
           ) : (
             <div className="space-y-4">
               {/* 1-line explanation */}
-              <p className="text-[13px] text-[var(--text-muted)] leading-relaxed">
+              <p className="text-sm text-[var(--text-muted)] leading-relaxed">
                 {isPayoutReady
                   ? 'Stripe is connected — you\u2019ll receive payouts automatically when art sells.'
                   : 'Complete Stripe onboarding so you can get paid when your art sells.'}
@@ -247,7 +249,7 @@ export function AccountStatusPanel({
                     {showErrorDetails ? 'Hide details' : 'Show details'}
                   </button>
                   {showErrorDetails && (
-                    <div className="mt-2 text-xs text-[var(--text-muted)] bg-[var(--surface-2)] rounded-lg p-3 border border-[var(--border)]">
+                    <div className="mt-2 text-xs text-[var(--text-muted)] bg-[var(--surface-3)] rounded-lg p-3 border border-[var(--border)]">
                       <p className="text-[var(--danger)] mb-1">{displayError}</p>
                       <p>Common fixes:</p>
                       <ul className="list-disc list-inside mt-1 space-y-0.5">
@@ -260,13 +262,13 @@ export function AccountStatusPanel({
                 </div>
               )}
 
-              {/* CTA */}
-              <div className="flex gap-2.5">
+              {/* CTA — matches Pricing button styles */}
+              <div className="flex gap-3">
                 {!isPayoutReady ? (
                   <button
                     onClick={startOnboarding}
                     disabled={payoutWorking}
-                    className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-medium bg-[var(--blue)] text-[var(--on-blue)] rounded-lg hover:bg-[var(--blue-hover)] disabled:opacity-60 transition-colors"
+                    className="flex-1 inline-flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold bg-[var(--blue)] text-[var(--on-blue)] hover:bg-[var(--blue-hover)] disabled:opacity-60 transition-colors"
                   >
                     {payoutWorking ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -279,7 +281,7 @@ export function AccountStatusPanel({
                   <button
                     onClick={openStripeDashboard}
                     disabled={payoutWorking}
-                    className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-medium bg-[var(--surface-2)] text-[var(--text)] border border-[var(--border)] rounded-lg hover:bg-[var(--surface-3)] disabled:opacity-60 transition-colors"
+                    className="flex-1 inline-flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] hover:bg-[var(--surface-3)] disabled:opacity-60 transition-colors"
                   >
                     {payoutWorking ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -292,10 +294,10 @@ export function AccountStatusPanel({
                 <button
                   onClick={onPayoutRefresh}
                   disabled={payoutWorking}
-                  className="px-3 py-2.5 text-sm bg-[var(--surface-2)] text-[var(--text-muted)] border border-[var(--border)] rounded-lg hover:bg-[var(--surface-3)] disabled:opacity-60 transition-colors"
+                  className="inline-flex items-center justify-center w-11 h-11 rounded-xl border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-muted)] hover:bg-[var(--surface-3)] disabled:opacity-60 transition-colors"
                   aria-label="Refresh payout status"
                 >
-                  <Gauge className="w-3.5 h-3.5" />
+                  <Gauge className="w-4 h-4" />
                 </button>
               </div>
             </div>

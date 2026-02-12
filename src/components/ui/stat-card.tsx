@@ -2,74 +2,49 @@ import { cn } from "./utils";
 import type { ReactNode } from "react";
 
 /**
- * StatCard — Consistent KPI tile matching the dashboard stat pattern.
- * Renders: icon → value → label → subtext.
- * Optionally clickable (wraps in <button>).
+ * StatCard — KPI tile for the artist dashboard.
+ *
+ * Styled to match the Plans & Pricing page card language:
+ * neutral icon treatment, surface-2 background, generous p-6 padding.
  */
 interface StatCardProps {
   label: string;
   value: ReactNode;
   subtext?: string;
   icon?: ReactNode;
-  /** Brand tint for the icon badge — "blue" | "green" | "muted" */
+  /** @deprecated Kept for call-site compat — color is now neutral. */
   color?: "blue" | "green" | "muted";
   onClick?: () => void;
   className?: string;
 }
-
-const colorMap: Record<string, { badge: string; icon: string; hoverBadge: string }> = {
-  blue: {
-    badge: "bg-[var(--blue-muted)]",
-    icon: "text-[var(--blue)]",
-    hoverBadge: "group-hover:bg-[var(--blue)]",
-  },
-  green: {
-    badge: "bg-[var(--green-muted)]",
-    icon: "text-[var(--green)]",
-    hoverBadge: "group-hover:bg-[var(--green)]",
-  },
-  muted: {
-    badge: "bg-[var(--surface-3)]",
-    icon: "text-[var(--text-muted)]",
-    hoverBadge: "",
-  },
-};
 
 function StatCard({
   label,
   value,
   subtext,
   icon,
-  color = "blue",
   onClick,
   className,
 }: StatCardProps) {
-  const colors = colorMap[color] || colorMap.blue;
   const Comp = onClick ? "button" : "div";
 
   return (
     <Comp
       onClick={onClick}
       className={cn(
-        "group bg-[var(--surface-1)] border border-[var(--border)] rounded-xl p-5 text-left transition-all",
+        "group bg-[var(--surface-2)] border border-[var(--border)] rounded-xl p-6 text-left transition-all duration-200",
         onClick &&
-          "hover:border-[var(--border-hover)] hover:shadow-sm cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]",
+          "hover:border-[var(--border-hover)] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]",
         className,
       )}
     >
       {icon && (
-        <div
-          className={cn(
-            "w-9 h-9 rounded-lg flex items-center justify-center mb-3 transition-colors",
-            colors.badge,
-            onClick && colors.hoverBadge,
-          )}
-        >
-          <span className={cn("w-4 h-4", colors.icon)}>{icon}</span>
+        <div className="w-9 h-9 rounded-lg bg-[var(--surface-3)] flex items-center justify-center">
+          <span className="w-4 h-4 text-[var(--text-muted)]">{icon}</span>
         </div>
       )}
-      <div className="text-2xl font-semibold text-[var(--text)] leading-none">{value}</div>
-      <div className="text-sm font-medium text-[var(--text-muted)] leading-normal mt-2">{label}</div>
+      <div className="text-3xl font-semibold text-[var(--text)] leading-none mt-4">{value}</div>
+      <div className="text-sm font-medium text-[var(--text-muted)] mt-2">{label}</div>
       {subtext && <div className="text-xs text-[var(--text-muted)] leading-relaxed mt-1">{subtext}</div>}
     </Comp>
   );

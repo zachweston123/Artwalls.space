@@ -233,10 +233,10 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
 
       {/* ═══════ HEADER ═══════ */}
       <div className="mb-8">
-        <h1 className="text-2xl sm:text-3xl font-semibold text-[var(--text)] leading-tight tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text)] leading-tight tracking-tight">
           Welcome back, {user?.name?.split(' ')[0] || 'Artist'}
         </h1>
-        <p className="text-sm text-[var(--text-muted)] leading-relaxed mt-2">
+        <p className="text-sm text-[var(--text-muted)] mt-2">
           Here's what's happening with your artwork
         </p>
       </div>
@@ -278,7 +278,7 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
       </div>
 
       {/* ═══════ TWO-COLUMN: Action Center + Status ═══════ */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-5 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6 mb-8">
         {/* LEFT — Action Center (3/5 width on desktop) */}
         <div className="lg:col-span-3">
           <ActionCenter
