@@ -242,7 +242,7 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
       </div>
 
       {/* ═══════ KPI STAT CARDS (top row) ═══════ */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
         <StatCard
           label="Active Artworks"
           value={activeArtworks}

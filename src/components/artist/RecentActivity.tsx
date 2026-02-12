@@ -103,7 +103,7 @@ export function RecentActivity({ userId, onNavigate }: RecentActivityProps) {
   /* ── Render ──────────────────────────────────────────────────────── */
   return (
     <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-xl overflow-hidden">
-      <div className="px-5 pt-5 pb-4 border-b border-[var(--border)] flex items-center justify-between">
+      <div className="px-5 pt-5 pb-2 flex items-center justify-between">
         <div>
           <h2 className="text-[15px] font-semibold text-[var(--text)] leading-none">
             Recent Activity

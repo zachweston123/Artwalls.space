@@ -126,16 +126,16 @@ export function AccountStatusPanel({
     <div className="space-y-4">
       {/* ══════ Plan & Limits Card ══════ */}
       <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-xl overflow-hidden">
-        <div className="px-5 pt-5 pb-4 border-b border-[var(--border)] flex items-center justify-between">
+        <div className="px-5 pt-5 pb-2 flex items-center justify-between">
           <h2 className="text-[15px] font-semibold text-[var(--text)] leading-none">
             Plan & Limits
           </h2>
           <PlanBadge plan={plan} size="sm" />
         </div>
 
-        <div className="px-5 py-5 space-y-3.5">
+        <div className="px-5 pt-4 pb-5 space-y-4">
           {/* Artworks usage */}
-          <div className="flex items-center justify-between min-h-[28px]">
+          <div className="flex items-center justify-between min-h-[36px]">
             <span className="text-[13px] text-[var(--text-muted)] leading-normal">Artworks</span>
             <span className="text-[13px] font-medium text-[var(--text)] leading-normal tabular-nums">
               {artworksUsed}
@@ -146,7 +146,7 @@ export function AccountStatusPanel({
           </div>
 
           {/* Displays usage */}
-          <div className="flex items-center justify-between min-h-[28px]">
+          <div className="flex items-center justify-between min-h-[36px]">
             <span className="text-[13px] text-[var(--text-muted)] leading-normal">
               Active Displays
             </span>
@@ -177,7 +177,7 @@ export function AccountStatusPanel({
           {plan !== 'pro' && (
             <button
               onClick={() => onNavigate('plans-pricing')}
-              className={`w-full text-center text-xs font-medium py-2.5 rounded-lg transition-colors mt-1 ${
+              className={`w-full text-center text-xs font-medium py-2.5 rounded-lg transition-colors mt-3 ${
                 displaysUsed >= limits.activeDisplays || artworksUsed >= limits.artworks
                   ? 'bg-[var(--blue)] text-[var(--on-blue)] hover:bg-[var(--blue-hover)]'
                   : 'text-[var(--blue)] hover:bg-[var(--blue-muted)]'
@@ -196,7 +196,7 @@ export function AccountStatusPanel({
         id="payout-status-section"
         className="bg-[var(--surface-1)] border border-[var(--border)] rounded-xl overflow-hidden"
       >
-        <div className="px-5 pt-5 pb-4 border-b border-[var(--border)] flex items-center justify-between">
+        <div className="px-5 pt-5 pb-2 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <CreditCard className="w-4 h-4 text-[var(--text-muted)]" />
             <h2 className="text-[15px] font-semibold text-[var(--text)] leading-none">
@@ -217,7 +217,7 @@ export function AccountStatusPanel({
           )}
         </div>
 
-        <div className="px-5 py-5">
+        <div className="px-5 pt-4 pb-5">
           {payoutLoading ? (
             <div className="flex items-center gap-2 text-sm text-[var(--text-muted)] leading-normal">
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -266,7 +266,7 @@ export function AccountStatusPanel({
                   <button
                     onClick={startOnboarding}
                     disabled={payoutWorking}
-                    className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium bg-[var(--blue)] text-[var(--on-blue)] rounded-lg hover:bg-[var(--blue-hover)] disabled:opacity-60 transition-colors"
+                    className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-medium bg-[var(--blue)] text-[var(--on-blue)] rounded-lg hover:bg-[var(--blue-hover)] disabled:opacity-60 transition-colors"
                   >
                     {payoutWorking ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -279,7 +279,7 @@ export function AccountStatusPanel({
                   <button
                     onClick={openStripeDashboard}
                     disabled={payoutWorking}
-                    className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium bg-[var(--surface-2)] text-[var(--text)] border border-[var(--border)] rounded-lg hover:bg-[var(--surface-3)] disabled:opacity-60 transition-colors"
+                    className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-medium bg-[var(--surface-2)] text-[var(--text)] border border-[var(--border)] rounded-lg hover:bg-[var(--surface-3)] disabled:opacity-60 transition-colors"
                   >
                     {payoutWorking ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -292,7 +292,7 @@ export function AccountStatusPanel({
                 <button
                   onClick={onPayoutRefresh}
                   disabled={payoutWorking}
-                  className="px-3 py-2 text-sm bg-[var(--surface-2)] text-[var(--text-muted)] border border-[var(--border)] rounded-lg hover:bg-[var(--surface-3)] disabled:opacity-60 transition-colors"
+                  className="px-3 py-2.5 text-sm bg-[var(--surface-2)] text-[var(--text-muted)] border border-[var(--border)] rounded-lg hover:bg-[var(--surface-3)] disabled:opacity-60 transition-colors"
                   aria-label="Refresh payout status"
                 >
                   <Gauge className="w-3.5 h-3.5" />

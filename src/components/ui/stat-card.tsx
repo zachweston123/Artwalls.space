@@ -51,7 +51,7 @@ function StatCard({
     <Comp
       onClick={onClick}
       className={cn(
-        "group bg-[var(--surface-1)] border border-[var(--border)] rounded-xl px-5 py-4 text-left transition-all",
+        "group bg-[var(--surface-1)] border border-[var(--border)] rounded-xl p-5 text-left transition-all",
         onClick &&
           "hover:border-[var(--border-hover)] hover:shadow-sm cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]",
         className,
@@ -60,7 +60,7 @@ function StatCard({
       {icon && (
         <div
           className={cn(
-            "w-8 h-8 rounded-lg flex items-center justify-center mb-3 transition-colors",
+            "w-9 h-9 rounded-lg flex items-center justify-center mb-3 transition-colors",
             colors.badge,
             onClick && colors.hoverBadge,
           )}
@@ -68,9 +68,9 @@ function StatCard({
           <span className={cn("w-4 h-4", colors.icon)}>{icon}</span>
         </div>
       )}
-      <div className="text-xl font-bold text-[var(--text)] leading-none">{value}</div>
-      <div className="text-[13px] font-medium text-[var(--text-muted)] leading-normal mt-1.5">{label}</div>
-      {subtext && <div className="text-xs text-[var(--text-muted)] leading-normal mt-0.5">{subtext}</div>}
+      <div className="text-2xl font-semibold text-[var(--text)] leading-none">{value}</div>
+      <div className="text-sm font-medium text-[var(--text-muted)] leading-normal mt-2">{label}</div>
+      {subtext && <div className="text-xs text-[var(--text-muted)] leading-relaxed mt-1">{subtext}</div>}
     </Comp>
   );
 }

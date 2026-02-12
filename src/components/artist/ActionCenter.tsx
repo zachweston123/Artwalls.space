@@ -122,7 +122,7 @@ export function ActionCenter({
   return (
     <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-xl overflow-hidden">
       {/* Header */}
-      <div className="px-5 pt-5 pb-4 border-b border-[var(--border)]">
+      <div className="px-5 pt-5 pb-2">
         <h2 className="text-[15px] font-semibold text-[var(--text)] leading-none">Action Center</h2>
         <p className="text-xs text-[var(--text-muted)] leading-normal mt-1.5">
           Next steps to grow your presence
@@ -152,7 +152,7 @@ export function ActionCenter({
           {visibleItems.map((item) => (
             <div
               key={item.id}
-              className="px-5 py-4 flex items-start gap-3.5 group"
+              className="px-5 py-5 flex items-start gap-4 group"
             >
               {/* Icon */}
               <div className="w-9 h-9 rounded-lg bg-[var(--blue-muted)] flex items-center justify-center flex-shrink-0 text-[var(--blue)] mt-0.5">
@@ -167,7 +167,7 @@ export function ActionCenter({
                 <p className="text-xs text-[var(--text-muted)] leading-relaxed mt-1">
                   {item.description}
                 </p>
-                <div className="flex items-center gap-3 mt-2.5">
+                <div className="flex items-center gap-3 mt-3">
                   <button
                     onClick={item.onAction}
                     className="text-xs font-semibold text-[var(--blue)] hover:underline"
