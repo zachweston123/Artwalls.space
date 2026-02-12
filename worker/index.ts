@@ -1321,7 +1321,7 @@ export default {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
       // Venues are explicitly excluded; all other roles (artist, undefined, null) are treated as artist
       if (user!.user_metadata?.role === 'venue') return json({ error: 'Artist role required (venue accounts cannot use this endpoint)' }, { status: 403 });
-      const rl = rateLimitByIp(getClientIp(request), 5, 60_000);
+      const rl = rateLimitByIp(getClientIp(request), 10, 60_000);
       if (!rl.ok) return json({ error: 'Rate limit exceeded' }, { status: 429 });
 
       // Check if already has account
@@ -1448,7 +1448,7 @@ export default {
       if (authErr) return authErr;
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
       if (user!.user_metadata?.role !== 'venue') return json({ error: 'Venue role required' }, { status: 403 });
-      const rl = rateLimitByIp(getClientIp(request), 5, 60_000);
+      const rl = rateLimitByIp(getClientIp(request), 10, 60_000);
       if (!rl.ok) return json({ error: 'Rate limit exceeded' }, { status: 429 });
 
       const { data: venue } = await supabaseAdmin.from('venues').select('stripe_account_id,email,name,default_venue_fee_bps').eq('id', user!.id).maybeSingle();
