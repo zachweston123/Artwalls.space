@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { UserCircle, Image, CreditCard, MapPin, X, CheckCircle2 } from 'lucide-react';
+import { UserCircle, Image, CreditCard, MapPin, X, CheckCircle2, ChevronRight } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 /**
@@ -18,6 +18,63 @@ interface ActionItem {
   cta: string;
   onAction: () => void;
   progress?: string;
+}
+
+/* ── Reusable tile component — guarantees identical layout ────────── */
+
+interface ActionTileProps {
+  item: ActionItem;
+  onDismiss: (id: string) => void;
+}
+
+function ActionTile({ item, onDismiss }: ActionTileProps) {
+  return (
+    <div
+      className="relative bg-[var(--surface-1)] border border-[var(--border)] rounded-xl p-5 group flex flex-col min-h-[148px] transition-colors duration-200 hover:border-[var(--blue)]/40 hover:bg-[var(--surface-3)]/30"
+    >
+      {/* Dismiss — top-right, appears on hover */}
+      <button
+        onClick={() => onDismiss(item.id)}
+        className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity p-1 rounded-md text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-3)]"
+        aria-label={`Dismiss ${item.title}`}
+      >
+        <X className="w-3 h-3" />
+      </button>
+
+      {/* Header row: icon + title/meta */}
+      <div className="flex items-start gap-3">
+        <div className="w-9 h-9 shrink-0 rounded-lg bg-[var(--surface-3)] flex items-center justify-center text-[var(--text-muted)]">
+          {item.icon}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-baseline justify-between gap-2">
+            <p className="text-sm font-semibold text-[var(--text)] leading-snug truncate">
+              {item.title}
+            </p>
+            {item.progress && (
+              <span className="text-xs text-[var(--text-muted)] tabular-nums whitespace-nowrap">
+                {item.progress}
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-[var(--text-muted)] leading-relaxed mt-1 line-clamp-2">
+            {item.description}
+          </p>
+        </div>
+      </div>
+
+      {/* Footer: CTA pinned to bottom */}
+      <div className="mt-auto pt-3">
+        <button
+          onClick={item.onAction}
+          className="inline-flex items-center gap-1 text-xs font-medium text-[var(--blue)] hover:underline"
+        >
+          {item.cta}
+          <ChevronRight className="w-3 h-3" />
+        </button>
+      </div>
+    </div>
+  );
 }
 
 interface ActionCenterProps {
@@ -151,49 +208,7 @@ export function ActionCenter({
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {visibleItems.map((item) => (
-                <div
-                  key={item.id}
-                  className="relative bg-[var(--surface-1)] border border-[var(--border)] rounded-lg p-4 group"
-                >
-                  {/* Dismiss */}
-                  <button
-                    onClick={() => dismiss(item.id)}
-                    className="absolute top-2.5 right-2.5 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity p-1 rounded text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-3)]"
-                    aria-label={`Dismiss ${item.title}`}
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-
-                  {/* Icon */}
-                  <div className="w-8 h-8 rounded-lg bg-[var(--surface-3)] flex items-center justify-center text-[var(--text-muted)] mb-2.5">
-                    {item.icon}
-                  </div>
-
-                  {/* Title + progress */}
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium text-[var(--text)] leading-snug">
-                      {item.title}
-                    </p>
-                    {item.progress && (
-                      <span className="text-xs text-[var(--text-muted)] tabular-nums">
-                        {item.progress}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Description (truncated) */}
-                  <p className="text-xs text-[var(--text-muted)] leading-relaxed mt-1 line-clamp-2">
-                    {item.description}
-                  </p>
-
-                  {/* CTA */}
-                  <button
-                    onClick={item.onAction}
-                    className="mt-2.5 text-xs font-medium text-[var(--blue)] hover:underline"
-                  >
-                    {item.cta} →
-                  </button>
-                </div>
+                <ActionTile key={item.id} item={item} onDismiss={dismiss} />
               ))}
             </div>
 
