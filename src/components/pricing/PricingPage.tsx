@@ -867,15 +867,15 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
           {[
             {
               q: 'Can I upgrade or downgrade anytime?',
-              a: 'Yes — change your plan at any time from your account settings. Upgrades take effect immediately and you'll be prorated. Downgrades take effect at the start of your next billing cycle.',
+              a: "Yes — change your plan at any time from your account settings. Upgrades take effect immediately and you'll be prorated. Downgrades take effect at the start of your next billing cycle.",
             },
             {
               q: 'Can I cancel anytime?',
-              a: 'Absolutely. There are no long-term contracts. Cancel from your account settings and you'll keep access through the end of your current billing period.',
+              a: "Absolutely. There are no long-term contracts. Cancel from your account settings and you'll keep access through the end of your current billing period.",
             },
             {
-              q: 'What does "Platform + Processing" mean?',
-              a: 'Every sale has two fees: the platform fee (which decreases as you upgrade) and a fixed 4.5% payment processing fee charged by Stripe. For example, on the Growth plan, the platform fee is just 2% — so the total taken from a sale is 6.5%. The rest goes to you and the venue.',
+              q: 'What does \"Platform + Processing\" mean?',
+              a: "Every sale has two fees: the platform fee (which decreases as you upgrade) and a fixed 4.5% payment processing fee charged by Stripe. For example, on the Growth plan, the platform fee is just 2% — so the total taken from a sale is 6.5%. The rest goes to you and the venue.",
             },
             {
               q: 'How does the Protection Plan work?',
