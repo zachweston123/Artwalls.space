@@ -334,17 +334,17 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       <EarningsComparisonBlurb variant="pricing" />
 
       {/* ── Plan Cards ─────────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-10 px-1">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 lg:gap-7 mb-12 px-1">
         {plans.map((plan) => {
           const Icon = plan.icon;
           return (
             <div
               key={plan.id}
-              className={`bg-[var(--surface-2)] rounded-xl border-2 p-5 sm:p-6 relative flex flex-col transition-all ${
+              className={`bg-[var(--surface-2)] rounded-xl border p-5 sm:p-6 relative flex flex-col overflow-hidden transition-all duration-200 ${
                 plan.popular
-                  ? 'border-[var(--accent)] shadow-lg lg:scale-105 z-10'
-                  : 'border-[var(--border)]'
-              }`}
+                  ? 'border-[var(--accent)] ring-2 ring-[var(--accent)]/25 shadow-lg lg:scale-[1.03] z-10'
+                  : 'border-[var(--border)] hover:ring-2 hover:ring-[var(--blue)]/20 hover:shadow-md'
+              } focus-within:ring-2 focus-within:ring-[var(--blue)]/30`}
             >
               {plan.popular && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[var(--accent)] text-white px-4 py-1 rounded-full text-xs font-bold whitespace-nowrap">
@@ -361,7 +361,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
               </div>
 
               {/* ★ PRIMARY VALUE — Take Home % */}
-              <div className="bg-[var(--surface-3)] border border-[var(--accent)] rounded-lg p-3 mb-3 text-center">
+              <div className="bg-[var(--surface-3)] border border-[var(--border)] rounded-lg p-3 mb-4 text-center">
                 <div className="text-3xl font-extrabold text-[var(--accent)] leading-tight">{plan.takeHome}%</div>
                 <div className="text-xs text-[var(--text-muted)] mt-0.5">{PRICING_COPY.takeHomeLabel} {PRICING_COPY.takeHomeSubtext}</div>
               </div>
@@ -390,7 +390,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
               </div>
 
               {/* Features */}
-              <ul className="space-y-2 mb-5 flex-1">
+              <ul className="space-y-2 mb-6 flex-1">
                 {plan.features.map((feature, index) => (
                   <li key={index} className="flex items-start gap-2 text-sm">
                     <Check className="w-4 h-4 text-[var(--accent)] flex-shrink-0 mt-0.5" />
@@ -403,7 +403,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
               <button
                 onClick={() => startSubscription(plan.id as PlanId)}
                 disabled={plan.disabled || subscribing === plan.id}
-                className={`w-full py-3 rounded-lg transition-colors text-sm font-medium ${
+                className={`w-full py-3 rounded-lg transition-colors text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] ${
                   plan.disabled
                     ? 'bg-[var(--surface-3)] text-[var(--text-muted)] cursor-not-allowed border border-[var(--border)]'
                     : plan.popular
@@ -426,7 +426,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       </div>
 
       {/* ── Example at $140 (expandable) ────────────────── */}
-      <div className="max-w-3xl mx-auto mb-10">
+      <div className="max-w-3xl mx-auto mb-12">
         <button
           onClick={() => setShowExample(!showExample)}
           className="w-full flex items-center justify-between bg-[var(--surface-2)] rounded-xl border border-[var(--border)] px-5 py-4 hover:shadow-sm transition-shadow"
@@ -452,7 +452,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
         )}
       </div>
 
-      <div className="max-w-4xl mx-auto mb-10">
+      <div className="max-w-4xl mx-auto mb-12">
         <div className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-5 sm:p-6">
           <Accordion type="single" collapsible>
             <AccordionItem value="payouts">
@@ -477,7 +477,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       </div>
 
       {/* Manage Subscription */}
-      <div className="text-center mb-10 bg-[var(--surface-2)] rounded-xl p-5 sm:p-6 border border-[var(--border)] max-w-2xl mx-auto">
+      <div className="text-center mb-12 bg-[var(--surface-2)] rounded-xl p-5 sm:p-6 border border-[var(--border)] max-w-2xl mx-auto">
           <p className="text-sm text-[var(--text)]">
           💡 You can upgrade or downgrade your plan anytime. Changes take effect at the start of your next billing cycle.
         </p>
@@ -496,7 +496,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       </div>
 
       {/* Earnings Calculator */}
-      <div className="max-w-4xl mx-auto mb-10">
+      <div className="max-w-4xl mx-auto mb-12">
         <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl p-5 sm:p-8">
           <h2 className="text-xl sm:text-2xl mb-2 text-[var(--text)] flex items-center gap-3">
             <Calculator className="w-6 h-6" />
@@ -569,10 +569,10 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                 <button
                   key={plan.id}
                   onClick={() => setSelectedPlanId(plan.id)}
-                  className={`p-4 rounded-lg border-2 transition-all text-left ${
+                  className={`p-4 rounded-xl border transition-all duration-200 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] ${
                     isSelected
-                      ? 'border-[var(--border)] bg-[var(--surface-3)] shadow-lg'
-                      : 'border-[var(--border)] bg-[var(--surface-2)] hover:bg-[var(--surface-3)]'
+                      ? 'border-[var(--accent)] ring-2 ring-[var(--accent)]/25 bg-[var(--surface-3)] shadow-md'
+                      : 'border-[var(--border)] bg-[var(--surface-2)] hover:ring-2 hover:ring-[var(--blue)]/20 hover:shadow-sm'
                   }`}
                 >
                   <div className="font-semibold text-[var(--text)] mb-2">{plan.name}</div>
@@ -657,7 +657,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       </div>
 
       {/* Protection Plan Details */}
-      <div className="max-w-4xl mx-auto mb-10">
+      <div className="max-w-4xl mx-auto mb-12">
         <button
           onClick={() => setShowProtectionDetails(!showProtectionDetails)}
           className="w-full bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-6 text-left hover:shadow-md transition-shadow"
@@ -787,7 +787,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       </div>
 
       {/* Feature Comparison */}
-      <div className="max-w-6xl mx-auto mb-10">
+      <div className="max-w-6xl mx-auto mb-12">
         <h2 className="text-xl sm:text-2xl mb-6 text-center text-[var(--text)]">Compare All Plans</h2>
 
         {/* Desktop table — hidden on mobile */}
@@ -799,7 +799,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                 {plans.map((p) => (
                   <th key={p.id} className={`text-center p-4 text-sm font-semibold ${p.popular ? 'bg-[var(--surface-3)] text-[var(--text)]' : 'text-[var(--text-muted)]'}`}>
                     <div>{p.name}</div>
-                    <div className="text-xs text-[var(--accent)] font-bold mt-1">{p.take}% take-home</div>
+                    <div className="text-xs text-[var(--accent)] font-bold mt-1">{p.takeHome}% take-home</div>
                   </th>
                 ))}
               </tr>
@@ -830,7 +830,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
         </div>
 
         {/* Mobile stacked cards — hidden on desktop */}
-        <div className="sm:hidden space-y-4">
+        <div className="sm:hidden space-y-5">
           {plans.map((plan) => {
             const featureMap: Record<string, string> = {
               free: 'N/A|1|1|1|—|—|$5/art/mo|$100',
@@ -841,10 +841,10 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
             const vals = (featureMap[plan.id] ?? '').split('|');
             const labels = ['Extra display fee', 'Artworks', 'Active displays', 'Applications/mo', 'Analytics', 'Priority', 'Protection', 'Max claim'];
             return (
-              <div key={plan.id} className={`rounded-xl border p-4 ${plan.popular ? 'border-[var(--accent)] bg-[var(--surface-2)]' : 'border-[var(--border)] bg-[var(--surface-1)]'}`}>
+              <div key={plan.id} className={`rounded-xl border p-5 overflow-hidden ${plan.popular ? 'border-[var(--accent)] ring-2 ring-[var(--accent)]/25 bg-[var(--surface-2)]' : 'border-[var(--border)] bg-[var(--surface-1)]'}`}>
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-base font-semibold text-[var(--text)]">{plan.name}</h3>
-                  <span className="text-sm font-bold text-[var(--accent)]">{plan.take}% take-home</span>
+                  <span className="text-sm font-bold text-[var(--accent)]">{plan.takeHome}% take-home</span>
                 </div>
                 <div className="space-y-2">
                   {labels.map((label, i) => (
@@ -863,7 +863,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       {/* FAQ */}
       <div className="max-w-3xl mx-auto">
         <h2 className="text-xl sm:text-2xl mb-6 text-center text-[var(--text)]">Frequently Asked Questions</h2>
-        <div className="space-y-3">
+        <div className="space-y-5">
           {[
             {
               q: 'Can I upgrade or downgrade anytime?',
