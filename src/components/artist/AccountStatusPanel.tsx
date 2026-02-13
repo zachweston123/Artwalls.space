@@ -181,7 +181,7 @@ export function AccountStatusPanel({
 
           {/* Upgrade CTA — visually separated from usage metrics */}
           {plan !== 'pro' && (
-            <div className="border-t border-[var(--border)] pt-5 mt-5">
+            <div className="border-t border-[var(--border)] pt-4 mt-4">
               <button
                 onClick={() => onNavigate('plans-pricing')}
                 className={`w-full py-3 rounded-xl text-sm font-semibold transition-colors ${
@@ -268,7 +268,7 @@ export function AccountStatusPanel({
               )}
 
               {/* CTA — visually separated from content above */}
-              <div className="border-t border-[var(--border)] pt-5 mt-5 flex gap-3">
+              <div className="border-t border-[var(--border)] pt-4 mt-4 flex gap-3">
                 {!isPayoutReady ? (
                   <button
                     onClick={startOnboarding}
