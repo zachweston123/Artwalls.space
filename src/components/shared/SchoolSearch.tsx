@@ -111,7 +111,7 @@ export function SchoolSearch({
     <div ref={searchRef} className="relative">
       {!selectedSchoolName ? (
         <div className="relative">
-          <div className="flex items-center px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] focus-within:ring-2 focus-within:ring-[var(--focus)]">
+          <div data-input-wrapper="" className="flex items-center px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface-1)] focus-within:border-[var(--focus)] focus-within:ring-2 focus-within:ring-[var(--focus)]/30 transition-colors">
             <Search className="w-4 h-4 text-[var(--text-muted)]" />
             <input
               ref={inputRef}
@@ -119,14 +119,14 @@ export function SchoolSearch({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onFocus={() => query.length >= 2 && setShowDropdown(true)}
-              className="flex-1 ml-2 bg-transparent outline-none text-[var(--text)] placeholder:text-[var(--text-muted)]"
+              className="flex-1 ml-2 bg-transparent border-none outline-none text-[var(--text)] placeholder:text-[var(--text-muted)]"
               placeholder="Search for your school..."
             />
             {loading && <Loader2 className="w-4 h-4 text-[var(--blue)] animate-spin" />}
           </div>
 
           {showDropdown && results.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-[var(--surface-1)] border border-[var(--border)] rounded-lg shadow-lg z-50">
+            <div className="absolute top-full left-0 right-0 mt-2 bg-[var(--surface-1)] border border-[var(--border)] rounded-xl shadow-lg z-50">
               <div className="max-h-64 overflow-y-auto">
                 {results.map((school) => (
                   <button
@@ -157,13 +157,13 @@ export function SchoolSearch({
           )}
 
           {showDropdown && query.length >= 2 && results.length === 0 && !loading && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-[var(--surface-1)] border border-[var(--border)] rounded-lg shadow-lg p-4 text-center text-[var(--text-muted)] z-50">
+            <div className="absolute top-full left-0 right-0 mt-2 bg-[var(--surface-1)] border border-[var(--border)] rounded-xl shadow-lg p-4 text-center text-[var(--text-muted)] z-50">
               <p>No schools found. Try another search term.</p>
             </div>
           )}
         </div>
       ) : (
-        <div className="flex items-center justify-between px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]">
+        <div className="flex items-center justify-between px-4 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface-2)]">
           <div className="flex-1">
             <p className="font-medium text-[var(--text)]">{selectedSchoolName}</p>
             <p className="text-xs text-[var(--text-muted)] mt-1">

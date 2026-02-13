@@ -34,6 +34,7 @@ export const IconInput = forwardRef<HTMLInputElement, IconInputProps>(function I
   return (
     <div className="w-full">
       <div
+        data-input-wrapper=""
         className={`relative flex items-center rounded-xl border border-[var(--border)] bg-[var(--surface-1)] focus-within:border-[var(--focus)] focus-within:ring-2 focus-within:ring-[var(--focus)]/30 transition-colors ${className}`}
       >
         {leadingIcon && (
@@ -45,7 +46,7 @@ export const IconInput = forwardRef<HTMLInputElement, IconInputProps>(function I
         <input
           ref={ref}
           {...inputProps}
-          className={`w-full h-11 rounded-xl bg-transparent text-[var(--text)] placeholder-[var(--text-muted)] outline-none ${leftPadding} ${rightPadding}`}
+          className={`w-full h-11 rounded-xl border-none bg-transparent text-[var(--text)] placeholder-[var(--text-muted)] outline-none shadow-none ${leftPadding} ${rightPadding}`}
           aria-invalid={!!error}
         />
 

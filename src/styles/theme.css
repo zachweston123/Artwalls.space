@@ -121,13 +121,29 @@ html, body {
   font-family: inherit;
 }
 
-/* C) Tokenize core elements */
-input,
+/* C) Tokenize core elements.
+   Only style STANDALONE inputs (not ones nested inside a custom wrapper).
+   Wrapper components like IconInput, SchoolSearch, etc. own the visible
+   border/background on their outer <div>, so inner inputs must stay bare. */
+input:not([data-bare]),
+textarea,
+select {
+  color: var(--text);
+}
+
+/* Standalone inputs that are NOT inside a wrapper get the full treatment.
+   Wrapper components mark their shell with [data-input-wrapper]. */
+input:not([data-bare]):not([data-input-wrapper] input),
 textarea,
 select {
   background: var(--surface-1);
-  color: var(--text);
   border: 1px solid var(--border);
+}
+
+/* Inner inputs inside wrappers: transparent bg, no border */
+[data-input-wrapper] input {
+  background: transparent;
+  border: none;
 }
 
 input::placeholder,
@@ -135,7 +151,8 @@ textarea::placeholder {
   color: var(--text-muted);
 }
 
-input:focus,
+/* Focus ring only on standalone inputs; wrappers handle their own */
+input:not([data-input-wrapper] input):focus,
 textarea:focus,
 select:focus {
   outline: none;
@@ -277,6 +294,15 @@ html[data-theme="dark"] .border-neutral-300 { border-color: var(--border) !impor
 .focus-visible\:ring-\[var\(--focus\)\]:focus-visible { --tw-ring-color: var(--focus); }
 .focus-visible\:ring-offset-\[var\(--bg\)\]:focus-visible { --tw-ring-offset-color: var(--bg); }
 
+/* Focus-within variants (search inputs, combobox wrappers) */
+.focus-within\:border-\[var\(--focus\)\]:focus-within { border-color: var(--focus); }
+.focus-within\:ring-2:focus-within {
+  --tw-ring-shadow: var(--tw-ring-inset, ) 0 0 0 calc(2px + var(--tw-ring-offset-width, 0px)) var(--tw-ring-color, var(--focus));
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+}
+.focus-within\:ring-\[var\(--focus\)\]:focus-within { --tw-ring-color: var(--focus); }
+.focus-within\:ring-\[var\(--focus\)\]\/30:focus-within { --tw-ring-color: color-mix(in srgb, var(--focus) 30%, transparent); }
+
 /* Viewport height utility shims (fix dark mode bars on mobile browsers) */
 .min-h-svh { min-height: 100svh; }
 .h-svh { height: 100svh; }
@@ -289,3 +315,7 @@ html[data-theme="dark"] .border-neutral-300 { border-color: var(--border) !impor
 .border-\[var\(--border-hover\)\] { border-color: var(--border-hover); }
 .hover\:border-\[var\(--border-hover\)\]:hover { border-color: var(--border-hover); }
 .text-\[var\(--info\)\] { color: var(--info); }
+
+/* Utility shims not present in pre-compiled Tailwind CSS */
+.border-none { border-style: none; }
+.shadow-none { box-shadow: none; }

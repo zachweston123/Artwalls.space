@@ -144,7 +144,7 @@ export function VenuePlacesSearch({ onPlaceSelect, placeholder = 'Search a coffe
     <div ref={containerRef} className="relative">
       {!manualMode && (
         <>
-          <div className="flex items-center px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] focus-within:ring-2 focus-within:ring-[var(--focus)]">
+          <div data-input-wrapper="" className="flex items-center px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface-1)] focus-within:border-[var(--focus)] focus-within:ring-2 focus-within:ring-[var(--focus)]/30 transition-colors">
             <Search className="w-4 h-4 text-[var(--text-muted)]" />
             <input
               type="text"
@@ -152,7 +152,7 @@ export function VenuePlacesSearch({ onPlaceSelect, placeholder = 'Search a coffe
               onChange={(e) => setQuery(e.target.value)}
               placeholder={placeholder}
               disabled={disabled || !!error}
-              className="flex-1 ml-2 bg-transparent outline-none text-[var(--text)] placeholder:text-[var(--text-muted)]"
+              className="flex-1 ml-2 bg-transparent border-none outline-none text-[var(--text)] placeholder:text-[var(--text-muted)]"
             />
             {loading && <Loader2 className="w-4 h-4 text-[var(--blue)] animate-spin" />}
           </div>
@@ -164,7 +164,7 @@ export function VenuePlacesSearch({ onPlaceSelect, placeholder = 'Search a coffe
           )}
 
           {predictions.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-[var(--surface-1)] border border-[var(--border)] rounded-lg shadow-lg z-50">
+            <div className="absolute top-full left-0 right-0 mt-2 bg-[var(--surface-1)] border border-[var(--border)] rounded-xl shadow-lg z-50">
               <div className="max-h-64 overflow-y-auto">
                 {predictions.map((p) => (
                   <button
@@ -203,7 +203,7 @@ export function VenuePlacesSearch({ onPlaceSelect, placeholder = 'Search a coffe
               onChange={(e) => setManualName(e.target.value)}
               placeholder="e.g., Sundown Coffee"
               disabled={disabled}
-              className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
+              className="w-full px-4 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
             />
           </div>
           <div>
@@ -214,7 +214,7 @@ export function VenuePlacesSearch({ onPlaceSelect, placeholder = 'Search a coffe
               onChange={(e) => setManualAddress(e.target.value)}
               placeholder="123 Main St, San Diego"
               disabled={disabled}
-              className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
+              className="w-full px-4 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]"
             />
           </div>
           {error && <div className="text-xs text-[var(--warning)]">{error}</div>}
