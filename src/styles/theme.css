@@ -33,6 +33,12 @@
   --info: var(--blue);
   --info-muted: var(--blue-muted);
 
+  /* compare-table */
+  --table-row-odd: var(--surface-2);
+  --table-row-even: var(--surface-1);
+  --table-row-hover: var(--surface-3);
+  --table-divider: rgba(0,0,0,0.05);
+
   /* focus */
   --focus: rgba(47,107,255,.45);
 
@@ -93,6 +99,12 @@ html[data-theme="dark"] {
   --focus: rgba(59,123,255,.55);
 
   --skeleton: var(--surface-3);
+
+  /* compare-table */
+  --table-row-odd: var(--surface-2);
+  --table-row-even: var(--surface-3);
+  --table-row-hover: rgba(255,255,255,0.04);
+  --table-divider: rgba(255,255,255,0.06);
 }
 
 html[data-theme="light"] {
@@ -321,3 +333,34 @@ html[data-theme="dark"] .border-neutral-300 { border-color: var(--border) !impor
 /* Utility shims not present in pre-compiled Tailwind CSS */
 .border-none { border-style: none; }
 .shadow-none { box-shadow: none; }
+
+/* ── Compare All Plans table ─────────────────────────────── */
+.compareTable table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.compareTable thead th {
+  background: var(--surface-3);
+}
+.compareTable thead tr {
+  border-bottom: 1px solid var(--border);
+}
+.compareTable tbody tr:nth-child(odd) {
+  background: var(--table-row-odd);
+}
+.compareTable tbody tr:nth-child(even) {
+  background: var(--table-row-even);
+}
+.compareTable tbody tr {
+  transition: background 0.15s ease;
+}
+.compareTable tbody tr:hover {
+  background: var(--table-row-hover);
+}
+.compareTable tbody td {
+  border-bottom: 1px solid var(--table-divider);
+}
+.compareTable tbody tr:last-child td {
+  border-bottom: none;
+}
