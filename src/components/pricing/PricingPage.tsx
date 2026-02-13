@@ -801,9 +801,9 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
             <table className="w-full min-w-[600px]">
               <thead>
                 <tr>
-                  <th className="text-left px-5 py-4 text-sm font-semibold whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>Feature</th>
+                  <th className="text-left px-6 py-5 text-sm font-semibold whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>Feature</th>
                   {plans.map((p) => (
-                    <th key={p.id} className="text-center px-5 py-4 text-sm font-semibold whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>
+                    <th key={p.id} className="text-center px-6 py-5 text-sm font-semibold whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>
                       <div style={p.popular ? { color: 'var(--text)' } : undefined}>{p.name}</div>
                       <div className="text-xs font-bold mt-1" style={{ color: 'var(--accent)' }}>{p.takeHome}% take-home</div>
                     </th>
@@ -823,9 +823,9 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                   { label: 'Max coverage/claim', values: ['$100', '$100', '$150', '$200'] },
                 ].map((row) => (
                   <tr key={row.label}>
-                    <td className="px-5 py-3 text-sm font-medium whitespace-nowrap" style={{ color: 'var(--text)' }}>{row.label}</td>
+                    <td className="px-6 py-4 text-sm font-medium whitespace-nowrap" style={{ color: 'var(--text)' }}>{row.label}</td>
                     {row.values.map((val, j) => (
-                      <td key={j} className="text-center px-5 py-3 text-sm tabular-nums" style={{ color: 'var(--text)' }}>
+                      <td key={j} className="text-center px-6 py-4 text-sm tabular-nums" style={{ color: 'var(--text)' }}>
                         {val}
                       </td>
                     ))}
@@ -840,7 +840,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       {/* FAQ */}
       <div className="max-w-3xl mx-auto">
         <h2 className="text-xl sm:text-2xl mb-6 text-center text-[var(--text)]">Frequently Asked Questions</h2>
-        <div className="space-y-5">
+        <div className="flex flex-col gap-6">
           {[
             {
               q: 'Can I upgrade or downgrade anytime?',
@@ -863,9 +863,9 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
               a: 'Payouts are processed through Stripe Connect. Once you connect your bank account, earnings are deposited on a rolling basis — typically within 2–7 business days after a sale.',
             },
           ].map((faq) => (
-            <div key={faq.q} className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-5 sm:p-6">
-              <h3 className="text-sm sm:text-base mb-2 font-semibold text-[var(--text)]">{faq.q}</h3>
-              <p className="text-sm text-[var(--text-muted)] leading-relaxed">{faq.a}</p>
+            <div key={faq.q} className="rounded-2xl p-5 sm:p-6" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
+              <h3 className="text-sm sm:text-base mb-2 font-semibold" style={{ color: 'var(--text)' }}>{faq.q}</h3>
+              <p className="text-[13px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>{faq.a}</p>
             </div>
           ))}
         </div>
