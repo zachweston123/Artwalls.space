@@ -795,14 +795,14 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       <div className="max-w-6xl mx-auto mb-12">
         <h2 className="text-xl sm:text-2xl mb-6 text-center text-[var(--text)]">Compare All Plans</h2>
 
-        {/* Desktop table — hidden on mobile */}
-        <div className="hidden sm:block bg-[var(--surface-2)] rounded-xl border border-[var(--border)] overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-[var(--border)]">
-                <th className="text-left p-4 text-sm text-[var(--text-muted)] font-semibold">Feature</th>
+        {/* Comparison table — horizontally scrollable on mobile */}
+        <div className="bg-[var(--surface-2)] rounded-2xl border border-[var(--border)] p-4 sm:p-6 overflow-x-auto">
+          <table className="w-full min-w-[600px]">
+            <thead className="sticky top-0 z-10">
+              <tr className="border-b-2 border-[var(--border)]">
+                <th className="text-left p-3 sm:p-4 text-sm text-[var(--text-muted)] font-semibold whitespace-nowrap">Feature</th>
                 {plans.map((p) => (
-                  <th key={p.id} className={`text-center p-4 text-sm font-semibold ${p.popular ? 'bg-[var(--surface-3)] text-[var(--text)]' : 'text-[var(--text-muted)]'}`}>
+                  <th key={p.id} className={`text-center p-3 sm:p-4 text-sm font-semibold whitespace-nowrap ${p.popular ? 'bg-[var(--surface-3)] text-[var(--text)]' : 'text-[var(--text-muted)]'}`}>
                     <div>{p.name}</div>
                     <div className="text-xs text-[var(--accent)] font-bold mt-1">{p.takeHome}% take-home</div>
                   </th>
@@ -822,9 +822,9 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                 { label: 'Max coverage/claim', values: ['$100', '$100', '$150', '$200'] },
               ].map((row, i) => (
                 <tr key={row.label} className={`border-b border-[var(--border)] ${i % 2 === 0 ? 'bg-[var(--surface-1)]' : ''}`}>
-                  <td className="p-4 text-sm text-[var(--text)]">{row.label}</td>
+                  <td className="p-3 sm:p-4 text-sm text-[var(--text)] font-medium whitespace-nowrap">{row.label}</td>
                   {row.values.map((val, j) => (
-                    <td key={j} className={`text-center p-4 text-sm ${plans[j]?.popular ? 'bg-[var(--surface-3)]' : ''} text-[var(--text)]`}>
+                    <td key={j} className={`text-center p-3 sm:p-4 text-sm tabular-nums ${plans[j]?.popular ? 'bg-[var(--surface-3)]' : ''} text-[var(--text)]`}>
                       {val}
                     </td>
                   ))}
@@ -832,36 +832,6 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
               ))}
             </tbody>
           </table>
-        </div>
-
-        {/* Mobile stacked cards — hidden on desktop */}
-        <div className="sm:hidden space-y-5">
-          {plans.map((plan) => {
-            const featureMap: Record<string, string> = {
-              free: 'N/A|1|1|1|—|—|$5/art/mo|$100',
-              starter: '$5/mo|10|4|3|Basic|—|$5/art/mo|$100',
-              growth: '$4/mo|30|10|Unlimited|Advanced|✓|$3/art/mo|$150',
-              pro: '—|Unlimited|Unlimited|Unlimited|Advanced|✓✓|FREE|$200',
-            };
-            const vals = (featureMap[plan.id] ?? '').split('|');
-            const labels = ['Extra display fee', 'Artworks', 'Active displays', 'Applications/mo', 'Analytics', 'Priority', 'Protection', 'Max claim'];
-            return (
-              <div key={plan.id} className={`rounded-xl border p-5 overflow-hidden ${plan.popular ? 'border-[var(--accent)] ring-2 ring-[var(--accent)]/25 bg-[var(--surface-2)]' : 'border-[var(--border)] bg-[var(--surface-1)]'}`}>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-base font-semibold text-[var(--text)]">{plan.name}</h3>
-                  <span className="text-sm font-bold text-[var(--accent)]">{plan.takeHome}% take-home</span>
-                </div>
-                <div className="space-y-2">
-                  {labels.map((label, i) => (
-                    <div key={label} className="flex justify-between text-sm">
-                      <span className="text-[var(--text-muted)]">{label}</span>
-                      <span className="text-[var(--text)] font-medium">{vals[i]}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
         </div>
       </div>
 
