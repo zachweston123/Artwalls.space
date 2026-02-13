@@ -1,7 +1,7 @@
 export const PRICING_COPY = {
   takeHomeLabel: 'Take home',
   takeHomeSubtext: 'of each artwork sale',
-  platformSupport: 'Includes platform + payment processing handling.',
+  platformSupport: 'Covers platform and payment processing costs.',
 };
 
 export const CHECKOUT_COPY = {

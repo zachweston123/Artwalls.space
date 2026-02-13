@@ -398,7 +398,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
               <AccordionTrigger>How payouts work</AccordionTrigger>
               <AccordionContent>
                 <div className="text-sm text-[var(--text-muted)] space-y-3">
-                  <p>We handle checkout, venue payouts, and artist transfers automatically. Your take-home percentage is based on the artwork list price.</p>
+                  <p>We handle the checkout process and automatically pay both the venue and you. Your take-home percentage is based on the price you set for your artwork.</p>
                   <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-lg p-4">
                     <p className="text-xs uppercase tracking-wide text-[var(--text-muted)]">Example (Starter, $200 list price)</p>
                     <ul className="mt-2 space-y-1">
@@ -937,14 +937,14 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                 <td className="text-center p-4 text-sm text-[var(--text)]"><strong>$39</strong></td>
               </tr>
               <tr className="border-b border-[var(--border)]">
-                <td className="p-4 text-sm text-[var(--text)]"><strong>Displays you can use</strong></td>
+                <td className="p-4 text-sm text-[var(--text)]"><strong>Active displays included</strong></td>
                 <td className="text-center p-4 text-sm text-[var(--text)]"><strong>1</strong></td>
                 <td className="text-center p-4 text-sm text-[var(--text)]"><strong>4</strong></td>
                 <td className="text-center p-4 text-sm bg-[var(--surface-3)] text-[var(--text)]"><strong>10</strong></td>
                 <td className="text-center p-4 text-sm text-[var(--text)]"><strong>Unlimited</strong></td>
               </tr>
               <tr className="border-b border-[var(--border)] bg-[var(--surface-1)]">
-                <td className="p-4 text-sm text-[var(--text)]">Extra displays after included</td>
+                <td className="p-4 text-sm text-[var(--text)]">Additional display fee</td>
                 <td className="text-center p-4 text-sm text-xs text-[var(--text-muted)]">N/A</td>
                 <td className="text-center p-4 text-sm text-xs text-[var(--text)]">$5/mo each</td>
                 <td className="text-center p-4 text-sm text-xs bg-[var(--surface-3)] text-[var(--text)]">$4/mo each</td>
@@ -972,21 +972,21 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                 <td className="text-center p-4 text-sm text-[var(--text)]">Unlimited</td>
               </tr>
               <tr className="border-b border-[var(--border)] bg-[var(--surface-1)]">
-                <td className="p-4 text-sm text-[var(--text)]"><strong>Priority visibility in search</strong></td>
+                <td className="p-4 text-sm text-[var(--text)]"><strong>Priority visibility in search results</strong></td>
                 <td className="text-center p-4 text-sm text-[var(--text)]">—</td>
                 <td className="text-center p-4 text-sm text-[var(--text)]">—</td>
                 <td className="text-center p-4 text-sm bg-[var(--surface-3)] text-[var(--text)]"><strong>✓</strong></td>
                 <td className="text-center p-4 text-sm text-[var(--text)]"><strong>✓✓</strong></td>
               </tr>
               <tr className="border-b border-[var(--border)] bg-[var(--surface-1)]">
-                <td className="p-4 text-sm text-[var(--text)]"><strong>Damage protection plan</strong></td>
+                <td className="p-4 text-sm text-[var(--text)]"><strong>Artwork Protection Plan</strong></td>
                 <td className="text-center p-4 text-sm text-xs text-[var(--text)]">$5/artwork/mo</td>
                 <td className="text-center p-4 text-sm text-xs text-[var(--text)]">$5/artwork/mo</td>
                 <td className="text-center p-4 text-sm text-xs bg-[var(--surface-3)] text-[var(--text)]">$3/artwork/mo</td>
                 <td className="text-center p-4 text-sm text-xs text-[var(--text)]"><strong>FREE</strong></td>
               </tr>
               <tr>
-                <td className="p-4 text-sm text-[var(--text)]">Max protection coverage</td>
+                <td className="p-4 text-sm text-[var(--text)]">Max coverage per claim</td>
                 <td className="text-center p-4 text-sm text-xs text-[var(--text)]">$100/claim</td>
                 <td className="text-center p-4 text-sm text-xs text-[var(--text)]">$100/claim</td>
                 <td className="text-center p-4 text-sm text-xs bg-[var(--surface-3)] text-[var(--text)]">$150/claim</td>
