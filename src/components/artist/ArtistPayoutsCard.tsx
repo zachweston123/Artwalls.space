@@ -7,6 +7,7 @@ import { supabase } from '../../lib/supabase';
 type ConnectStatus = {
   hasAccount: boolean;
   accountId?: string;
+  onboardingStatus?: 'not_started' | 'pending' | 'complete' | 'restricted';
   chargesEnabled?: boolean;
   payoutsEnabled?: boolean;
   detailsSubmitted?: boolean;
@@ -97,6 +98,13 @@ export function ArtistPayoutsCard({ user }: ArtistPayoutsCardProps) {
   };
 
   const isReady = !!status.hasAccount && !!status.payoutsEnabled;
+  const onboardingLabel = status.onboardingStatus === 'complete'
+    ? 'Connected'
+    : status.onboardingStatus === 'pending'
+      ? 'Pending'
+      : status.onboardingStatus === 'restricted'
+        ? 'Action needed'
+        : 'Not connected';
 
   return (
     <div className="bg-[var(--surface-1)] text-[var(--text)] rounded-xl p-6 border border-[var(--border)]">
@@ -120,7 +128,7 @@ export function ArtistPayoutsCard({ user }: ArtistPayoutsCardProps) {
                 : 'bg-[var(--surface-2)] text-[var(--warning)] border-[var(--border)]'
             }`}
           >
-            {isReady ? 'Payouts enabled' : 'Action required'}
+            {isReady ? 'Payouts enabled' : onboardingLabel}
           </span>
         )}
       </div>

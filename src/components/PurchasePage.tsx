@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ShoppingCart, MapPin, User, ArrowLeft, Loader2 } from 'lucide-react';
+import { ShoppingCart, MapPin, User, ArrowLeft, Loader2, Lock, CheckCircle } from 'lucide-react';
 import { ArtworkReactions } from './ArtworkReactions';
 import { CHECKOUT_COPY } from '../lib/feeCopy';
-import { trackQrScan, trackArtworkView, trackCheckoutStart } from '../lib/trackEvent';
+import { trackQrScan, trackArtworkView, trackCheckoutStart, trackEvent } from '../lib/trackEvent';
 import { ArtistProfilePublicView, type ArtistPublicData } from './shared/ArtistProfilePublicView';
 import { VenueProfilePublicView, type VenuePublicData } from './shared/VenueProfilePublicView';
 
@@ -71,6 +71,12 @@ export function PurchasePage({ artworkId, onBack, onNavigate }: PurchasePageProp
     let cancelled = false;
     (async () => {
       if (purchaseStatus === 'success') {
+        // Track purchase success view
+        trackEvent({
+          event_type: 'artwork_view',
+          artworkId,
+          metadata: { action: 'purchase_success_viewed' },
+        });
         try {
           const data = await apiGet<{ order: { receiptUrl: string | null } | null }>(`/api/orders/by-artwork?artworkId=${encodeURIComponent(artworkId)}`);
           if (!cancelled) setReceiptUrl(data.order?.receiptUrl || null);
@@ -250,7 +256,11 @@ export function PurchasePage({ artworkId, onBack, onNavigate }: PurchasePageProp
           {/* Details */}
           <div>
             <div className="mb-6">
-              <span className="inline-block px-3 py-1 bg-[var(--surface-3)] text-[var(--text)] border border-[var(--border)] rounded-full text-sm mb-4">
+              <span className={`inline-block px-3 py-1 rounded-full text-sm mb-4 border ${
+                artwork?.status === 'sold'
+                  ? 'bg-[var(--surface-3)] text-[var(--text-muted)] border-[var(--border)]'
+                  : 'bg-[var(--green-muted)] text-[var(--green)] border-[var(--border)]'
+              }`}>
                 {artwork?.status === 'sold' ? 'Sold' : 'Available for Purchase'}
               </span>
               <h1 className="text-3xl sm:text-4xl mb-3 text-[var(--text)]">{artwork?.title || 'Artwork'}</h1>
@@ -345,15 +355,41 @@ export function PurchasePage({ artworkId, onBack, onNavigate }: PurchasePageProp
             </div>
 
             {purchaseStatus === 'success' && (
-              <div className="bg-[var(--surface-3)] rounded-xl p-4 border border-[var(--border)] mb-4">
-                <p className="text-sm text-[var(--text)]">
-                  Payment successful! Show this to venue staff to collect the artwork.
-                </p>
-                {receiptUrl && (
-                  <p className="text-sm mt-2">
-                    <a href={receiptUrl} target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] underline">View Stripe Receipt</a>
-                  </p>
-                )}
+              <div className="bg-[var(--green-muted)] rounded-xl p-5 border border-[var(--border)] mb-4">
+                <div className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-[var(--green)] flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-[var(--text)] mb-1">
+                      Payment successful!
+                    </p>
+                    <p className="text-sm text-[var(--text-muted)] mb-3">
+                      Show this to venue staff to collect your artwork.
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {receiptUrl && (
+                        <a href={receiptUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm font-medium text-[var(--accent)] hover:underline">
+                          View receipt
+                        </a>
+                      )}
+                      {artwork?.artistId && (
+                        <button
+                          onClick={() => onNavigate?.(`/p/artist/${artwork.artistId}`)}
+                          className="text-sm font-medium text-[var(--accent)] hover:underline"
+                        >
+                          View artist profile
+                        </button>
+                      )}
+                      {artwork?.venueId && (
+                        <button
+                          onClick={() => onNavigate?.(`/venues/${artwork.venueId}`)}
+                          className="text-sm font-medium text-[var(--accent)] hover:underline"
+                        >
+                          View venue
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
             {purchaseStatus === 'cancel' && (
@@ -371,13 +407,21 @@ export function PurchasePage({ artworkId, onBack, onNavigate }: PurchasePageProp
             <button
               onClick={handlePurchase}
               disabled={buying || artwork?.status === 'sold' || purchaseStatus === 'success' || !artwork}
-              className="w-full flex items-center justify-center gap-3 px-6 py-3 sm:py-4 bg-[var(--accent)] disabled:bg-[var(--surface-3)] text-[var(--accent-contrast)] disabled:text-[var(--text-muted)] rounded-xl hover:brightness-95 transition shadow-lg mb-4"
+              className="w-full flex items-center justify-center gap-3 px-6 py-3 sm:py-4 bg-[var(--accent)] disabled:bg-[var(--surface-3)] text-[var(--accent-contrast)] disabled:text-[var(--text-muted)] rounded-xl hover:brightness-95 transition shadow-lg mb-2"
             >
               {buying ? <Loader2 className="w-5 h-5 animate-spin" /> : <ShoppingCart className="w-5 h-5" />}
               <span className="text-base sm:text-lg">
                 {artwork?.status === 'sold' ? 'Already Sold' : purchaseStatus === 'success' ? 'Payment Complete' : 'Buy This Artwork'}
               </span>
             </button>
+
+            {/* Trust cues */}
+            <div className="flex items-center justify-center gap-4 text-xs text-[var(--text-muted)] mb-4">
+              <span className="inline-flex items-center gap-1">
+                <Lock className="w-3 h-3" /> Secure checkout
+              </span>
+              <span>Powered by Stripe</span>
+            </div>
 
             {loading && (
               <p className="text-xs text-[var(--text-muted)]">Loading latest availability…</p>

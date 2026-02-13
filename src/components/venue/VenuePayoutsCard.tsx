@@ -93,11 +93,11 @@ export function VenuePayoutsCard({ user }: VenuePayoutsCardProps) {
   };
   const isReady = !!status.hasAccount && !!status.payoutsEnabled;
   const onboardingLabel = status.onboardingStatus === 'complete'
-    ? 'Ready to receive payouts'
+    ? 'Connected'
     : status.onboardingStatus === 'pending'
-      ? 'Finish Stripe setup'
+      ? 'Pending'
       : status.onboardingStatus === 'restricted'
-        ? 'Action needed in Stripe'
+        ? 'Action needed'
         : 'Not connected';
 
   return (

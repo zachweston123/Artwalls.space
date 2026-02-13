@@ -1,7 +1,8 @@
-import { Check, Sparkles, Shield, TrendingUp, Zap, Calculator, Loader2 } from 'lucide-react';
+import { Check, Sparkles, Shield, TrendingUp, Zap, Calculator, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { apiPost } from '../../lib/api';
 import { PRICING_COPY } from '../../lib/feeCopy';
+import { trackEvent } from '../../lib/trackEvent';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 import { EarningsComparisonBlurb } from './EarningsComparisonBlurb';
 
@@ -12,12 +13,18 @@ interface PricingPageProps {
 
 export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPageProps) {
   const [showProtectionDetails, setShowProtectionDetails] = useState(false);
+  const [showExample, setShowExample] = useState(false);
   const [saleValue, setSaleValue] = useState(100);
   const [artworksPerMonth, setArtworksPerMonth] = useState(5);
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [subscribing, setSubscribing] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [managingPortal, setManagingPortal] = useState<boolean>(false);
+
+  // Track plan_viewed on mount
+  useEffect(() => {
+    trackEvent({ event_type: 'artwork_view', metadata: { page: 'pricing', action: 'plan_viewed' } });
+  }, []);
 
   // Helper functions for number formatting
   const formatCurrency = (centAmount: number) => {
@@ -36,13 +43,15 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       icon: Sparkles,
       takeHome: 60,
       tagline: 'Perfect for trying Artwalls',
+      platformFee: '25%',
       features: [
-        '1 active display included',
-        '1 artwork',
+        '1 active artwork',
+        '1 active display',
         'Basic QR code generation',
         'Weekly payouts',
       ],
       activeDisplays: 1,
+      artworks: 1,
       overagePricing: null,
       payoutSpeed: 'Weekly',
       protection: 'Optional at $5/artwork/mo',
@@ -60,13 +69,15 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       icon: TrendingUp,
       takeHome: 80,
       tagline: 'Great for growing artists',
+      platformFee: '5%',
       features: [
-        '4 active displays included',
         'Up to 10 artworks',
+        '4 active displays',
         'Priority support',
         'Standard payouts',
       ],
       activeDisplays: 4,
+      artworks: 10,
       overagePricing: '$5/mo per additional display',
       payoutSpeed: 'Standard',
       protection: 'Optional at $3/artwork/mo',
@@ -84,13 +95,15 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       icon: Zap,
       takeHome: 83,
       tagline: 'Most popular for active artists',
+      platformFee: '2%',
       features: [
-        '10 active displays included',
         'Up to 30 artworks',
+        '10 active displays',
         'Unlimited venue applications',
-        'Priority visibility in search results',
+        'Priority visibility in search',
       ],
       activeDisplays: 10,
+      artworks: 30,
       overagePricing: '$4/mo per additional display',
       payoutSpeed: 'Standard',
       protection: 'Optional at $3/artwork/mo',
@@ -108,14 +121,15 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       icon: Shield,
       takeHome: 85,
       tagline: 'Best for high-volume artists',
+      platformFee: '0%',
       features: [
-        'Unlimited active displays',
         'Unlimited artworks',
-        'Unlimited venue applications',
-        'Free Artwork Protection Plan',
+        'Unlimited active displays',
+        'Free Artwork Protection',
         'Featured artist eligibility',
       ],
       activeDisplays: 'Unlimited',
+      artworks: 'Unlimited',
       overagePricing: null,
       payoutSpeed: 'Fast',
       protection: 'Included FREE',
@@ -205,10 +219,21 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
   const growthMonthly = calculateMonthlyNet('growth', 83, 19, false);
   const proMonthly = calculateMonthlyNet('pro', 85, 39, true);
 
+  // Example breakdown for the $140 expandable section
+  const examplePrice = 140;
+  const exampleBreakdowns = [
+    { name: 'Free', pct: 60, take: examplePrice * 0.60 },
+    { name: 'Starter', pct: 80, take: examplePrice * 0.80 },
+    { name: 'Growth', pct: 83, take: examplePrice * 0.83 },
+    { name: 'Pro', pct: 85, take: examplePrice * 0.85 },
+  ];
+
   async function startSubscription(tier: PlanId) {
     if (tier === 'free') return;
     setError(null);
     setSubscribing(tier);
+    // Analytics: upgrade_clicked
+    trackEvent({ event_type: 'checkout_start', metadata: { action: 'upgrade_clicked', tier } });
     try {
       // Map UI tiers to backend tiers. Server supports 'starter' | 'growth' | 'pro'.
       const mappedTier = tier;
@@ -224,6 +249,8 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
           return;
         }
       } catch {}
+      // Analytics: checkout_started
+      trackEvent({ event_type: 'checkout_start', metadata: { action: 'checkout_started', tier: mappedTier } });
       const { url } = await apiPost<{ url: string }>(
         '/api/stripe/billing/create-subscription-session',
         { tier: mappedTier, artistId },
@@ -295,84 +322,92 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
   }
 
   return (
-    <div className="bg-[var(--bg)]">
-      <div className="text-center mb-12">
-        <h1 className="text-3xl mb-2 text-[var(--text)]">Plans & Pricing</h1>
-        <p className="text-[var(--text-muted)] max-w-2xl mx-auto">
-          Choose the plan that fits your needs. Upgrade anytime as your art business grows.
+    <div className="bg-[var(--bg)] pb-16">
+      {/* Hero Header */}
+      <div className="text-center mb-10 pt-2">
+        <h1 className="text-3xl sm:text-4xl font-bold mb-3 text-[var(--text)]">Plans & Pricing</h1>
+        <p className="text-[var(--text-muted)] max-w-xl mx-auto text-base sm:text-lg">
+          Keep more of every sale. Upgrade anytime as your art business grows.
         </p>
       </div>
 
       <EarningsComparisonBlurb variant="pricing" />
 
-      {/* Plan Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+      {/* ── Plan Cards ─────────────────────────────────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-10 px-1">
         {plans.map((plan) => {
           const Icon = plan.icon;
           return (
             <div
               key={plan.id}
-              className={`bg-[var(--surface-2)] rounded-xl border-2 p-8 relative transition-all ${
-                plan.popular ? 'border-[var(--accent)] shadow-lg scale-105' : 'border-[var(--border)]'
+              className={`bg-[var(--surface-2)] rounded-xl border-2 p-5 sm:p-6 relative flex flex-col transition-all ${
+                plan.popular
+                  ? 'border-[var(--accent)] shadow-lg lg:scale-105 z-10'
+                  : 'border-[var(--border)]'
               }`}
             >
               {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[var(--accent)] text-white px-4 py-1 rounded-full text-xs font-bold">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[var(--accent)] text-white px-4 py-1 rounded-full text-xs font-bold whitespace-nowrap">
                   Most Popular
                 </div>
               )}
 
-              <div className="flex items-start justify-between mb-4">
+              <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
-                  <h3 className="text-xl font-bold text-[var(--text)]">{plan.name}</h3>
-                  <p className="text-xs text-[var(--text-muted)] mt-1">{plan.tagline}</p>
+                  <h3 className="text-lg font-bold text-[var(--text)]">{plan.name}</h3>
+                  <p className="text-xs text-[var(--text-muted)] mt-0.5">{plan.tagline}</p>
                 </div>
-                <Icon className="w-8 h-8 text-[var(--accent)] flex-shrink-0" />
+                <Icon className="w-7 h-7 text-[var(--accent)] flex-shrink-0" />
               </div>
 
-              {/* Artist Take-Home Percentage - Prominent Display */}
-              <div className="bg-[var(--surface-3)] border border-[var(--accent)] rounded-lg p-3 mb-4">
-                <div className="text-xs text-[var(--text-muted)] font-semibold">{PRICING_COPY.takeHomeLabel}</div>
-                <div className="text-2xl font-bold text-[var(--accent)]">{plan.takeHome}%</div>
-                <div className="text-xs text-[var(--text-muted)] mt-1">{PRICING_COPY.takeHomeSubtext}</div>
+              {/* ★ PRIMARY VALUE — Take Home % */}
+              <div className="bg-[var(--surface-3)] border border-[var(--accent)] rounded-lg p-3 mb-3 text-center">
+                <div className="text-3xl font-extrabold text-[var(--accent)] leading-tight">{plan.takeHome}%</div>
+                <div className="text-xs text-[var(--text-muted)] mt-0.5">{PRICING_COPY.takeHomeLabel} {PRICING_COPY.takeHomeSubtext}</div>
               </div>
 
-              <div className="mb-6">
-                <span className="text-3xl font-bold text-[var(--text)]">{plan.price === 0 ? 'Free' : `$${plan.price}`}</span>
-                <span className="text-[var(--text-muted)] ml-1">{plan.period}</span>
+              {/* Price */}
+              <div className="mb-4 text-center">
+                <span className="text-2xl font-bold text-[var(--text)]">{plan.price === 0 ? 'Free' : `$${plan.price}`}</span>
+                <span className="text-[var(--text-muted)] ml-1 text-sm">{plan.period}</span>
               </div>
 
-              <ul className="space-y-3 mb-6">
+              {/* Secondary — Limits */}
+              <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
+                <div className="bg-[var(--surface-1)] rounded-md p-2 text-center border border-[var(--border)]">
+                  <div className="font-semibold text-[var(--text)]">{plan.artworks}</div>
+                  <div className="text-[var(--text-muted)]">Artworks</div>
+                </div>
+                <div className="bg-[var(--surface-1)] rounded-md p-2 text-center border border-[var(--border)]">
+                  <div className="font-semibold text-[var(--text)]">{plan.activeDisplays}</div>
+                  <div className="text-[var(--text-muted)]">Displays</div>
+                </div>
+              </div>
+
+              {/* Secondary — Platform fee label */}
+              <div className="text-xs text-center text-[var(--text-muted)] mb-3">
+                Platform + Processing: <span className="font-semibold text-[var(--text)]">{plan.platformFee}</span>
+              </div>
+
+              {/* Features */}
+              <ul className="space-y-2 mb-5 flex-1">
                 {plan.features.map((feature, index) => (
                   <li key={index} className="flex items-start gap-2 text-sm">
-                    <Check className="w-5 h-5 text-[var(--accent)] flex-shrink-0" />
+                    <Check className="w-4 h-4 text-[var(--accent)] flex-shrink-0 mt-0.5" />
                     <span className="text-[var(--text)]">{feature}</span>
                   </li>
                 ))}
               </ul>
 
-              <div className="border-t border-[var(--border)] pt-4 mb-6">
-                <p className="text-xs text-[var(--text-muted)] mb-2">Artwork Protection Plan:</p>
-                <p className="text-sm text-[var(--text)] mb-1">
-                  {plan.protection}
-                  {plan.id === 'pro' && (
-                    <span className="ml-2 text-xs bg-[var(--surface-3)] text-[var(--text)] border border-[var(--border)] px-2 py-0.5 rounded">
-                      INCLUDED
-                    </span>
-                  )}
-                </p>
-                <p className="text-xs text-[var(--text-muted)]">Coverage: {plan.protectionCap}</p>
-                <p className="text-xs text-[var(--text-muted)]">{plan.claimLimit}</p>
-              </div>
-
+              {/* CTA */}
               <button
                 onClick={() => startSubscription(plan.id as PlanId)}
                 disabled={plan.disabled || subscribing === plan.id}
-                className={`w-full py-3 rounded-lg transition-colors ${
+                className={`w-full py-3 rounded-lg transition-colors text-sm font-medium ${
                   plan.disabled
                     ? 'bg-[var(--surface-3)] text-[var(--text-muted)] cursor-not-allowed border border-[var(--border)]'
                     : plan.popular
-                    ? 'bg-[var(--accent)] text-[var(--accent-contrast)]'
+                    ? 'bg-[var(--accent)] text-[var(--accent-contrast)] shadow-md hover:brightness-95'
                     : 'bg-[var(--surface-3)] text-[var(--text)] hover:bg-[var(--surface-2)] border border-[var(--border)]'
                 }`}
               >
@@ -390,8 +425,35 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
         })}
       </div>
 
-      <div className="max-w-4xl mx-auto mb-12">
-        <div className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-6">
+      {/* ── Example at $140 (expandable) ────────────────── */}
+      <div className="max-w-3xl mx-auto mb-10">
+        <button
+          onClick={() => setShowExample(!showExample)}
+          className="w-full flex items-center justify-between bg-[var(--surface-2)] rounded-xl border border-[var(--border)] px-5 py-4 hover:shadow-sm transition-shadow"
+        >
+          <span className="text-sm font-semibold text-[var(--text)]">💰 Example: What you take home on a $140 sale</span>
+          {showExample ? <ChevronUp className="w-5 h-5 text-[var(--text-muted)]" /> : <ChevronDown className="w-5 h-5 text-[var(--text-muted)]" />}
+        </button>
+        {showExample && (
+          <div className="bg-[var(--surface-2)] rounded-b-xl border border-t-0 border-[var(--border)] p-5">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {exampleBreakdowns.map((b) => (
+                <div key={b.name} className="bg-[var(--surface-1)] rounded-lg border border-[var(--border)] p-3 text-center">
+                  <div className="text-xs text-[var(--text-muted)] mb-1">{b.name} ({b.pct}%)</div>
+                  <div className="text-xl font-bold text-[var(--accent)]">${b.take.toFixed(2)}</div>
+                  <div className="text-xs text-[var(--text-muted)]">take-home</div>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-[var(--text-muted)] mt-3 text-center">
+              Venue always receives 15%. Buyer pays a 4.5% service fee at checkout. Remaining % is Platform + Processing.
+            </p>
+          </div>
+        )}
+      </div>
+
+      <div className="max-w-4xl mx-auto mb-10">
+        <div className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-5 sm:p-6">
           <Accordion type="single" collapsible>
             <AccordionItem value="payouts">
               <AccordionTrigger>How payouts work</AccordionTrigger>
@@ -414,8 +476,8 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
         </div>
       </div>
 
-      {/* Upgrade Note */}
-      <div className="text-center mb-12 bg-[var(--surface-2)] rounded-xl p-6 border border-[var(--border)]">
+      {/* Manage Subscription */}
+      <div className="text-center mb-10 bg-[var(--surface-2)] rounded-xl p-5 sm:p-6 border border-[var(--border)] max-w-2xl mx-auto">
           <p className="text-sm text-[var(--text)]">
           💡 You can upgrade or downgrade your plan anytime. Changes take effect at the start of your next billing cycle.
         </p>
@@ -434,10 +496,10 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       </div>
 
       {/* Earnings Calculator */}
-      <div className="max-w-4xl mx-auto mb-12">
-        <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl p-8">
-          <h2 className="text-2xl mb-2 text-[var(--text)] flex items-center gap-3">
-            <Calculator className="w-7 h-7" />
+      <div className="max-w-4xl mx-auto mb-10">
+        <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl p-5 sm:p-8">
+          <h2 className="text-xl sm:text-2xl mb-2 text-[var(--text)] flex items-center gap-3">
+            <Calculator className="w-6 h-6" />
             Earnings Calculator
           </h2>
           <p className="text-sm text-[var(--text-muted)] mb-6">
@@ -494,7 +556,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
 
           <p className="text-sm text-[var(--text)] mb-3 font-semibold">Click a plan to see your earnings breakdown:</p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
             {[
               { id: 'free', name: 'Free', takeHome: 60, price: 0, earnings: freeEarnings, monthly: freeMonthly },
               { id: 'starter', name: 'Starter', takeHome: 80, price: 9, earnings: starterEarnings, monthly: starterMonthly },
@@ -531,213 +593,71 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
             })}
           </div>
 
-          {selectedPlanId && (
-            <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-lg p-6">
-              <h3 className="font-bold text-[var(--text)] mb-4 text-lg">
-                {selectedPlanId === 'free' && 'Free Plan'}
-                {selectedPlanId === 'starter' && 'Starter Plan'}
-                {selectedPlanId === 'growth' && 'Growth Plan'}
-                {selectedPlanId === 'pro' && 'Pro Plan'}
-                {' '}Earnings Breakdown
-              </h3>
-              
-              <div className="space-y-3">
-                <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
-                  <span className="text-[var(--text-muted)]">Sale Value</span>
-                  <span className="font-semibold text-[var(--text)]">${formatWhole(saleValue)}</span>
+          {selectedPlanId && (() => {
+            const allData: Record<string, { earnings: ReturnType<typeof calculateArtistTakeHome>; monthly: ReturnType<typeof calculateMonthlyNet>; label: string; sub: number; protLabel: string }> = {
+              free: { earnings: freeEarnings, monthly: freeMonthly, label: 'Free Plan', sub: 0, protLabel: '$3/artwork/mo' },
+              starter: { earnings: starterEarnings, monthly: starterMonthly, label: 'Starter Plan', sub: 9, protLabel: '$3/artwork/mo' },
+              growth: { earnings: growthEarnings, monthly: growthMonthly, label: 'Growth Plan', sub: 19, protLabel: '$3/artwork/mo' },
+              pro: { earnings: proEarnings, monthly: proMonthly, label: 'Pro Plan', sub: 39, protLabel: 'Included' },
+            };
+            const d = allData[selectedPlanId];
+            if (!d) return null;
+            return (
+              <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-lg p-4 sm:p-6">
+                <h3 className="font-bold text-[var(--text)] mb-4 text-base sm:text-lg">{d.label} Earnings Breakdown</h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
+                    <span className="text-[var(--text-muted)] text-sm">Sale Value</span>
+                    <span className="font-semibold text-[var(--text)]">${formatWhole(saleValue)}</span>
+                  </div>
+                  <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
+                    <span className="text-[var(--text-muted)] text-sm">Artist Earnings ({d.earnings.artistPct}%)</span>
+                    <span className="font-semibold text-[var(--accent)]">${formatCurrency(d.earnings.artistAmount * 100)}</span>
+                  </div>
+                  <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
+                    <span className="text-[var(--text-muted)] text-sm">Venue Commission (15%)</span>
+                    <span className="font-semibold text-[var(--text)]">${formatCurrency(d.earnings.venueAmount * 100)}</span>
+                  </div>
+                  <div className="flex justify-between items-center pt-3 bg-[var(--surface-2)] border border-[var(--border)] p-4 rounded-lg mb-2">
+                    <span className="font-bold text-[var(--text)] text-sm">Your per-sale earnings</span>
+                    <span className="font-bold text-[var(--accent)] text-xl">${formatCurrency(d.earnings.artistAmount * 100)}</span>
+                  </div>
+                  <div className="bg-[var(--surface-3)] p-4 rounded-lg border border-[var(--border)]">
+                    <h4 className="text-sm font-semibold text-[var(--text)] mb-2">After Additional Costs:</h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-[var(--text-muted)]">Monthly Subscription</span>
+                        <span className="text-[var(--text)]">{d.sub === 0 ? '$0' : `-$${d.sub}`}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[var(--text-muted)]">Protection Plan</span>
+                        <span className="text-[var(--text)]">{d.protLabel}</span>
+                      </div>
+                      <div className="border-t border-[var(--border)] pt-2 mt-2">
+                        <div className="flex justify-between font-semibold">
+                          <span className="text-[var(--text)]">Est. Net Income / month</span>
+                          <span className="text-[var(--text)]">${formatWhole(d.monthly.monthlyNet)}</span>
+                        </div>
+                      </div>
+                      {d.monthly.allowedArtworks < artworksPerMonth && (
+                        <p className="text-xs text-[var(--text-muted)] mt-2">
+                          Limited by plan: supports up to {d.monthly.artworkLimit === Number.POSITIVE_INFINITY ? 'unlimited' : d.monthly.artworkLimit} artworks.
+                        </p>
+                      )}
+                    </div>
+                  </div>
                 </div>
-
-                <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
-                  <span className="text-[var(--text-muted)]">Artworks / month</span>
-                  <span className="font-semibold text-[var(--text)]">{artworksPerMonth}</span>
-                </div>
-
-                {selectedPlanId === 'free' && (
-                  <>
-                    <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
-                      <span className="text-[var(--text-muted)]">Artist Earnings (60%)</span>
-                      <span className="font-semibold text-[var(--accent)]">${formatCurrency(freeEarnings.artistAmount * 100)}</span>
-                    </div>
-                    <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
-                      <span className="text-[var(--text-muted)]">Venue Commission (15%)</span>
-                      <span className="font-semibold text-[var(--text)]">${formatCurrency(freeEarnings.venueAmount * 100)}</span>
-                    </div>
-                    <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
-                      <span className="text-[var(--text-muted)]">Monthly Subscription</span>
-                      <span className="font-semibold text-[var(--text)]">$0</span>
-                    </div>
-                    <div className="flex justify-between items-center pt-3 bg-[var(--surface-2)] border border-[var(--border)] p-4 rounded-lg mb-4">
-                      <span className="font-bold text-[var(--text)]">Your per-sale earnings</span>
-                      <span className="font-bold text-[var(--accent)] text-xl">${formatCurrency(freeEarnings.artistAmount * 100)}</span>
-                    </div>
-                    <div className="bg-[var(--surface-3)] p-4 rounded-lg border border-[var(--border)]">
-                      <h4 className="text-sm font-semibold text-[var(--text)] mb-2">After Additional Costs:</h4>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-[var(--text-muted)]">Monthly Subscription</span>
-                          <span className="text-[var(--text)]">$0</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-[var(--text-muted)]">Protection Plan</span>
-                          <span className="text-[var(--text)]">$3/artwork/mo</span>
-                        </div>
-                        <div className="border-t border-[var(--border)] pt-2 mt-2">
-                          <div className="flex justify-between font-semibold">
-                            <span className="text-[var(--text)]">Est. Net Income / month</span>
-                            <span className="text-[var(--text)]">${formatWhole(freeMonthly.monthlyNet)}</span>
-                          </div>
-                        </div>
-                        {freeMonthly.allowedArtworks < artworksPerMonth && (
-                          <p className="text-xs text-[var(--text-muted)] mt-2">
-                            Limited by plan: Free supports up to {freeMonthly.allowedArtworks} artworks.
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {selectedPlanId === 'starter' && (
-                  <>
-                    <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
-                      <span className="text-[var(--text-muted)]">Artist Earnings (80%)</span>
-                      <span className="font-semibold text-[var(--accent)]">${formatCurrency(starterEarnings.artistAmount * 100)}</span>
-                    </div>
-                    <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
-                      <span className="text-[var(--text-muted)]">Venue Commission (15%)</span>
-                      <span className="font-semibold text-[var(--text)]">${formatCurrency(starterEarnings.venueAmount * 100)}</span>
-                    </div>
-                    <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
-                      <span className="text-[var(--text-muted)]">Monthly Subscription</span>
-                      <span className="font-semibold text-[var(--text)]">$9.00</span>
-                    </div>
-                    <div className="flex justify-between items-center pt-3 bg-[var(--surface-2)] border border-[var(--border)] p-4 rounded-lg mb-4">
-                      <span className="font-bold text-[var(--text)]">Your per-sale earnings</span>
-                      <span className="font-bold text-[var(--accent)] text-xl">${formatCurrency(starterEarnings.artistAmount * 100)}</span>
-                    </div>
-                    <div className="bg-[var(--surface-3)] p-4 rounded-lg border border-[var(--border)]">
-                      <h4 className="text-sm font-semibold text-[var(--text)] mb-2">After Additional Costs:</h4>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-[var(--text-muted)]">Monthly Subscription</span>
-                          <span className="text-[var(--text)]">-$9</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-[var(--text-muted)]">Protection Plan</span>
-                          <span className="text-[var(--text)]">$3/artwork/mo</span>
-                        </div>
-                        <div className="border-t border-[var(--border)] pt-2 mt-2">
-                          <div className="flex justify-between font-semibold">
-                            <span className="text-[var(--text)]">Est. Net Income / month</span>
-                            <span className="text-[var(--text)]">${formatWhole(starterMonthly.monthlyNet)}</span>
-                          </div>
-                        </div>
-                        {starterMonthly.allowedArtworks < artworksPerMonth && (
-                          <p className="text-xs text-[var(--text-muted)] mt-2">
-                            Limited by plan: Starter supports up to {starterMonthly.allowedArtworks} artworks.
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {selectedPlanId === 'growth' && (
-                  <>
-                    <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
-                      <span className="text-[var(--text-muted)]">Artist Earnings (83%)</span>
-                      <span className="font-semibold text-[var(--accent)]">${formatCurrency(growthEarnings.artistAmount * 100)}</span>
-                    </div>
-                    <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
-                      <span className="text-[var(--text-muted)]">Venue Commission (15%)</span>
-                      <span className="font-semibold text-[var(--text)]">${formatCurrency(growthEarnings.venueAmount * 100)}</span>
-                    </div>
-                    <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
-                      <span className="text-[var(--text-muted)]">Monthly Subscription</span>
-                      <span className="font-semibold text-[var(--text)]">$19.00</span>
-                    </div>
-                    <div className="flex justify-between items-center pt-3 bg-[var(--surface-2)] border border-[var(--border)] p-4 rounded-lg mb-4">
-                      <span className="font-bold text-[var(--text)]">Your per-sale earnings</span>
-                      <span className="font-bold text-[var(--accent)] text-xl">${formatCurrency(growthEarnings.artistAmount * 100)}</span>
-                    </div>
-                    <div className="bg-[var(--surface-3)] p-4 rounded-lg border border-[var(--border)]">
-                      <h4 className="text-sm font-semibold text-[var(--text)] mb-2">After Additional Costs:</h4>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-[var(--text-muted)]">Monthly Subscription</span>
-                          <span className="text-[var(--text)]">-$19</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-[var(--text-muted)]">Protection Plan</span>
-                          <span className="text-[var(--text)]">$3/artwork/mo</span>
-                        </div>
-                        <div className="border-t border-[var(--border)] pt-2 mt-2">
-                          <div className="flex justify-between font-semibold">
-                            <span className="text-[var(--text)]">Est. Net Income / month</span>
-                            <span className="text-[var(--text)]">${formatWhole(growthMonthly.monthlyNet)}</span>
-                          </div>
-                        </div>
-                        {growthMonthly.allowedArtworks < artworksPerMonth && (
-                          <p className="text-xs text-[var(--text-muted)] mt-2">
-                            Limited by plan: Growth supports up to 30 artworks.
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {selectedPlanId === 'pro' && (
-                  <>
-                    <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
-                      <span className="text-[var(--text-muted)]">Artist Earnings (85%)</span>
-                      <span className="font-semibold text-[var(--accent)]">${formatCurrency(proEarnings.artistAmount * 100)}</span>
-                    </div>
-                    <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
-                      <span className="text-[var(--text-muted)]">Venue Commission (15%)</span>
-                      <span className="font-semibold text-[var(--text)]">${formatCurrency(proEarnings.venueAmount * 100)}</span>
-                    </div>
-                    <div className="flex justify-between items-center pb-3 border-b border-[var(--border)]">
-                      <span className="text-[var(--text-muted)]">Monthly Subscription</span>
-                      <span className="font-semibold text-[var(--text)]">$39.00</span>
-                    </div>
-                    <div className="flex justify-between items-center pt-3 bg-[var(--surface-2)] border border-[var(--border)] p-4 rounded-lg mb-4">
-                      <span className="font-bold text-[var(--text)]">Your per-sale earnings</span>
-                      <span className="font-bold text-[var(--accent)] text-xl">${formatCurrency(proEarnings.artistAmount * 100)}</span>
-                    </div>
-                    <div className="bg-[var(--surface-3)] p-4 rounded-lg border border-[var(--border)]">
-                      <h4 className="text-sm font-semibold text-[var(--text)] mb-2">After Additional Costs:</h4>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-[var(--text-muted)]">Monthly Subscription</span>
-                          <span className="text-[var(--text)]">-$39</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-[var(--text-muted)]">Protection Plan</span>
-                          <span className="text-[var(--text)]">Included</span>
-                        </div>
-                        <div className="border-t border-[var(--border)] pt-2 mt-2">
-                          <div className="flex justify-between font-semibold">
-                            <span className="text-[var(--text)]">Est. Net Income / month</span>
-                            <span className="text-[var(--text)]">${formatWhole(proMonthly.monthlyNet)}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                )}
+                <p className="text-xs text-[var(--text-muted)] mt-4">
+                  💡 <span className="font-semibold">Pro tip:</span> The Pro plan includes free protection for all your artworks and offers the highest artist take-home (85%) to maximize your earnings!
+                </p>
               </div>
-
-              <p className="text-xs text-[var(--text-muted)] mt-4">
-                💡 <span className="font-semibold">Pro tip:</span> The Pro plan includes free protection for all your artworks and offers the highest artist take-home (85%) to maximize your earnings!
-              </p>
-            </div>
-          )}
+            );
+          })()}
         </div>
       </div>
 
       {/* Protection Plan Details */}
-      <div className="max-w-4xl mx-auto mb-12">
+      <div className="max-w-4xl mx-auto mb-10">
         <button
           onClick={() => setShowProtectionDetails(!showProtectionDetails)}
           className="w-full bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-6 text-left hover:shadow-md transition-shadow"
@@ -755,7 +675,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
               </div>
             </div>
             <div className="text-[var(--text-muted)]">
-              {showProtectionDetails ? '−' : '+'}
+              {showProtectionDetails ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
             </div>
           </div>
         </button>
@@ -866,158 +786,111 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
         )}
       </div>
 
-      {/* Payout Information by Plan */}
-      <div className="max-w-4xl mx-auto mb-12">
-        <div className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-6">
-          <h2 className="text-2xl mb-2 text-[var(--text)]">Payout Information by Plan</h2>
-          <p className="text-sm text-[var(--text-muted)] mb-4">
-            Artwork and application limits per subscription tier.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[
-              { id: 'free', name: 'Free', listings: '1', applications: '1/month' },
-              { id: 'starter', name: 'Starter', listings: '10', applications: '3/month' },
-              { id: 'growth', name: 'Growth', listings: '30', applications: 'Unlimited' },
-              { id: 'pro', name: 'Pro', listings: 'Unlimited', applications: 'Unlimited' },
-            ].map((p) => (
-              <div key={p.id} className="bg-[var(--surface-1)] rounded-lg border border-[var(--border)] p-4">
-                <h3 className="text-lg text-[var(--text)] mb-2">{p.name}</h3>
-                <div className="text-sm">
-                  <div className="flex items-center justify-between py-1">
-                    <span className="text-[var(--text-muted)]">Artworks</span>
-                    <span className="text-[var(--text)] font-semibold">{p.listings}</span>
-                  </div>
-                  <div className="flex items-center justify-between py-1">
-                    <span className="text-[var(--text-muted)]">Venue applications</span>
-                    <span className="text-[var(--text)] font-semibold">{p.applications}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-          <p className="text-xs text-[var(--text-muted)] mt-3">
-            Limits apply per billing cycle. Upgrade anytime to increase caps.
-          </p>
-        </div>
-      </div>
+      {/* Feature Comparison */}
+      <div className="max-w-6xl mx-auto mb-10">
+        <h2 className="text-xl sm:text-2xl mb-6 text-center text-[var(--text)]">Compare All Plans</h2>
 
-      {/* Feature Comparison Table */}
-      <div className="max-w-6xl mx-auto mb-12">
-        <h2 className="text-2xl mb-6 text-center text-[var(--text)]">Compare All Plans</h2>
-        <div className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] overflow-x-auto">
+        {/* Desktop table — hidden on mobile */}
+        <div className="hidden sm:block bg-[var(--surface-2)] rounded-xl border border-[var(--border)] overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-[var(--border)]">
-                <th className="text-left p-4 text-sm text-[var(--text-muted)] font-semibold">What You Get</th>
-                <th className="text-center p-4 text-sm text-[var(--text-muted)] font-semibold">
-                  <div>Free</div>
-                  <div className="text-xs text-[var(--accent)] font-bold mt-1">60% earnings</div>
-                </th>
-                <th className="text-center p-4 text-sm text-[var(--text-muted)] font-semibold">
-                  <div>Starter</div>
-                  <div className="text-xs text-[var(--accent)] font-bold mt-1">80% earnings</div>
-                </th>
-                <th className="text-center p-4 text-sm bg-[var(--surface-3)] text-[var(--text)] font-semibold">
-                  <div>Growth</div>
-                  <div className="text-xs text-[var(--accent)] font-bold mt-1">83% earnings</div>
-                </th>
-                <th className="text-center p-4 text-sm text-[var(--text-muted)] font-semibold">
-                  <div>Pro</div>
-                  <div className="text-xs text-[var(--accent)] font-bold mt-1">85% earnings</div>
-                </th>
+                <th className="text-left p-4 text-sm text-[var(--text-muted)] font-semibold">Feature</th>
+                {plans.map((p) => (
+                  <th key={p.id} className={`text-center p-4 text-sm font-semibold ${p.popular ? 'bg-[var(--surface-3)] text-[var(--text)]' : 'text-[var(--text-muted)]'}`}>
+                    <div>{p.name}</div>
+                    <div className="text-xs text-[var(--accent)] font-bold mt-1">{p.take}% take-home</div>
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
-              <tr className="border-b border-[var(--border)] bg-[var(--surface-1)]">
-                <td className="p-4 text-sm text-[var(--text)]">Monthly subscription</td>
-                <td className="text-center p-4 text-sm text-[var(--text)]"><strong>Free</strong></td>
-                <td className="text-center p-4 text-sm text-[var(--text)]"><strong>$9</strong></td>
-                <td className="text-center p-4 text-sm bg-[var(--surface-3)] text-[var(--text)]"><strong>$19</strong></td>
-                <td className="text-center p-4 text-sm text-[var(--text)]"><strong>$39</strong></td>
-              </tr>
-              <tr className="border-b border-[var(--border)]">
-                <td className="p-4 text-sm text-[var(--text)]"><strong title="Active displays are the number of artworks you can have displayed through Artwalls at the same time.">Active displays included</strong></td>
-                <td className="text-center p-4 text-sm text-[var(--text)]"><strong>1</strong></td>
-                <td className="text-center p-4 text-sm text-[var(--text)]"><strong>4</strong></td>
-                <td className="text-center p-4 text-sm bg-[var(--surface-3)] text-[var(--text)]"><strong>10</strong></td>
-                <td className="text-center p-4 text-sm text-[var(--text)]"><strong>Unlimited</strong></td>
-              </tr>
-              <tr className="border-b border-[var(--border)] bg-[var(--surface-1)]">
-                <td className="p-4 text-sm text-[var(--text)]">Additional display fee</td>
-                <td className="text-center p-4 text-sm text-xs text-[var(--text-muted)]">N/A</td>
-                <td className="text-center p-4 text-sm text-xs text-[var(--text)]">$5/mo each</td>
-                <td className="text-center p-4 text-sm text-xs bg-[var(--surface-3)] text-[var(--text)]">$4/mo each</td>
-                <td className="text-center p-4 text-sm text-xs text-[var(--text)]">—</td>
-              </tr>
-              <tr className="border-b border-[var(--border)]">
-                <td className="p-4 text-sm text-[var(--text)]">Artworks you can list</td>
-                <td className="text-center p-4 text-sm text-[var(--text)]">1</td>
-                <td className="text-center p-4 text-sm text-[var(--text)]">10</td>
-                <td className="text-center p-4 text-sm bg-[var(--surface-3)] text-[var(--text)]">30</td>
-                <td className="text-center p-4 text-sm text-[var(--text)]">Unlimited</td>
-              </tr>
-              <tr className="border-b border-[var(--border)] bg-[var(--surface-1)]">
-                <td className="p-4 text-sm text-[var(--text)]"><strong>Sales analytics</strong></td>
-                <td className="text-center p-4 text-sm text-[var(--text)]">—</td>
-                <td className="text-center p-4 text-sm text-[var(--text)]">Basic</td>
-                <td className="text-center p-4 text-sm bg-[var(--surface-3)] text-[var(--text)]"><strong>Advanced</strong></td>
-                <td className="text-center p-4 text-sm text-[var(--text)]"><strong>Advanced</strong></td>
-              </tr>
-              <tr className="border-b border-[var(--border)]">
-                <td className="p-4 text-sm text-[var(--text)]">Venue applications per month</td>
-                <td className="text-center p-4 text-sm text-[var(--text)]">1</td>
-                <td className="text-center p-4 text-sm text-[var(--text)]">3</td>
-                <td className="text-center p-4 text-sm bg-[var(--surface-3)] text-[var(--text)]">Unlimited</td>
-                <td className="text-center p-4 text-sm text-[var(--text)]">Unlimited</td>
-              </tr>
-              <tr className="border-b border-[var(--border)] bg-[var(--surface-1)]">
-                <td className="p-4 text-sm text-[var(--text)]"><strong>Priority visibility in search results</strong></td>
-                <td className="text-center p-4 text-sm text-[var(--text)]">—</td>
-                <td className="text-center p-4 text-sm text-[var(--text)]">—</td>
-                <td className="text-center p-4 text-sm bg-[var(--surface-3)] text-[var(--text)]"><strong>✓</strong></td>
-                <td className="text-center p-4 text-sm text-[var(--text)]"><strong>✓✓</strong></td>
-              </tr>
-              <tr className="border-b border-[var(--border)] bg-[var(--surface-1)]">
-                <td className="p-4 text-sm text-[var(--text)]"><strong>Artwork Protection Plan</strong></td>
-                <td className="text-center p-4 text-sm text-xs text-[var(--text)]">$5/artwork/mo</td>
-                <td className="text-center p-4 text-sm text-xs text-[var(--text)]">$5/artwork/mo</td>
-                <td className="text-center p-4 text-sm text-xs bg-[var(--surface-3)] text-[var(--text)]">$3/artwork/mo</td>
-                <td className="text-center p-4 text-sm text-xs text-[var(--text)]"><strong>FREE</strong></td>
-              </tr>
-              <tr>
-                <td className="p-4 text-sm text-[var(--text)]">Max coverage per claim</td>
-                <td className="text-center p-4 text-sm text-xs text-[var(--text)]">$100/claim</td>
-                <td className="text-center p-4 text-sm text-xs text-[var(--text)]">$100/claim</td>
-                <td className="text-center p-4 text-sm text-xs bg-[var(--surface-3)] text-[var(--text)]">$150/claim</td>
-                <td className="text-center p-4 text-sm text-xs text-[var(--text)]">$200/claim</td>
-              </tr>
+              {[
+                { label: 'Monthly price', values: ['Free', '$9', '$19', '$39'] },
+                { label: 'Artworks listed', values: ['1', '10', '30', 'Unlimited'] },
+                { label: 'Active displays', values: ['1', '4', '10', 'Unlimited'] },
+                { label: 'Extra display fee', values: ['N/A', '$5/mo', '$4/mo', '—'] },
+                { label: 'Venue applications/mo', values: ['1', '3', 'Unlimited', 'Unlimited'] },
+                { label: 'Sales analytics', values: ['—', 'Basic', 'Advanced', 'Advanced'] },
+                { label: 'Priority visibility', values: ['—', '—', '✓', '✓✓'] },
+                { label: 'Protection plan', values: ['$5/art/mo', '$5/art/mo', '$3/art/mo', 'FREE'] },
+                { label: 'Max coverage/claim', values: ['$100', '$100', '$150', '$200'] },
+              ].map((row, i) => (
+                <tr key={row.label} className={`border-b border-[var(--border)] ${i % 2 === 0 ? 'bg-[var(--surface-1)]' : ''}`}>
+                  <td className="p-4 text-sm text-[var(--text)]">{row.label}</td>
+                  {row.values.map((val, j) => (
+                    <td key={j} className={`text-center p-4 text-sm ${plans[j]?.popular ? 'bg-[var(--surface-3)]' : ''} text-[var(--text)]`}>
+                      {val}
+                    </td>
+                  ))}
+                </tr>
+              ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile stacked cards — hidden on desktop */}
+        <div className="sm:hidden space-y-4">
+          {plans.map((plan) => {
+            const featureMap: Record<string, string> = {
+              free: 'N/A|1|1|1|—|—|$5/art/mo|$100',
+              starter: '$5/mo|10|4|3|Basic|—|$5/art/mo|$100',
+              growth: '$4/mo|30|10|Unlimited|Advanced|✓|$3/art/mo|$150',
+              pro: '—|Unlimited|Unlimited|Unlimited|Advanced|✓✓|FREE|$200',
+            };
+            const vals = (featureMap[plan.id] ?? '').split('|');
+            const labels = ['Extra display fee', 'Artworks', 'Active displays', 'Applications/mo', 'Analytics', 'Priority', 'Protection', 'Max claim'];
+            return (
+              <div key={plan.id} className={`rounded-xl border p-4 ${plan.popular ? 'border-[var(--accent)] bg-[var(--surface-2)]' : 'border-[var(--border)] bg-[var(--surface-1)]'}`}>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-base font-semibold text-[var(--text)]">{plan.name}</h3>
+                  <span className="text-sm font-bold text-[var(--accent)]">{plan.take}% take-home</span>
+                </div>
+                <div className="space-y-2">
+                  {labels.map((label, i) => (
+                    <div key={label} className="flex justify-between text-sm">
+                      <span className="text-[var(--text-muted)]">{label}</span>
+                      <span className="text-[var(--text)] font-medium">{vals[i]}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
       {/* FAQ */}
       <div className="max-w-3xl mx-auto">
-        <h2 className="text-2xl mb-6 text-center text-[var(--text)]">Frequently Asked Questions</h2>
-        <div className="space-y-4">
-          <div className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-6">
-            <h3 className="text-base mb-2 text-[var(--text)]">Can I change plans later?</h3>
-            <p className="text-sm text-[var(--text)]">
-              Yes! You can upgrade or downgrade anytime. Changes take effect at the start of your next billing cycle.
-            </p>
-          </div>
-          <div className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-6">
-            <h3 className="text-base mb-2 text-[var(--text)]">How does the Protection Plan work if I have multiple artworks displayed?</h3>
-            <p className="text-sm text-[var(--text)]">
-              On Free plan, protection costs $5 per displayed artwork per month. On Starter and Growth plans, it costs $3 per displayed artwork per month. On Pro, protection is included FREE for all displayed artworks. You can toggle protection on/off for each placement.
-            </p>
-          </div>
-          <div className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-6">
-            <h3 className="text-base mb-2 text-[var(--text)]">What's the revenue split on sales?</h3>
-            <p className="text-sm text-[var(--text)]">
-              Artists receive a percentage of the sale price based on their current subscription plan, while venues always receive 15%. The platform fee is determined by the artist's subscription plan and is applied in addition to this split.
-            </p>
-          </div>
+        <h2 className="text-xl sm:text-2xl mb-6 text-center text-[var(--text)]">Frequently Asked Questions</h2>
+        <div className="space-y-3">
+          {[
+            {
+              q: 'Can I upgrade or downgrade anytime?',
+              a: 'Yes — change your plan at any time from your account settings. Upgrades take effect immediately and you'll be prorated. Downgrades take effect at the start of your next billing cycle.',
+            },
+            {
+              q: 'Can I cancel anytime?',
+              a: 'Absolutely. There are no long-term contracts. Cancel from your account settings and you'll keep access through the end of your current billing period.',
+            },
+            {
+              q: 'What does "Platform + Processing" mean?',
+              a: 'Every sale has two fees: the platform fee (which decreases as you upgrade) and a fixed 4.5% payment processing fee charged by Stripe. For example, on the Growth plan, the platform fee is just 2% — so the total taken from a sale is 6.5%. The rest goes to you and the venue.',
+            },
+            {
+              q: 'How does the Protection Plan work?',
+              a: 'The Protection Plan covers accidental damage, theft, and vandalism while your artwork is displayed through Artwalls. Coverage caps vary by plan ($100–$200 per claim). Pro members get it free — everyone else can add it per artwork.',
+            },
+            {
+              q: 'When do I get paid?',
+              a: 'Payouts are processed through Stripe Connect. Once you connect your bank account, earnings are deposited on a rolling basis — typically within 2–7 business days after a sale.',
+            },
+          ].map((faq) => (
+            <div key={faq.q} className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-5 sm:p-6">
+              <h3 className="text-sm sm:text-base mb-2 font-semibold text-[var(--text)]">{faq.q}</h3>
+              <p className="text-sm text-[var(--text-muted)] leading-relaxed">{faq.a}</p>
+            </div>
+          ))}
         </div>
       </div>
     </div>

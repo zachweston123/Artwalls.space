@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { DollarSign, TrendingUp, Package, BarChart3, Calendar, Eye } from 'lucide-react';
+import { DollarSign, TrendingUp, Package, BarChart3, Calendar, Eye, ArrowUpRight } from 'lucide-react';
 import { apiGet } from '../../lib/api';
 import { resolveArtistSubscription } from '../../lib/subscription';
 import type { User } from '../../App';
@@ -193,6 +193,22 @@ export function ArtistSales({ user, onNavigate }: ArtistSalesProps) {
         </div>
       )}
 
+      {/* Inline upgrade nudge — free/starter only */}
+      {(['free', 'starter'] as SubscriptionTier[]).includes(tier) && (
+        <div className="mb-6 flex flex-wrap items-center gap-2 text-sm bg-[var(--surface-2)] border border-[var(--border)] rounded-lg px-4 py-3">
+          <span className="text-[var(--text-muted)]">Your plan take-home:</span>
+          <span className="font-bold text-[var(--text)]">{getPayoutPercentage(tier)}</span>
+          <span className="text-[var(--text-muted)]">&middot;</span>
+          <button
+            onClick={() => onNavigate?.('plans-pricing')}
+            className="inline-flex items-center gap-1 font-semibold text-[var(--accent)] hover:underline"
+          >
+            Upgrade to keep more
+            <ArrowUpRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
       {/* Analytics Upsell - Free/Starter Only */}
       {(['free', 'starter'] as SubscriptionTier[]).includes(tier) && (
         <div className="mb-8 bg-[var(--surface-2)] border-2 border-[var(--accent)] border-opacity-30 rounded-xl p-6">
@@ -219,7 +235,44 @@ export function ArtistSales({ user, onNavigate }: ArtistSalesProps) {
           <h2 className="text-xl">Sales History</h2>
         </div>
 
-        <div className="overflow-x-auto">
+        {/* Mobile stacked cards */}
+        <div className="sm:hidden divide-y divide-[var(--border)]">
+          {sales.map((sale) => (
+            <div key={sale.id} className="p-4 space-y-2">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-[var(--surface-3)] border border-[var(--border)] rounded overflow-hidden flex-shrink-0">
+                  <img
+                    src={sale.artworkImage || 'https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=400'}
+                    alt={sale.artworkTitle}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-[var(--text)] truncate">{sale.artworkTitle}</p>
+                  <p className="text-xs text-[var(--text-muted)]">{sale.venueName || '—'}</p>
+                </div>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <div>
+                  <span className="text-[var(--text-muted)]">Sale: </span>
+                  <span className="text-[var(--text)]">${sale.price.toFixed(2)}</span>
+                </div>
+                <div>
+                  <span className="text-[var(--accent)] font-semibold">${sale.artistEarnings.toFixed(2)}</span>
+                  {getSalePayoutPercent(sale) != null && (
+                    <span className="text-xs text-[var(--text-muted)] ml-1">({getSalePayoutPercent(sale)}%)</span>
+                  )}
+                </div>
+              </div>
+              <p className="text-xs text-[var(--text-muted)]">
+                {new Date(sale.saleDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop table */}
+        <div className="hidden sm:block overflow-x-auto">
           <table className="w-full">
             <thead className="bg-[var(--surface-3)]">
               <tr>

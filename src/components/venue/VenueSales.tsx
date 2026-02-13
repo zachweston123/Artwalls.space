@@ -80,7 +80,38 @@ export function VenueSales({ onNavigate, user }: VenueSalesProps) {
           <h2 className="text-xl">Sales History</h2>
         </div>
 
-        <div className="overflow-x-auto">
+        {/* Mobile stacked cards */}
+        <div className="sm:hidden divide-y divide-[var(--border)]">
+          {mockSales.map((sale) => (
+            <div key={sale.id} className="p-4 space-y-2">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-[var(--surface-3)] rounded overflow-hidden flex-shrink-0">
+                  <img src={sale.artworkImage} alt={sale.artworkTitle} className="w-full h-full object-cover" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-[var(--text)] truncate">{sale.artworkTitle}</p>
+                  <p className="text-xs text-[var(--text-muted)]">{sale.artistName}</p>
+                </div>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <div>
+                  <span className="text-[var(--text-muted)]">Sale: </span>
+                  <span className="text-[var(--text)]">{formatCurrency(sale.price)}</span>
+                </div>
+                <div>
+                  <span className="text-[var(--green)] font-semibold">{formatCurrency(sale.venueEarnings)}</span>
+                  <span className="text-xs text-[var(--text-muted)] ml-1">(15%)</span>
+                </div>
+              </div>
+              <p className="text-xs text-[var(--text-muted)]">
+                {new Date(sale.saleDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop table */}
+        <div className="hidden sm:block overflow-x-auto">
           <table className="w-full">
             <thead className="bg-[var(--surface-3)]">
               <tr>
