@@ -335,7 +335,6 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                 <div className="text-xs text-[var(--text-muted)] font-semibold">{PRICING_COPY.takeHomeLabel}</div>
                 <div className="text-2xl font-bold text-[var(--accent)]">{plan.takeHome}%</div>
                 <div className="text-xs text-[var(--text-muted)] mt-1">{PRICING_COPY.takeHomeSubtext}</div>
-                <div className="text-[10px] text-[var(--text-muted)] mt-2">{PRICING_COPY.platformSupport}</div>
               </div>
 
               <div className="mb-6">

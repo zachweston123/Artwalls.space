@@ -576,7 +576,6 @@ export function ArtistOnboardingWizard({ user, onComplete, onSkip }: ArtistOnboa
                     </div>
                     <div className="px-3 py-1 rounded-full text-xs bg-[var(--surface-2)]">Take home {plan.pct}%</div>
                   </div>
-                  <p className="text-xs text-[var(--text-muted)] mb-3">Platform + processing shown separately. Upgrade anytime.</p>
                   <div className="space-y-2">
                     <button
                       onClick={() => handlePlanSelect(plan.id, plan.id === 'free' ? 'free' : 'upgrade')}
