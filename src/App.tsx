@@ -145,6 +145,7 @@ export default function App() {
   const [artistOnboarding, setArtistOnboarding] = useState<{ completed: boolean; step: number | null } | null>(null);
   const [roleMismatch, setRoleMismatch] = useState<{ current: 'artist' | 'venue'; required: 'artist' | 'venue' } | null>(null);
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
+  const [artistSubscriptionTier, setArtistSubscriptionTier] = useState<'free' | 'starter' | 'growth' | 'pro'>('free');
 
   const ARTIST_ONBOARDING_SNOOZE_KEY = 'artistOnboardingSkipUntil';
 
@@ -303,6 +304,36 @@ export default function App() {
     }
     
     checkAgreementStatus();
+  }, [currentUser]);
+
+  // Fetch the artist's subscription tier from Supabase
+  useEffect(() => {
+    let mounted = true;
+    async function fetchSubscriptionTier() {
+      if (!currentUser || currentUser.role !== 'artist') {
+        if (mounted) setArtistSubscriptionTier('free');
+        return;
+      }
+      try {
+        const { data, error } = await supabase
+          .from('artists')
+          .select('subscription_tier')
+          .eq('id', currentUser.id)
+          .single();
+        if (!error && data?.subscription_tier && mounted) {
+          const tier = data.subscription_tier as string;
+          if (tier === 'starter' || tier === 'growth' || tier === 'pro') {
+            setArtistSubscriptionTier(tier);
+          } else {
+            setArtistSubscriptionTier('free');
+          }
+        }
+      } catch {
+        // Silently fall back to 'free'
+      }
+    }
+    fetchSubscriptionTier();
+    return () => { mounted = false; };
   }, [currentUser]);
 
   const getArtistOnboardingSnoozeUntil = () => {
@@ -1057,7 +1088,7 @@ export default function App() {
         {currentPage === 'privacy-policy' && <PrivacyPolicy onNavigate={handleNavigate} />}
         {currentPage === 'terms-of-service' && <TermsOfService onNavigate={handleNavigate} />}
         {currentPage === 'plans-pricing' && currentUser.role === 'artist' && (
-          <PricingPage onNavigate={handleNavigate} currentPlan="free" />
+          <PricingPage onNavigate={handleNavigate} currentPlan={artistSubscriptionTier} />
         )}
         {currentPage === 'why-artwalls-artist' && (
           <WhyArtwallsArtistsPage onNavigate={handleNavigate} viewerRole={currentUser.role} />

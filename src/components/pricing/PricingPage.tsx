@@ -57,7 +57,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       protection: 'Optional at $5/artwork/mo',
       protectionCap: '$100 per incident',
       claimLimit: 'Up to 2 claims/year',
-      cta: currentPlan === 'free' ? 'Current Plan' : 'Downgrade',
+      cta: currentPlan === 'free' ? 'Current Plan' : 'Manage Subscription',
       popular: false,
       disabled: currentPlan === 'free',
     },
@@ -83,7 +83,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       protection: 'Optional at $3/artwork/mo',
       protectionCap: '$100 per incident',
       claimLimit: 'Up to 2 claims/year',
-      cta: currentPlan === 'starter' ? 'Current Plan' : 'Get Started',
+      cta: currentPlan === 'starter' ? 'Current Plan' : currentPlan === 'free' ? 'Get Started' : 'Change Plan',
       popular: false,
       disabled: currentPlan === 'starter',
     },
@@ -109,7 +109,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       protection: 'Optional at $3/artwork/mo',
       protectionCap: '$150 per incident',
       claimLimit: 'Up to 3 claims/year',
-      cta: currentPlan === 'growth' ? 'Current Plan' : 'Upgrade to Growth',
+      cta: currentPlan === 'growth' ? 'Current Plan' : currentPlan === 'free' ? 'Upgrade to Growth' : 'Change Plan',
       popular: true,
       disabled: currentPlan === 'growth',
     },
@@ -135,7 +135,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       protection: 'Included FREE',
       protectionCap: '$200 per incident',
       claimLimit: 'Up to 4 claims/year',
-      cta: currentPlan === 'pro' ? 'Current Plan' : 'Upgrade to Pro',
+      cta: currentPlan === 'pro' ? 'Current Plan' : currentPlan === 'free' ? 'Upgrade to Pro' : 'Change Plan',
       popular: false,
       disabled: currentPlan === 'pro',
     },
@@ -223,6 +223,16 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
     if (tier === 'free') return;
     setError(null);
     setSubscribing(tier);
+
+    // If user already has a paid plan and clicks a DIFFERENT plan, go to billing portal
+    // so they can change plans through Stripe (avoids creating a duplicate subscription).
+    if (currentPlan !== 'free' && tier !== currentPlan) {
+      trackEvent({ event_type: 'checkout_start', metadata: { action: 'change_plan_via_portal', from: currentPlan, to: tier } });
+      await openBillingPortal();
+      setSubscribing(null);
+      return;
+    }
+
     // Analytics: upgrade_clicked
     trackEvent({ event_type: 'checkout_start', metadata: { action: 'upgrade_clicked', tier } });
     try {
@@ -242,17 +252,24 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       } catch {}
       // Analytics: checkout_started
       trackEvent({ event_type: 'checkout_start', metadata: { action: 'checkout_started', tier: mappedTier } });
-      const { url } = await apiPost<{ url: string }>(
+      const result = await apiPost<{ url: string; redirectedToPortal?: boolean }>(
         '/api/stripe/billing/create-subscription-session',
         { tier: mappedTier, artistId },
       );
-      window.location.href = url;
+      // Backend may return a billing portal URL if the artist already has an active subscription
+      if (result.redirectedToPortal) {
+        trackEvent({ event_type: 'checkout_start', metadata: { action: 'redirected_to_portal', tier: mappedTier } });
+      }
+      window.location.href = result.url;
     } catch (e: any) {
       console.error('Subscription error:', e);
       
       // Better error messages
       let userMessage = 'Unable to start subscription checkout';
-      if (e.message?.includes('CORS') || e.message?.includes('Failed to fetch')) {
+      if (e.status === 409 || e.message?.includes('already have an active')) {
+        // Duplicate subscription — guide user to Manage Subscription
+        userMessage = 'You already have an active subscription. Use "Manage Subscription" below to change or cancel your plan.';
+      } else if (e.message?.includes('CORS') || e.message?.includes('Failed to fetch')) {
         userMessage = 'Connection issue. Please refresh the page and try again.';
       } else if (e.message?.includes('offline')) {
         userMessage = 'You appear to be offline. Please check your connection.';
@@ -395,7 +412,14 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
 
               {/* CTA */}
               <button
-                onClick={() => startSubscription(plan.id as PlanId)}
+                onClick={() => {
+                  // Free card "Manage Subscription" for paid users → open billing portal
+                  if (plan.id === 'free' && currentPlan !== 'free') {
+                    openBillingPortal();
+                  } else {
+                    startSubscription(plan.id as PlanId);
+                  }
+                }}
                 disabled={plan.disabled || subscribing === plan.id}
                 className={`w-full py-3 rounded-lg transition-colors text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] ${
                   plan.disabled

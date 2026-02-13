@@ -56,6 +56,41 @@ type Env = {
   RATE_LIMIT_KV?: any;   // KV namespace binding (optional — falls back to in-memory)
 };
 
+/**
+ * Resolve artist subscription tier from a Stripe Price ID.
+ * Falls back to metadata.tier or 'free' if the price ID isn't recognized.
+ */
+function resolveTierFromPriceId(
+  priceId: string | undefined | null,
+  env: Env,
+  metadataTier?: string | null,
+): 'free' | 'starter' | 'growth' | 'pro' {
+  if (priceId) {
+    const map: Record<string, 'starter' | 'growth' | 'pro'> = {};
+    const ids = {
+      starter: env.STRIPE_PRICE_ID_STARTER || env.STRIPE_SUB_PRICE_STARTER,
+      growth: env.STRIPE_PRICE_ID_GROWTH || env.STRIPE_SUB_PRICE_GROWTH,
+      pro: env.STRIPE_PRICE_ID_PRO || env.STRIPE_SUB_PRICE_PRO,
+    };
+    for (const [tier, id] of Object.entries(ids)) {
+      if (id) map[id] = tier as 'starter' | 'growth' | 'pro';
+    }
+    if (map[priceId]) return map[priceId];
+  }
+  // Fallback to metadata (may be stale after portal plan changes)
+  const raw = (metadataTier || '').toLowerCase().trim();
+  if (raw === 'starter' || raw === 'growth' || raw === 'pro') return raw;
+  return 'free';
+}
+
+/** Platform fee basis points per tier (for analytics column). */
+const TIER_PLATFORM_FEE_BPS: Record<string, number> = {
+  free: 2500,
+  starter: 500,
+  growth: 200,
+  pro: 0,
+};
+
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
@@ -1134,14 +1169,17 @@ export default {
         const event = await verifyAndParseStripeEvent(body, sig, env.STRIPE_WEBHOOK_SECRET);
         if (!event) return json({ error: 'Invalid signature' }, { status: 400 });
 
-        // Idempotency check
+        // ── Idempotency: skip events we've already processed ──
         if (supabaseAdmin) {
           const { data: existing } = await supabaseAdmin
             .from('stripe_webhook_events')
             .select('stripe_event_id')
             .eq('stripe_event_id', event.id)
             .maybeSingle();
-          if (existing) return json({ received: true, duplicate: true });
+          if (existing) {
+            console.log(`[webhook] Duplicate event ${event.id} (${event.type}) — skipping`);
+            return json({ received: true, duplicate: true });
+          }
         }
 
         // ── Handle event types ──
@@ -1152,17 +1190,35 @@ export default {
           // Subscription checkout completed
           if (session?.mode === 'subscription') {
             const artistId = session?.metadata?.artistId;
-            const tier = session?.metadata?.tier || 'free';
             const subscriptionId = session.subscription;
             const customerId = session.customer;
+
+            // Resolve tier from the subscription's price ID (authoritative)
+            let priceId: string | null = null;
+            if (subscriptionId && typeof subscriptionId === 'string') {
+              try {
+                const subResp = await stripeFetch(`/v1/subscriptions/${subscriptionId}`, { method: 'GET' });
+                const sub = await subResp.json() as any;
+                priceId = sub?.items?.data?.[0]?.price?.id || null;
+              } catch (e) {
+                console.warn('[webhook] Unable to fetch subscription price ID:', getErrorMessage(e));
+              }
+            }
+            const tier = resolveTierFromPriceId(priceId, env, session?.metadata?.tier);
+
             if (artistId && subscriptionId && typeof subscriptionId === 'string') {
-              await upsertArtist({
+              const result = await upsertArtist({
                 id: artistId,
                 stripeCustomerId: typeof customerId === 'string' ? customerId : null,
                 stripeSubscriptionId: subscriptionId,
                 subscriptionTier: tier,
                 subscriptionStatus: 'active',
+                platformFeeBps: TIER_PLATFORM_FEE_BPS[tier] ?? null,
               });
+              if (result.status >= 400) {
+                console.error('[webhook] checkout.session.completed upsert failed', result.status);
+                return json({ error: 'DB update failed' }, { status: 500 });
+              }
               console.log('✅ Artist subscription activated', { artistId, tier, subscriptionId });
             }
           }
@@ -1314,15 +1370,30 @@ export default {
         if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.deleted') {
           const sub = event.data?.object;
           const artistId = sub?.metadata?.artistId;
-          const tier = sub?.metadata?.tier || 'free';
+
+          // Resolve tier from the subscription's current price ID (authoritative)
+          // This correctly handles plan changes made through the Stripe Customer Portal.
+          const priceId = sub?.items?.data?.[0]?.price?.id || null;
+          const tier = event.type === 'customer.subscription.deleted'
+            ? 'free'
+            : resolveTierFromPriceId(priceId, env, sub?.metadata?.tier);
+          const status = event.type === 'customer.subscription.deleted'
+            ? 'canceled'
+            : (sub?.status === 'active' ? 'active' : (sub?.status || 'inactive'));
+
           if (artistId) {
-            await upsertArtist({
+            const result = await upsertArtist({
               id: artistId,
               stripeSubscriptionId: sub?.id || null,
               subscriptionTier: tier,
-              subscriptionStatus: sub?.status === 'active' ? 'active' : (sub?.status || 'inactive'),
+              subscriptionStatus: status,
+              platformFeeBps: TIER_PLATFORM_FEE_BPS[tier] ?? null,
             });
-            console.log('✅ Artist subscription updated', { artistId, status: sub?.status });
+            if (result.status >= 400) {
+              console.error(`[webhook] ${event.type} upsert failed`, result.status);
+              return json({ error: 'DB update failed' }, { status: 500 });
+            }
+            console.log('✅ Artist subscription updated', { artistId, tier, status });
           }
         }
 
@@ -1342,20 +1413,33 @@ export default {
           }
         }
 
-        // Record for idempotency
+        // ── Record for idempotency ──
+        // If this insert fails, return 500 so Stripe retries (we may have
+        // processed the event above but can't guarantee dedup on the next attempt).
         if (supabaseAdmin) {
-          await supabaseAdmin.from('stripe_webhook_events').insert({
+          const { error: idempError } = await supabaseAdmin.from('stripe_webhook_events').insert({
             stripe_event_id: event.id,
             type: event.type,
             note: 'processed by worker',
             processed_at: new Date().toISOString(),
-          }).then(() => {}).catch(() => {});
+          });
+          if (idempError) {
+            // Unique-violation (23505) means a concurrent handler already recorded it — that's fine.
+            if (idempError.code !== '23505') {
+              console.error('[webhook] Failed to record idempotency:', idempError.message);
+              return json({ error: 'Idempotency record failed' }, { status: 500 });
+            }
+          }
         }
 
         return json({ received: true });
       } catch (err: unknown) {
-        console.error('Stripe webhook error:', getErrorMessage(err));
-        return json({ error: getErrorMessage(err) }, { status: 400 });
+        console.error('[webhook] Unhandled error:', getErrorMessage(err));
+        // Return 500 for unexpected errors so Stripe retries.
+        // 400 is reserved for signature verification failures.
+        const msg = getErrorMessage(err);
+        const isSignatureError = msg.includes('signature') || msg.includes('Webhook');
+        return json({ error: msg }, { status: isSignatureError ? 400 : 500 });
       }
     }
 
@@ -1769,7 +1853,35 @@ export default {
       if (!priceId) return json({ error: `Price ID not configured for ${tier}` }, { status: 500 });
 
       // Ensure Stripe customer
-      const { data: artist } = await supabaseAdmin.from('artists').select('stripe_customer_id,email,name').eq('id', user.id).maybeSingle();
+      const { data: artist } = await supabaseAdmin.from('artists').select('stripe_customer_id,email,name,subscription_status,subscription_tier').eq('id', user.id).maybeSingle();
+
+      // ── Block duplicate subscriptions ──
+      // If the artist already has an active subscription, redirect to the
+      // billing portal instead of creating a new checkout session.
+      if (artist?.subscription_status === 'active' && artist?.subscription_tier && artist.subscription_tier !== 'free') {
+        if (artist.stripe_customer_id) {
+          const portalOrigin = env.PAGES_ORIGIN || 'https://artwalls.space';
+          try {
+            const portalResp = await stripeFetch('/v1/billing_portal/sessions', {
+              method: 'POST',
+              body: toForm({
+                customer: artist.stripe_customer_id,
+                return_url: `${portalOrigin}/#/artist-dashboard`,
+              }),
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            });
+            const portal = await portalResp.json() as any;
+            if (portalResp.ok && portal.url) {
+              console.log('[subscription] Active sub exists — redirecting to portal', { artistId: user.id, currentTier: artist.subscription_tier });
+              return json({ url: portal.url, redirectedToPortal: true });
+            }
+          } catch (e) {
+            console.warn('[subscription] Portal redirect failed, falling through:', getErrorMessage(e));
+          }
+        }
+        // If portal creation fails, return a clear error rather than creating a duplicate
+        return json({ error: 'You already have an active subscription. Use Manage Subscription to change plans.' }, { status: 409 });
+      }
       let customerId = artist?.stripe_customer_id;
       if (!customerId) {
         const custResp = await stripeFetch('/v1/customers', {
