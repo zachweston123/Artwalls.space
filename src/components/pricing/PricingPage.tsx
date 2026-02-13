@@ -798,14 +798,16 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
         {/* Comparison table — single surface, zebra + subtle dividers via CSS */}
         <div className="compareTable rounded-2xl overflow-hidden" style={{ border: '1px solid var(--border)', background: 'var(--surface-2)' }}>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[600px]">
+            <table className="w-full min-w-[760px]">
               <thead>
                 <tr>
-                  <th className="text-left px-6 py-5 text-sm font-semibold whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>Feature</th>
+                  <th className="text-left px-6 py-5 sm:py-6 text-sm font-semibold whitespace-nowrap align-bottom" style={{ color: 'var(--text-muted)' }}>Feature</th>
                   {plans.map((p) => (
-                    <th key={p.id} className="text-center px-6 py-5 text-sm font-semibold whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>
-                      <div style={p.popular ? { color: 'var(--text)' } : undefined}>{p.name}</div>
-                      <div className="text-xs font-bold mt-1" style={{ color: 'var(--accent)' }}>{p.takeHome}% take-home</div>
+                    <th key={p.id} className="text-center px-6 py-5 sm:py-6 align-bottom" style={{ color: 'var(--text-muted)' }}>
+                      <div className="flex flex-col items-center gap-1.5">
+                        <div className="text-sm sm:text-base font-semibold leading-tight whitespace-nowrap" style={p.popular ? { color: 'var(--text)' } : undefined}>{p.name}</div>
+                        <div className="text-xs sm:text-sm font-medium leading-tight whitespace-nowrap" style={{ color: 'var(--accent)' }}>{p.takeHome}% take-home</div>
+                      </div>
                     </th>
                   ))}
                 </tr>
