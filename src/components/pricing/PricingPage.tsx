@@ -801,12 +801,12 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
             <table className="w-full min-w-[760px]">
               <thead>
                 <tr>
-                  <th className="text-left px-6 py-5 sm:py-6 text-sm font-semibold whitespace-nowrap align-bottom" style={{ color: 'var(--text-muted)' }}>Feature</th>
+                  <th className="text-left text-sm font-semibold" style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>Feature</th>
                   {plans.map((p) => (
-                    <th key={p.id} className="text-center px-6 py-5 sm:py-6 align-bottom" style={{ color: 'var(--text-muted)' }}>
-                      <div className="flex flex-col items-center gap-1.5">
-                        <div className="text-sm sm:text-base font-semibold leading-tight whitespace-nowrap" style={p.popular ? { color: 'var(--text)' } : undefined}>{p.name}</div>
-                        <div className="text-xs sm:text-sm font-medium leading-tight whitespace-nowrap" style={{ color: 'var(--accent)' }}>{p.takeHome}% take-home</div>
+                    <th key={p.id} className="text-center" style={{ color: 'var(--text-muted)' }}>
+                      <div className="plan-header-stack">
+                        <span className="text-sm sm:text-base font-semibold" style={{ color: p.popular ? 'var(--text)' : undefined, lineHeight: 1, whiteSpace: 'nowrap' }}>{p.name}</span>
+                        <span className="text-xs sm:text-sm font-medium" style={{ color: 'var(--accent)', lineHeight: 1, whiteSpace: 'nowrap' }}>{p.takeHome}% take-home</span>
                       </div>
                     </th>
                   ))}
