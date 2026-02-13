@@ -10,7 +10,7 @@ import {
 import { PlanBadge } from '../pricing/PlanBadge';
 import { apiPost } from '../../lib/api';
 import { supabase } from '../../lib/supabase';
-import { Card, CardHeader, CardTitle, CardAction, CardContent } from '../ui/card';
+import { Card, CardHeader, CardTitle, CardAction, CardContent, CardFooter } from '../ui/card';
 
 /**
  * AccountStatusPanel — Right-column status overview for the artist dashboard.
@@ -178,25 +178,25 @@ export function AccountStatusPanel({
             )}
 
           </div>
-
-          {/* Upgrade CTA — visually separated from usage metrics */}
-          {plan !== 'pro' && (
-            <div className="border-t border-[var(--border)] pt-4 mt-4">
-              <button
-                onClick={() => onNavigate('plans-pricing')}
-                className={`w-full py-3 rounded-xl text-sm font-semibold transition-colors ${
-                  displaysUsed >= limits.activeDisplays || artworksUsed >= limits.artworks
-                    ? 'bg-[var(--blue)] text-[var(--on-blue)] hover:bg-[var(--blue-hover)]'
-                    : 'border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] hover:bg-[var(--surface-3)]'
-                }`}
-              >
-                {displaysUsed >= limits.activeDisplays || artworksUsed >= limits.artworks
-                  ? 'Upgrade \u2014 you\u2019ve hit a limit'
-                  : 'Upgrade plan'}
-              </button>
-            </div>
-          )}
         </CardContent>
+
+        {/* Upgrade CTA — visually separated from usage metrics */}
+        {plan !== 'pro' && (
+          <CardFooter className="border-t border-[var(--border)] pt-4">
+            <button
+              onClick={() => onNavigate('plans-pricing')}
+              className={`w-full py-3 rounded-xl text-sm font-semibold transition-colors ${
+                displaysUsed >= limits.activeDisplays || artworksUsed >= limits.artworks
+                  ? 'bg-[var(--blue)] text-[var(--on-blue)] hover:bg-[var(--blue-hover)]'
+                  : 'border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] hover:bg-[var(--surface-3)]'
+              }`}
+            >
+              {displaysUsed >= limits.activeDisplays || artworksUsed >= limits.artworks
+                ? 'Upgrade \u2014 you\u2019ve hit a limit'
+                : 'Upgrade plan'}
+            </button>
+          </CardFooter>
+        )}
       </Card>
 
       {/* ══════ Payouts Status Card ══════ */}
@@ -267,47 +267,50 @@ export function AccountStatusPanel({
                 </div>
               )}
 
-              {/* CTA — visually separated from content above */}
-              <div className="border-t border-[var(--border)] pt-4 mt-4 flex gap-3">
-                {!isPayoutReady ? (
-                  <button
-                    onClick={startOnboarding}
-                    disabled={payoutWorking}
-                    className="flex-1 inline-flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold bg-[var(--blue)] text-[var(--on-blue)] hover:bg-[var(--blue-hover)] disabled:opacity-60 transition-colors"
-                  >
-                    {payoutWorking ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    )}
-                    Set up payouts
-                  </button>
-                ) : (
-                  <button
-                    onClick={openStripeDashboard}
-                    disabled={payoutWorking}
-                    className="flex-1 inline-flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] hover:bg-[var(--surface-3)] disabled:opacity-60 transition-colors"
-                  >
-                    {payoutWorking ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    )}
-                    Manage payouts
-                  </button>
-                )}
-                <button
-                  onClick={onPayoutRefresh}
-                  disabled={payoutWorking}
-                  className="inline-flex items-center justify-center w-11 h-11 rounded-xl border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-muted)] hover:bg-[var(--surface-3)] disabled:opacity-60 transition-colors"
-                  aria-label="Refresh payout status"
-                >
-                  <Gauge className="w-4 h-4" />
-                </button>
-              </div>
             </>
           )}
         </CardContent>
+
+        {/* CTA — visually separated from content above */}
+        {!payoutLoading && (
+          <CardFooter className="border-t border-[var(--border)] pt-4 gap-3">
+            {!isPayoutReady ? (
+              <button
+                onClick={startOnboarding}
+                disabled={payoutWorking}
+                className="flex-1 inline-flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold bg-[var(--blue)] text-[var(--on-blue)] hover:bg-[var(--blue-hover)] disabled:opacity-60 transition-colors"
+              >
+                {payoutWorking ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <ExternalLink className="w-3.5 h-3.5" />
+                )}
+                Set up payouts
+              </button>
+            ) : (
+              <button
+                onClick={openStripeDashboard}
+                disabled={payoutWorking}
+                className="flex-1 inline-flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] hover:bg-[var(--surface-3)] disabled:opacity-60 transition-colors"
+              >
+                {payoutWorking ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <ExternalLink className="w-3.5 h-3.5" />
+                )}
+                Manage payouts
+              </button>
+            )}
+            <button
+              onClick={onPayoutRefresh}
+              disabled={payoutWorking}
+              className="inline-flex items-center justify-center w-11 h-11 rounded-xl border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text-muted)] hover:bg-[var(--surface-3)] disabled:opacity-60 transition-colors"
+              aria-label="Refresh payout status"
+            >
+              <Gauge className="w-4 h-4" />
+            </button>
+          </CardFooter>
+        )}
       </Card>
     </div>
   );
