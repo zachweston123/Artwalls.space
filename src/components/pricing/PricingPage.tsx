@@ -336,7 +336,6 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                 <div className="text-2xl font-bold text-[var(--accent)]">{plan.takeHome}%</div>
                 <div className="text-xs text-[var(--text-muted)] mt-1">{PRICING_COPY.takeHomeSubtext}</div>
                 <div className="text-[10px] text-[var(--text-muted)] mt-2">{PRICING_COPY.platformSupport}</div>
-                <EarningsComparisonBlurb variant="subscribe" takeHomePercent={plan.takeHome} />
               </div>
 
               <div className="mb-6">
