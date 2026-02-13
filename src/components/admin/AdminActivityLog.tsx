@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Activity, RefreshCw } from 'lucide-react';
+import { PageHeroHeader } from '../PageHeroHeader';
 
 type ActivityLog = {
   id: string;
@@ -69,12 +70,10 @@ export function AdminActivityLog() {
 
   return (
     <div className="bg-[var(--bg)]">
-      <div className="mb-8">
-        <h1 className="text-3xl mb-2 text-[var(--text)]">Activity Log</h1>
-        <p className="text-[var(--text-muted)]">
-          Audit trail of all admin actions
-        </p>
-      </div>
+      <PageHeroHeader
+        title="Activity Log"
+        subtitle="Audit trail of all admin actions"
+      />
 
       <div className="flex items-center gap-3 mb-4 text-sm text-[var(--text-muted)]">
         <button

@@ -15,6 +15,7 @@ import {
 import { useEffect, useState } from 'react';
 import { apiGet, apiPost } from '../../lib/api';
 import { StatCard } from '../ui/stat-card';
+import { PageHeroHeader } from '../PageHeroHeader';
 
 interface AdminDashboardProps {
   onNavigate: (page: string, params?: any) => void;
@@ -272,12 +273,10 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
       {!loading && metrics && (
         <>
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl mb-2 text-[var(--text)]">Dashboard</h1>
-        <p className="text-[var(--text-muted)]">
-          Overview of platform metrics and recent activity
-        </p>
-      </div>
+      <PageHeroHeader
+        title="Dashboard"
+        subtitle="Overview of platform metrics and recent activity"
+      />
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 mb-8">

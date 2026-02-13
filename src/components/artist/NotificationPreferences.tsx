@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Bell, Mail, MessageSquare, CheckCircle, AlertCircle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { PageHeroHeader } from '../PageHeroHeader';
 
 interface NotificationPreferencesProps {
   onBack: () => void;
@@ -95,19 +96,11 @@ export function NotificationPreferences({ onBack }: NotificationPreferencesProps
 
   return (
     <div className="bg-[var(--bg)] text-[var(--text)] min-h-screen">
-      {/* Header */}
-      <div className="flex items-center gap-4 mb-8">
-        <button
-          onClick={onBack}
-          className="p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <div>
-          <h1 className="text-3xl mb-1">Notification Preferences</h1>
-          <p className="text-[var(--text-muted)]">Manage how you receive notifications</p>
-        </div>
-      </div>
+      <PageHeroHeader
+        title="Notification Preferences"
+        subtitle="Manage how you receive notifications"
+        onBack={onBack}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Content */}

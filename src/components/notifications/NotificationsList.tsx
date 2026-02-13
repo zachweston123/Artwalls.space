@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import type { User } from '../../App';
 import { getMyNotifications, setNotificationReadState } from '../../lib/api';
+import { PageHeroHeader } from '../PageHeroHeader';
 
 interface NotificationsListProps {
   user?: User;
@@ -244,23 +245,26 @@ export function NotificationsList({ user, onNavigate }: NotificationsListProps) 
 
   return (
     <div className="bg-[var(--bg)] text-[var(--text)]">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-8">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text)]">Notifications</h1>
-          <p className="text-sm text-[var(--text-muted)] mt-1">
-            {loading ? 'Loading…' : `${unreadCount} unread notification${unreadCount === 1 ? '' : 's'}`}
-          </p>
-        </div>
-        {unreadCount > 0 && (
-          <button
-            onClick={handleMarkAllRead}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-sm text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors self-start"
-          >
-            <CheckCheck className="w-4 h-4" />
-            Mark all as read
-          </button>
-        )}
-      </div>
+      <PageHeroHeader
+        title="Notifications"
+        subtitle={loading ? 'Loading…' : `${unreadCount} unread notification${unreadCount === 1 ? '' : 's'}`}
+        actions={
+          unreadCount > 0 ? (
+            <button
+              onClick={handleMarkAllRead}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border text-sm transition-colors"
+              style={{
+                borderColor: 'var(--border)',
+                background: 'var(--surface-2)',
+                color: 'var(--text)',
+              }}
+            >
+              <CheckCheck className="w-4 h-4" />
+              Mark all as read
+            </button>
+          ) : undefined
+        }
+      />
 
       <div className="max-w-3xl space-y-8">
         {loading && (

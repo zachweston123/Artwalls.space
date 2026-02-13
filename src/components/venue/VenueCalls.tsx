@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { apiGet, apiPost } from '../../lib/api';
 import type { User } from '../../App';
+import { PageHeroHeader } from '../PageHeroHeader';
 
 interface VenueCallsProps {
   user: User;
@@ -80,7 +81,10 @@ export function VenueCalls({ user, onViewCall }: VenueCallsProps) {
 
   return (
     <div className="bg-[var(--bg)] text-[var(--text)]">
-      <h1 className="text-3xl font-bold mb-4 text-[var(--text)]">Calls for Art</h1>
+      <PageHeroHeader
+        title="Calls for Art"
+        subtitle="Create and manage open calls for artists to submit their work."
+      />
 
       <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl p-4 mb-6">
         <h2 className="text-xl font-semibold mb-3">Create a call</h2>

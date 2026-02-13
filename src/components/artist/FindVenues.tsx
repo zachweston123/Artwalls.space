@@ -4,6 +4,7 @@ import { LabelChip } from '../LabelChip';
 import { VENUE_HIGHLIGHTS } from '../../data/highlights';
 import { apiGet } from '../../lib/api';
 import { resolveArtistSubscription } from '../../lib/subscription';
+import { PageHeroHeader } from '../PageHeroHeader';
 
 interface FindVenuesProps {
   onViewVenue: (venueId: string) => void;
@@ -211,13 +212,10 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
 
   return (
     <div className="bg-[var(--bg)] text-[var(--text)]">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl mb-2">Find Venues</h1>
-        <p className="text-[var(--text-muted)]">
-          Discover venues where you can display and sell your artwork
-        </p>
-      </div>
+      <PageHeroHeader
+        title="Find Venues"
+        subtitle="Discover venues where you can display and sell your artwork"
+      />
 
       {/* Search & Filters */}
       <div className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)] mb-6">

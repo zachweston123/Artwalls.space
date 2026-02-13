@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { apiGet } from '../../lib/api';
 import { CheckCircle, Clock, Gift, Mail } from 'lucide-react';
+import { PageHeroHeader } from '../PageHeroHeader';
 
 interface Referral {
   id: string;
@@ -50,10 +51,10 @@ export function ArtistReferrals() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-[var(--text)]">Your Referrals</h1>
-        <p className="text-sm text-[var(--text-muted)]">Track invite status and rewards.</p>
-      </div>
+      <PageHeroHeader
+        title="Your Referrals"
+        subtitle="Track invite status and rewards."
+      />
 
       <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-2xl p-6">
         {loading ? (

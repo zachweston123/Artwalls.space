@@ -1,6 +1,7 @@
 import { Mail, Search, Filter, TrendingUp, Users, CheckCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { apiGet } from '../../lib/api';
+import { PageHeroHeader } from '../PageHeroHeader';
 
 interface InviteTotals {
   created: number;
@@ -57,9 +58,10 @@ export function AdminInvites() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-[var(--text)]">Pending Invitations</h1>
-      </div>
+      <PageHeroHeader
+        title="Pending Invitations"
+        subtitle="Review and manage platform invitations."
+      />
 
       <div className="bg-[var(--surface-1)] rounded-xl border border-[var(--border)] p-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">

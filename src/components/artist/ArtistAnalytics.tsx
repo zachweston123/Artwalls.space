@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { getErrorMessage } from '../../lib/errors';
 import { TrendingUp, ShoppingBag, DollarSign, BarChart3, QrCode, Eye } from 'lucide-react';
 import type { User } from '../../App';
+import { PageHeroHeader } from '../PageHeroHeader';
 
 type TimeRange = '7d' | '30d' | '90d';
 
@@ -164,11 +165,10 @@ export function ArtistAnalytics({ user }: ArtistAnalyticsProps) {
 
   return (
     <div className="bg-[var(--bg)] text-[var(--text)]">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl sm:text-4xl font-bold text-[var(--text)] mb-2">Analytics</h1>
-        <p className="text-sm text-[var(--text-muted)]">Track your sales performance and artwork engagement.</p>
-      </div>
+      <PageHeroHeader
+        title="Analytics"
+        subtitle="Track your sales performance and artwork engagement."
+      />
 
       {/* Time Range Selector */}
       <div className="flex gap-2 mb-6">

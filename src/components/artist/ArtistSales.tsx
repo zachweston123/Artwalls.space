@@ -4,6 +4,7 @@ import { apiGet } from '../../lib/api';
 import { resolveArtistSubscription } from '../../lib/subscription';
 import type { User } from '../../App';
 import { StatCard } from '../ui/stat-card';
+import { PageHeroHeader } from '../PageHeroHeader';
 
 interface ArtistSalesProps { 
   user: User;
@@ -70,10 +71,10 @@ export function ArtistSales({ user, onNavigate }: ArtistSalesProps) {
 
   return (
     <div className="bg-[var(--bg)] text-[var(--text)]">
-      <div className="mb-8">
-        <h1 className="text-3xl mb-2">Sales & Earnings</h1>
-        <p className="text-[var(--text-muted)]">Track your artwork sales and income. Payouts vary by subscription plan.</p>
-      </div>
+      <PageHeroHeader
+        title="Sales & Earnings"
+        subtitle="Track your artwork sales and income. Payouts vary by subscription plan."
+      />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
         <StatCard

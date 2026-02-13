@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ArrowLeft, Eye, EyeOff, Lock, AlertCircle, CheckCircle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { PageHeroHeader } from '../PageHeroHeader';
 
 interface PasswordSecurityProps {
   onBack: () => void;
@@ -68,19 +69,11 @@ export function PasswordSecurity({ onBack }: PasswordSecurityProps) {
 
   return (
     <div className="bg-[var(--bg)] text-[var(--text)] min-h-screen">
-      {/* Header */}
-      <div className="flex items-center gap-4 mb-8">
-        <button
-          onClick={onBack}
-          className="p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <div>
-          <h1 className="text-3xl mb-1">Password & Security</h1>
-          <p className="text-[var(--text-muted)]">Manage your password and security settings</p>
-        </div>
-      </div>
+      <PageHeroHeader
+        title="Password & Security"
+        subtitle="Manage your password and security settings"
+        onBack={onBack}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Content */}

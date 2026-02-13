@@ -1,6 +1,6 @@
 import { DollarSign, TrendingUp, Package } from 'lucide-react';
 import { mockSales } from '../../data/mockData';
-import { PageHeader } from '../PageHeader';
+import { PageHeroHeader } from '../PageHeroHeader';
 import { EmptyState } from '../EmptyState';
 import { formatCurrency, safeDivide } from '../../utils/format';
 import { VenuePayoutsCard } from './VenuePayoutsCard';
@@ -20,13 +20,29 @@ export function VenueSales({ onNavigate, user }: VenueSalesProps) {
 
   return (
     <div className="bg-[var(--bg)] text-[var(--text)]">
-      <PageHeader
-        breadcrumb="Performance / Sales & Earnings"
+      <PageHeroHeader
         title="Sales & earnings"
         subtitle="Track artwork sales and your 15% commission share"
-        primaryAction={onNavigate ? { label: 'Set up payouts', onClick: () => onNavigate('venue-dashboard') } : undefined}
-        secondaryAction={onNavigate ? { label: 'Add wall space', onClick: () => onNavigate('venue-walls') } : undefined}
-        className="mb-8"
+        actions={
+          onNavigate ? (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => onNavigate('venue-walls')}
+                className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                style={{ border: '1px solid var(--border)', color: 'var(--text)', background: 'var(--surface-2)' }}
+              >
+                Add wall space
+              </button>
+              <button
+                onClick={() => onNavigate('venue-dashboard')}
+                className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                style={{ background: 'var(--blue)', color: 'var(--on-blue)' }}
+              >
+                Set up payouts
+              </button>
+            </div>
+          ) : undefined
+        }
       />
 
       {user && (

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Search, Filter, Download, RefreshCcw, Users as UsersIcon } from 'lucide-react';
 import { apiGet, apiPost } from '../../lib/api';
+import { PageHeroHeader } from '../PageHeroHeader';
 
 interface AdminUsersProps {
   onViewUser: (userId: string) => void;
@@ -223,12 +224,10 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
   return (
     <div className="bg-[var(--bg)]">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl mb-2 text-[var(--text)]">Users</h1>
-        <p className="text-[var(--text-muted)]">
-          Manage and support platform users
-        </p>
-      </div>
+      <PageHeroHeader
+        title="Users"
+        subtitle="Manage and support platform users"
+      />
 
       {toast && (
         <div className="mb-4 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 text-sm text-[var(--text)]" role="status">

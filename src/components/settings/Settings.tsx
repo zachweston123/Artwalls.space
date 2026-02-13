@@ -22,6 +22,7 @@ import { getErrorMessage } from '../../lib/errors';
 import type { ThemePreference } from '../../lib/theme';
 import { applyThemePreference, coerceThemePreference, getStoredThemePreference } from '../../lib/theme';
 import { PlanBadge } from '../pricing/PlanBadge';
+import { PageHeroHeader } from '../PageHeroHeader';
 
 interface SettingsProps {
   onNavigate: (page: string) => void;
@@ -255,13 +256,10 @@ export function Settings({ onNavigate, user: currentUser }: SettingsProps) {
 
   return (
     <div className="max-w-4xl mx-auto">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2 text-[var(--text)]">Settings</h1>
-        <p className="text-[var(--text-muted)]">
-          Manage your account, subscription, and preferences
-        </p>
-      </div>
+      <PageHeroHeader
+        title="Settings"
+        subtitle="Manage your account, subscription, and preferences"
+      />
 
       {/* Error/Success Messages */}
       {error && (

@@ -1,14 +1,16 @@
 import { Frame, Search, Filter } from 'lucide-react';
 import { useState } from 'react';
+import { PageHeroHeader } from '../PageHeroHeader';
 
 export function AdminCurrentDisplays() {
   const [searchQuery, setSearchQuery] = useState('');
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-[var(--text)]">Active Displays</h1>
-      </div>
+      <PageHeroHeader
+        title="Active Displays"
+        subtitle="Monitor artwork currently on display across venues."
+      />
 
       <div className="bg-[var(--surface-1)] rounded-xl border border-[var(--border)] p-6">
         <div className="flex flex-col md:flex-row gap-4 mb-6">

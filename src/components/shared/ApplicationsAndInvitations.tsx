@@ -7,6 +7,7 @@ import { DurationBadge } from '../scheduling/DisplayDurationSelector';
 import { DisplayDurationSelector } from '../scheduling/DisplayDurationSelector';
 import { createVenueBooking, API_BASE } from '../../lib/api';
 import { supabase } from '../../lib/supabase';
+import { PageHeroHeader } from '../PageHeroHeader';
 
 interface ApplicationsAndInvitationsProps {
   userRole: 'artist' | 'venue';
@@ -333,22 +334,14 @@ export function ApplicationsAndInvitations({ userRole, onBack, defaultTab = 'app
 
   return (
     <div className="bg-[var(--bg)] text-[var(--text)] min-h-screen">
-      {/* Back Button */}
-      <button
-        onClick={onBack}
-        className="mb-6 px-4 py-2 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] border border-[var(--border)] rounded-lg transition-colors text-[var(--text-muted)] hover:text-[var(--text)]"
-      >
-        ← Back
-      </button>
 
       {userRole === 'artist' ? (
         <>
-          <div className="mb-6">
-            <h1 className="text-3xl font-semibold text-[var(--text)] mb-2">My Artwalls Pipeline</h1>
-            <p className="text-[var(--text-muted)]">
-              {pipelineNeedsActionCount} {pipelineNeedsActionCount === 1 ? 'item needs' : 'items need'} your attention - {pipelineApplicationCount} applications - {pipelineInviteCount} invitations
-            </p>
-          </div>
+          <PageHeroHeader
+            title="My Artwalls Pipeline"
+            subtitle={`${pipelineNeedsActionCount} ${pipelineNeedsActionCount === 1 ? 'item needs' : 'items need'} your attention - ${pipelineApplicationCount} applications - ${pipelineInviteCount} invitations`}
+            onBack={onBack}
+          />
 
           <div className="flex flex-wrap gap-2 mb-8">
             <button
@@ -712,14 +705,12 @@ export function ApplicationsAndInvitations({ userRole, onBack, defaultTab = 'app
       ) : (
         // ========== VENUE VIEW: Artist Applications ==========
         <>
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h1 className="text-3xl mb-2 text-[var(--text)]">Applications & Invitations</h1>
-              <p className="text-[var(--text-muted)]">
-                {pendingCount} pending application{pendingCount !== 1 ? 's' : ''} to review
-              </p>
-            </div>
-            <div className="flex gap-2">
+          <PageHeroHeader
+            title="Applications & Invitations"
+            subtitle={`${pendingCount} pending application${pendingCount !== 1 ? 's' : ''} to review`}
+            onBack={onBack}
+            actions={
+              <div className="flex gap-2">
               <button
                 onClick={() => setFilter('all')}
                 className={`px-4 py-2 rounded-lg transition-colors ${
@@ -761,7 +752,8 @@ export function ApplicationsAndInvitations({ userRole, onBack, defaultTab = 'app
                 Rejected
               </button>
             </div>
-          </div>
+            }
+          />
 
           <div className="space-y-4">
             {filteredApplications.map((application) => (

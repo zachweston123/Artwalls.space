@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { apiPost } from '../../lib/api';
 import { PRICING_COPY } from '../../lib/feeCopy';
 import { trackEvent } from '../../lib/trackEvent';
+import { PageHeroHeader } from '../PageHeroHeader';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 import { EarningsComparisonBlurb } from './EarningsComparisonBlurb';
 
@@ -314,12 +315,11 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
   return (
     <div className="bg-[var(--bg)] pb-16">
       {/* Hero Header */}
-      <div className="text-center mb-10 pt-2">
-        <h1 className="text-3xl sm:text-4xl font-bold mb-3 text-[var(--text)]">Plans & Pricing</h1>
-        <p className="text-[var(--text-muted)] max-w-xl mx-auto text-base sm:text-lg">
-          Keep more of every sale. Upgrade anytime as your art business grows.
-        </p>
-      </div>
+      <PageHeroHeader
+        title="Plans & Pricing"
+        subtitle="Keep more of every sale. Upgrade anytime as your art business grows."
+        center
+      />
 
       <EarningsComparisonBlurb variant="pricing" />
 

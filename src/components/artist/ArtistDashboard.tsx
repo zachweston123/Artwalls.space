@@ -10,6 +10,7 @@ import { ActionCenter } from './ActionCenter';
 import { AccountStatusPanel } from './AccountStatusPanel';
 import { RecentActivity } from './RecentActivity';
 import { QuickActions } from './QuickActions';
+import { PageHeroHeader } from '../PageHeroHeader';
 
 /**
  * ConnectStatus — Stripe Connect payout state.
@@ -233,14 +234,10 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
       )}
 
       {/* ═══════ HEADER ═══════ */}
-      <div className="mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text)] leading-tight tracking-tight">
-          Welcome back, {user?.name?.split(' ')[0] || 'Artist'}
-        </h1>
-        <p className="text-sm text-[var(--text-muted)] mt-2">
-          Here's what's happening with your artwork
-        </p>
-      </div>
+      <PageHeroHeader
+        title={`Welcome back, ${user?.name?.split(' ')[0] || 'Artist'}`}
+        subtitle="Here's what's happening with your artwork"
+      />
 
       {/* ═══════ KPI STAT CARDS (top row) ═══════ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
