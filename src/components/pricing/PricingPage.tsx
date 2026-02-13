@@ -340,17 +340,21 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
           return (
             <div
               key={plan.id}
-              className={`bg-[var(--surface-1)] rounded-xl border shadow-sm p-5 sm:p-6 relative flex flex-col overflow-hidden transition-all duration-200 ${
-                plan.popular
-                  ? 'border-[var(--accent)] ring-2 ring-[var(--accent)]/25 shadow-lg lg:scale-[1.03] z-10'
-                  : 'border-[var(--border)] hover:ring-2 hover:ring-[var(--blue)]/20 hover:shadow-md'
-              } focus-within:ring-2 focus-within:ring-[var(--blue)]/30`}
+              className={`relative ${plan.popular ? 'pt-3' : ''}`}
             >
+              {/* "Most Popular" badge — sits in the outer wrapper so it's never clipped */}
               {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[var(--accent)] text-white px-4 py-1 rounded-full text-xs font-bold whitespace-nowrap">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 bg-[var(--accent)] text-white px-4 py-1 rounded-full text-xs font-bold whitespace-nowrap shadow-md">
                   Most Popular
                 </div>
               )}
+              <div
+                className={`bg-[var(--surface-1)] rounded-xl border shadow-sm p-5 sm:p-6 flex flex-col h-full transition-all duration-200 ${
+                  plan.popular
+                    ? 'border-[var(--accent)] ring-2 ring-[var(--accent)]/25 shadow-lg lg:scale-[1.03]'
+                    : 'border-[var(--border)] hover:ring-2 hover:ring-[var(--blue)]/20 hover:shadow-md'
+                } focus-within:ring-2 focus-within:ring-[var(--blue)]/30`}
+              >
 
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
@@ -420,6 +424,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                   plan.cta
                 )}
               </button>
+              </div>
             </div>
           );
         })}
