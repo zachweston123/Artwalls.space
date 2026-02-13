@@ -22,6 +22,7 @@ import { uploadArtworkImage } from '../../lib/storage';
 import { apiPost } from '../../lib/api';
 import { useArtistOnboarding } from '../../hooks/useArtistOnboarding';
 import { supabase } from '../../lib/supabase';
+import { EarningsComparisonBlurb } from '../pricing/EarningsComparisonBlurb';
 
 interface ArtistOnboardingWizardProps {
   user: User;
@@ -575,7 +576,8 @@ export function ArtistOnboardingWizard({ user, onComplete, onSkip }: ArtistOnboa
                     <div className="px-3 py-1 rounded-full text-xs bg-[var(--surface-2)]">Take home {plan.pct}%</div>
                   </div>
                   <p className="text-xs text-[var(--text-muted)] mb-3">Platform + processing shown separately. Upgrade anytime.</p>
-                  <div className="space-y-2">
+                  <EarningsComparisonBlurb variant="subscribe" takeHomePercent={plan.pct} />
+                  <div className="space-y-2 mt-3">
                     <button
                       onClick={() => handlePlanSelect(plan.id, plan.id === 'free' ? 'free' : 'upgrade')}
                       disabled={planWorking === plan.id}

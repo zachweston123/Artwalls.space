@@ -226,3 +226,14 @@ export function estimateMonthlyEarnings(
   const venuePct = 0.15;
   return avgPriceDollars * venuePct * salesPerMonth;
 }
+
+/**
+ * Return every tier's take-home percentage as whole numbers (60, 80, 83, 85).
+ * Used by UI blurbs so they never hardcode plan values.
+ */
+export function getAllTierTakeHomePercents(): Record<ArtistTierKey, number> {
+  return Object.fromEntries(
+    (Object.entries(ARTIST_TIER_CONFIG) as [ArtistTierKey, { takeHomePercent: number; platformBps: number }][])
+      .map(([k, v]) => [k, Math.round(v.takeHomePercent * 100)])
+  ) as Record<ArtistTierKey, number>;
+}
