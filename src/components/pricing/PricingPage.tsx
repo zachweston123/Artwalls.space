@@ -334,13 +334,13 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       <EarningsComparisonBlurb variant="pricing" />
 
       {/* ── Plan Cards ─────────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 lg:gap-7 mb-12 px-1">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 lg:gap-8 mb-12 px-2 sm:px-4 lg:px-1">
         {plans.map((plan) => {
           const Icon = plan.icon;
           return (
             <div
               key={plan.id}
-              className={`bg-[var(--surface-2)] rounded-xl border p-5 sm:p-6 relative flex flex-col overflow-hidden transition-all duration-200 ${
+              className={`bg-[var(--surface-1)] rounded-xl border shadow-sm p-5 sm:p-6 relative flex flex-col overflow-hidden transition-all duration-200 ${
                 plan.popular
                   ? 'border-[var(--accent)] ring-2 ring-[var(--accent)]/25 shadow-lg lg:scale-[1.03] z-10'
                   : 'border-[var(--border)] hover:ring-2 hover:ring-[var(--blue)]/20 hover:shadow-md'
