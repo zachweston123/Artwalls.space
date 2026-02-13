@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { apiGet, apiPost } from '../../lib/api';
+import { StatCard } from '../ui/stat-card';
 
 interface AdminDashboardProps {
   onNavigate: (page: string, params?: any) => void;
@@ -96,8 +97,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
       delta: 'All registered accounts',
       deltaType: 'neutral' as const,
       icon: Users,
-      iconBg: 'bg-[var(--surface-3)] border border-[var(--border)]',
-      iconColor: 'text-[var(--blue)]',
+      accent: 'blue' as const,
       onClick: () => onNavigate('admin-users'),
     },
     {
@@ -106,8 +106,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
       delta: metrics ? `+${metrics.monthlyArtistsDelta} this month` : 'Loading...',
       deltaType: 'positive' as const,
       icon: Users,
-      iconBg: 'bg-[var(--surface-3)] border border-[var(--border)]',
-      iconColor: 'text-[var(--blue)]',
+      accent: 'blue' as const,
       onClick: () => onNavigate('admin-users', { type: 'artists' }),
     },
     {
@@ -116,8 +115,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
       delta: metrics ? `+${metrics.monthlyVenuesDelta} this month` : 'Loading...',
       deltaType: 'positive' as const,
       icon: Building,
-      iconBg: 'bg-[var(--surface-3)] border border-[var(--border)]',
-      iconColor: 'text-[var(--green)]',
+      accent: 'green' as const,
       onClick: () => onNavigate('admin-users', { type: 'venues' }),
     },
     {
@@ -126,8 +124,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
       delta: metrics && metrics.totals.activeDisplays > 0 ? `${Math.round((metrics.totals.activeDisplays / Math.max(1, metrics.totals.activeDisplays + 50)) * 100)}% utilized` : 'No active displays',
       deltaType: 'neutral' as const,
       icon: Frame,
-      iconBg: 'bg-[var(--surface-3)] border border-[var(--border)]',
-      iconColor: 'text-[var(--text-muted)]',
+      accent: 'violet' as const,
       onClick: () => onNavigate('admin-current-displays'),
     },
     {
@@ -136,8 +133,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
       delta: metrics && metrics.pendingInvites > 0 ? 'Needs review' : 'None pending',
       deltaType: metrics && metrics.pendingInvites > 0 ? 'warning' as const : 'positive' as const,
       icon: Mail,
-      iconBg: 'bg-[var(--surface-3)] border border-[var(--border)]',
-      iconColor: 'text-[var(--warning)]',
+      accent: 'amber' as const,
       onClick: () => onNavigate('admin-invites'),
     },
     {
@@ -146,8 +142,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
       delta: metrics ? `+${metrics.month.gvmDelta}% vs last month` : 'Loading...',
       deltaType: 'positive' as const,
       icon: DollarSign,
-      iconBg: 'bg-[var(--surface-3)] border border-[var(--border)]',
-      iconColor: 'text-[var(--green)]',
+      accent: 'green' as const,
       onClick: () => onNavigate('admin-sales'),
     },
     {
@@ -156,8 +151,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
       delta: '10% platform fee',
       deltaType: 'neutral' as const,
       icon: TrendingUp,
-      iconBg: 'bg-[var(--surface-3)] border border-[var(--border)]',
-      iconColor: 'text-[var(--blue)]',
+      accent: 'blue' as const,
       onClick: () => onNavigate('admin-sales'),
     },
     {
@@ -166,8 +160,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
       delta: metrics && metrics.supportQueue > 0 ? `${Math.max(1, Math.floor(metrics.supportQueue * 0.3))} urgent` : 'No issues',
       deltaType: metrics && metrics.supportQueue > 0 ? 'warning' as const : 'positive' as const,
       icon: AlertCircle,
-      iconBg: 'bg-[var(--surface-3)] border border-[var(--border)]',
-      iconColor: 'text-[var(--danger)]',
+      accent: 'amber' as const,
       onClick: () => onNavigate('admin-support'),
     },
   ];
@@ -236,19 +229,6 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
     }
   }
 
-  const getDeltaColor = (type: string) => {
-    switch (type) {
-      case 'positive':
-        return 'text-[var(--green)]';
-      case 'negative':
-        return 'text-[var(--danger)]';
-      case 'warning':
-        return 'text-[var(--warning)]';
-      default:
-        return 'text-[var(--text-muted)]';
-    }
-  };
-
   const getActivityIcon = (status: string) => {
     switch (status) {
       case 'success':
@@ -300,30 +280,20 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 mb-8">
         {kpis.map((kpi) => {
           const Icon = kpi.icon;
           return (
-            <div
+            <StatCard
               key={kpi.label}
+              label={kpi.label}
+              value={kpi.value}
+              icon={<Icon className="w-5 h-5" />}
+              accent={kpi.accent}
+              delta={kpi.delta}
+              deltaType={kpi.deltaType}
               onClick={kpi.onClick}
-              className="bg-[var(--surface-2)] rounded-xl p-6 border border-[var(--border)] hover:bg-[var(--surface-3)] transition-colors cursor-pointer"
-            >
-              <div className="flex items-start justify-between mb-4">
-                <div className={`w-12 h-12 ${kpi.iconBg} rounded-lg flex items-center justify-center`}>
-                  <Icon className={`w-6 h-6 ${kpi.iconColor}`} />
-                </div>
-              </div>
-              <div className="text-sm text-[var(--text-muted)] mb-1">
-                {kpi.label}
-              </div>
-              <div className="text-2xl mb-2 text-[var(--text)]">
-                {kpi.value}
-              </div>
-              <div className={`text-xs ${getDeltaColor(kpi.deltaType)}`}>
-                {kpi.delta}
-              </div>
-            </div>
+            />
           );
         })}
       </div>

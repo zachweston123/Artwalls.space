@@ -8,6 +8,7 @@ import { formatCurrency, formatRatioOrCount } from '../../utils/format';
 import { EmptyState } from '../EmptyState';
 import { VenueSetupChecklist } from '../VenueSetupChecklist';
 import { VenueNextActions } from './VenueNextActions';
+import { StatCard } from '../ui/stat-card';
 
 interface VenueDashboardProps {
   onNavigate: (page: string) => void;
@@ -134,24 +135,19 @@ export function VenueDashboard({ onNavigate, user, hasAcceptedAgreement }: Venue
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-12">
         {venueStats.map((stat) => {
           const Icon = stat.icon;
           return (
-            <button
+            <StatCard
               key={stat.label}
+              label={stat.label}
+              value={stat.value}
+              subtext={stat.subtext}
+              icon={<Icon className="w-5 h-5" />}
+              accent="green"
               onClick={stat.action}
-              className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)] hover:border-[var(--border-hover)] hover:shadow-sm transition-all text-left group"
-            >
-              <div className="flex items-start justify-between mb-4">
-                <div className="w-12 h-12 bg-[var(--green-muted)] rounded-lg flex items-center justify-center group-hover:bg-[var(--green)] transition-colors">
-                  <Icon className="w-6 h-6 text-[var(--green)] group-hover:text-[var(--accent-contrast)] transition-colors" />
-                </div>
-              </div>
-              <div className="text-3xl mb-1 text-[var(--text)]">{stat.value}</div>
-              <div className="text-[var(--text-muted)] text-sm">{stat.label}</div>
-              <div className="text-[var(--text-muted)] text-xs mt-1">{stat.subtext}</div>
-            </button>
+            />
           );
         })}
       </div>

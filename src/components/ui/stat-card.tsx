@@ -2,16 +2,27 @@ import { cn } from "./utils";
 import type { ReactNode } from "react";
 
 /**
- * StatCard — KPI tile for the artist dashboard.
+ * StatCard — Universal KPI tile used across all dashboards.
  *
- * Styled to match the Plans & Pricing page card language:
- * accent-tinted icon circle, transparent border at rest, ring-based hover.
+ * Design rules:
+ * - Transparent border at rest (reserves space → no layout shift on hover)
+ * - Ring-based hover/focus glow with accent color
+ * - p-5 consistent padding, overflow-hidden to prevent decorative bleed
+ * - focus-visible ring for keyboard accessibility
+ * - Optional delta/trend line with semantic coloring
  */
 
-/* KPI accent mapping — colors match the Plans & Pricing design language.
-   blue   = Active Artworks     green  = Total Earnings
-   violet = Recent Sales        amber  = Pending Applications */
+/* Accent mapping — blue, green, violet, amber */
 type AccentColor = "blue" | "green" | "violet" | "amber";
+
+/* Delta semantic coloring */
+type DeltaType = "positive" | "negative" | "warning" | "neutral";
+const deltaColors: Record<DeltaType, string> = {
+  positive: "text-[var(--green)]",
+  negative: "text-[var(--danger)]",
+  warning: "text-[var(--warning)]",
+  neutral: "text-[var(--text-muted)]",
+};
 
 const accentStyles: Record<
   AccentColor,
@@ -58,6 +69,10 @@ interface StatCardProps {
   icon?: ReactNode;
   /** Accent color for icon badge and hover ring */
   accent?: AccentColor;
+  /** Short delta / trend line (e.g. "+12 this month") */
+  delta?: string;
+  /** Semantic type for delta coloring */
+  deltaType?: DeltaType;
   /** @deprecated Use `accent` instead. Kept for call-site compat. */
   color?: "blue" | "green" | "muted";
   onClick?: () => void;
@@ -70,6 +85,8 @@ function StatCard({
   subtext,
   icon,
   accent = "blue",
+  delta,
+  deltaType = "neutral",
   onClick,
   className,
 }: StatCardProps) {
@@ -80,9 +97,9 @@ function StatCard({
     <Comp
       onClick={onClick}
       className={cn(
-        /* Base — transparent border reserves space so hover ring causes NO layout shift */
-        "group bg-[var(--surface-2)] border border-transparent rounded-xl p-5 shadow-sm",
-        "text-left transition-all duration-200 ease-out",
+        /* Shell — transparent border at rest, overflow-hidden prevents bleed */
+        "group relative bg-[var(--surface-2)] border border-transparent rounded-xl p-5 shadow-sm overflow-hidden",
+        "flex flex-col text-left transition-all duration-200 ease-out",
         /* Hover + focus-visible — accent border + ring glow (ring = box-shadow, no shift) */
         s.ring,
         onClick && "cursor-pointer",
@@ -112,9 +129,14 @@ function StatCard({
           {subtext}
         </div>
       )}
+      {delta && (
+        <div className={cn("text-xs mt-1", deltaColors[deltaType])}>
+          {delta}
+        </div>
+      )}
     </Comp>
   );
 }
 
 export { StatCard };
-export type { AccentColor };
+export type { AccentColor, DeltaType };

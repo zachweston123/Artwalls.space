@@ -1,5 +1,6 @@
-import { Frame, Users, CreditCard, FileText, ChevronRight } from 'lucide-react';
+import { Frame, Users, CreditCard, FileText } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../ui/card';
+import { ActionTile } from '../ui/action-tile';
 
 /**
  * VenueNextActions — prioritised next-step tiles for the venue dashboard.
@@ -88,32 +89,11 @@ export function VenueNextActions({
       <CardContent>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {visible.map((item) => (
-            <button
+            <ActionTile
               key={item.id}
-              onClick={() => onNavigate(item.page)}
-              className="relative bg-[var(--surface-1)] border border-[var(--border)] rounded-xl p-5 text-left flex flex-col min-h-[148px] transition-all duration-200 hover:border-[var(--green)]/60 hover:ring-2 hover:ring-[var(--green)]/25 hover:bg-[var(--surface-3)]/50 hover:shadow-sm"
-            >
-              <div className="flex items-start gap-3">
-                <div className="w-9 h-9 shrink-0 rounded-lg bg-[var(--surface-3)] flex items-center justify-center text-[var(--text-muted)]">
-                  {item.icon}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-baseline justify-between gap-2">
-                    <p className="text-sm font-semibold text-[var(--text)] leading-snug truncate">{item.title}</p>
-                    {item.progress && (
-                      <span className="text-xs text-[var(--text-muted)] tabular-nums whitespace-nowrap">{item.progress}</span>
-                    )}
-                  </div>
-                  <p className="text-xs text-[var(--text-muted)] leading-relaxed mt-1 line-clamp-2">{item.description}</p>
-                </div>
-              </div>
-              <div className="mt-auto pt-3">
-                <span className="inline-flex items-center gap-1 text-xs font-medium text-[var(--green)]">
-                  {item.cta}
-                  <ChevronRight className="w-3 h-3" />
-                </span>
-              </div>
-            </button>
+              item={{ ...item, onAction: () => onNavigate(item.page) }}
+              accent="green"
+            />
           ))}
         </div>
       </CardContent>

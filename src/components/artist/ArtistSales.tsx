@@ -3,6 +3,7 @@ import { DollarSign, TrendingUp, Package, BarChart3, Calendar, Eye, ArrowUpRight
 import { apiGet } from '../../lib/api';
 import { resolveArtistSubscription } from '../../lib/subscription';
 import type { User } from '../../App';
+import { StatCard } from '../ui/stat-card';
 
 interface ArtistSalesProps { 
   user: User;
@@ -74,45 +75,28 @@ export function ArtistSales({ user, onNavigate }: ArtistSalesProps) {
         <p className="text-[var(--text-muted)]">Track your artwork sales and income. Payouts vary by subscription plan.</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <div className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)]">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-[var(--green-muted)] border border-[var(--border)] rounded-lg flex items-center justify-center">
-              <DollarSign className="w-6 h-6 text-[var(--green)]" />
-            </div>
-            <div>
-              <div className="text-sm text-[var(--text-muted)]">Total Earnings</div>
-              <div className="text-2xl text-[var(--text)]">${totalEarnings.toFixed(2)}</div>
-            </div>
-          </div>
-          <div className="text-xs text-[var(--text-muted)]">{payoutPercentLabel} of total sales</div>
-        </div>
-
-        <div className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)]">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-[var(--green-muted)] border border-[var(--border)] rounded-lg flex items-center justify-center">
-              <Package className="w-6 h-6 text-[var(--green)]" />
-            </div>
-            <div>
-              <div className="text-sm text-[var(--text-muted)]">Total Sales</div>
-              <div className="text-2xl text-[var(--text)]">{totalSales}</div>
-            </div>
-          </div>
-          <div className="text-xs text-[var(--text-muted)]">Artworks sold</div>
-        </div>
-
-        <div className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)]">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-[var(--blue)]" />
-            </div>
-            <div>
-              <div className="text-sm text-[var(--text-muted)]">Average Sale</div>
-              <div className="text-2xl text-[var(--text)]">${averageSale.toFixed(0)}</div>
-            </div>
-          </div>
-          <div className="text-xs text-[var(--text-muted)]">Per artwork</div>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
+        <StatCard
+          label="Total Earnings"
+          value={`$${totalEarnings.toFixed(2)}`}
+          subtext={`${payoutPercentLabel} of total sales`}
+          icon={<DollarSign className="w-5 h-5" />}
+          accent="green"
+        />
+        <StatCard
+          label="Total Sales"
+          value={totalSales}
+          subtext="Artworks sold"
+          icon={<Package className="w-5 h-5" />}
+          accent="green"
+        />
+        <StatCard
+          label="Average Sale"
+          value={`$${averageSale.toFixed(0)}`}
+          subtext="Per artwork"
+          icon={<TrendingUp className="w-5 h-5" />}
+          accent="blue"
+        />
       </div>
 
       {/* Advanced Analytics - Growth/Pro Only */}

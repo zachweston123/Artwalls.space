@@ -5,6 +5,7 @@ import { EmptyState } from '../EmptyState';
 import { formatCurrency, safeDivide } from '../../utils/format';
 import { VenuePayoutsCard } from './VenuePayoutsCard';
 import type { User } from '../../App';
+import { StatCard } from '../ui/stat-card';
 
 interface VenueSalesProps {
   onNavigate?: (page: string) => void;
@@ -34,45 +35,28 @@ export function VenueSales({ onNavigate, user }: VenueSalesProps) {
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <div className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)]">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-[var(--green-muted)] rounded-lg flex items-center justify-center">
-              <DollarSign className="w-6 h-6 text-[var(--green)]" />
-            </div>
-            <div>
-              <div className="text-sm text-[var(--text-muted)]">Total Earnings</div>
-              <div className="text-2xl">{formatCurrency(totalEarnings)}</div>
-            </div>
-          </div>
-          <div className="text-xs text-[var(--text-muted)]">15% commission</div>
-        </div>
-
-        <div className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)]">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-[var(--surface-2)] rounded-lg flex items-center justify-center">
-              <Package className="w-6 h-6 text-[var(--blue)]" />
-            </div>
-            <div>
-              <div className="text-sm text-[var(--text-muted)]">Artworks Sold</div>
-              <div className="text-2xl">{totalSales}</div>
-            </div>
-          </div>
-          <div className="text-xs text-[var(--text-muted)]">From your venue</div>
-        </div>
-
-        <div className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)]">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-[var(--surface-2)] rounded-lg flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-[var(--blue)]" />
-            </div>
-            <div>
-              <div className="text-sm text-[var(--text-muted)]">Avg. Commission</div>
-              <div className="text-2xl">{averageCommissionDisplay}</div>
-            </div>
-          </div>
-          <div className="text-xs text-[var(--text-muted)]">{averageCommission === null ? 'No sales yet' : 'Per sale'}</div>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
+        <StatCard
+          label="Total Earnings"
+          value={formatCurrency(totalEarnings)}
+          subtext="15% commission"
+          icon={<DollarSign className="w-5 h-5" />}
+          accent="green"
+        />
+        <StatCard
+          label="Artworks Sold"
+          value={totalSales}
+          subtext="From your venue"
+          icon={<Package className="w-5 h-5" />}
+          accent="blue"
+        />
+        <StatCard
+          label="Avg. Commission"
+          value={averageCommissionDisplay}
+          subtext={averageCommission === null ? 'No sales yet' : 'Per sale'}
+          icon={<TrendingUp className="w-5 h-5" />}
+          accent="blue"
+        />
       </div>
 
       <div className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] overflow-hidden">
