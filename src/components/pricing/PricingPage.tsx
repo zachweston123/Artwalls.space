@@ -795,14 +795,15 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       <div className="max-w-6xl mx-auto mb-12">
         <h2 className="text-xl sm:text-2xl mb-6 text-center text-[var(--text)]">Compare All Plans</h2>
 
-        {/* Comparison table — horizontally scrollable on mobile */}
-        <div className="bg-[var(--surface-2)] rounded-2xl border border-[var(--border)] p-4 sm:p-6 overflow-x-auto">
+        {/* Comparison table — single surface, no inner card */}
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] overflow-hidden">
+          <div className="overflow-x-auto">
           <table className="w-full min-w-[600px]">
-            <thead className="sticky top-0 z-10">
-              <tr className="border-b-2 border-[var(--border)]">
-                <th className="text-left p-3 sm:p-4 text-sm text-[var(--text-muted)] font-semibold whitespace-nowrap">Feature</th>
+            <thead>
+              <tr className="bg-[var(--surface-3)] border-b border-[var(--border)]">
+                <th className="text-left px-4 py-3 sm:px-5 sm:py-4 text-sm text-[var(--text-muted)] font-semibold whitespace-nowrap">Feature</th>
                 {plans.map((p) => (
-                  <th key={p.id} className={`text-center p-3 sm:p-4 text-sm font-semibold whitespace-nowrap ${p.popular ? 'bg-[var(--surface-3)] text-[var(--text)]' : 'text-[var(--text-muted)]'}`}>
+                  <th key={p.id} className={`text-center px-4 py-3 sm:px-5 sm:py-4 text-sm font-semibold whitespace-nowrap ${p.popular ? 'text-[var(--text)]' : 'text-[var(--text-muted)]'}`}>
                     <div>{p.name}</div>
                     <div className="text-xs text-[var(--accent)] font-bold mt-1">{p.takeHome}% take-home</div>
                   </th>
@@ -810,28 +811,32 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
               </tr>
             </thead>
             <tbody>
-              {[
-                { label: 'Monthly price', values: ['Free', '$9', '$19', '$39'] },
-                { label: 'Artworks listed', values: ['1', '10', '30', 'Unlimited'] },
-                { label: 'Active displays', values: ['1', '4', '10', 'Unlimited'] },
-                { label: 'Extra display fee', values: ['N/A', '$5/mo', '$4/mo', '—'] },
-                { label: 'Venue applications/mo', values: ['1', '3', 'Unlimited', 'Unlimited'] },
-                { label: 'Sales analytics', values: ['—', 'Basic', 'Advanced', 'Advanced'] },
-                { label: 'Priority visibility', values: ['—', '—', '✓', '✓✓'] },
-                { label: 'Protection plan', values: ['$5/art/mo', '$5/art/mo', '$3/art/mo', 'FREE'] },
-                { label: 'Max coverage/claim', values: ['$100', '$100', '$150', '$200'] },
-              ].map((row, i) => (
-                <tr key={row.label} className={`border-b border-[var(--border)] ${i % 2 === 0 ? 'bg-[var(--surface-1)]' : ''}`}>
-                  <td className="p-3 sm:p-4 text-sm text-[var(--text)] font-medium whitespace-nowrap">{row.label}</td>
-                  {row.values.map((val, j) => (
-                    <td key={j} className={`text-center p-3 sm:p-4 text-sm tabular-nums ${plans[j]?.popular ? 'bg-[var(--surface-3)]' : ''} text-[var(--text)]`}>
-                      {val}
-                    </td>
-                  ))}
-                </tr>
-              ))}
+              {(() => {
+                const rows = [
+                  { label: 'Monthly price', values: ['Free', '$9', '$19', '$39'] },
+                  { label: 'Artworks listed', values: ['1', '10', '30', 'Unlimited'] },
+                  { label: 'Active displays', values: ['1', '4', '10', 'Unlimited'] },
+                  { label: 'Extra display fee', values: ['N/A', '$5/mo', '$4/mo', '—'] },
+                  { label: 'Venue applications/mo', values: ['1', '3', 'Unlimited', 'Unlimited'] },
+                  { label: 'Sales analytics', values: ['—', 'Basic', 'Advanced', 'Advanced'] },
+                  { label: 'Priority visibility', values: ['—', '—', '✓', '✓✓'] },
+                  { label: 'Protection plan', values: ['$5/art/mo', '$5/art/mo', '$3/art/mo', 'FREE'] },
+                  { label: 'Max coverage/claim', values: ['$100', '$100', '$150', '$200'] },
+                ];
+                return rows.map((row, i) => (
+                  <tr key={row.label} className={`${i < rows.length - 1 ? 'border-b border-[var(--border)]/60' : ''} ${i % 2 === 0 ? 'bg-[var(--surface-1)]' : ''}`}>
+                    <td className="px-4 py-3 sm:px-5 sm:py-3.5 text-sm text-[var(--text)] font-medium whitespace-nowrap">{row.label}</td>
+                    {row.values.map((val, j) => (
+                      <td key={j} className={`text-center px-4 py-3 sm:px-5 sm:py-3.5 text-sm tabular-nums ${plans[j]?.popular ? 'bg-[var(--accent)]/[0.04]' : ''} text-[var(--text)]`}>
+                        {val}
+                      </td>
+                    ))}
+                  </tr>
+                ));
+              })()}
             </tbody>
           </table>
+          </div>
         </div>
       </div>
 
