@@ -13,7 +13,6 @@ interface PricingPageProps {
 
 export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPageProps) {
   const [showProtectionDetails, setShowProtectionDetails] = useState(false);
-  const [showExample, setShowExample] = useState(false);
   const [saleValue, setSaleValue] = useState(100);
   const [artworksPerMonth, setArtworksPerMonth] = useState(5);
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
@@ -219,15 +218,6 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
   const growthMonthly = calculateMonthlyNet('growth', 83, 19, false);
   const proMonthly = calculateMonthlyNet('pro', 85, 39, true);
 
-  // Example breakdown for the $140 expandable section
-  const examplePrice = 140;
-  const exampleBreakdowns = [
-    { name: 'Free', pct: 60, take: examplePrice * 0.60 },
-    { name: 'Starter', pct: 80, take: examplePrice * 0.80 },
-    { name: 'Growth', pct: 83, take: examplePrice * 0.83 },
-    { name: 'Pro', pct: 85, take: examplePrice * 0.85 },
-  ];
-
   async function startSubscription(tier: PlanId) {
     if (tier === 'free') return;
     setError(null);
@@ -428,33 +418,6 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
             </div>
           );
         })}
-      </div>
-
-      {/* ── Example at $140 (expandable) ────────────────── */}
-      <div className="max-w-3xl mx-auto mb-12">
-        <button
-          onClick={() => setShowExample(!showExample)}
-          className="w-full flex items-center justify-between bg-[var(--surface-2)] rounded-xl border border-[var(--border)] px-5 py-4 hover:shadow-sm transition-shadow"
-        >
-          <span className="text-sm font-semibold text-[var(--text)]">💰 Example: What you take home on a $140 sale</span>
-          {showExample ? <ChevronUp className="w-5 h-5 text-[var(--text-muted)]" /> : <ChevronDown className="w-5 h-5 text-[var(--text-muted)]" />}
-        </button>
-        {showExample && (
-          <div className="bg-[var(--surface-2)] rounded-b-xl border border-t-0 border-[var(--border)] p-5">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {exampleBreakdowns.map((b) => (
-                <div key={b.name} className="bg-[var(--surface-1)] rounded-lg border border-[var(--border)] p-3 text-center">
-                  <div className="text-xs text-[var(--text-muted)] mb-1">{b.name} ({b.pct}%)</div>
-                  <div className="text-xl font-bold text-[var(--accent)]">${b.take.toFixed(2)}</div>
-                  <div className="text-xs text-[var(--text-muted)]">take-home</div>
-                </div>
-              ))}
-            </div>
-            <p className="text-xs text-[var(--text-muted)] mt-3 text-center">
-              Venue always receives 15%. Buyer pays a 4.5% service fee at checkout. Remaining % is Platform + Processing.
-            </p>
-          </div>
-        )}
       </div>
 
       <div className="max-w-4xl mx-auto mb-12">
