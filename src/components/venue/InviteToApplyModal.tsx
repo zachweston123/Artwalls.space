@@ -56,6 +56,7 @@ export function InviteToApplyModal({ artistName, venueName, onSend, onCancel }: 
           <button
             onClick={onCancel}
             className="p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
+            aria-label="Close dialog"
           >
             <X className="w-5 h-5" />
           </button>

@@ -152,9 +152,9 @@ export function ApprovedListings() {
     return (
       <div className="text-center py-12">
         <QrCode className="h-12 w-12 text-text-secondary mx-auto mb-4 opacity-50" />
-        <h2 className="text-lg font-semibold text-text mb-2">No Approved Artworks</h2>
+        <h2 className="text-lg font-semibold text-text mb-2">No approved artworks yet</h2>
         <p className="text-text-secondary">
-          Once your artworks are approved by venues, you'll be able to generate and download QR codes here.
+          Once your artworks are approved by a venue, you’ll be able to generate and download QR codes here.
         </p>
       </div>
     );
@@ -273,7 +273,7 @@ export function ApprovedListings() {
                 <button
                   onClick={() => copyQrUrl(artwork.id)}
                   className="flex items-center justify-center gap-1 py-2 px-3 bg-green/10 hover:bg-green/20 border border-green/30 rounded text-green-700 dark:text-green-300 text-sm font-medium transition-colors"
-                  title="Copy QR code URL to clipboard"
+                  title="Copy artwork link to clipboard"
                 >
                   {copyStates[artwork.id] ? (
                     <>
@@ -291,7 +291,7 @@ export function ApprovedListings() {
                 <button
                   onClick={() => downloadQrCode(artwork.id)}
                   className="flex items-center justify-center gap-1 py-2 px-3 bg-green/10 hover:bg-green/20 border border-green/30 rounded text-green-700 dark:text-green-300 text-sm font-medium transition-colors"
-                  title="Download QR code as PNG (print ready)"
+                  title="Download QR code as PNG (print-ready)"
                 >
                   <Download className="h-4 w-4" />
                   PNG

@@ -9,15 +9,15 @@ export function UpgradePromptCard({ currentPlan, onUpgrade }: UpgradePromptCardP
   const prompts = {
     free: {
       title: 'Ready to grow your art business?',
-      description: 'Upgrade to Starter for 4 active displays, 10 artwork listings, lower platform fees (10%), and up to 3 venue applications per month.',
+      description: 'Upgrade to Starter for 4 active displays, 10 artworks, lower platform fees (10%), and up to 3 venue applications per month.',
       cta: 'Upgrade to Starter – $9/mo',
       features: ['4 active displays', '10 artworks', 'Lower fees (10%)'],
     },
     starter: {
       title: 'Unlock unlimited applications',
-      description: 'Upgrade to Growth for 10 active displays, unlimited venue applications, priority visibility, and lower platform fees (8%).',
+      description: 'Upgrade to Growth for 10 active displays, unlimited venue applications, priority visibility in search results, and lower platform fees (8%).',
       cta: 'Upgrade to Growth – $19/mo',
-      features: ['10 active displays', 'Unlimited applications', 'Lower fees (8%)'],
+      features: ['10 active displays', 'Unlimited venue applications', 'Lower fees (8%)'],
     },
     growth: {
       title: 'Get protection included FREE',

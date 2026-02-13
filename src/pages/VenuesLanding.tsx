@@ -111,7 +111,7 @@ export function VenuesLandingPage({ onNavigate, onLogin, viewerRole = null }: Ve
             <div>
               <PageHeader
                 breadcrumb="Manage / Venue tools"
-                title="Make your space look better"
+                title="Make your space stand out"
                 subtitle="Artwalls makes it easy to host rotating local art without turning your business into a gallery."
                 primaryAction={
                   isVenueViewer
@@ -138,10 +138,10 @@ export function VenuesLandingPage({ onNavigate, onLogin, viewerRole = null }: Ve
                   </div>
                 </div>
                 <p className="text-sm text-[var(--text-muted)] mb-6">
-                  Log in to review artists, manage your wall, and track current displays.
+                  Log in to review artist applications, manage your wall spaces, and track your current displays.
                 </p>
                 <p className="text-sm text-[var(--text-muted)] mb-4">
-                  New here? <button onClick={() => onNavigate?.('login')} className="text-[var(--green)] hover:underline">Create a venue account</button> in ~2 minutes.
+                  New here? <button onClick={() => onNavigate?.('login')} className="text-[var(--green)] hover:underline">Create a venue account</button> in about 2 minutes.
                 </p>
                 <form id="venue-login" onSubmit={handleSubmit} className="space-y-4">
                   {(errorMessage || infoMessage) && (
@@ -217,30 +217,30 @@ export function VenuesLandingPage({ onNavigate, onLogin, viewerRole = null }: Ve
                   </div>
                   <div>
                     <p className="text-sm text-[var(--text-muted)]">You're signed in.</p>
-                    <h2 className="text-xl font-semibold text-[var(--text)]">Venue tools</h2>
+                    <h2 className="text-xl font-semibold text-[var(--text)]">Venue Tools</h2>
                   </div>
                 </div>
                 <p className="text-sm text-[var(--text-muted)] mb-6">
-                  Review artists, manage your wall, and keep displays fresh with a single workflow.
+                  Review artist applications, manage your wall spaces, and keep your displays fresh.
                 </p>
                 <div className="grid gap-3 text-sm">
                   <div className="flex items-center justify-between p-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]">
                     <div>
-                      <p className="font-semibold text-[var(--text)]">Manage wall spaces</p>
+                      <p className="font-semibold text-[var(--text)]">Manage Wall Spaces</p>
                       <p className="text-xs text-[var(--text-muted)]">Add dimensions, photos, and availability.</p>
                     </div>
                     <button onClick={() => onNavigate?.('venue-walls')} className="text-[var(--green)] hover:underline">Open</button>
                   </div>
                   <div className="flex items-center justify-between p-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]">
                     <div>
-                      <p className="font-semibold text-[var(--text)]">Browse artists</p>
+                      <p className="font-semibold text-[var(--text)]">Browse Artists</p>
                       <p className="text-xs text-[var(--text-muted)]">Invite or approve artists for your walls.</p>
                     </div>
                     <button onClick={() => onNavigate?.('venue-find-artists')} className="text-[var(--green)] hover:underline">Open</button>
                   </div>
                   <div className="flex items-center justify-between p-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]">
                     <div>
-                      <p className="font-semibold text-[var(--text)]">Review current art</p>
+                      <p className="font-semibold text-[var(--text)]">Review Current Art</p>
                       <p className="text-xs text-[var(--text-muted)]">See what’s on display and upcoming rotations.</p>
                     </div>
                     <button onClick={() => onNavigate?.('venue-current')} className="text-[var(--green)] hover:underline">Open</button>
@@ -258,8 +258,8 @@ export function VenuesLandingPage({ onNavigate, onLogin, viewerRole = null }: Ve
           <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_.8fr] gap-6 items-center">
             <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-2xl p-6 sm:p-8 shadow-sm">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--surface-2)] border border-[var(--border)] text-[var(--green)] mb-3">Curated sets</div>
-              <h2 className="text-xl sm:text-2xl font-bold mb-3 text-[var(--text)]">Pick a ready-to-hang wall in minutes</h2>
-              <p className="text-[var(--text-muted)] mb-4">Artists bundle 3–6 pieces that fit your vibe. Availability is auto-checked, so you skip the back-and-forth and schedule one install.</p>
+              <h2 className="text-xl sm:text-2xl font-bold mb-3 text-[var(--text)]">Pick a ready-to-hang art set in minutes</h2>
+              <p className="text-[var(--text-muted)] mb-4">Artists bundle 3–6 pieces that fit your vibe. Availability is checked automatically, so you skip the back-and-forth and schedule one install.</p>
               <ul className="space-y-2 text-sm text-[var(--text-muted)] mb-6">
                 <li>• 3–6 pieces, curated for one wall</li>
                 <li>• Verified availability + pricing upfront</li>
@@ -270,13 +270,13 @@ export function VenuesLandingPage({ onNavigate, onLogin, viewerRole = null }: Ve
                   onClick={() => onNavigate?.('venue-curated-sets')}
                   className="px-5 py-3 rounded-lg bg-[var(--green)] text-[var(--accent-contrast)] hover:brightness-95 transition"
                 >
-                  Browse curated sets
+                  Browse Curated Sets
                 </button>
                 <button
                   onClick={() => onNavigate?.('venue-dashboard')}
                   className="px-5 py-3 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] hover:bg-[var(--surface-2)] transition"
                 >
-                  View my wall plan
+                  View My Wall Plan
                 </button>
               </div>
             </div>
@@ -301,10 +301,10 @@ export function VenuesLandingPage({ onNavigate, onLogin, viewerRole = null }: Ve
               <h2 className="text-xl sm:text-2xl font-bold mb-3 text-[var(--text)]">Why venues use Artwalls (instead of random artist DMs)</h2>
               <p className="text-[var(--text-muted)] mb-6">Because the “old way” is chaotic:</p>
               <ul className="list-disc pl-6 space-y-3 text-[var(--text-muted)]">
-                <li>constant messages from artists (hard to vet fast)</li>
+                <li>constant messages from artists (hard to vet quickly)</li>
                 <li>unclear install/rotation expectations</li>
                 <li>no standard way to show pricing or sell pieces</li>
-                <li>awkward commission convos</li>
+                <li>awkward commission conversations</li>
               </ul>
             </div>
 
@@ -327,12 +327,12 @@ export function VenuesLandingPage({ onNavigate, onLogin, viewerRole = null }: Ve
       <section className="py-12 sm:py-16 px-4 bg-[var(--surface)] border-y border-[var(--border)]">
         <div className="max-w-6xl mx-auto">
           <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-2xl p-6 sm:p-8">
-            <h2 className="text-xl sm:text-2xl font-bold mb-4 text-[var(--text)]">What's in it for my venue?</h2>
+            <h2 className="text-xl sm:text-2xl font-bold mb-4 text-[var(--text)]">What's in it for your venue?</h2>
             <ul className="list-disc pl-6 space-y-3 text-[var(--text-muted)]">
               <li>Your space looks more unique (people literally talk about the walls)</li>
               <li>You support local community (customers love that)</li>
-              <li>Optional revenue through commission when pieces sell</li>
-              <li>Minimal staff involvement (it shouldn’t slow your day down)</li>
+              <li>Option to earn commission when artwork sells</li>
+              <li>Minimal staff involvement (won't slow down your day)</li>
             </ul>
           </div>
         </div>
@@ -346,8 +346,8 @@ export function VenuesLandingPage({ onNavigate, onLogin, viewerRole = null }: Ve
             <ol className="space-y-4 text-[var(--text-muted)]">
               <li><span className="font-semibold text-[var(--text)]">1)</span> Create a venue profile + add wall details</li>
               <li><span className="font-semibold text-[var(--text)]">2)</span> Review artists / accept invites</li>
-              <li><span className="font-semibold text-[var(--text)]">3)</span> Approve a display + schedule install/rotation</li>
-              <li><span className="font-semibold text-[var(--text)]">4)</span> Put up QR labels and let guests explore</li>
+              <li><span className="font-semibold text-[var(--text)]">3)</span> Approve a display and schedule the installation (or rotation)</li>
+              <li><span className="font-semibold text-[var(--text)]">4)</span> Put up the QR labels and let guests explore the art</li>
             </ol>
           </div>
         </div>

@@ -37,7 +37,7 @@ export default function MomentumBanner({ onNavigate, onDismiss }: MomentumBanner
             Your art is live on Artwalls 🎨
           </p>
           <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
-            Unlock more visibility — more active listings, more venue opportunities,
+            Unlock more visibility — more active displays, more venue opportunities,
             and better insights. And if a piece sells, you keep more.
           </p>
           <button

@@ -240,6 +240,7 @@ export function ArtistInvites({ onApply, onDecline, onNavigate, artistId }: Arti
               <button
                 onClick={() => setSelectedInvite(null)}
                 className="p-2 hover:bg-[var(--surface-3)] rounded-lg transition-colors"
+                aria-label="Close dialog"
               >
                 <XIcon className="w-5 h-5" />
               </button>

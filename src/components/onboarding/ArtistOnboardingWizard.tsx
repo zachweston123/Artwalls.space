@@ -166,7 +166,7 @@ export function ArtistOnboardingWizard({ user, onComplete, onSkip }: ArtistOnboa
       }
       setActiveStep(6);
     } catch (err: unknown) {
-      setError(getErrorMessage(err) || 'Unable to start plan flow');
+      setError(getErrorMessage(err) || 'Unable to start plan selection');
     } finally {
       setPlanWorking(null);
     }

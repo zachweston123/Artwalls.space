@@ -231,9 +231,9 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
       <div className="min-h-svh bg-[var(--bg)] flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-4xl">
           <div className="text-center mb-8 sm:mb-12">
-            <h1 className="text-2xl sm:text-3xl mb-3 text-[var(--text)] font-semibold">Welcome to Artwalls</h1>
+            <h1 className="text-2xl sm:text-3xl mb-3 text-[var(--text)] font-semibold">Welcome to Artwalls!</h1>
             <p className="text-[var(--text-muted)] text-sm sm:text-base max-w-md mx-auto">
-              Connecting local artists with venues to display and sell physical artworks
+              Let's get you set up — are you an artist or a venue?
             </p>
           </div>
 
@@ -249,7 +249,7 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
                 <div>
                   <h2 className="text-xl mb-1 sm:mb-2 text-[var(--blue)] font-semibold">I'm an Artist</h2>
                   <p className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
-                    Share and sell your artwork at local venues and manage your portfolio
+                    Build a beautiful portfolio, get your art into local venues, and sell your work directly to buyers.
                   </p>
                   <button
                     onClick={(e) => {
@@ -275,7 +275,7 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
                 <div>
                   <h2 className="text-xl mb-1 sm:mb-2 text-[var(--green)] font-semibold">I'm a Venue</h2>
                   <p className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
-                    Support local artists by displaying rotating artworks and earn 15% commission
+                    Host rotating local art, support your community's artists, and make your space truly stand out.
                   </p>
                   <button
                     onClick={(e) => {
@@ -461,7 +461,7 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
                 onClick={() => setSelectedRole(null)}
                 className="text-sm text-[var(--text-muted)] hover:text-[var(--text)]"
               >
-                ← Choose different role
+                ← Back to Login
               </button>
             </div>
           )}

@@ -38,8 +38,8 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       tagline: 'Perfect for trying Artwalls',
       features: [
         '1 active display included',
-        '1 artwork listing',
-        'Basic QR generation',
+        '1 artwork',
+        'Basic QR code generation',
         'Weekly payouts',
       ],
       activeDisplays: 1,
@@ -87,8 +87,8 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       features: [
         '10 active displays included',
         'Up to 30 artworks',
-        'Unlimited applications',
-        'Priority visibility boost',
+        'Unlimited venue applications',
+        'Priority visibility in search results',
       ],
       activeDisplays: 10,
       overagePricing: '$4/mo per additional display',
@@ -111,8 +111,8 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       features: [
         'Unlimited active displays',
         'Unlimited artworks',
-        'Unlimited applications',
-        'Free protection plan',
+        'Unlimited venue applications',
+        'Free Artwork Protection Plan',
         'Featured artist eligibility',
       ],
       activeDisplays: 'Unlimited',
@@ -872,7 +872,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
         <div className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-6">
           <h2 className="text-2xl mb-2 text-[var(--text)]">Payout Information by Plan</h2>
           <p className="text-sm text-[var(--text-muted)] mb-4">
-            Listing and application limits per subscription tier.
+            Artwork and application limits per subscription tier.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
@@ -885,7 +885,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                 <h3 className="text-lg text-[var(--text)] mb-2">{p.name}</h3>
                 <div className="text-sm">
                   <div className="flex items-center justify-between py-1">
-                    <span className="text-[var(--text-muted)]">Artwork listings</span>
+                    <span className="text-[var(--text-muted)]">Artworks</span>
                     <span className="text-[var(--text)] font-semibold">{p.listings}</span>
                   </div>
                   <div className="flex items-center justify-between py-1">
@@ -937,7 +937,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                 <td className="text-center p-4 text-sm text-[var(--text)]"><strong>$39</strong></td>
               </tr>
               <tr className="border-b border-[var(--border)]">
-                <td className="p-4 text-sm text-[var(--text)]"><strong>Active displays included</strong></td>
+                <td className="p-4 text-sm text-[var(--text)]"><strong title="Active displays are the number of artworks you can have displayed through Artwalls at the same time.">Active displays included</strong></td>
                 <td className="text-center p-4 text-sm text-[var(--text)]"><strong>1</strong></td>
                 <td className="text-center p-4 text-sm text-[var(--text)]"><strong>4</strong></td>
                 <td className="text-center p-4 text-sm bg-[var(--surface-3)] text-[var(--text)]"><strong>10</strong></td>

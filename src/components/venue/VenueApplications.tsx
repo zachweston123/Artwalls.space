@@ -213,11 +213,11 @@ export function VenueApplications() {
           <div className="w-16 h-16 bg-[var(--surface-2)] rounded-full flex items-center justify-center mx-auto mb-4">
             <Clock className="w-8 h-8 text-[var(--text-muted)]" />
           </div>
-          <h3 className="text-xl mb-2 text-[var(--text)]">No applications</h3>
+          <h3 className="text-xl mb-2 text-[var(--text)]">No applications yet</h3>
           <p className="text-[var(--text-muted)]">
             {filter === 'all'
-              ? "You don't have any applications yet"
-              : `No ${filter} applications`}
+              ? "You don't have any applications yet."
+              : `No ${filter} applications yet.`}
           </p>
         </div>
       )}
@@ -237,6 +237,7 @@ export function VenueApplications() {
                 <button
                   onClick={() => setShowApprovalModal(false)}
                   className="p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
+                  aria-label="Close dialog"
                 >
                   <X className="w-5 h-5" />
                 </button>

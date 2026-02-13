@@ -422,7 +422,7 @@ export function CuratedSets({ user, onNavigate }: CuratedSetsProps) {
   const renderEmpty = () => {
     const upgradeCta = atLimit
       ? {
-          label: 'Upgrade to unlock curated sets',
+          label: 'View Plans to Unlock Curated Sets',
           onClick: () => onNavigate?.('plans-pricing'),
         }
       : null;
@@ -508,9 +508,9 @@ export function CuratedSets({ user, onNavigate }: CuratedSetsProps) {
             onClick={handleCreate}
             disabled={saving || atLimit}
           >
-            Create set
+            Create Set
           </button>
-          {atLimit && <span className="text-xs text-[var(--text-muted)]">Upgrade to unlock more sets.</span>}
+          {atLimit && <span className="text-xs text-[var(--text-muted)]">Upgrade your plan to create more sets.</span>}
           {error && <span className="text-xs text-[var(--danger)]">{error}</span>}
         </div>
       </div>

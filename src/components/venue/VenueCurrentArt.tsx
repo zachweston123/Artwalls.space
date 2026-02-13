@@ -256,9 +256,9 @@ export function VenueCurrentArt() {
           </div>
           {filter === 'all' && (
             <>
-              <h3 className="text-xl mb-2">No artwork on display</h3>
+              <h3 className="text-xl mb-2">No artwork on display yet</h3>
               <p className="text-[var(--text-muted)] mb-6">
-                Review artist applications to start displaying artwork
+                Review artist applications to start displaying artwork.
               </p>
               <button className="px-6 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-opacity">
                 View Applications
@@ -267,8 +267,8 @@ export function VenueCurrentArt() {
           )}
           {filter !== 'all' && (
             <>
-              <h3 className="text-xl mb-2">No {filter.replace('-', ' ')} artwork</h3>
-              <p className="text-[var(--text-muted)]">Try selecting a different filter</p>
+              <h3 className="text-xl mb-2">No {filter.replace('-', ' ')} artwork yet</h3>
+              <p className="text-[var(--text-muted)]">Try selecting a different filter.</p>
             </>
           )}
         </div>
@@ -283,6 +283,7 @@ export function VenueCurrentArt() {
               <button
                 onClick={() => setShowConfirmModal(false)}
                 className="p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
+                aria-label="Close dialog"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -314,7 +315,7 @@ export function VenueCurrentArt() {
           <div className="bg-[var(--surface-1)] border border-[var(--border)] text-[var(--text)] rounded-2xl p-6 max-w-md w-full">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl">Artwork QR Code</h3>
-              <button onClick={() => setQrArtwork(null)} className="p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors">
+              <button onClick={() => setQrArtwork(null)} className="p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors" aria-label="Close dialog">
                 <X className="w-5 h-5" />
               </button>
             </div>

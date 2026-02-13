@@ -67,7 +67,7 @@ export function VenueDashboard({ onNavigate, user, hasAcceptedAgreement }: Venue
     {
       label: 'Pending Applications',
       value: pendingApplications,
-      subtext: 'Awaiting review',
+      subtext: 'Awaiting your review',
       icon: Clock,
       color: 'green',
       action: () => onNavigate('venue-applications'),
@@ -96,8 +96,8 @@ export function VenueDashboard({ onNavigate, user, hasAcceptedAgreement }: Venue
         breadcrumb="Manage / Dashboard"
         title="Venue dashboard"
         subtitle="Track wall spaces, applications, and payouts"
-        primaryAction={{ label: 'Add wall space', onClick: () => onNavigate('venue-walls') }}
-        secondaryAction={{ label: 'Find artists', onClick: () => onNavigate('venue-find-artists') }}
+        primaryAction={{ label: 'Add Wall Space', onClick: () => onNavigate('venue-walls') }}
+        secondaryAction={{ label: 'Find Artists', onClick: () => onNavigate('venue-find-artists') }}
         className="mb-6"
       />
 
@@ -155,7 +155,7 @@ export function VenueDashboard({ onNavigate, user, hasAcceptedAgreement }: Venue
               onClick={() => onNavigate('venue-applications')}
               className="w-full px-4 py-3 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-colors flex items-center justify-between font-medium text-sm"
             >
-              <span>Review applications</span>
+              <span>Review Applications</span>
               {pendingApplications > 0 && (
                 <span className="px-2 py-1 bg-[var(--surface-1)] text-[var(--green)] rounded-full text-xs">
                   {pendingApplications} new
@@ -166,25 +166,25 @@ export function VenueDashboard({ onNavigate, user, hasAcceptedAgreement }: Venue
               onClick={() => onNavigate('venue-walls')}
               className="w-full px-4 py-3 bg-[var(--surface-2)] text-[var(--text)] rounded-lg hover:bg-[var(--surface-3)] transition-colors"
             >
-              Manage wall spaces
+              Manage Wall Spaces
             </button>
             <button
               onClick={() => onNavigate('venue-find-artists')}
               className="w-full px-4 py-3 bg-[var(--surface-2)] text-[var(--text)] rounded-lg hover:bg-[var(--surface-3)] transition-colors"
             >
-              Invite artists
+              Invite Artists
             </button>
             <button
               onClick={() => onNavigate('venue-curated-sets')}
               className="w-full px-4 py-3 bg-[var(--surface-2)] text-[var(--text)] rounded-lg hover:bg-[var(--surface-3)] transition-colors"
             >
-              Browse curated sets
+              Browse Curated Sets
             </button>
             <button
               onClick={() => onNavigate('venue-sales')}
               className="w-full px-4 py-3 bg-[var(--surface-2)] text-[var(--text)] rounded-lg hover:bg-[var(--surface-3)] transition-colors"
             >
-              Set up payouts
+              Set Up Payouts
             </button>
           </div>
           <div className="mt-3 text-xs text-[var(--text-muted)]">

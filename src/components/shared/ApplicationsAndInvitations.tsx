@@ -663,7 +663,8 @@ export function ApplicationsAndInvitations({ userRole, onBack, defaultTab = 'app
                             <button
                               onClick={() => toggleQrVisibility(artwork.id)}
                               className="p-2 hover:bg-[var(--surface-3)] rounded transition-colors"
-                              title={qrStates[artwork.id] ? 'Hide QR' : 'Show QR'}
+                              title={qrStates[artwork.id] ? 'Hide QR code' : 'Show QR code'}
+                              aria-label={qrStates[artwork.id] ? 'Hide QR code' : 'Show QR code'}
                             >
                               {qrStates[artwork.id] ? (
                                 <EyeOff className="w-4 h-4 text-[var(--text-muted)]" />

@@ -15,8 +15,8 @@ export function WhyArtwallsArtistsPage({ onNavigate, viewerRole = null }: WhyArt
       price: 'Free',
       subtitle: 'You take home 60%',
       features: [
-        '1 active display, 1 artwork listing',
-        'Basic QR generation',
+        '1 active display, 1 artwork',
+        'Basic QR code generation',
         'Weekly payouts',
       ],
     },
@@ -62,17 +62,17 @@ export function WhyArtwallsArtistsPage({ onNavigate, viewerRole = null }: WhyArt
     <div className="bg-[var(--bg)] text-[var(--text)]">
       <SEO
         title="Why Artwalls for Artists"
-        description="Artwalls helps you get placed in local venues, track everything, and actually sell with a clean QR + listing flow."
+        description="Artwalls helps you get placed in local venues, track everything, and actually sell — with an easy QR code + artwork page process."
       />
 
       {/* Hero */}
       <section className="py-12 sm:py-20 px-4 border-b border-[var(--border)]">
         <div className="max-w-5xl mx-auto text-center">
           <h1 className="text-3xl sm:text-4xl font-bold mb-4 text-[var(--text)]">
-            Get your art on real walls — without doing the most.
+            Get your art on real walls — without all the hassle.
           </h1>
           <p className="text-lg sm:text-xl text-[var(--text-muted)] mb-8 max-w-3xl mx-auto">
-            Artwalls helps you get placed in local venues, track everything, and actually sell with a clean QR + listing flow.
+            Artwalls helps you get placed in local venues, track everything, and actually sell — with an easy QR code + artwork page process.
           </p>
           {(showSignupCta || showArtistActions) && (
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -130,9 +130,9 @@ export function WhyArtwallsArtistsPage({ onNavigate, viewerRole = null }: WhyArt
             <p className="text-[var(--text-muted)] mb-6">Artwalls is the system behind your venue placements.</p>
             <ul className="list-disc pl-6 space-y-3 text-[var(--text-muted)]">
               <li>Venue discovery + applications (so you’re not guessing who’s open to art)</li>
-              <li>Simple “display” tracking (where your art is up, dates, rotations, notes)</li>
-              <li>QR labels that actually convert (scan → artwork page → inquiry / purchase flow)</li>
-              <li>Payouts built in (so sales don’t turn into Venmo chaos)</li>
+              <li>Simple display tracking (know exactly where each piece is, for how long, and when it rotates)</li>
+              <li>QR labels that actually convert (visitors scan, see the artwork's page, and can easily inquire or buy on the spot)</li>
+              <li>Built-in payouts (so getting paid doesn't turn into a Venmo frenzy)</li>
               <li>Analytics (see what’s getting scanned and selling on higher tiers)</li>
               <li>Optional damage protection (peace of mind when work is on public walls)</li>
             </ul>
@@ -146,7 +146,7 @@ export function WhyArtwallsArtistsPage({ onNavigate, viewerRole = null }: WhyArt
         <div className="max-w-5xl mx-auto">
           <h2 className="text-xl sm:text-2xl font-bold mb-3 text-[var(--text)]">Why subscribers win (real talk)</h2>
           <p className="text-[var(--text-muted)] mb-8">
-            If you’re actively trying to grow, the paid tiers are basically: more walls, more listings, more chances to get placed, and you keep more of each sale.
+            If you're actively trying to grow, the paid tiers are basically: more wall spots, more artworks, more chances to get placed, and you keep more from each sale.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
@@ -184,7 +184,7 @@ export function WhyArtwallsArtistsPage({ onNavigate, viewerRole = null }: WhyArt
           <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-2xl p-6 sm:p-8">
             <h2 className="text-xl sm:text-2xl font-bold mb-3 text-[var(--text)]">Optional damage protection</h2>
             <p className="text-[var(--text-muted)]">
-              If you’re placing physical art in public spaces, protection helps you sleep. Coverage scales by plan (ex: $100 → $150 → $200 max coverage per claim as tiers go up)
+              If you’re placing physical art in public spaces, protection helps you sleep. Coverage scales with your plan — for example, up to $100 per claim on Free & Starter, $150 on Growth, and $200 on Pro.
             </p>
           </div>
         </div>
@@ -204,7 +204,7 @@ export function WhyArtwallsArtistsPage({ onNavigate, viewerRole = null }: WhyArt
             <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-2xl p-6">
               <h3 className="text-lg font-semibold mb-3 text-[var(--text)]">With Artwalls:</h3>
               <p className="text-[var(--text-muted)]">
-                You have a profile + listings + QR + payouts + a placement system + venue pipeline — and you scale way faster.
+                You have a profile + artworks + QR codes + payouts + a placement system + venue pipeline — and you scale way faster.
               </p>
             </div>
           </div>

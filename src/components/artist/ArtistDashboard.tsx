@@ -271,7 +271,7 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
         <StatCard
           label="Pending Applications"
           value={stats?.applications?.pending ?? 0}
-          subtext="Awaiting approval"
+          subtext="Waiting on venue approval"
           icon={<Package className="w-5 h-5" />}
           accent="amber"
           onClick={() => onNavigate('artist-applications')}

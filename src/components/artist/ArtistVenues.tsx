@@ -164,6 +164,7 @@ export function ArtistVenues() {
                   setSelectedVenue(null);
                 }}
                 className="p-2 hover:bg-[var(--surface-3)] rounded-lg transition-colors text-[var(--text)]"
+                aria-label="Close dialog"
               >
                 <X className="w-5 h-5" />
               </button>

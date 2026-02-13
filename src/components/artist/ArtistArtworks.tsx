@@ -158,7 +158,7 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
       setError(null);
 
       if (atLimit) {
-        setError('You have reached the active artwork limit for your plan. Upgrade to add more listings.');
+        setError('You have reached the active artwork limit for your plan. Upgrade your plan to list more artwork.');
         return;
       }
 
@@ -367,7 +367,7 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
       {atLimit && (
         <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl p-4 mb-6 text-sm flex items-center justify-between flex-wrap gap-3">
           <div className="text-[var(--text)]">
-            You have {activeCount} active listings, which is the maximum for your plan. Upgrade to unlock more slots.
+            You currently have {activeCount} artworks listed, which is the maximum for your plan. Upgrade your plan to list more artwork.
           </div>
           <a
             href="#/plans-pricing"
@@ -401,7 +401,7 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
               <div>
                 <label className="block text-sm text-[var(--text)] mb-2">Artwork Photos (at least 3)</label>
                 <div className="flex gap-3 items-center">
-                  <label className="flex items-center justify-center w-12 h-12 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] cursor-pointer">
+                  <label className="flex items-center justify-center w-12 h-12 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] cursor-pointer" aria-label="Upload artwork photos" title="Upload artwork photos">
                     <Upload className="w-5 h-5 text-[var(--text-muted)]" />
                     <input
                       type="file"
@@ -636,7 +636,7 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
                   className="flex-1 px-4 py-2 bg-[var(--blue)] text-[var(--on-blue)] rounded-lg hover:bg-[var(--blue-hover)] transition-colors disabled:opacity-60 inline-flex items-center justify-center gap-2"
                 >
                   {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-                  Create Listing
+                  Create Artwork
                 </button>
               </div>
             </form>

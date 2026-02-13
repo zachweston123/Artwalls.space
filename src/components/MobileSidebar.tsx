@@ -138,6 +138,7 @@ export function MobileSidebar({ isOpen, onClose, user, onNavigate, onLogout, cur
           <button
             onClick={onClose}
             className="p-2 hover:bg-[var(--surface-3)] rounded-lg transition-colors text-[var(--text)]"
+            aria-label="Close menu"
           >
             <X className="w-5 h-5" />
           </button>
