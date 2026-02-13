@@ -96,6 +96,12 @@ export function ArtistOnboardingWizard({ user, onComplete, onSkip }: ArtistOnboa
     setProfileDraft(state.profile);
   }, [state.step, state.plan, state.profile]);
 
+  // Log onboarding_started once on first mount
+  useEffect(() => {
+    logEvent('onboarding_started', { step: state.step });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     refreshArtworks();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps

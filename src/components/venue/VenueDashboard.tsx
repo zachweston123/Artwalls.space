@@ -7,6 +7,7 @@ import { PageHeader } from '../PageHeader';
 import { formatCurrency, formatRatioOrCount } from '../../utils/format';
 import { EmptyState } from '../EmptyState';
 import { VenueSetupChecklist } from '../VenueSetupChecklist';
+import { VenueNextActions } from './VenueNextActions';
 
 interface VenueDashboardProps {
   onNavigate: (page: string) => void;
@@ -20,6 +21,7 @@ export function VenueDashboard({ onNavigate, user, hasAcceptedAgreement }: Venue
     applications: { pending: number };
     sales: { total: number; totalEarnings: number };
   } | null>(null);
+  const [payoutsConnected, setPayoutsConnected] = useState<boolean | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -44,6 +46,25 @@ export function VenueDashboard({ onNavigate, user, hasAcceptedAgreement }: Venue
       }
     }
     loadStats();
+    return () => { isMounted = false; };
+  }, [user?.id]);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadPayouts() {
+      if (!user?.id) return;
+      try {
+        const data = await apiGet<{ hasAccount?: boolean; payoutsEnabled?: boolean }>(
+          `/api/stripe/connect/venue/status?userId=${encodeURIComponent(user.id)}`
+        );
+        if (!isMounted) return;
+        setPayoutsConnected(!!data?.payoutsEnabled);
+      } catch {
+        if (!isMounted) return;
+        setPayoutsConnected(false);
+      }
+    }
+    loadPayouts();
     return () => { isMounted = false; };
   }, [user?.id]);
 
@@ -136,6 +157,15 @@ export function VenueDashboard({ onNavigate, user, hasAcceptedAgreement }: Venue
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div>
+          <VenueNextActions
+            hasWalls={totalWalls > 0}
+            pendingApplications={pendingApplications}
+            payoutsConnected={payoutsConnected}
+            onNavigate={onNavigate}
+          />
+        </div>
+
         <div className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)]">
           <h2 className="text-lg font-semibold mb-4 text-[var(--text)]">Recent Activity</h2>
           <EmptyState
@@ -146,50 +176,6 @@ export function VenueDashboard({ onNavigate, user, hasAcceptedAgreement }: Venue
             secondaryAction={{ label: 'Add wall space', onClick: () => onNavigate('venue-walls') }}
             className="bg-[var(--surface-2)]"
           />
-        </div>
-
-        <div className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)]">
-          <h2 className="text-lg font-semibold mb-4 text-[var(--text)]">Quick Actions</h2>
-          <div className="space-y-3">
-            <button
-              onClick={() => onNavigate('venue-applications')}
-              className="w-full px-4 py-3 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-colors flex items-center justify-between font-medium text-sm"
-            >
-              <span>Review Applications</span>
-              {pendingApplications > 0 && (
-                <span className="px-2 py-1 bg-[var(--surface-1)] text-[var(--green)] rounded-full text-xs">
-                  {pendingApplications} new
-                </span>
-              )}
-            </button>
-            <button
-              onClick={() => onNavigate('venue-walls')}
-              className="w-full px-4 py-3 bg-[var(--surface-2)] text-[var(--text)] rounded-lg hover:bg-[var(--surface-3)] transition-colors"
-            >
-              Manage Wall Spaces
-            </button>
-            <button
-              onClick={() => onNavigate('venue-find-artists')}
-              className="w-full px-4 py-3 bg-[var(--surface-2)] text-[var(--text)] rounded-lg hover:bg-[var(--surface-3)] transition-colors"
-            >
-              Invite Artists
-            </button>
-            <button
-              onClick={() => onNavigate('venue-curated-sets')}
-              className="w-full px-4 py-3 bg-[var(--surface-2)] text-[var(--text)] rounded-lg hover:bg-[var(--surface-3)] transition-colors"
-            >
-              Browse Curated Sets
-            </button>
-            <button
-              onClick={() => onNavigate('venue-sales')}
-              className="w-full px-4 py-3 bg-[var(--surface-2)] text-[var(--text)] rounded-lg hover:bg-[var(--surface-3)] transition-colors"
-            >
-              Set Up Payouts
-            </button>
-          </div>
-          <div className="mt-3 text-xs text-[var(--text-muted)]">
-            Want the story? <button onClick={() => onNavigate('why-artwalls-venue')} className="text-[var(--green)] hover:underline">Why Artwalls</button>
-          </div>
         </div>
       </div>
 

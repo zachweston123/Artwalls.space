@@ -51,7 +51,8 @@ export function MobileSidebar({ isOpen, onClose, user, onNavigate, onLogout, cur
     {
       title: 'Support',
       links: [
-        { id: 'artist-notifications', label: 'Notifications', icon: Bell },
+        { id: 'artist-notifications-center', label: 'Notifications', icon: Bell },
+        { id: 'artist-notifications', label: 'Notification Preferences', icon: Settings },
         { id: 'policies', label: 'Policies & Agreements', icon: Shield },
         { id: settingsTarget, label: 'Settings', icon: Settings },
       ],
@@ -94,7 +95,8 @@ export function MobileSidebar({ isOpen, onClose, user, onNavigate, onLogout, cur
     {
       title: 'Support',
       links: [
-        { id: 'venue-notifications', label: 'Notifications', icon: Bell },
+        { id: 'venue-notifications-center', label: 'Notifications', icon: Bell },
+        { id: 'venue-notifications', label: 'Notification Preferences', icon: Settings },
         { id: 'policies', label: 'Policies & Agreements', icon: Shield },
         { id: settingsTarget, label: 'Settings', icon: Settings },
       ],

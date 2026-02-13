@@ -325,7 +325,7 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
                   <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)]">
                     <span className="text-sm font-semibold text-[var(--text)]">Notifications</span>
                     <button
-                      onClick={() => onNavigate(user.role === 'artist' ? 'artist-notifications' : 'venue-notifications')}
+                      onClick={() => onNavigate(user.role === 'artist' ? 'artist-notifications-center' : 'venue-notifications-center')}
                       className="text-xs text-[var(--blue)] hover:underline"
                     >
                       View all

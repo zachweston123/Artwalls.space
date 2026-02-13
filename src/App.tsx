@@ -58,6 +58,7 @@ const VenueWallStats = lazy(() => import('./components/venue/VenueWallStats').th
 // Shared
 const ApplicationsAndInvitations = lazy(() => import('./components/shared/ApplicationsAndInvitations').then(m => ({ default: m.ApplicationsAndInvitations })));
 const NotificationsList = lazy(() => import('./components/notifications/NotificationsList').then(m => ({ default: m.NotificationsList })));
+const RoleMismatchPage = lazy(() => import('./components/shared/RoleMismatchPage').then(m => ({ default: m.RoleMismatchPage })));
 const Settings = lazy(() => import('./components/settings/Settings').then(m => ({ default: m.Settings })));
 
 // Pages
@@ -142,6 +143,8 @@ export default function App() {
   const [showProfileCompletion, setShowProfileCompletion] = useState(false);
   const [pendingPhoneNumber, setPendingPhoneNumber] = useState<string | null>(null);
   const [artistOnboarding, setArtistOnboarding] = useState<{ completed: boolean; step: number | null } | null>(null);
+  const [roleMismatch, setRoleMismatch] = useState<{ current: 'artist' | 'venue'; required: 'artist' | 'venue' } | null>(null);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
 
   const ARTIST_ONBOARDING_SNOOZE_KEY = 'artistOnboardingSkipUntil';
 
@@ -348,6 +351,23 @@ export default function App() {
     };
   }, [currentUser]);
 
+  // Fetch unread notification count for nav badge
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchUnread() {
+      if (!currentUser) { setUnreadNotificationCount(0); return; }
+      try {
+        const { notifications } = await (await import('./lib/api')).getMyNotifications(currentUser.id, currentUser.role || '');
+        if (!isMounted) return;
+        setUnreadNotificationCount((notifications || []).filter(n => !n.isRead).length);
+      } catch {
+        if (isMounted) setUnreadNotificationCount(0);
+      }
+    }
+    fetchUnread();
+    return () => { isMounted = false; };
+  }, [currentUser]);
+
   useEffect(() => {
     if (!currentUser || currentUser.role !== 'artist') return;
     if (!artistOnboarding || artistOnboarding.completed) return;
@@ -442,22 +462,21 @@ export default function App() {
     syncProfile();
   }, [currentUser]);
 
-  // Role-based page access control - redirect unauthorized users
+  // Role-based page access control — show friendly mismatch page
   useEffect(() => {
     if (!currentUser) return;
+    setRoleMismatch(null); // Reset on every page change
 
-    const artistOnlyPages = ['artist-venues'];
-    const venueOnlyPages = ['find-art', 'venue-find-artists'];
+    const artistOnlyPages = ['artist-venues', 'artist-artworks', 'artist-sales', 'artist-profile', 'artist-curated-sets', 'artist-analytics'];
+    const venueOnlyPages = ['find-art', 'venue-find-artists', 'venue-walls', 'venue-current', 'venue-calls'];
 
-    // If artist tries to access venue-only pages, redirect to artist dashboard
     if (currentUser.role === 'artist' && venueOnlyPages.includes(currentPage)) {
-      setCurrentPage('artist-dashboard');
+      setRoleMismatch({ current: 'artist', required: 'venue' });
       return;
     }
 
-    // If venue tries to access artist-only pages, redirect to venue dashboard
     if (currentUser.role === 'venue' && artistOnlyPages.includes(currentPage)) {
-      setCurrentPage('venue-dashboard');
+      setRoleMismatch({ current: 'venue', required: 'artist' });
       return;
     }
   }, [currentUser, currentPage]);
@@ -998,6 +1017,7 @@ export default function App() {
         onLogout={handleLogout}
         currentPage={currentPage}
         onMenuClick={() => setIsSidebarOpen(true)}
+        unreadCount={unreadNotificationCount}
       />
       
       <MobileSidebar
@@ -1064,6 +1084,15 @@ export default function App() {
           />
         )}
 
+        {/* Role mismatch — friendly redirect page */}
+        {roleMismatch && (
+          <RoleMismatchPage
+            currentRole={roleMismatch.current}
+            requiredRole={roleMismatch.required}
+            onNavigate={handleNavigate}
+          />
+        )}
+
         {currentUser.role === 'artist' && (
           <>
             {currentPage === 'artist-onboarding' && <ArtistOnboardingWizard user={currentUser} onComplete={() => { setArtistOnboarding({ completed: true, step: null }); handleNavigate('artist-dashboard'); }} onSkip={() => { snoozeArtistOnboarding(); handleNavigate('artist-dashboard'); }} />}
@@ -1116,7 +1145,8 @@ export default function App() {
             {currentPage === 'artist-profile' && <ArtistProfile onNavigate={handleNavigate} />}
             {currentPage === 'artist-password-security' && <PasswordSecurity onBack={() => handleNavigate('artist-profile')} />}
             {currentPage === 'artist-notifications' && <NotificationPreferences onBack={() => handleNavigate('artist-profile')} />}
-            {currentPage === 'artist-notifications-legacy' && <NotificationsList />}
+            {currentPage === 'artist-notifications-center' && <NotificationsList user={currentUser} onNavigate={handleNavigate} />}
+            {currentPage === 'artist-notifications-legacy' && <NotificationsList user={currentUser} onNavigate={handleNavigate} />}
             {currentPage === 'artist-settings' && <Settings onNavigate={handleNavigate} />}
           </>
         )}
@@ -1138,6 +1168,7 @@ export default function App() {
             {currentPage === 'venue-profile' && <VenueProfile onNavigate={handleNavigate} />}
             {currentPage === 'venue-password-security' && <VenuePasswordSecurity onBack={() => handleNavigate('venue-profile')} />}
             {currentPage === 'venue-notifications' && <VenueNotificationPreferences onBack={() => handleNavigate('venue-profile')} />}
+            {currentPage === 'venue-notifications-center' && <NotificationsList user={currentUser} onNavigate={handleNavigate} />}
             {currentPage === 'find-art' && <FindArtHub onNavigate={handleNavigate} />}
             {currentPage === 'venue-curated-sets' && <CuratedSetsMarketplace onNavigate={handleNavigate} />}
             {currentPage === 'venue-find-artists' && (
