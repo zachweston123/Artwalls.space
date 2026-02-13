@@ -16,10 +16,9 @@ export function Footer({ onNavigate }: FooterProps) {
     });
   }, []);
 
-  const navigateToTop = (page: string) => {
-    onNavigate(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  // Scroll-to-top is handled globally in App.tsx whenever currentPage changes,
+  // so footer links just need to call onNavigate.
+  const navigateToTop = onNavigate;
 
   return (
     <footer className="bg-[var(--surface-2)] border-t border-[var(--border)] mt-16">

@@ -209,6 +209,16 @@ export default function App() {
     localStorage.setItem('currentPage', currentPage);
   }, [currentPage]);
 
+  // ─── Global scroll-to-top on page change ──────────────────────────────────
+  // When the "page" (currentPage) changes, scroll to the top so every internal
+  // navigation behaves like a traditional page load.  We use `behavior: 'auto'`
+  // (instant) so the user isn't waiting for a smooth scroll while new content
+  // is already rendered.  Hash-only changes within the purchase QR flow do NOT
+  // change currentPage, so they are unaffected.
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [currentPage]);
+
   // Restore auth session and keep UI in sync across refreshes/tabs
   useEffect(() => {
     let isMounted = true;
