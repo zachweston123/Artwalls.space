@@ -803,8 +803,8 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
               <tr className="bg-[var(--surface-3)] border-b border-[var(--border)]">
                 <th className="text-left px-4 py-3 sm:px-5 sm:py-4 text-sm text-[var(--text-muted)] font-semibold whitespace-nowrap">Feature</th>
                 {plans.map((p) => (
-                  <th key={p.id} className={`text-center px-4 py-3 sm:px-5 sm:py-4 text-sm font-semibold whitespace-nowrap ${p.popular ? 'text-[var(--text)]' : 'text-[var(--text-muted)]'}`}>
-                    <div>{p.name}</div>
+                  <th key={p.id} className={`text-center px-4 py-3 sm:px-5 sm:py-4 text-sm font-semibold whitespace-nowrap text-[var(--text-muted)]`}>
+                    <div className={p.popular ? 'text-[var(--text)]' : ''}>{p.name}</div>
                     <div className="text-xs text-[var(--accent)] font-bold mt-1">{p.takeHome}% take-home</div>
                   </th>
                 ))}
@@ -824,10 +824,10 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                   { label: 'Max coverage/claim', values: ['$100', '$100', '$150', '$200'] },
                 ];
                 return rows.map((row, i) => (
-                  <tr key={row.label} className={`${i < rows.length - 1 ? 'border-b border-[var(--border)]/60' : ''} ${i % 2 === 0 ? 'bg-[var(--surface-1)]' : ''}`}>
+                  <tr key={row.label} className={`transition-colors hover:bg-[var(--surface-3)] ${i < rows.length - 1 ? 'border-b border-[var(--border-subtle)]' : ''} ${i % 2 === 0 ? 'bg-[var(--surface-1)]' : ''}`}>
                     <td className="px-4 py-3 sm:px-5 sm:py-3.5 text-sm text-[var(--text)] font-medium whitespace-nowrap">{row.label}</td>
                     {row.values.map((val, j) => (
-                      <td key={j} className={`text-center px-4 py-3 sm:px-5 sm:py-3.5 text-sm tabular-nums ${plans[j]?.popular ? 'bg-[var(--accent)]/[0.04]' : ''} text-[var(--text)]`}>
+                      <td key={j} className={`text-center px-4 py-3 sm:px-5 sm:py-3.5 text-sm tabular-nums text-[var(--text)]`}>
                         {val}
                       </td>
                     ))}
