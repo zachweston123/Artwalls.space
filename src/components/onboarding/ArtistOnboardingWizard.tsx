@@ -562,6 +562,7 @@ export function ArtistOnboardingWizard({ user, onComplete, onSkip }: ArtistOnboa
                 </div>
               </div>
             </div>
+            <EarningsComparisonBlurb variant="pricing" />
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
               {PLAN_CARDS.map((plan) => (
                 <div
@@ -576,8 +577,7 @@ export function ArtistOnboardingWizard({ user, onComplete, onSkip }: ArtistOnboa
                     <div className="px-3 py-1 rounded-full text-xs bg-[var(--surface-2)]">Take home {plan.pct}%</div>
                   </div>
                   <p className="text-xs text-[var(--text-muted)] mb-3">Platform + processing shown separately. Upgrade anytime.</p>
-                  <EarningsComparisonBlurb variant="subscribe" takeHomePercent={plan.pct} />
-                  <div className="space-y-2 mt-3">
+                  <div className="space-y-2">
                     <button
                       onClick={() => handlePlanSelect(plan.id, plan.id === 'free' ? 'free' : 'upgrade')}
                       disabled={planWorking === plan.id}
