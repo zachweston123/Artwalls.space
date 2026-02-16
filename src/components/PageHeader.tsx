@@ -1,5 +1,9 @@
 import { ReactNode } from 'react';
 
+/**
+ * @deprecated Use `PageHeroHeader` from `./PageHeroHeader` instead.
+ * This component is kept for backward compatibility only.
+ */
 interface ActionConfig {
   label: string;
   onClick?: () => void;

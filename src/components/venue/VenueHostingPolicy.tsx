@@ -1,4 +1,5 @@
 import { AlertCircle, CheckCircle, XCircle } from 'lucide-react';
+import { PageHeroHeader } from '../PageHeroHeader';
 
 interface VenueHostingPolicyProps {
   onNavigate?: (page: string) => void;
@@ -8,11 +9,11 @@ export function VenueHostingPolicy({ onNavigate }: VenueHostingPolicyProps) {
   return (
     <div className="min-h-screen bg-[var(--bg)]">
       {/* Header */}
-      <div className="bg-[var(--surface)] border-b border-[var(--border)] py-12">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6">
-          <h1 className="text-4xl font-bold text-[var(--text)] mb-2">Venue Hosting Policy</h1>
-          <p className="text-[var(--text-muted)]">Guidelines for displaying artworks at your venue</p>
-        </div>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-8">
+        <PageHeroHeader
+          title="Venue Hosting Policy"
+          subtitle="Guidelines for displaying artworks at your venue"
+        />
       </div>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12">

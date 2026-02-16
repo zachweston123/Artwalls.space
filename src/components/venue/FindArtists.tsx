@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Search, MapPin, Filter, Users } from 'lucide-react';
 import { LabelChip } from '../LabelChip';
 import { apiGet } from '../../lib/api';
-import { PageHeader } from '../PageHeader';
+import { PageHeroHeader } from '../PageHeroHeader';
 import { EmptyState } from '../EmptyState';
 
 interface FindArtistsProps {
@@ -118,12 +118,21 @@ export function FindArtists({ onInviteArtist, onViewProfile, onNavigate }: FindA
 
   return (
     <div className="bg-[var(--bg)] text-[var(--text)]">
-      <PageHeader
+      <PageHeroHeader
         breadcrumb="Discover / Find Artists"
         title="Find artists"
         subtitle={`Discover ${venueCity ? `${venueCity} ` : ''}artists and invite them to display at your venue.`}
-        primaryAction={onNavigate ? { label: 'Improve venue profile', onClick: () => onNavigate('venue-profile') } : undefined}
-        className="mb-6"
+        actions={
+          onNavigate ? (
+            <button
+              type="button"
+              onClick={() => onNavigate('venue-profile')}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-[var(--blue)] text-[var(--on-blue)] hover:bg-[var(--blue-hover)]"
+            >
+              Improve venue profile
+            </button>
+          ) : undefined
+        }
       />
 
       {/* Search & Filters */}

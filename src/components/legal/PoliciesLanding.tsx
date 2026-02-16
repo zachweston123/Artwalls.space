@@ -1,5 +1,6 @@
 import { FileText, Scale, Shield, FileCheck } from 'lucide-react';
 import { DollarSign } from 'lucide-react';
+import { PageHeroHeader } from '../PageHeroHeader';
 
 interface PoliciesLandingProps {
   onNavigate: (page: string) => void;
@@ -8,12 +9,10 @@ interface PoliciesLandingProps {
 export function PoliciesLanding({ onNavigate }: PoliciesLandingProps) {
   return (
     <div className="bg-[var(--bg)] text-[var(--text)]">
-      <div className="mb-8">
-        <h1 className="text-3xl mb-2 text-[var(--text)]">Policies & Agreements</h1>
-        <p className="text-[var(--text-muted)]">
-          Review the terms and agreements that govern the Artwalls marketplace
-        </p>
-      </div>
+      <PageHeroHeader
+        title="Policies & Agreements"
+        subtitle="Review the terms and agreements that govern the Artwalls marketplace"
+      />
 
       <div className="max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Pricing & Plans Card */}

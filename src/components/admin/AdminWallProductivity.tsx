@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { BarChart3, ArrowDownRight, ArrowUpRight, QrCode, Eye, ShoppingCart, DollarSign } from 'lucide-react';
 import { apiGet } from '../../lib/api';
+import { PageHeroHeader } from '../PageHeroHeader';
 
 interface FunnelVenue {
   venue_id: string;
@@ -114,29 +115,27 @@ export function AdminWallProductivity({ onNavigate }: AdminWallProductivityProps
   return (
     <div className="bg-[var(--bg)]">
       {/* Header */}
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl mb-2 text-[var(--text)]">Wall Productivity</h1>
-          <p className="text-[var(--text-muted)]">
-            Core funnel: QR scans → artwork views → checkout → purchase
-          </p>
-        </div>
-        <div className="flex gap-2">
-          {[7, 14, 30].map((d) => (
-            <button
-              key={d}
-              onClick={() => setDays(d)}
-              className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
-                days === d
-                  ? 'bg-[var(--blue)] text-[var(--on-blue)] border-transparent'
-                  : 'bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)] hover:bg-[var(--surface-3)]'
-              }`}
-            >
-              {d}d
-            </button>
-          ))}
-        </div>
-      </div>
+      <PageHeroHeader
+        title="Wall Productivity"
+        subtitle="Core funnel: QR scans → artwork views → checkout → purchase"
+        actions={
+          <div className="flex gap-2">
+            {[7, 14, 30].map((d) => (
+              <button
+                key={d}
+                onClick={() => setDays(d)}
+                className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
+                  days === d
+                    ? 'bg-[var(--blue)] text-[var(--on-blue)] border-transparent'
+                    : 'bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)] hover:bg-[var(--surface-3)]'
+                }`}
+              >
+                {d}d
+              </button>
+            ))}
+          </div>
+        }
+      />
 
       {/* Funnel KPI cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

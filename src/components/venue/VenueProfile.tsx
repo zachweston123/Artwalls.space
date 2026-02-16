@@ -3,7 +3,7 @@ import { Store, Mail, Phone, MapPin, Clock, DollarSign, Instagram, ExternalLink,
 import { VenueProfileEdit, type VenueProfileData } from './VenueProfileEdit';
 import { apiPost, getVenueSchedule } from '../../lib/api';
 import { supabase } from '../../lib/supabase';
-import { PageHeader } from '../PageHeader';
+import { PageHeroHeader } from '../PageHeroHeader';
 import { formatCurrency } from '../../utils/format';
 import { SocialLinks } from '../shared/SocialLinks';
 
@@ -267,18 +267,22 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
 
   return (
     <div className="bg-[var(--bg)] text-[var(--text)]">
-      <PageHeader
+      <PageHeroHeader
         breadcrumb="Manage / Venue Profile"
         title="Venue profile"
         subtitle="Manage your venue information and settings"
-        primaryAction={{
-          label: 'Edit profile',
-          onClick: () => {
-            setSaveError(null);
-            setIsEditing(true);
-          },
-        }}
-        className="mb-8"
+        actions={
+          <button
+            type="button"
+            onClick={() => {
+              setSaveError(null);
+              setIsEditing(true);
+            }}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-[var(--blue)] text-[var(--on-blue)] hover:bg-[var(--blue-hover)]"
+          >
+            Edit profile
+          </button>
+        }
       />
 
       <div className="mb-4 flex justify-end">

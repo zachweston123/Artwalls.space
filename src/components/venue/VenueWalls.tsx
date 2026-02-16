@@ -3,6 +3,7 @@ import { Plus, X, Frame, Upload, Image as ImageIcon, Pencil, ChevronLeft, Chevro
 import { apiGet, apiPost } from '../../lib/api';
 import { supabase } from '../../lib/supabase';
 import { uploadWallspacePhoto } from '../../lib/storage';
+import { PageHeroHeader } from '../PageHeroHeader';
 
 type WallSpace = {
   id: string;
@@ -444,21 +445,19 @@ export function VenueWalls() {
           </div>
         </div>
       )}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-3xl mb-2">My Wall Spaces</h1>
-          <p className="text-[var(--text-muted)]">
-            {wallSpaces.length} total spaces • {wallSpaces.filter(w => w.available).length} available
-          </p>
-        </div>
-        <button
-          onClick={() => setShowAddForm(true)}
-          className="flex items-center justify-center gap-2 px-4 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-opacity"
-        >
-          <Plus className="w-5 h-5" />
-          <span>Add Wall Space</span>
-        </button>
-      </div>
+      <PageHeroHeader
+        title="My Wall Spaces"
+        subtitle={<>{wallSpaces.length} total spaces &bull; {wallSpaces.filter(w => w.available).length} available</>}
+        actions={
+          <button
+            onClick={() => setShowAddForm(true)}
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-opacity"
+          >
+            <Plus className="w-5 h-5" />
+            <span>Add Wall Space</span>
+          </button>
+        }
+      />
 
       {showAddForm && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 sm:p-6 overflow-y-auto">

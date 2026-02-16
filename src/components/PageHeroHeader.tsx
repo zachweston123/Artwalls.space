@@ -12,6 +12,8 @@ interface PageHeroHeaderProps {
   className?: string;
   /** Center-align title + subtitle (e.g. Pricing page) */
   center?: boolean;
+  /** Optional breadcrumb text shown above the title */
+  breadcrumb?: string;
 }
 
 export function PageHeroHeader({
@@ -24,6 +26,7 @@ export function PageHeroHeader({
   meta,
   className = '',
   center = false,
+  breadcrumb,
 }: PageHeroHeaderProps) {
   return (
     <div
@@ -75,6 +78,14 @@ export function PageHeroHeader({
           )}
 
           <div className="min-w-0">
+            {breadcrumb && (
+              <p
+                className="text-xs uppercase tracking-[0.08em] mb-1"
+                style={{ color: 'var(--text-muted)' }}
+              >
+                {breadcrumb}
+              </p>
+            )}
             <div className="flex flex-wrap items-center gap-2">
               <h1
                 className="text-2xl sm:text-3xl font-semibold leading-tight"

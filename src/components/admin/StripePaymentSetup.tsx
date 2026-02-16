@@ -15,6 +15,7 @@ import {
   ShoppingCart
 } from 'lucide-react';
 import { API_BASE, apiGet } from '../../lib/api';
+import { PageHeroHeader } from '../PageHeroHeader';
 
 interface StripeSetupProps {
   onNavigate?: (page: string) => void;
@@ -94,6 +95,10 @@ export function StripePaymentSetup({ onNavigate }: StripeSetupProps) {
 
   return (
     <div className="bg-[var(--bg)] text-[var(--text)] p-6 rounded-lg">
+      <PageHeroHeader
+        title="Stripe Payment Setup"
+        subtitle="Manage payment processing, API keys, and webhook configuration"
+      />
       <div className="space-y-6">
       {/* Integration Checklist */}
       <div className="bg-[var(--surface-1)] rounded-xl border border-[var(--border)] p-6">

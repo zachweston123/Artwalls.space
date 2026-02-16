@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Plus, X, Upload, Loader2 } from 'lucide-react';
+import { PageHeroHeader } from '../PageHeroHeader';
 type Artwork = {
   id: string;
   title: string;
@@ -323,46 +324,40 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
 
   return (
     <div className="bg-[var(--bg)] text-[var(--text)]">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-semibold mb-1 sm:mb-2">My Artworks</h1>
-          <p className="text-[var(--text-muted)] text-sm">
-            {loading ? 'Loading…' : `${artworks.length} pieces in your collection`}
-          </p>
-          <p className="text-[var(--text-muted)] text-xs mt-1">
+      <PageHeroHeader
+        title="My Artworks"
+        subtitle={loading ? 'Loading…' : `${artworks.length} pieces in your collection`}
+        meta={
+          <p className="text-[var(--text-muted)] text-xs">
             Plan: {isPlanActive ? planId : `${planId} (inactive)`} · Active listings: {activeCount}
             {hasFiniteLimit ? ` / ${ent.artworksLimit}` : ' (unlimited)'}
           </p>
-        </div>
-        <div className="flex items-center gap-3">
-          {(() => {
-            return (
-              <div className="flex items-center gap-3 w-full sm:w-auto">
-                <button
-                  onClick={() => setShowAddForm(true)}
-                  disabled={atLimit}
-                  className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-colors text-sm sm:text-base ${
-                    atLimit
-                      ? 'bg-[var(--surface-3)] text-[var(--text-muted)] cursor-not-allowed border border-[var(--border)]'
-                      : 'bg-[var(--blue)] text-[var(--on-blue)] hover:bg-[var(--blue-hover)] shadow-sm'
-                  }`}
-                >
-                  <Plus className="w-5 h-5" />
-                  <span>Add Artwork</span>
-                </button>
-              {atLimit && (
-                <a
-                  href="#/plans-pricing"
-                  className="px-3 py-2 text-sm bg-[var(--accent)] text-[var(--accent-contrast)] rounded-lg"
-                >
-                  Upgrade to add more
-                </a>
-              )}
-            </div>
-          );
-        })()}
-        </div>
-      </div>
+        }
+        actions={
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowAddForm(true)}
+              disabled={atLimit}
+              className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-colors text-sm sm:text-base ${
+                atLimit
+                  ? 'bg-[var(--surface-3)] text-[var(--text-muted)] cursor-not-allowed border border-[var(--border)]'
+                  : 'bg-[var(--blue)] text-[var(--on-blue)] hover:bg-[var(--blue-hover)] shadow-sm'
+              }`}
+            >
+              <Plus className="w-5 h-5" />
+              <span>Add Artwork</span>
+            </button>
+            {atLimit && (
+              <a
+                href="#/plans-pricing"
+                className="px-3 py-2 text-sm bg-[var(--accent)] text-[var(--accent-contrast)] rounded-lg"
+              >
+                Upgrade to add more
+              </a>
+            )}
+          </div>
+        }
+      />
 
       {atLimit && (
         <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl p-4 mb-6 text-sm flex items-center justify-between flex-wrap gap-3">

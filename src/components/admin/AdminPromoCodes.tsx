@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Plus, Tag, Copy, RefreshCw } from 'lucide-react';
+import { PageHeroHeader } from '../PageHeroHeader';
 
 type PromoStatus = 'active' | 'inactive' | 'expired';
 
@@ -99,23 +100,21 @@ export function AdminPromoCodes() {
 
   return (
     <div className="bg-[var(--bg)]">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold mb-2 text-[var(--text)]">Promo Codes</h1>
-          <p className="text-[var(--text-muted)]">
-            Create and manage subscription discount codes
-          </p>
-        </div>
-        <a
-          href="https://dashboard.stripe.com/promotions"
-          target="_blank"
-          rel="noreferrer"
-          className="flex items-center gap-2 px-6 py-3 bg-[var(--blue)] text-[var(--on-blue)] rounded-lg hover:bg-[var(--blue-hover)] transition-colors"
-        >
-          <Plus className="w-5 h-5" />
-          Open Stripe Promo Codes
-        </a>
-      </div>
+      <PageHeroHeader
+        title="Promo Codes"
+        subtitle="Create and manage subscription discount codes"
+        actions={
+          <a
+            href="https://dashboard.stripe.com/promotions"
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-2 px-6 py-3 bg-[var(--blue)] text-[var(--on-blue)] rounded-lg hover:bg-[var(--blue-hover)] transition-colors"
+          >
+            <Plus className="w-5 h-5" />
+            Open Stripe Promo Codes
+          </a>
+        }
+      />
 
       <div className="flex items-center gap-3 mb-4 text-sm text-[var(--text-muted)]">
         <button

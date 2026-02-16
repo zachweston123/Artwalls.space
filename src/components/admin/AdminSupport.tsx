@@ -1,6 +1,7 @@
 import { AlertCircle, Search, Filter, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { apiGet } from '../../lib/api';
+import { PageHeroHeader } from '../PageHeroHeader';
 
 interface SupportTicket {
   id: string;
@@ -78,14 +79,10 @@ export function AdminSupport() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-[var(--text)]">Support Queue</h1>
-          <p className="text-sm text-[var(--text-muted)] mt-1">
-            {tickets.length} total tickets • {tickets.filter(t => t.severity === 'urgent').length} urgent
-          </p>
-        </div>
-      </div>
+      <PageHeroHeader
+        title="Support Queue"
+        subtitle={<>{tickets.length} total tickets &bull; {tickets.filter(t => t.severity === 'urgent').length} urgent</>}
+      />
 
       <div className="bg-[var(--surface-1)] rounded-xl border border-[var(--border)] p-6">
         <div className="flex flex-col md:flex-row gap-4 mb-6">

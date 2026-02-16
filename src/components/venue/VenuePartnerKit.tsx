@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { CheckCircle, Users, TrendingUp, Shield, Download, AlertCircle, Lightbulb, ArrowRight, Calculator, Zap } from 'lucide-react';
 import { ECONOMICS } from '../../types/venueSetup';
 import { calculatePricingBreakdown, formatCentsAsDollars, estimateMonthlyEarnings } from '../../lib/pricingCalculations';
+import { PageHeroHeader } from '../PageHeroHeader';
 
 interface VenuePartnerKitProps {
   onNavigate?: (page: string) => void;
@@ -118,11 +119,11 @@ export function VenuePartnerKit({ onNavigate }: VenuePartnerKitProps) {
   return (
     <div className="min-h-screen bg-[var(--bg)]">
       {/* Header */}
-      <div className="bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/80 py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-[var(--accent-contrast)]">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-4">Become a Venue Partner</h1>
-          <p className="text-xl opacity-90">Display rotating artworks and earn 15% from every sale</p>
-        </div>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-8">
+        <PageHeroHeader
+          title="Become a Venue Partner"
+          subtitle="Display rotating artworks and earn 15% from every sale"
+        />
       </div>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-16">

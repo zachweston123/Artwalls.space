@@ -3,7 +3,7 @@ import { Store } from 'lucide-react';
 import { SEO } from '../components/SEO';
 import type { User, UserRole } from '../App';
 import { getErrorMessage } from '../lib/errors';
-import { PageHeader } from '../components/PageHeader';
+import { PageHeroHeader } from '../components/PageHeroHeader';
 
 interface VenuesLandingPageProps {
   onNavigate?: (page: string) => void;
@@ -109,21 +109,36 @@ export function VenuesLandingPage({ onNavigate, onLogin, viewerRole = null }: Ve
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_.8fr] gap-8 items-center">
             <div>
-              <PageHeader
+              <PageHeroHeader
                 breadcrumb="Manage / Venue tools"
                 title="Make your space stand out"
                 subtitle="Artwalls makes it easy to host rotating local art without turning your business into a gallery."
-                primaryAction={
-                  isVenueViewer
-                    ? { label: 'Go to Dashboard', onClick: () => onNavigate?.('venue-dashboard') }
-                    : { label: 'Log in', onClick: () => document.getElementById('venue-login')?.scrollIntoView({ behavior: 'smooth' }) }
+                actions={
+                  <>
+                    <button
+                      type="button"
+                      onClick={
+                        isVenueViewer
+                          ? () => onNavigate?.('venue-find-artists')
+                          : () => onNavigate?.('login')
+                      }
+                      className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] hover:bg-[var(--surface-2)]"
+                    >
+                      {isVenueViewer ? 'Find artists' : 'Create venue account'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={
+                        isVenueViewer
+                          ? () => onNavigate?.('venue-dashboard')
+                          : () => document.getElementById('venue-login')?.scrollIntoView({ behavior: 'smooth' })
+                      }
+                      className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-[var(--blue)] text-[var(--on-blue)] hover:bg-[var(--blue-hover)]"
+                    >
+                      {isVenueViewer ? 'Go to Dashboard' : 'Log in'}
+                    </button>
+                  </>
                 }
-                secondaryAction={
-                  isVenueViewer
-                    ? { label: 'Find artists', onClick: () => onNavigate?.('venue-find-artists') }
-                    : { label: 'Create venue account', onClick: () => onNavigate?.('login') }
-                }
-                className="mb-6"
               />
             </div>
             {!isSignedIn && (

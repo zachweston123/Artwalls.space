@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Heart, Star, Sparkles } from 'lucide-react';
-import { PageHeader } from '../PageHeader';
+import { PageHeroHeader } from '../PageHeroHeader';
 import { EmptyState } from '../EmptyState';
 
 interface CuratedSetsMarketplaceProps {
@@ -86,13 +86,28 @@ export function CuratedSetsMarketplace({ onNavigate }: CuratedSetsMarketplacePro
 
   return (
     <div className="bg-[var(--bg)] text-[var(--text)] min-h-screen">
-      <PageHeader
+      <PageHeroHeader
         breadcrumb="Venues / Curated sets"
         title="Curated sets marketplace"
         subtitle="Pick ready-to-hang sets matched to your vibe, walls, and budget"
-        primaryAction={{ label: 'Back to dashboard', onClick: () => onNavigate('venue-dashboard') }}
-        secondaryAction={{ label: 'View saved sets', onClick: () => onNavigate('venue-curated-sets') }}
-        className="mb-6"
+        actions={
+          <>
+            <button
+              type="button"
+              onClick={() => onNavigate('venue-curated-sets')}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] hover:bg-[var(--surface-2)]"
+            >
+              View saved sets
+            </button>
+            <button
+              type="button"
+              onClick={() => onNavigate('venue-dashboard')}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-[var(--blue)] text-[var(--on-blue)] hover:bg-[var(--blue-hover)]"
+            >
+              Back to dashboard
+            </button>
+          </>
+        }
       />
 
       <div className="max-w-6xl mx-auto px-4">

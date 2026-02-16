@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { apiGet } from '../../lib/api';
 import type { User } from '../../App';
 import { VenuePayoutsCard } from './VenuePayoutsCard';
-import { PageHeader } from '../PageHeader';
+import { PageHeroHeader } from '../PageHeroHeader';
 import { formatCurrency, formatRatioOrCount } from '../../utils/format';
 import { EmptyState } from '../EmptyState';
 import { VenueSetupChecklist } from '../VenueSetupChecklist';
@@ -114,13 +114,28 @@ export function VenueDashboard({ onNavigate, user, hasAcceptedAgreement }: Venue
 
   return (
     <div className="bg-[var(--bg)] text-[var(--text)]">
-      <PageHeader
+      <PageHeroHeader
         breadcrumb="Manage / Dashboard"
         title="Venue dashboard"
         subtitle="Track wall spaces, applications, and payouts"
-        primaryAction={{ label: 'Add Wall Space', onClick: () => onNavigate('venue-walls') }}
-        secondaryAction={{ label: 'Find Artists', onClick: () => onNavigate('venue-find-artists') }}
-        className="mb-6"
+        actions={
+          <>
+            <button
+              type="button"
+              onClick={() => onNavigate('venue-find-artists')}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] hover:bg-[var(--surface-2)]"
+            >
+              Find Artists
+            </button>
+            <button
+              type="button"
+              onClick={() => onNavigate('venue-walls')}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-[var(--blue)] text-[var(--on-blue)] hover:bg-[var(--blue-hover)]"
+            >
+              Add Wall Space
+            </button>
+          </>
+        }
       />
 
       {user && (

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { CheckCircle, Users, Gift } from 'lucide-react';
+import { PageHeroHeader } from '../PageHeroHeader';
 
 interface ReferralProgramProps {
   onNavigate?: (page: string) => void;
@@ -65,11 +66,11 @@ export function ReferralProgram({ onNavigate }: ReferralProgramProps) {
   return (
     <div className="min-h-screen bg-[var(--bg)]">
       {/* Header */}
-      <div className="bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/80 py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-[var(--accent-contrast)]">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-4">Referral Program</h1>
-          <p className="text-xl opacity-90">Know someone who'd love to host art? Refer them and earn rewards.</p>
-        </div>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-8">
+        <PageHeroHeader
+          title="Referral Program"
+          subtitle="Know someone who'd love to host art? Refer them and earn rewards."
+        />
       </div>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-16">
