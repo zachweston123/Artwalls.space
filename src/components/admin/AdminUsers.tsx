@@ -76,73 +76,92 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
       // Ensure local tables are synced from Supabase Auth
       try { await apiPost('/api/admin/sync-users', {}); } catch {}
 
-      const [artistsResp, venuesResp, authResp] = await Promise.all([
-        apiGet<any>('/api/artists').catch(() => []),
-        apiGet<any>('/api/venues').catch(() => []),
-        apiGet<any>('/api/admin/users').catch(() => []),
-      ]);
+      // Primary: use the admin-only unified users endpoint (no public filters)
+      let combined: typeof users = [];
+      let usedFallback = false;
 
-      const artists = Array.isArray(artistsResp)
-        ? artistsResp
-        : (artistsResp?.artists || artistsResp?.data || []);
-      const venues = Array.isArray(venuesResp)
-        ? venuesResp
-        : (venuesResp?.venues || venuesResp?.data || []);
+      try {
+        const adminResp = await apiGet<any>('/api/admin/users');
+        const adminUsers = Array.isArray(adminResp)
+          ? adminResp
+          : (adminResp?.users || adminResp?.data?.users || adminResp?.data || []);
 
-      const mappedArtists = (artists || []).map(a => ({
-        id: a.id,
-        name: a.name || 'Artist',
-        email: a.email || null,
-        role: 'artist' as const,
-        plan: (a.subscriptionTier || 'free').toString().replace(/^(.)/, (m: string) => m.toUpperCase()),
-        status: (a.subscriptionStatus === 'suspended') ? 'Suspended' : 'Active',
-        lastActive: '—',
-        city: '—',
-        agreementAccepted: true,
-      }));
+        combined = (adminUsers || []).map((u: any) => ({
+          id: u.id,
+          name: u.name || 'User',
+          email: u.email || null,
+          role: (u.role === 'venue' ? 'venue' : u.role === 'unknown' ? 'artist' : u.role || 'artist') as 'artist' | 'venue',
+          plan: u.plan
+            ? String(u.plan).replace(/^(.)/, (m: string) => m.toUpperCase())
+            : '—',
+          status: (u.status === 'Suspended' ? 'Suspended' : 'Active') as 'Active' | 'Suspended',
+          lastActive: '—',
+          city: u.city || '—',
+          agreementAccepted: true,
+        }));
 
-      const mappedVenues = (venues || []).map(v => ({
-        id: v.id,
-        name: v.name || 'Venue',
-        email: v.email || null,
-        role: 'venue' as const,
-        plan: '—',
-        status: v.suspended ? 'Suspended' : 'Active',
-        lastActive: '—',
-        city: '—',
-        agreementAccepted: true,
-      }));
+        if (adminResp?.counts) {
+          console.info('[AdminUsers] Loaded:', adminResp.counts);
+        }
+      } catch (adminErr) {
+        // Fallback: if /api/admin/users fails, use the public endpoints (lossy)
+        console.warn('[AdminUsers] /api/admin/users failed, falling back to public endpoints:', adminErr);
+        usedFallback = true;
 
-      // Basic merge of auth users to fill any missing profiles
-      const authUsers = Array.isArray(authResp)
-        ? authResp
-        : (authResp?.users || authResp?.data?.users || authResp?.data || []);
-      const authMapped = (authUsers || []).map(u => ({
-        id: u.id,
-        name: u.name || 'User',
-        email: u.email || null,
-        role: (u.role === 'venue' ? 'venue' : 'artist') as 'artist' | 'venue',
-        plan: '—',
-        status: 'Active',
-        lastActive: '—',
-        city: '—',
-        agreementAccepted: true,
-      }));
+        const [artistsResp, venuesResp] = await Promise.all([
+          apiGet<any>('/api/artists').catch(() => []),
+          apiGet<any>('/api/venues').catch(() => []),
+        ]);
 
-      const seen = new Set<string>();
-      const combined: typeof users = [];
-      for (const list of [mappedArtists, mappedVenues, authMapped]) {
-        for (const item of list) {
-          if (seen.has(item.id)) continue;
-          seen.add(item.id);
-          combined.push(item);
+        const artists = Array.isArray(artistsResp)
+          ? artistsResp
+          : (artistsResp?.artists || artistsResp?.data || []);
+        const venues = Array.isArray(venuesResp)
+          ? venuesResp
+          : (venuesResp?.venues || venuesResp?.data || []);
+
+        const mappedArtists = (artists || []).map((a: any) => ({
+          id: a.id,
+          name: a.name || 'Artist',
+          email: a.email || null,
+          role: 'artist' as const,
+          plan: (a.subscriptionTier || 'free').toString().replace(/^(.)/, (m: string) => m.toUpperCase()),
+          status: (a.subscriptionStatus === 'suspended') ? 'Suspended' as const : 'Active' as const,
+          lastActive: '—',
+          city: '—',
+          agreementAccepted: true,
+        }));
+
+        const mappedVenues = (venues || []).map((v: any) => ({
+          id: v.id,
+          name: v.name || 'Venue',
+          email: v.email || null,
+          role: 'venue' as const,
+          plan: '—',
+          status: (v.suspended ? 'Suspended' as const : 'Active' as const),
+          lastActive: '—',
+          city: '—',
+          agreementAccepted: true,
+        }));
+
+        const seen = new Set<string>();
+        for (const list of [mappedArtists, mappedVenues]) {
+          for (const item of list) {
+            if (seen.has(item.id)) continue;
+            seen.add(item.id);
+            combined.push(item);
+          }
         }
       }
 
       setUsers(combined.length ? combined : mockUsers);
-      setToast('Users refreshed');
+      setToast(usedFallback
+        ? 'Users refreshed (partial — admin endpoint unavailable)'
+        : 'Users refreshed'
+      );
       setTimeout(() => setToast(null), 2000);
-    } catch {
+    } catch (err) {
+      console.error('[AdminUsers] reload failed:', err);
       setUsers(mockUsers);
     } finally {
       setIsLoading(false);
@@ -515,17 +534,31 @@ export function AdminUsers({ onViewUser }: AdminUsersProps) {
             <UsersIcon className="w-8 h-8 text-[var(--text-muted)]" />
           </div>
           <h3 className="text-xl mb-2 text-[var(--text)]">No users found</h3>
-          <p className="text-[var(--text-muted)] mb-6">
+          <p className="text-[var(--text-muted)] mb-2">
             {hasActiveFilters
               ? 'Try adjusting your filters to see more results'
               : 'No users in the system yet'}
           </p>
+          {!hasActiveFilters && users.length === 0 && (
+            <p className="text-xs text-[var(--text-muted)] mb-4">
+              If you expect users here, check that the worker's <code>/api/admin/users</code> endpoint is deployed and your account has the <code>admin</code> role in the <code>artists</code> table.
+            </p>
+          )}
           {hasActiveFilters && (
             <button
               onClick={clearFilters}
               className="px-6 py-2 bg-[var(--blue)] text-[var(--on-blue)] rounded-lg hover:bg-[var(--blue-hover)] transition-colors"
             >
               Clear Filters
+            </button>
+          )}
+          {!hasActiveFilters && (
+            <button
+              onClick={reload}
+              disabled={isLoading}
+              className="px-6 py-2 bg-[var(--blue)] text-[var(--on-blue)] rounded-lg hover:bg-[var(--blue-hover)] transition-colors"
+            >
+              {isLoading ? 'Refreshing…' : 'Retry'}
             </button>
           )}
         </div>

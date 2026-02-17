@@ -631,6 +631,290 @@ export default {
       return json(data);
     }
 
+    // ── Admin-only: unified users list ──
+    // Returns ALL artists + venues + auth users in a single merged list.
+    // No is_public / is_live / suspended filters — admins see everything.
+    if (url.pathname === '/api/admin/users' && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+
+      const user = await getSupabaseUserFromRequest(request);
+      if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
+      const { data: callerRow } = await supabaseAdmin
+        .from('artists')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (callerRow?.role !== 'admin') return json({ error: 'Forbidden' }, { status: 403 });
+
+      try {
+        // Fetch ALL artists (no is_public / is_live filter)
+        const { data: allArtists, error: artistErr } = await supabaseAdmin
+          .from('artists')
+          .select('id,name,email,role,subscription_tier,subscription_status,city_primary,is_live,is_public,created_at')
+          .order('created_at', { ascending: false })
+          .limit(5000);
+
+        // Fetch ALL venues (no suspended filter)
+        const { data: allVenues, error: venueErr } = await supabaseAdmin
+          .from('venues')
+          .select('id,name,email,city,suspended,created_at')
+          .order('created_at', { ascending: false })
+          .limit(5000);
+
+        // Fetch auth users for any accounts that may not have artist/venue rows yet
+        let authUsers: any[] = [];
+        try {
+          const { data: authData, error: authErr } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
+          if (!authErr && authData?.users) {
+            authUsers = authData.users;
+          }
+        } catch (e) {
+          // listUsers may not be available in all Supabase plans; continue without it
+          console.warn('[admin/users] auth.admin.listUsers failed:', e instanceof Error ? e.message : e);
+        }
+
+        if (artistErr) console.error('[admin/users] artists query error:', artistErr.message);
+        if (venueErr) console.error('[admin/users] venues query error:', venueErr.message);
+
+        const artists = allArtists || [];
+        const venues = allVenues || [];
+
+        // Build unified list, deduped by ID
+        const seen = new Set<string>();
+        const combined: any[] = [];
+
+        for (const a of artists) {
+          if (seen.has(a.id)) continue;
+          seen.add(a.id);
+          combined.push({
+            id: a.id,
+            name: a.name || 'Artist',
+            email: a.email || null,
+            role: 'artist',
+            plan: (a.subscription_tier || 'free'),
+            status: a.subscription_status === 'suspended' ? 'Suspended' : 'Active',
+            city: a.city_primary || null,
+            is_live: a.is_live,
+            is_public: a.is_public,
+            admin_role: a.role || null,
+            created_at: a.created_at || null,
+          });
+        }
+
+        for (const v of venues) {
+          if (seen.has(v.id)) continue;
+          seen.add(v.id);
+          combined.push({
+            id: v.id,
+            name: v.name || 'Venue',
+            email: v.email || null,
+            role: 'venue',
+            plan: null,
+            status: v.suspended ? 'Suspended' : 'Active',
+            city: v.city || null,
+            is_live: null,
+            is_public: null,
+            admin_role: null,
+            created_at: v.created_at || null,
+          });
+        }
+
+        // Add auth users that don't have artist/venue rows yet
+        for (const u of authUsers) {
+          if (seen.has(u.id)) continue;
+          seen.add(u.id);
+          const meta = u.user_metadata || {};
+          combined.push({
+            id: u.id,
+            name: meta.name || meta.full_name || 'User',
+            email: u.email || null,
+            role: meta.role || 'unknown',
+            plan: null,
+            status: 'Active',
+            city: null,
+            is_live: null,
+            is_public: null,
+            admin_role: null,
+            created_at: u.created_at || null,
+          });
+        }
+
+        return json({
+          users: combined,
+          counts: { artists: artists.length, venues: venues.length, auth: authUsers.length, total: combined.length },
+        });
+      } catch (e) {
+        console.error('[admin/users] unexpected error:', e instanceof Error ? e.message : e);
+        return json({ error: 'Failed to fetch users', detail: e instanceof Error ? e.message : String(e) }, { status: 500 });
+      }
+    }
+
+    // ── Admin-only: sync users (no-op placeholder for backfill button) ──
+    if (url.pathname === '/api/admin/sync-users' && method === 'POST') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+
+      const user = await getSupabaseUserFromRequest(request);
+      if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
+      const { data: callerRow } = await supabaseAdmin
+        .from('artists')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (callerRow?.role !== 'admin') return json({ error: 'Forbidden' }, { status: 403 });
+
+      // Count current records as a diagnostic
+      const { count: artistCount } = await supabaseAdmin
+        .from('artists')
+        .select('id', { count: 'exact', head: true });
+      const { count: venueCount } = await supabaseAdmin
+        .from('venues')
+        .select('id', { count: 'exact', head: true });
+
+      return json({ ok: true, artists: artistCount || 0, venues: venueCount || 0 });
+    }
+
+    // ── Admin-only: dashboard metrics ──
+    if (url.pathname === '/api/admin/metrics' && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+
+      const user = await getSupabaseUserFromRequest(request);
+      if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
+      const { data: callerRow } = await supabaseAdmin
+        .from('artists')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (callerRow?.role !== 'admin') return json({ error: 'Forbidden' }, { status: 403 });
+
+      try {
+        // Total counts
+        const { count: artistCount } = await supabaseAdmin
+          .from('artists')
+          .select('id', { count: 'exact', head: true });
+        const { count: venueCount } = await supabaseAdmin
+          .from('venues')
+          .select('id', { count: 'exact', head: true });
+
+        // Active displays (wallspaces with a current artwork)
+        const { count: activeDisplays } = await supabaseAdmin
+          .from('wallspaces')
+          .select('id', { count: 'exact', head: true })
+          .not('current_artwork_id', 'is', null);
+
+        // Artists/venues created this month
+        const monthStart = new Date();
+        monthStart.setDate(1);
+        monthStart.setHours(0, 0, 0, 0);
+        const monthStartISO = monthStart.toISOString();
+
+        const { count: newArtistsMonth } = await supabaseAdmin
+          .from('artists')
+          .select('id', { count: 'exact', head: true })
+          .gte('created_at', monthStartISO);
+        const { count: newVenuesMonth } = await supabaseAdmin
+          .from('venues')
+          .select('id', { count: 'exact', head: true })
+          .gte('created_at', monthStartISO);
+
+        // Pending invites
+        const { count: pendingInvites } = await supabaseAdmin
+          .from('venue_invites')
+          .select('id', { count: 'exact', head: true })
+          .eq('status', 'pending');
+
+        // Support queue
+        const { count: supportQueue } = await supabaseAdmin
+          .from('support_messages')
+          .select('id', { count: 'exact', head: true })
+          .in('status', ['new', 'open']);
+
+        // Recent sales activity (last 30 days)
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+        const { data: recentOrders } = await supabaseAdmin
+          .from('orders')
+          .select('id,created_at,amount_cents')
+          .gte('created_at', thirtyDaysAgo)
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        const gmv = (recentOrders || []).reduce((sum: number, o: any) => sum + (o.amount_cents || 0), 0);
+        const platformRevenue = Math.round(gmv * 0.10);
+
+        return json({
+          totals: {
+            artists: artistCount || 0,
+            venues: venueCount || 0,
+            activeDisplays: activeDisplays || 0,
+          },
+          month: {
+            gmv,
+            platformRevenue,
+            gvmDelta: 0,
+          },
+          monthlyArtistsDelta: newArtistsMonth || 0,
+          monthlyVenuesDelta: newVenuesMonth || 0,
+          pendingInvites: pendingInvites || 0,
+          supportQueue: supportQueue || 0,
+          recentActivity: (recentOrders || []).map((o: any) => ({
+            type: 'sale',
+            timestamp: o.created_at,
+            amount_cents: o.amount_cents || 0,
+          })),
+        });
+      } catch (e) {
+        console.error('[admin/metrics] error:', e instanceof Error ? e.message : e);
+        return json({ error: 'Failed to load metrics' }, { status: 500 });
+      }
+    }
+
+    // ── Admin-only: user metrics breakdown ──
+    if (url.pathname === '/api/admin/user-metrics' && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+
+      const user = await getSupabaseUserFromRequest(request);
+      if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
+      const { data: callerRow } = await supabaseAdmin
+        .from('artists')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (callerRow?.role !== 'admin') return json({ error: 'Forbidden' }, { status: 403 });
+
+      try {
+        const { data: artists } = await supabaseAdmin
+          .from('artists')
+          .select('id,subscription_tier,art_types');
+        const { count: venueCount } = await supabaseAdmin
+          .from('venues')
+          .select('id', { count: 'exact', head: true });
+
+        const allArtists = artists || [];
+        const totalArtists = allArtists.length;
+        const totalUsers = totalArtists + (venueCount || 0);
+
+        // Breakdown by tier
+        const artistsByTier: Record<string, number> = {};
+        for (const a of allArtists) {
+          const tier = (a.subscription_tier || 'free').toLowerCase();
+          artistsByTier[tier] = (artistsByTier[tier] || 0) + 1;
+        }
+
+        // Breakdown by art type
+        const artistsByType: Record<string, number> = {};
+        for (const a of allArtists) {
+          const types = Array.isArray(a.art_types) ? a.art_types : [];
+          for (const t of types) {
+            if (t) artistsByType[String(t)] = (artistsByType[String(t)] || 0) + 1;
+          }
+        }
+
+        return json({ totalUsers, totalArtists, artistsByTier, artistsByType });
+      } catch (e) {
+        console.error('[admin/user-metrics] error:', e instanceof Error ? e.message : e);
+        return json({ error: 'Failed to load user metrics' }, { status: 500 });
+      }
+    }
+
     // ── Momentum banner dismiss ──
     if (url.pathname === '/api/artists/dismiss-momentum-banner' && method === 'POST') {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
