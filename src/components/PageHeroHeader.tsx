@@ -88,7 +88,7 @@ export function PageHeroHeader({
             )}
             <div className="flex flex-wrap items-center gap-2">
               <h1
-                className="text-2xl sm:text-3xl font-semibold leading-tight"
+                className="text-2xl sm:text-3xl font-semibold leading-tight font-display tracking-tight"
                 style={{ color: 'var(--text)' }}
               >
                 {title}

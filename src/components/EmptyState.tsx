@@ -61,7 +61,7 @@ export function EmptyState({
           {icon}
         </div>
       )}
-      <h3 className="text-lg font-semibold text-[var(--text)] mb-2">{title}</h3>
+      <h3 className="text-lg font-semibold text-[var(--text)] mb-2 font-display tracking-tight">{title}</h3>
       {description && <p className="text-sm text-[var(--text-muted)] mb-6 max-w-md mx-auto">{description}</p>}
       <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
         {renderAction(primaryAction, true)}

@@ -118,7 +118,7 @@ function StatCard({
           <span className={cn("w-5 h-5", s.iconColor)}>{icon}</span>
         </div>
       )}
-      <div className="text-2xl font-semibold text-[var(--text)] leading-none mt-3">
+      <div className="text-2xl font-semibold text-[var(--text)] leading-none mt-3 font-display tracking-tight">
         {value}
       </div>
       <div className="text-sm font-medium text-[var(--text-muted)] mt-1.5">

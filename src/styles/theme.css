@@ -3,6 +3,10 @@
 
 /* A) Tokens (exact) */
 :root {
+  /* typography */
+  --font-sans: "Work Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+
   /* base */
   --bg: #ffffff;
   --surface-1: #f7f8fb;
@@ -119,7 +123,7 @@ html[data-theme="dark"] {
 html, body {
   background: var(--bg);
   color: var(--text);
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
+  font-family: var(--font-sans);
   /* Use small viewport height to avoid top/bottom bars on mobile browsers */
   min-height: 100svh;
 }
@@ -133,6 +137,12 @@ html, body {
 /* 1) One global font (inherit everywhere). */
 *, *::before, *::after {
   font-family: inherit;
+}
+
+/* 2) Display font for all headings — Space Grotesk. */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  letter-spacing: -0.025em;
 }
 
 /* C) Tokenize core elements.
@@ -333,6 +343,11 @@ html[data-theme="dark"] .border-neutral-300 { border-color: var(--border) !impor
 /* Utility shims not present in pre-compiled Tailwind CSS */
 .border-none { border-style: none; }
 .shadow-none { box-shadow: none; }
+
+/* Font family utilities */
+.font-sans { font-family: var(--font-sans); }
+.font-display { font-family: var(--font-display); }
+.tracking-tight { letter-spacing: -0.025em; }
 
 /* ── Compare All Plans table ─────────────────────────────── */
 .compareTable table {

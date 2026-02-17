@@ -54,7 +54,7 @@ export function PageHeader({
       <div className="space-y-1">
         {breadcrumb && <p className="text-xs uppercase tracking-[0.08em] text-[var(--text-muted)]">{breadcrumb}</p>}
         <div>
-          <h1 className="text-2xl sm:text-3xl font-semibold text-[var(--text)] leading-tight">{title}</h1>
+          <h1 className="text-2xl sm:text-3xl font-semibold text-[var(--text)] leading-tight font-display tracking-tight">{title}</h1>
           {subtitle && <p className="text-sm text-[var(--text-muted)] mt-1">{subtitle}</p>}
         </div>
       </div>

@@ -40,7 +40,7 @@ function SectionCard({
       {(title || subtitle) && (
         <div className={cn("mb-4", padding === "none" && "px-6 pt-6")}>
           {title && (
-            <h2 className="text-lg font-semibold text-[var(--text)] leading-tight">{title}</h2>
+            <h2 className="text-lg font-semibold text-[var(--text)] leading-tight font-display tracking-tight">{title}</h2>
           )}
           {subtitle && (
             <p className="text-sm text-[var(--text-muted)] mt-1">{subtitle}</p>
