@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Plus, Tag, Copy, RefreshCw } from 'lucide-react';
 import { PageHeroHeader } from '../PageHeroHeader';
+import { apiGet, apiPost } from '../../lib/api';
 
 type PromoStatus = 'active' | 'inactive' | 'expired';
 
@@ -16,31 +17,26 @@ type PromoCode = {
 };
 
 async function fetchPromoCodes(): Promise<PromoCode[]> {
-  const res = await fetch('/api/admin/promo-codes', { credentials: 'include' });
-  if (!res.ok) {
-    throw new Error(`Failed to load promo codes (${res.status})`);
+  try {
+    const data = await apiGet<any>('/api/admin/promo-codes');
+    return (data?.promoCodes || data || []).map((p: any) => ({
+      id: String(p.id),
+      code: p.code,
+      discountLabel: p.discountLabel ?? p.discount ?? '',
+      duration: p.duration ?? '—',
+      maxRedemptions: p.maxRedemptions ?? p.max_redemptions ?? null,
+      redeemedCount: p.redeemedCount ?? p.redeemed_count ?? 0,
+      expiresAt: p.expiresAt ?? p.expires ?? p.expires_at ?? null,
+      status: (p.status?.toLowerCase?.() as PromoStatus) ?? 'active',
+    }));
+  } catch {
+    // Endpoint may not exist yet — return empty
+    return [];
   }
-  const data = await res.json();
-  return (data?.promoCodes || data || []).map((p: any) => ({
-    id: String(p.id),
-    code: p.code,
-    discountLabel: p.discountLabel ?? p.discount ?? '',
-    duration: p.duration ?? '—',
-    maxRedemptions: p.maxRedemptions ?? p.max_redemptions ?? null,
-    redeemedCount: p.redeemedCount ?? p.redeemed_count ?? 0,
-    expiresAt: p.expiresAt ?? p.expires ?? p.expires_at ?? null,
-    status: (p.status?.toLowerCase?.() as PromoStatus) ?? 'active',
-  }));
 }
 
 async function deactivatePromoCode(id: string) {
-  const res = await fetch(`/api/admin/promo-codes/${id}/deactivate`, {
-    method: 'POST',
-    credentials: 'include',
-  });
-  if (!res.ok) {
-    throw new Error('Failed to deactivate promo code');
-  }
+  await apiPost(`/api/admin/promo-codes/${id}/deactivate`, {});
 }
 
 export function AdminPromoCodes() {

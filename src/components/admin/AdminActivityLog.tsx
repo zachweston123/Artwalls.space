@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Activity, RefreshCw } from 'lucide-react';
 import { PageHeroHeader } from '../PageHeroHeader';
+import { apiGet } from '../../lib/api';
 
 type ActivityLog = {
   id: string;
@@ -12,19 +13,20 @@ type ActivityLog = {
 };
 
 async function fetchActivity(): Promise<ActivityLog[]> {
-  const res = await fetch('/api/admin/activity-log', { credentials: 'include' });
-  if (!res.ok) {
-    throw new Error(`Failed to load activity (${res.status})`);
+  try {
+    const data = await apiGet<any>('/api/admin/activity-log');
+    return (data?.activity || data || []).map((item: any) => ({
+      id: String(item.id),
+      timestamp: item.timestamp ?? item.created_at ?? '',
+      admin: item.admin ?? item.adminEmail ?? 'admin',
+      action: item.action ?? '',
+      target: item.target ?? null,
+      details: item.details ?? item.metadata ?? null,
+    }));
+  } catch {
+    // Endpoint may not exist yet — return empty
+    return [];
   }
-  const data = await res.json();
-  return (data?.activity || data || []).map((item: any) => ({
-    id: String(item.id),
-    timestamp: item.timestamp ?? item.created_at ?? '',
-    admin: item.admin ?? item.adminEmail ?? 'admin',
-    action: item.action ?? '',
-    target: item.target ?? null,
-    details: item.details ?? item.metadata ?? null,
-  }));
 }
 
 export function AdminActivityLog() {

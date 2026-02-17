@@ -388,6 +388,30 @@ export default {
       return null; // success — caller can proceed
     }
 
+    /**
+     * Check admin status — matches the frontend logic.
+     * 1) Check Supabase auth user_metadata.role === 'admin'
+     * 2) Fall back to artists.role === 'admin'
+     * This ensures the frontend and backend agree on who is an admin.
+     */
+    async function isAdminUser(user: any): Promise<boolean> {
+      // Primary: auth metadata (same source the frontend uses)
+      const metaRole = user?.user_metadata?.role;
+      if (metaRole === 'admin') return true;
+      // Fallback: artists table
+      if (!supabaseAdmin) return false;
+      try {
+        const { data } = await supabaseAdmin
+          .from('artists')
+          .select('role')
+          .eq('id', user.id)
+          .maybeSingle();
+        return data?.role === 'admin';
+      } catch {
+        return false;
+      }
+    }
+
     async function upsertArtist(artist: { id: string; email?: string | null; name?: string | null; role?: string; phoneNumber?: string | null; cityPrimary?: string | null; citySecondary?: string | null; stripeAccountId?: string | null; stripeCustomerId?: string | null; subscriptionTier?: string | null; subscriptionStatus?: string | null; stripeSubscriptionId?: string | null; platformFeeBps?: number | null; }): Promise<Response> {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured - check SUPABASE_SERVICE_ROLE_KEY secret' }, { status: 500 });
       const payload = {
@@ -614,12 +638,7 @@ export default {
 
       const user = await getSupabaseUserFromRequest(request);
       if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
-      const { data: artist } = await supabaseAdmin
-        .from('artists')
-        .select('role')
-        .eq('id', user.id)
-        .maybeSingle();
-      if (artist?.role !== 'admin') return json({ error: 'Forbidden' }, { status: 403 });
+      if (!(await isAdminUser(user))) return json({ error: 'Forbidden' }, { status: 403 });
 
       const days = parseInt(url.searchParams.get('days') || '7', 10);
       const safeDays = Math.min(Math.max(days, 1), 90);
@@ -639,12 +658,7 @@ export default {
 
       const user = await getSupabaseUserFromRequest(request);
       if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
-      const { data: callerRow } = await supabaseAdmin
-        .from('artists')
-        .select('role')
-        .eq('id', user.id)
-        .maybeSingle();
-      if (callerRow?.role !== 'admin') return json({ error: 'Forbidden' }, { status: 403 });
+      if (!(await isAdminUser(user))) return json({ error: 'Forbidden' }, { status: 403 });
 
       try {
         // Fetch ALL artists (no is_public / is_live filter)
@@ -755,12 +769,7 @@ export default {
 
       const user = await getSupabaseUserFromRequest(request);
       if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
-      const { data: callerRow } = await supabaseAdmin
-        .from('artists')
-        .select('role')
-        .eq('id', user.id)
-        .maybeSingle();
-      if (callerRow?.role !== 'admin') return json({ error: 'Forbidden' }, { status: 403 });
+      if (!(await isAdminUser(user))) return json({ error: 'Forbidden' }, { status: 403 });
 
       // Count current records as a diagnostic
       const { count: artistCount } = await supabaseAdmin
@@ -779,27 +788,25 @@ export default {
 
       const user = await getSupabaseUserFromRequest(request);
       if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
-      const { data: callerRow } = await supabaseAdmin
-        .from('artists')
-        .select('role')
-        .eq('id', user.id)
-        .maybeSingle();
-      if (callerRow?.role !== 'admin') return json({ error: 'Forbidden' }, { status: 403 });
+      if (!(await isAdminUser(user))) return json({ error: 'Forbidden' }, { status: 403 });
+
+      // Helper: safe count that returns 0 if the table doesn't exist
+      async function safeCount(table: string, filter?: (q: any) => any): Promise<number> {
+        try {
+          let q = supabaseAdmin!.from(table).select('id', { count: 'exact', head: true });
+          if (filter) q = filter(q);
+          const { count } = await q;
+          return count || 0;
+        } catch { return 0; }
+      }
 
       try {
-        // Total counts
-        const { count: artistCount } = await supabaseAdmin
-          .from('artists')
-          .select('id', { count: 'exact', head: true });
-        const { count: venueCount } = await supabaseAdmin
-          .from('venues')
-          .select('id', { count: 'exact', head: true });
+        // Total counts (artists & venues are core — always exist)
+        const artistCount = await safeCount('artists');
+        const venueCount = await safeCount('venues');
 
-        // Active displays (wallspaces with a current artwork)
-        const { count: activeDisplays } = await supabaseAdmin
-          .from('wallspaces')
-          .select('id', { count: 'exact', head: true })
-          .not('current_artwork_id', 'is', null);
+        // Optional tables — graceful zero if missing
+        const activeDisplays = await safeCount('wallspaces', q => q.not('current_artwork_id', 'is', null));
 
         // Artists/venues created this month
         const monthStart = new Date();
@@ -807,55 +814,45 @@ export default {
         monthStart.setHours(0, 0, 0, 0);
         const monthStartISO = monthStart.toISOString();
 
-        const { count: newArtistsMonth } = await supabaseAdmin
-          .from('artists')
-          .select('id', { count: 'exact', head: true })
-          .gte('created_at', monthStartISO);
-        const { count: newVenuesMonth } = await supabaseAdmin
-          .from('venues')
-          .select('id', { count: 'exact', head: true })
-          .gte('created_at', monthStartISO);
+        const newArtistsMonth = await safeCount('artists', q => q.gte('created_at', monthStartISO));
+        const newVenuesMonth = await safeCount('venues', q => q.gte('created_at', monthStartISO));
 
-        // Pending invites
-        const { count: pendingInvites } = await supabaseAdmin
-          .from('venue_invites')
-          .select('id', { count: 'exact', head: true })
-          .eq('status', 'pending');
+        // Optional tables
+        const pendingInvites = await safeCount('venue_invites', q => q.eq('status', 'pending'));
+        const supportQueue = await safeCount('support_messages', q => q.in('status', ['new', 'open']));
 
-        // Support queue
-        const { count: supportQueue } = await supabaseAdmin
-          .from('support_messages')
-          .select('id', { count: 'exact', head: true })
-          .in('status', ['new', 'open']);
+        // Recent sales activity (last 30 days) — orders may not exist yet
+        let recentOrders: any[] = [];
+        try {
+          const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+          const { data } = await supabaseAdmin
+            .from('orders')
+            .select('id,created_at,amount_cents')
+            .gte('created_at', thirtyDaysAgo)
+            .order('created_at', { ascending: false })
+            .limit(10);
+          recentOrders = data || [];
+        } catch { /* table may not exist */ }
 
-        // Recent sales activity (last 30 days)
-        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-        const { data: recentOrders } = await supabaseAdmin
-          .from('orders')
-          .select('id,created_at,amount_cents')
-          .gte('created_at', thirtyDaysAgo)
-          .order('created_at', { ascending: false })
-          .limit(10);
-
-        const gmv = (recentOrders || []).reduce((sum: number, o: any) => sum + (o.amount_cents || 0), 0);
+        const gmv = recentOrders.reduce((sum: number, o: any) => sum + (o.amount_cents || 0), 0);
         const platformRevenue = Math.round(gmv * 0.10);
 
         return json({
           totals: {
-            artists: artistCount || 0,
-            venues: venueCount || 0,
-            activeDisplays: activeDisplays || 0,
+            artists: artistCount,
+            venues: venueCount,
+            activeDisplays,
           },
           month: {
             gmv,
             platformRevenue,
             gvmDelta: 0,
           },
-          monthlyArtistsDelta: newArtistsMonth || 0,
-          monthlyVenuesDelta: newVenuesMonth || 0,
-          pendingInvites: pendingInvites || 0,
-          supportQueue: supportQueue || 0,
-          recentActivity: (recentOrders || []).map((o: any) => ({
+          monthlyArtistsDelta: newArtistsMonth,
+          monthlyVenuesDelta: newVenuesMonth,
+          pendingInvites,
+          supportQueue,
+          recentActivity: recentOrders.map((o: any) => ({
             type: 'sale',
             timestamp: o.created_at,
             amount_cents: o.amount_cents || 0,
@@ -873,12 +870,7 @@ export default {
 
       const user = await getSupabaseUserFromRequest(request);
       if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
-      const { data: callerRow } = await supabaseAdmin
-        .from('artists')
-        .select('role')
-        .eq('id', user.id)
-        .maybeSingle();
-      if (callerRow?.role !== 'admin') return json({ error: 'Forbidden' }, { status: 403 });
+      if (!(await isAdminUser(user))) return json({ error: 'Forbidden' }, { status: 403 });
 
       try {
         const { data: artists } = await supabaseAdmin
@@ -940,6 +932,17 @@ export default {
       return json({ error: 'Not found' }, { status: 404 });
     }
 
+    // ── Admin-only: password verify (used by AdminPasswordPrompt) ──
+    if (url.pathname === '/api/admin/verify' && method === 'POST') {
+      const user = await getSupabaseUserFromRequest(request);
+      if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
+      // Accept any request from a user whose auth metadata says admin
+      if (await isAdminUser(user)) {
+        return json({ ok: true });
+      }
+      return json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     // ── Integration status endpoint (for admin Stripe checklist) ──────────
     // Requires admin auth so it doesn't leak config to the public
     if (url.pathname === '/api/debug/env' || url.pathname === '/api/integration/status') {
@@ -961,8 +964,7 @@ export default {
       if (!user) {
         return json({ error: 'Unauthorized' }, { status: 401 });
       }
-      const { data: adminCheck } = await supabaseAdmin.from('artists').select('role').eq('id', user.id).maybeSingle();
-      if (adminCheck?.role !== 'admin') {
+      if (!(await isAdminUser(user))) {
         return json({ error: 'Forbidden' }, { status: 403 });
       }
 
@@ -3393,8 +3395,7 @@ export default {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
       const user = await getSupabaseUserFromRequest(request);
       if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
-      const { data: artist } = await supabaseAdmin.from('artists').select('role').eq('id', user.id).maybeSingle();
-      if (artist?.role !== 'admin') return json({ error: 'Forbidden' }, { status: 403 });
+      if (!(await isAdminUser(user))) return json({ error: 'Forbidden' }, { status: 403 });
 
       const statusFilter = url.searchParams.get('status') || '';
 
@@ -3450,8 +3451,7 @@ export default {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
       const user = await getSupabaseUserFromRequest(request);
       if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
-      const { data: artist } = await supabaseAdmin.from('artists').select('role').eq('id', user.id).maybeSingle();
-      if (artist?.role !== 'admin') return json({ error: 'Forbidden' }, { status: 403 });
+      if (!(await isAdminUser(user))) return json({ error: 'Forbidden' }, { status: 403 });
 
       const ticketId = decodeURIComponent(url.pathname.split('/support-tickets/')[1].split('/messages')[0]);
       const [email, pageSource] = ticketId.split('::');
@@ -3474,8 +3474,7 @@ export default {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
       const user = await getSupabaseUserFromRequest(request);
       if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
-      const { data: artist } = await supabaseAdmin.from('artists').select('role').eq('id', user.id).maybeSingle();
-      if (artist?.role !== 'admin') return json({ error: 'Forbidden' }, { status: 403 });
+      if (!(await isAdminUser(user))) return json({ error: 'Forbidden' }, { status: 403 });
 
       const limit = Math.min(parseInt(url.searchParams.get('limit') || '20', 10), 100);
       const offset = parseInt(url.searchParams.get('offset') || '0', 10);
@@ -3522,8 +3521,7 @@ export default {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
       const user = await getSupabaseUserFromRequest(request);
       if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
-      const { data: artist } = await supabaseAdmin.from('artists').select('role').eq('id', user.id).maybeSingle();
-      if (artist?.role !== 'admin') return json({ error: 'Forbidden' }, { status: 403 });
+      if (!(await isAdminUser(user))) return json({ error: 'Forbidden' }, { status: 403 });
 
       const msgId = url.pathname.split('/messages/')[1];
       if (!isUUID(msgId)) return json({ error: 'Invalid message ID' }, { status: 400 });
@@ -3554,8 +3552,7 @@ export default {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
       const user = await getSupabaseUserFromRequest(request);
       if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
-      const { data: artist } = await supabaseAdmin.from('artists').select('role').eq('id', user.id).maybeSingle();
-      if (artist?.role !== 'admin') return json({ error: 'Forbidden' }, { status: 403 });
+      if (!(await isAdminUser(user))) return json({ error: 'Forbidden' }, { status: 403 });
 
       const parts = url.pathname.split('/messages/')[1].split('/status');
       const msgId = parts[0];
