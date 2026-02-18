@@ -74,4 +74,61 @@ The `admin_users` table is created by the migration file:
 `supabase/migrations/20260217_admin_users_table.sql`
 
 Apply it via the Supabase SQL Editor or `supabase db push`.
+
+---
+
+## Venue Map — "Find Art Near You"
+
+### Overview
+
+A public discovery surface where anyone can browse participating venues on an interactive map, filtered by city. Inspired by TooGoodToGo's map + list UX.
+
+**Routes:**
+- `/find` — City selector page (search / grid of popular cities)
+- `/find/:citySlug` — Split-panel map + scrollable venue list for that city
+
+### How it works
+
+1. **Venues opt in** by toggling "Show on venue map" in their profile settings
+2. The `is_participating` flag and `city_slug` are stored in the `venues` table
+3. The frontend queries Supabase directly (anon key) using an RLS policy that allows public reads of participating venues
+4. Leaflet renders the map with OpenStreetMap tiles (free, no API key needed)
+5. Venue pins show name, address, type, and distance from city center
+
+### Database columns (venues table)
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `city_slug` | `text` | URL-safe slug (auto-generated from `city`) |
+| `is_participating` | `boolean` | Opt-in for public map visibility |
+| `state` | `text` | US state code |
+| `postal_code` | `text` | ZIP code |
+
+**Migration:** `supabase/migrations/20260217_venue_map_city_discovery.sql`
+
+### Marking a venue as participating (manual)
+
+```sql
+UPDATE venues
+SET is_participating = true,
+    city_slug = 'san-diego'
+WHERE id = '<venue-uuid>';
+```
+
+### Tech stack additions
+
+- **leaflet** `^1.9.4` — Map rendering (OSM tiles, no API key)
+- **@types/leaflet** `^1.9.12` — TypeScript definitions
+
+### File inventory
+
+| File | Purpose |
+|------|---------|
+| `src/pages/FindCitySelector.tsx` | City picker entry page at `/find` |
+| `src/pages/CityVenueMap.tsx` | Map + list split view at `/find/:citySlug` |
+| `src/components/map/VenueMap.tsx` | Leaflet map wrapper with venue pins |
+| `src/components/map/VenueMapCard.tsx` | Venue card for the list panel |
+| `src/components/map/venue-map.css` | Custom Leaflet styling |
+| `src/lib/venueMap.ts` | Data types + Supabase fetch helpers |
+| `src/data/cities.ts` | City data with slug helpers |
   

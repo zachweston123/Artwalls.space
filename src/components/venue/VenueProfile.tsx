@@ -47,6 +47,7 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
     totalEarnings: number;
     wallSpaces: number;
     activeDisplays: number;
+    isParticipating: boolean;
     installWindow: { day: string; time: string };
   }>({
     name: '',
@@ -65,6 +66,7 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
     totalEarnings: 0,
     wallSpaces: 0,
     activeDisplays: 0,
+    isParticipating: false,
     installWindow: {
       day: 'Not set',
       time: 'Add your install window in Settings',
@@ -91,7 +93,7 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
       try {
         const { data: venueData } = await supabase
           .from('venues')
-          .select('cover_photo_url, city, bio, labels, address, address_lat, address_lng, website, instagram_handle')
+          .select('cover_photo_url, city, bio, labels, address, address_lat, address_lng, website, instagram_handle, is_participating')
           .eq('id', user.id)
           .single();
         
@@ -107,6 +109,7 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
             addressLng: venueData.address_lng || prev.addressLng,
             website: venueData.website || prev.website,
             instagram: venueData.instagram_handle || prev.instagram,
+            isParticipating: Boolean(venueData.is_participating),
           }));
         }
 
@@ -194,6 +197,17 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
       if (data.instagramHandle !== undefined) {
         updateData.instagram_handle = data.instagramHandle;
       }
+      if (data.isParticipating !== undefined) {
+        updateData.is_participating = data.isParticipating;
+      }
+      // Auto-compute city_slug from city
+      if (data.city) {
+        updateData.city_slug = data.city
+          .toLowerCase()
+          .trim()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-|-$/g, '');
+      }
       
       if (Object.keys(updateData).length > 0) {
         const { error: updateError } = await supabase
@@ -233,6 +247,7 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
         addressLng: data.addressLng || prev.addressLng,
         website: data.website || prev.website,
         instagram: data.instagramHandle || prev.instagram,
+        isParticipating: data.isParticipating ?? prev.isParticipating,
       }));
       setIsEditing(false);
     } catch (err: any) {
@@ -646,6 +661,7 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
             addressLng: profile.addressLng,
             website: profile.website,
             instagramHandle: profile.instagram,
+            isParticipating: profile.isParticipating,
           }}
           onSave={handleSave}
           onCancel={() => setIsEditing(false)}

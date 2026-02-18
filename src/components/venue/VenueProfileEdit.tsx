@@ -29,6 +29,8 @@ export interface VenueProfileData {
   addressLng?: number;
   website?: string;
   instagramHandle?: string;
+  /** Opt-in to appear on the public venue map */
+  isParticipating?: boolean;
 }
 
 export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfileEditProps) {
@@ -47,6 +49,7 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
     addressLng: (initialData as any)?.addressLng,
     website: initialData?.website ?? '',
     instagramHandle: initialData?.instagramHandle ?? '',
+    isParticipating: initialData?.isParticipating ?? false,
   });
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -375,6 +378,32 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
                 />
                 <p className="text-xs text-[var(--text-muted)] mt-1">Artists within 50 miles will see your venue.</p>
               </div>
+            </div>
+
+            {/* Venue Map opt-in */}
+            <div className="mt-4 p-4 bg-[var(--surface-3)] rounded-lg border border-[var(--border)]">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.isParticipating ?? false}
+                  onChange={(e) => setFormData({ ...formData, isParticipating: e.target.checked })}
+                  className="mt-0.5 w-4 h-4 rounded border-[var(--border)] accent-[var(--blue)]"
+                />
+                <div>
+                  <span className="text-sm font-semibold text-[var(--text)]">
+                    Show on venue map
+                  </span>
+                  <p className="text-xs text-[var(--text-muted)] mt-0.5">
+                    Appear on the "Find Art Near You" public map so visitors and collectors can discover your venue. Requires a street address with coordinates.
+                  </p>
+                </div>
+              </label>
+              {formData.isParticipating && !formData.addressLat && (
+                <p className="text-xs text-[var(--danger)] mt-2 flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                  Please add a street address above so we can place your pin on the map.
+                </p>
+              )}
             </div>
           </div>
 

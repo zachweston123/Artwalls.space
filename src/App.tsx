@@ -68,6 +68,8 @@ const PublicArtistProfilePage = lazy(() => import('./pages/public/PublicArtistPr
 const PublicArtistPage = lazy(() => import('./pages/PublicArtistPage').then(m => ({ default: m.PublicArtistPage })));
 const PublicArtistSetPage = lazy(() => import('./pages/PublicArtistSetPage').then(m => ({ default: m.PublicArtistSetPage })));
 const PublicVenuePage = lazy(() => import('./pages/PublicVenuePage').then(m => ({ default: m.PublicVenuePage })));
+const FindCitySelector = lazy(() => import('./pages/FindCitySelector').then(m => ({ default: m.FindCitySelector })));
+const CityVenueMap = lazy(() => import('./pages/CityVenueMap').then(m => ({ default: m.CityVenueMap })));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword').then(m => ({ default: m.ForgotPassword })));
 const ResetPassword = lazy(() => import('./pages/ResetPassword').then(m => ({ default: m.ResetPassword })));
 const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
@@ -826,6 +828,20 @@ export default function App() {
     const parts = pathname.split('/').filter(Boolean);
     const venueId = parts[1] || '';
     return <Suspense fallback={<PageLoader />}><PublicVenuePage venueId={venueId} /></Suspense>;
+  }
+
+  // /find — city selector (public venue map entry point)
+  if (pathname === '/find' || pathname === '/find/') {
+    return <Suspense fallback={<PageLoader />}><FindCitySelector onNavigate={handleNavigate} /></Suspense>;
+  }
+
+  // /find/:citySlug — city venue map (map + list split view)
+  if (pathname.startsWith('/find/')) {
+    const parts = pathname.split('/').filter(Boolean);
+    const citySlug = parts[1] || '';
+    if (citySlug) {
+      return <Suspense fallback={<PageLoader />}><CityVenueMap citySlug={citySlug} /></Suspense>;
+    }
   }
 
   // /venue/signup — venue signup page

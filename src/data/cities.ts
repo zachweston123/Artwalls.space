@@ -148,3 +148,40 @@ export function getNearestCities(city: City, radius: number = 50): City[] {
     return distA - distB;
   });
 }
+
+// ── City slug helpers (for /find/:citySlug routes) ──────────────────────────
+
+/**
+ * Convert a city name to a URL-safe slug.
+ * "San Diego" → "san-diego", "St. Louis" → "st-louis"
+ */
+export function toCitySlug(name: string): string {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+/**
+ * Lookup a city by its URL slug (e.g. "san-diego" → San Diego, CA).
+ * Returns the first match.
+ */
+export function getCityBySlug(slug: string): City | undefined {
+  const clean = slug.toLowerCase().trim();
+  return MAJOR_US_CITIES.find((c) => toCitySlug(c.name) === clean);
+}
+
+/**
+ * Deduplicated list of cities (some appear twice in the data).
+ * Uses name+state as key.
+ */
+export function getUniqueCities(): City[] {
+  const seen = new Set<string>();
+  return MAJOR_US_CITIES.filter((c) => {
+    const key = `${c.name}-${c.state}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
