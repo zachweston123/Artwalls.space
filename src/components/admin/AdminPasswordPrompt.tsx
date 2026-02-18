@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { apiPost } from '../../lib/api';
 
 interface AdminPasswordPromptProps {
   onVerify: () => void;
@@ -18,19 +19,8 @@ export function AdminPasswordPrompt({ onVerify, onCancel }: AdminPasswordPromptP
     setIsLoading(true);
 
     try {
-      // Direct fetch without extra headers to avoid CORS issues
-      const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || 'https://api.artwalls.space';
-      const res = await fetch(`${API_BASE}/api/admin/verify`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
-      });
-      
-      if (!res.ok) {
-        throw new Error(`Request failed: ${res.status}`);
-      }
-      
-      const response = (await res.json()) as { ok: boolean };
+      // Use the authenticated API wrapper — attaches Supabase JWT automatically
+      const response = await apiPost<{ ok: boolean }>('/api/admin/verify', { password });
       
       if (response.ok) {
         try {
@@ -48,8 +38,15 @@ export function AdminPasswordPrompt({ onVerify, onCancel }: AdminPasswordPromptP
         setPassword('');
         setIsLoading(false);
       }
-    } catch (err) {
-      setError('Verification failed. Please try again.');
+    } catch (err: any) {
+      const msg = err?.message || '';
+      if (msg.includes('Unauthorized') || msg.includes('AUTH_REQUIRED')) {
+        setError('Please log in first to access admin features.');
+      } else if (msg.includes('Forbidden') || msg.includes('ADMIN_REQUIRED')) {
+        setError("You don't have admin access. Contact the site owner.");
+      } else {
+        setError('Verification failed. Please try again.');
+      }
       setPassword('');
       setIsLoading(false);
     }

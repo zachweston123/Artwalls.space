@@ -61,12 +61,27 @@ async function getAuthHeader(): Promise<Record<string, string>> {
     const { data } = await supabase.auth.getSession();
     const token = data.session?.access_token;
     const headers: Record<string, string> = {};
-    if (token) headers.Authorization = `Bearer ${token}`;
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    } else if (import.meta.env?.DEV) {
+      // Dev-only warning: admin endpoints will 401 without a token
+      const callerHint = new Error().stack?.split('\n')[2]?.trim() || '';
+      if (!_authWarnShown) {
+        console.warn(
+          '[api] No Supabase session — requests to admin endpoints will fail with 401.\n' +
+          '  Make sure you are logged in. ' + callerHint
+        );
+        _authWarnShown = true;
+      }
+    }
     return headers;
   } catch {
     return {};
   }
 }
+
+// Only show the no-session warning once per page load
+let _authWarnShown = false;
 
 export async function apiGet<T>(path: string): Promise<T> {
   const authHeader = await getAuthHeader();

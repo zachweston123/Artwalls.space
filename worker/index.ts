@@ -389,17 +389,35 @@ export default {
     }
 
     /**
-     * Check admin status — matches the frontend logic.
-     * 1) Check Supabase auth user_metadata.role === 'admin'
-     * 2) Fall back to artists.role === 'admin'
-     * This ensures the frontend and backend agree on who is an admin.
+     * Check admin status.
+     * Priority order:
+     *   1) admin_users table (DB-backed allowlist — source of truth)
+     *   2) Supabase auth user_metadata.role === 'admin'
+     *   3) artists.role === 'admin'
+     * Checks 2 & 3 are kept for backward compat until all admins are
+     * inserted into admin_users.
      */
     async function isAdminUser(user: any): Promise<boolean> {
-      // Primary: auth metadata (same source the frontend uses)
+      if (!user?.id) return false;
+      if (!supabaseAdmin) return false;
+
+      // 1) DB-backed allowlist (preferred — service role bypasses RLS)
+      try {
+        const { data } = await supabaseAdmin
+          .from('admin_users')
+          .select('user_id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        if (data) return true;
+      } catch {
+        // Table may not exist yet; fall through to legacy checks
+      }
+
+      // 2) Auth metadata
       const metaRole = user?.user_metadata?.role;
       if (metaRole === 'admin') return true;
-      // Fallback: artists table
-      if (!supabaseAdmin) return false;
+
+      // 3) Fallback: artists table
       try {
         const { data } = await supabaseAdmin
           .from('artists')
@@ -410,6 +428,36 @@ export default {
       } catch {
         return false;
       }
+    }
+
+    /**
+     * Centralized admin gate — authenticates the request AND verifies admin.
+     * Returns null on success (caller proceeds), or a ready-to-return Response
+     * (401 / 403 / 500) on failure.
+     *
+     * Usage:
+     *   const guardResp = await requireAdmin(request);
+     *   if (guardResp) return guardResp;
+     *   // ... admin-only logic ...
+     */
+    async function requireAdmin(req: Request): Promise<Response | null> {
+      if (!supabaseAdmin) {
+        return json({
+          error: 'Server misconfiguration: Supabase admin client not initialised',
+          code: 'SUPABASE_ADMIN_MISCONFIG',
+          hint: 'Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY as Worker secrets',
+        }, { status: 500 });
+      }
+      const user = await getSupabaseUserFromRequest(req);
+      if (!user) {
+        return json({ error: 'Unauthorized', code: 'AUTH_REQUIRED' }, { status: 401 });
+      }
+      if (!(await isAdminUser(user))) {
+        return json({ error: 'Forbidden', code: 'ADMIN_REQUIRED' }, { status: 403 });
+      }
+      // Stash the validated user on the request for downstream use
+      (req as any).__adminUser = user;
+      return null; // success
     }
 
     async function upsertArtist(artist: { id: string; email?: string | null; name?: string | null; role?: string; phoneNumber?: string | null; cityPrimary?: string | null; citySecondary?: string | null; stripeAccountId?: string | null; stripeCustomerId?: string | null; subscriptionTier?: string | null; subscriptionStatus?: string | null; stripeSubscriptionId?: string | null; platformFeeBps?: number | null; }): Promise<Response> {
@@ -634,11 +682,8 @@ export default {
 
     // Admin-only: wall productivity metrics (proxies the RPC)
     if (url.pathname === '/api/admin/wall-productivity' && method === 'GET') {
-      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
-
-      const user = await getSupabaseUserFromRequest(request);
-      if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
-      if (!(await isAdminUser(user))) return json({ error: 'Forbidden' }, { status: 403 });
+      const guardResp = await requireAdmin(request);
+      if (guardResp) return guardResp;
 
       const days = parseInt(url.searchParams.get('days') || '7', 10);
       const safeDays = Math.min(Math.max(days, 1), 90);
@@ -654,11 +699,8 @@ export default {
     // Returns ALL artists + venues + auth users in a single merged list.
     // No is_public / is_live / suspended filters — admins see everything.
     if (url.pathname === '/api/admin/users' && method === 'GET') {
-      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
-
-      const user = await getSupabaseUserFromRequest(request);
-      if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
-      if (!(await isAdminUser(user))) return json({ error: 'Forbidden' }, { status: 403 });
+      const guardResp = await requireAdmin(request);
+      if (guardResp) return guardResp;
 
       try {
         // Fetch ALL artists (no is_public / is_live filter)
@@ -765,11 +807,8 @@ export default {
 
     // ── Admin-only: sync users (no-op placeholder for backfill button) ──
     if (url.pathname === '/api/admin/sync-users' && method === 'POST') {
-      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
-
-      const user = await getSupabaseUserFromRequest(request);
-      if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
-      if (!(await isAdminUser(user))) return json({ error: 'Forbidden' }, { status: 403 });
+      const guardResp = await requireAdmin(request);
+      if (guardResp) return guardResp;
 
       // Count current records as a diagnostic
       const { count: artistCount } = await supabaseAdmin
@@ -784,11 +823,8 @@ export default {
 
     // ── Admin-only: dashboard metrics ──
     if (url.pathname === '/api/admin/metrics' && method === 'GET') {
-      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
-
-      const user = await getSupabaseUserFromRequest(request);
-      if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
-      if (!(await isAdminUser(user))) return json({ error: 'Forbidden' }, { status: 403 });
+      const guardResp = await requireAdmin(request);
+      if (guardResp) return guardResp;
 
       // Helper: safe count that returns 0 if the table doesn't exist
       async function safeCount(table: string, filter?: (q: any) => any): Promise<number> {
@@ -866,11 +902,8 @@ export default {
 
     // ── Admin-only: user metrics breakdown ──
     if (url.pathname === '/api/admin/user-metrics' && method === 'GET') {
-      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
-
-      const user = await getSupabaseUserFromRequest(request);
-      if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
-      if (!(await isAdminUser(user))) return json({ error: 'Forbidden' }, { status: 403 });
+      const guardResp = await requireAdmin(request);
+      if (guardResp) return guardResp;
 
       try {
         const { data: artists } = await supabaseAdmin
@@ -932,41 +965,18 @@ export default {
       return json({ error: 'Not found' }, { status: 404 });
     }
 
-    // ── Admin-only: password verify (used by AdminPasswordPrompt) ──
+    // ── Admin-only: verify caller is admin (used by AdminPasswordPrompt) ──
     if (url.pathname === '/api/admin/verify' && method === 'POST') {
-      const user = await getSupabaseUserFromRequest(request);
-      if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
-      // Accept any request from a user whose auth metadata says admin
-      if (await isAdminUser(user)) {
-        return json({ ok: true });
-      }
-      return json({ error: 'Forbidden' }, { status: 403 });
+      const guardResp = await requireAdmin(request);
+      if (guardResp) return guardResp;
+      return json({ ok: true });
     }
 
     // ── Integration status endpoint (for admin Stripe checklist) ──────────
     // Requires admin auth so it doesn't leak config to the public
     if (url.pathname === '/api/debug/env' || url.pathname === '/api/integration/status') {
-      // Allow admin-only access
-      const user = await getSupabaseUserFromRequest(request);
-      if (!supabaseAdmin) {
-        return json({
-          ok: false,
-          env: {
-            appUrl: pagesOrigin,
-            corsOrigin: Array.from(allowedOrigins),
-            stripe: { secretKey: false, webhookSecret: false },
-            supabase: { url: false, serviceRoleKey: false },
-            workerName: 'artwalls-space',
-          },
-          error: 'SUPABASE_ADMIN_MISCONFIG — cannot verify admin role',
-        });
-      }
-      if (!user) {
-        return json({ error: 'Unauthorized' }, { status: 401 });
-      }
-      if (!(await isAdminUser(user))) {
-        return json({ error: 'Forbidden' }, { status: 403 });
-      }
+      const guardResp = await requireAdmin(request);
+      if (guardResp) return guardResp;
 
       return json({
         ok: true,
@@ -3392,10 +3402,8 @@ export default {
 
     // GET /api/admin/support-tickets — list tickets (grouped from support_messages by email+page_source)
     if (url.pathname === '/api/admin/support-tickets' && method === 'GET') {
-      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
-      const user = await getSupabaseUserFromRequest(request);
-      if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
-      if (!(await isAdminUser(user))) return json({ error: 'Forbidden' }, { status: 403 });
+      const guardResp = await requireAdmin(request);
+      if (guardResp) return guardResp;
 
       const statusFilter = url.searchParams.get('status') || '';
 
@@ -3448,10 +3456,8 @@ export default {
 
     // GET /api/admin/support-tickets/:id/messages — messages for a ticket group
     if (url.pathname.match(/^\/api\/admin\/support-tickets\/(.+)\/messages$/) && method === 'GET') {
-      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
-      const user = await getSupabaseUserFromRequest(request);
-      if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
-      if (!(await isAdminUser(user))) return json({ error: 'Forbidden' }, { status: 403 });
+      const guardResp = await requireAdmin(request);
+      if (guardResp) return guardResp;
 
       const ticketId = decodeURIComponent(url.pathname.split('/support-tickets/')[1].split('/messages')[0]);
       const [email, pageSource] = ticketId.split('::');
@@ -3471,10 +3477,8 @@ export default {
 
     // GET /api/admin/support/messages — list messages with filters (for SupportInbox)
     if (url.pathname === '/api/admin/support/messages' && method === 'GET') {
-      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
-      const user = await getSupabaseUserFromRequest(request);
-      if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
-      if (!(await isAdminUser(user))) return json({ error: 'Forbidden' }, { status: 403 });
+      const guardResp = await requireAdmin(request);
+      if (guardResp) return guardResp;
 
       const limit = Math.min(parseInt(url.searchParams.get('limit') || '20', 10), 100);
       const offset = parseInt(url.searchParams.get('offset') || '0', 10);
@@ -3518,10 +3522,8 @@ export default {
 
     // GET /api/admin/support/messages/:id — single message detail
     if (url.pathname.match(/^\/api\/admin\/support\/messages\/[^/]+$/) && method === 'GET') {
-      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
-      const user = await getSupabaseUserFromRequest(request);
-      if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
-      if (!(await isAdminUser(user))) return json({ error: 'Forbidden' }, { status: 403 });
+      const guardResp = await requireAdmin(request);
+      if (guardResp) return guardResp;
 
       const msgId = url.pathname.split('/messages/')[1];
       if (!isUUID(msgId)) return json({ error: 'Invalid message ID' }, { status: 400 });
@@ -3549,10 +3551,8 @@ export default {
 
     // PATCH /api/admin/support/messages/:id/status — update message status
     if (url.pathname.match(/^\/api\/admin\/support\/messages\/[^/]+\/status$/) && method === 'PATCH') {
-      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
-      const user = await getSupabaseUserFromRequest(request);
-      if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
-      if (!(await isAdminUser(user))) return json({ error: 'Forbidden' }, { status: 403 });
+      const guardResp = await requireAdmin(request);
+      if (guardResp) return guardResp;
 
       const parts = url.pathname.split('/messages/')[1].split('/status');
       const msgId = parts[0];

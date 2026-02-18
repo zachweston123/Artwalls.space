@@ -262,12 +262,35 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
       )}
 
       {/* Error State */}
-      {error && (
-        <div className="mb-8 bg-[var(--danger-muted)] border border-[var(--danger)] text-[var(--danger)] p-4 rounded-lg">
-          <p className="font-semibold mb-1">Failed to load dashboard</p>
-          <p className="text-sm">{error}</p>
-        </div>
-      )}
+      {error && (() => {
+        const isUnauthorized = error.includes('Unauthorized') || error.includes('AUTH_REQUIRED');
+        const isForbidden = error.includes('Forbidden') || error.includes('ADMIN_REQUIRED');
+
+        if (isUnauthorized) {
+          return (
+            <div className="mb-8 bg-[var(--warning-muted,#fef3c7)] border border-[var(--warning,#f59e0b)] text-[var(--warning-fg,#92400e)] p-4 rounded-lg">
+              <p className="font-semibold mb-1">Session expired</p>
+              <p className="text-sm">Please log in again to access the admin dashboard.</p>
+            </div>
+          );
+        }
+
+        if (isForbidden) {
+          return (
+            <div className="mb-8 bg-[var(--danger-muted)] border border-[var(--danger)] text-[var(--danger)] p-4 rounded-lg">
+              <p className="font-semibold mb-1">Access denied</p>
+              <p className="text-sm">You don't have admin access. Contact the site owner to be added to the admin list.</p>
+            </div>
+          );
+        }
+
+        return (
+          <div className="mb-8 bg-[var(--danger-muted)] border border-[var(--danger)] text-[var(--danger)] p-4 rounded-lg">
+            <p className="font-semibold mb-1">Failed to load dashboard</p>
+            <p className="text-sm">{error}</p>
+          </div>
+        );
+      })()}
 
       {/* Content - only show if not loading and data exists */}
       {!loading && metrics && (
