@@ -126,6 +126,14 @@ export interface User {
 export default function App() {
   const normalizePage = (page: string) => (page === 'venue-profile-edit' ? 'venue-profile' : page);
 
+  // Helper: check if a page belongs to the admin console
+  const isAdminPage = (page: string) => page.startsWith('admin-');
+  // Helper: given a role, return the default dashboard page
+  const defaultDashboardForRole = (role: UserRole) =>
+    role === 'admin' ? 'admin-dashboard'
+    : role === 'venue' ? 'venue-dashboard'
+    : 'artist-dashboard';
+
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [currentPage, setCurrentPage] = useState<string>(() => {
     // Try to restore page from localStorage, default to 'login'
@@ -240,11 +248,16 @@ export default function App() {
         // Restore from localStorage if available, otherwise use dashboard
         const storedPage = localStorage.getItem('currentPage');
         if (storedPage && storedPage !== 'login') {
-          // Keep the stored page if user is logged in
-          setCurrentPage(normalizePage(storedPage));
+          // If the user is admin but the stored page isn't an admin page,
+          // redirect to admin-dashboard (prevents blank content area).
+          if (nextUser.role === 'admin' && !isAdminPage(storedPage)) {
+            setCurrentPage('admin-dashboard');
+          } else {
+            setCurrentPage(normalizePage(storedPage));
+          }
         } else {
           // Set to appropriate dashboard if no stored page
-          setCurrentPage(nextUser.role === 'admin' ? 'admin-dashboard' : nextUser.role === 'artist' ? 'artist-dashboard' : 'venue-dashboard');
+          setCurrentPage(defaultDashboardForRole(nextUser.role));
         }
       } else {
         const pageFromPath = getPageFromPath(window.location.pathname);
@@ -273,6 +286,10 @@ export default function App() {
           localStorage.removeItem('currentPage');
           const pageFromPath = getPageFromPath(window.location.pathname);
           return normalizePage(pageFromPath || 'login');
+        }
+        // If user is admin but current page isn't an admin page, redirect
+        if (nextUser.role === 'admin' && !isAdminPage(prevPage)) {
+          return 'admin-dashboard';
         }
         // Keep current page if user is still logged in
         return normalizePage(prevPage);
@@ -489,9 +506,13 @@ export default function App() {
   }, [currentUser?.role]);
 
   const handleLogin = (user: User) => {
-    // Standard login flow
-    setCurrentUser(user);
-    setCurrentPage(user.role === 'artist' ? 'artist-dashboard' : user.role === 'venue' ? 'venue-dashboard' : 'admin-dashboard');
+    // Enforce admin email check — callers (e.g. Login.tsx) may not know about
+    // ADMIN_EMAILS, so re-check here before committing state.
+    const emailLower = (user.email || '').toLowerCase().trim();
+    const isAdmin = ADMIN_EMAILS.includes(emailLower);
+    const effectiveUser: User = isAdmin ? { ...user, role: 'admin' } : user;
+    setCurrentUser(effectiveUser);
+    setCurrentPage(defaultDashboardForRole(effectiveUser.role));
   };
 
   // Venue signup early return moved below all hooks (see render section)
@@ -551,12 +572,14 @@ export default function App() {
         console.warn('Profile provision failed', e);
       }
 
-      // Update local state
+      // Update local state — enforce admin email check
+      const emailLower = (googleUser.email || '').toLowerCase().trim();
+      const effectiveRole: UserRole = ADMIN_EMAILS.includes(emailLower) ? 'admin' : role;
       const user: User = {
         id: googleUser.id,
         name: googleUser.user_metadata?.name || googleUser.email?.split('@')[0] || 'User',
         email: googleUser.email || '',
-        role,
+        role: effectiveRole,
       };
 
       // Check if phone number is missing from metadata
@@ -569,7 +592,7 @@ export default function App() {
       } else {
         // Phone exists, proceed directly to dashboard
         setCurrentUser(user);
-        setCurrentPage(role === 'artist' ? 'artist-dashboard' : 'venue-dashboard');
+        setCurrentPage(defaultDashboardForRole(effectiveRole));
         setShowGoogleRoleSelection(false);
         setGoogleUser(null);
       }
@@ -601,17 +624,19 @@ export default function App() {
         console.warn('Profile provision with phone failed', e);
       }
 
-      // Now proceed to dashboard
-      const role = googleUser.user_metadata?.role as UserRole;
+      // Now proceed to dashboard — enforce admin email check
+      const rawRole = googleUser.user_metadata?.role as UserRole;
+      const emailLower = (googleUser.email || '').toLowerCase().trim();
+      const effectiveRole: UserRole = ADMIN_EMAILS.includes(emailLower) ? 'admin' : rawRole;
       const user: User = {
         id: googleUser.id,
         name: googleUser.user_metadata?.name || googleUser.email?.split('@')[0] || 'User',
         email: googleUser.email || '',
-        role,
+        role: effectiveRole,
       };
 
       setCurrentUser(user);
-      setCurrentPage(role === 'artist' ? 'artist-dashboard' : 'venue-dashboard');
+      setCurrentPage(defaultDashboardForRole(effectiveRole));
       setShowGoogleRoleSelection(false);
       setGoogleUser(null);
       setPendingPhoneNumber(null);
@@ -627,17 +652,19 @@ export default function App() {
     try {
       setShowProfileCompletion(false);
       
-      // Proceed without phone number
-      const role = googleUser.user_metadata?.role as UserRole;
+      // Proceed without phone number — enforce admin email check
+      const rawRole = googleUser.user_metadata?.role as UserRole;
+      const emailLower = (googleUser.email || '').toLowerCase().trim();
+      const effectiveRole: UserRole = ADMIN_EMAILS.includes(emailLower) ? 'admin' : rawRole;
       const user: User = {
         id: googleUser.id,
         name: googleUser.user_metadata?.name || googleUser.email?.split('@')[0] || 'User',
         email: googleUser.email || '',
-        role,
+        role: effectiveRole,
       };
 
       setCurrentUser(user);
-      setCurrentPage(role === 'artist' ? 'artist-dashboard' : 'venue-dashboard');
+      setCurrentPage(defaultDashboardForRole(effectiveRole));
       setShowGoogleRoleSelection(false);
       setGoogleUser(null);
       setPendingPhoneNumber(null);

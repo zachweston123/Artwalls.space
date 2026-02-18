@@ -188,9 +188,19 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
 
       const currentRole = (data.user.user_metadata?.role as UserRole) || null;
 
+      // Admin emails — must match the list in App.tsx / worker/index.ts
+      const ADMIN_EMAILS = ['zweston8136@sdsu.edu'];
+      const emailLower = (data.user.email || '').toLowerCase().trim();
+      const isAdminEmail = ADMIN_EMAILS.includes(emailLower);
+
+      // Determine effective role: admin email overrides everything
+      const effectiveRole: UserRole = isAdminEmail
+        ? 'admin'
+        : (currentRole === 'admin' ? 'admin' : (selectedRole || currentRole || 'artist'));
+
       // If the user selected a role and it differs/missing, backfill metadata.
-      // BUT if the user is already an admin, do not overwrite their role with 'artist'/'venue'
-      if (currentRole !== 'admin' && selectedRole && selectedRole !== currentRole) {
+      // BUT never overwrite admin role, and skip for admin-email users.
+      if (!isAdminEmail && currentRole !== 'admin' && selectedRole && selectedRole !== currentRole) {
         await supabase.auth.updateUser({
           data: {
             role: selectedRole,
@@ -214,9 +224,9 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
         name:
           safeName ||
           (data.user.user_metadata?.name as string | undefined) ||
-          (currentRole === 'admin' ? 'Admin' : selectedRole === 'artist' ? 'Artist' : 'Venue'),
+          (effectiveRole === 'admin' ? 'Admin' : selectedRole === 'artist' ? 'Artist' : 'Venue'),
         email: data.user.email || email.trim(),
-        role: currentRole === 'admin' ? 'admin' : (selectedRole || currentRole),
+        role: effectiveRole,
       });
     } catch (err: any) {
       setErrorMessage(err?.message || 'Authentication failed.');
