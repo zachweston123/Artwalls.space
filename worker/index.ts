@@ -941,7 +941,24 @@ export default {
     if (url.pathname === '/api/admin/verify' && method === 'POST') {
       const guardResp = await requireAdmin(request);
       if (guardResp) return guardResp;
-      return json({ ok: true });
+
+      // Ensure the admin's user_metadata.role is set to 'admin' so the
+      // frontend SPA renders the admin layout (App.tsx checks this field).
+      const adminUser = (request as any).__adminUser;
+      if (adminUser && supabaseAdmin) {
+        const currentRole = adminUser.user_metadata?.role;
+        if (currentRole !== 'admin') {
+          try {
+            await supabaseAdmin.auth.admin.updateUserById(adminUser.id, {
+              user_metadata: { ...adminUser.user_metadata, role: 'admin' },
+            });
+          } catch (e) {
+            console.warn('[admin/verify] Failed to set admin role metadata:', e instanceof Error ? e.message : e);
+          }
+        }
+      }
+
+      return json({ ok: true, roleUpdated: true });
     }
 
     // ── Integration status endpoint (for admin Stripe checklist) ──────────
@@ -3370,6 +3387,260 @@ export default {
 
       if (insertErr) return json({ error: insertErr.message }, { status: 500 });
       return json({ ok: true, id: data?.id });
+    }
+
+    // ── Admin-only: sales & GMV ──
+    if (url.pathname === '/api/admin/sales' && method === 'GET') {
+      const guardResp = await requireAdmin(request);
+      if (guardResp) return guardResp;
+
+      try {
+        const search = url.searchParams.get('search') || '';
+        const statusParam = url.searchParams.get('status') || '';
+
+        let query = supabaseAdmin
+          .from('orders')
+          .select('*,artist:artists(id,name,email),venue:venues(id,name,email),artwork:artworks(id,title)')
+          .order('created_at', { ascending: false })
+          .limit(200);
+
+        if (statusParam) query = query.eq('status', statusParam);
+        if (search) query = query.ilike('buyer_email', `%${search}%`);
+
+        const { data: orders, error: ordErr } = await query;
+        if (ordErr) return json({ error: ordErr.message }, { status: 500 });
+
+        const rows = orders || [];
+        const summary = {
+          totalGmv: rows.reduce((s: number, o: any) => s + (o.amount_cents || 0), 0),
+          totalPlatformFees: rows.reduce((s: number, o: any) => s + (o.platform_fee_cents || 0), 0),
+          totalVenueFees: rows.reduce((s: number, o: any) => s + (o.venue_payout_cents || 0), 0),
+          totalArtistPayouts: rows.reduce((s: number, o: any) => s + (o.artist_payout_cents || 0), 0),
+          orderCount: rows.length,
+        };
+
+        return json({ orders: rows, summary, total: rows.length });
+      } catch (e) {
+        console.error('[admin/sales]', e instanceof Error ? e.message : e);
+        return json({ error: 'Failed to load sales' }, { status: 500 });
+      }
+    }
+
+    // ── Admin-only: referrals list ──
+    if (url.pathname === '/api/admin/referrals' && method === 'GET') {
+      const guardResp = await requireAdmin(request);
+      if (guardResp) return guardResp;
+
+      try {
+        const { data, error: refErr } = await supabaseAdmin
+          .from('venue_referrals')
+          .select('*,artist:artists!venue_referrals_artist_user_id_fkey(id,name,email),venue:venues(id,name,email)')
+          .order('created_at', { ascending: false })
+          .limit(200);
+        if (refErr) {
+          // Table may not exist — return empty
+          return json({ referrals: [] });
+        }
+        return json({ referrals: data || [] });
+      } catch {
+        return json({ referrals: [] });
+      }
+    }
+
+    // ── Admin-only: grant referral reward ──
+    if (url.pathname === '/api/admin/referrals/grant' && method === 'POST') {
+      const guardResp = await requireAdmin(request);
+      if (guardResp) return guardResp;
+
+      const payload = await request.json().catch(() => ({}));
+      const referralId = payload?.referralId;
+      if (!referralId) return json({ error: 'referralId required' }, { status: 400 });
+
+      try {
+        const { data: ref } = await supabaseAdmin
+          .from('venue_referrals')
+          .select('id,artist_user_id,status')
+          .eq('id', referralId)
+          .maybeSingle();
+        if (!ref) return json({ error: 'Referral not found' }, { status: 404 });
+        if (ref.status !== 'qualified') return json({ error: 'Referral is not qualified' }, { status: 400 });
+
+        const adminUser = (request as any).__adminUser;
+        const now = new Date().toISOString();
+
+        // Insert reward record
+        await supabaseAdmin.from('referral_rewards').insert({
+          referral_id: ref.id,
+          artist_user_id: ref.artist_user_id,
+          reward_type: 'pro_month',
+          granted_by_admin_id: adminUser?.id || null,
+        });
+
+        // Grant 30 days of pro
+        const proUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+        await supabaseAdmin.from('artists').update({ pro_until: proUntil, updated_at: now }).eq('id', ref.artist_user_id);
+
+        // Update referral status
+        await supabaseAdmin.from('venue_referrals').update({ status: 'reward_granted', updated_at: now }).eq('id', ref.id);
+
+        return json({ ok: true });
+      } catch (e) {
+        console.error('[admin/referrals/grant]', e instanceof Error ? e.message : e);
+        return json({ error: 'Failed to grant reward' }, { status: 500 });
+      }
+    }
+
+    // ── Admin-only: venue invites summary ──
+    if (url.pathname === '/api/admin/venue-invites/summary' && method === 'GET') {
+      const guardResp = await requireAdmin(request);
+      if (guardResp) return guardResp;
+
+      const rangeDays = Math.min(parseInt(url.searchParams.get('days') || '30', 10), 90);
+      const since = new Date(Date.now() - rangeDays * 24 * 60 * 60 * 1000).toISOString();
+
+      try {
+        const { data: invites } = await supabaseAdmin
+          .from('venue_invites')
+          .select('id,artist_id,status,created_at')
+          .gte('created_at', since)
+          .order('created_at', { ascending: true });
+
+        const all = invites || [];
+        const totals = {
+          created: all.length,
+          sent: all.filter((i: any) => i.status !== 'DRAFT').length,
+          accepted: all.filter((i: any) => i.status === 'ACCEPTED').length,
+        };
+
+        // Group by day
+        const dayMap = new Map<string, { created: number; sent: number; accepted: number }>();
+        for (const inv of all) {
+          const day = inv.created_at?.substring(0, 10) || 'unknown';
+          if (!dayMap.has(day)) dayMap.set(day, { created: 0, sent: 0, accepted: 0 });
+          const d = dayMap.get(day)!;
+          d.created++;
+          if ((inv as any).status !== 'DRAFT') d.sent++;
+          if ((inv as any).status === 'ACCEPTED') d.accepted++;
+        }
+        const byDay = Array.from(dayMap.entries()).map(([date, counts]) => ({ date, ...counts }));
+
+        // Top artists
+        const artistMap = new Map<string, { artistId: string; created: number; accepted: number }>();
+        for (const inv of all) {
+          const aid = (inv as any).artist_id || 'unknown';
+          if (!artistMap.has(aid)) artistMap.set(aid, { artistId: aid, created: 0, accepted: 0 });
+          const a = artistMap.get(aid)!;
+          a.created++;
+          if ((inv as any).status === 'ACCEPTED') a.accepted++;
+        }
+
+        // Resolve artist names
+        const artistIds = Array.from(artistMap.keys()).filter(id => id !== 'unknown');
+        let artistNames: Record<string, string> = {};
+        if (artistIds.length > 0) {
+          const { data: artists } = await supabaseAdmin
+            .from('artists')
+            .select('id,name')
+            .in('id', artistIds.slice(0, 50));
+          for (const a of (artists || [])) {
+            artistNames[a.id] = a.name || 'Artist';
+          }
+        }
+
+        const topArtists = Array.from(artistMap.values())
+          .sort((a, b) => b.created - a.created)
+          .slice(0, 10)
+          .map(a => ({
+            artistId: a.artistId,
+            artistName: artistNames[a.artistId] || 'Artist',
+            created: a.created,
+            accepted: a.accepted,
+            conversionRate: a.created > 0 ? Math.round((a.accepted / a.created) * 100) : 0,
+          }));
+
+        return json({ rangeDays, totals, byDay, topArtists });
+      } catch (e) {
+        console.error('[admin/venue-invites/summary]', e instanceof Error ? e.message : e);
+        return json({ rangeDays, totals: { created: 0, sent: 0, accepted: 0 }, byDay: [], topArtists: [] });
+      }
+    }
+
+    // ── Admin-only: promo codes ──
+    if (url.pathname === '/api/admin/promo-codes' && method === 'GET') {
+      const guardResp = await requireAdmin(request);
+      if (guardResp) return guardResp;
+
+      // Return empty until a promo_codes table is created
+      return json({ promoCodes: [] });
+    }
+
+    if (url.pathname.match(/^\/api\/admin\/promo-codes\/[^/]+\/deactivate$/) && method === 'POST') {
+      const guardResp = await requireAdmin(request);
+      if (guardResp) return guardResp;
+      return json({ ok: true });
+    }
+
+    // ── Admin-only: activity log ──
+    if (url.pathname === '/api/admin/activity-log' && method === 'GET') {
+      const guardResp = await requireAdmin(request);
+      if (guardResp) return guardResp;
+
+      // Return empty until an activity_log table is created
+      return json({ activity: [] });
+    }
+
+    // ── Admin-only: test SMS ──
+    if (url.pathname === '/api/admin/test-sms' && method === 'POST') {
+      const guardResp = await requireAdmin(request);
+      if (guardResp) return guardResp;
+      // Placeholder — requires Twilio or similar integration
+      return json({ ok: true, message: 'SMS integration not yet configured' });
+    }
+
+    // ── Admin-only: current displays (wallspaces with active art) ──
+    if (url.pathname === '/api/admin/current-displays' && method === 'GET') {
+      const guardResp = await requireAdmin(request);
+      if (guardResp) return guardResp;
+
+      try {
+        const { data, error: wsErr } = await supabaseAdmin
+          .from('wallspaces')
+          .select('*,venue:venues(id,name,city)')
+          .not('current_artwork_id', 'is', null)
+          .order('updated_at', { ascending: false })
+          .limit(200);
+        if (wsErr) return json({ displays: [] });
+        return json({ displays: data || [] });
+      } catch {
+        return json({ displays: [] });
+      }
+    }
+
+    // ── Admin-only: suspend / activate user ──
+    if (url.pathname.match(/^\/api\/admin\/users\/[^/]+\/(suspend|activate)$/) && method === 'POST') {
+      const guardResp = await requireAdmin(request);
+      if (guardResp) return guardResp;
+
+      const pathParts = url.pathname.split('/');
+      const userId = pathParts[pathParts.length - 2];
+      const action = pathParts[pathParts.length - 1]; // 'suspend' or 'activate'
+      if (!isUUID(userId)) return json({ error: 'Invalid user ID' }, { status: 400 });
+
+      const isSuspend = action === 'suspend';
+      const now = new Date().toISOString();
+
+      // Try updating both tables — one will match
+      await supabaseAdmin.from('artists').update({
+        subscription_status: isSuspend ? 'suspended' : 'active',
+        updated_at: now,
+      }).eq('id', userId);
+
+      await supabaseAdmin.from('venues').update({
+        suspended: isSuspend,
+        updated_at: now,
+      }).eq('id', userId);
+
+      return json({ ok: true, action, userId });
     }
 
     // GET /api/admin/support-tickets — list tickets (grouped from support_messages by email+page_source)

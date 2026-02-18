@@ -6,28 +6,16 @@ interface AdminAnnouncementsProps {
 }
 
 export function AdminAnnouncements({ onCreateAnnouncement }: AdminAnnouncementsProps) {
-  const [announcements, setAnnouncements] = useState([
-    {
-      id: '1',
-      title: 'New Protection Plan Available',
-      audience: 'Artists',
-      type: 'Banner',
-      status: 'Active',
-      startDate: '2024-01-15',
-      endDate: '2024-02-15',
-      createdBy: 'Admin User',
-    },
-    {
-      id: '2',
-      title: 'System Maintenance Scheduled',
-      audience: 'All',
-      type: 'Notification',
-      status: 'Scheduled',
-      startDate: '2024-02-01',
-      endDate: null,
-      createdBy: 'Tech Team',
-    },
-  ]);
+  const [announcements, setAnnouncements] = useState<Array<{
+    id: string;
+    title: string;
+    audience: string;
+    type: string;
+    status: string;
+    startDate: string;
+    endDate: string | null;
+    createdBy: string;
+  }>>([]);
   const [selected, setSelected] = useState<any | null>(null);
   const [mode, setMode] = useState<'view' | 'edit' | 'delete' | null>(null);
 

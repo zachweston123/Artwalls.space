@@ -191,12 +191,18 @@ export default function App() {
   // Route overrides are now handled after all hooks (see bottom of component)
   // to avoid React hooks ordering violations.
 
+  // Admin email(s) — must match the ADMIN_EMAILS list in worker/index.ts
+  const ADMIN_EMAILS = ['zweston8136@sdsu.edu'];
+
   const userFromSupabase = (supaUser: SupabaseUser | null | undefined): User | null => {
     if (!supaUser?.id) return null;
     const rawRole = (supaUser.user_metadata?.role as string | undefined | null);
+    // Check if the email matches a hardcoded admin — override role regardless of metadata.
+    const emailLower = (supaUser.email || '').toLowerCase().trim();
+    const isAdminEmail = ADMIN_EMAILS.includes(emailLower);
     // Default to 'artist' when role metadata is missing (e.g. Google OAuth sign-up).
     // Only 'venue' and 'admin' need to be explicitly set.
-    const role: UserRole = (rawRole === 'venue' || rawRole === 'admin') ? rawRole : 'artist';
+    const role: UserRole = isAdminEmail ? 'admin' : (rawRole === 'venue' || rawRole === 'admin') ? rawRole : 'artist';
     return {
       id: supaUser.id,
       name:
@@ -238,7 +244,7 @@ export default function App() {
           setCurrentPage(normalizePage(storedPage));
         } else {
           // Set to appropriate dashboard if no stored page
-          setCurrentPage(nextUser.role === 'artist' ? 'artist-dashboard' : 'venue-dashboard');
+          setCurrentPage(nextUser.role === 'admin' ? 'admin-dashboard' : nextUser.role === 'artist' ? 'artist-dashboard' : 'venue-dashboard');
         }
       } else {
         const pageFromPath = getPageFromPath(window.location.pathname);

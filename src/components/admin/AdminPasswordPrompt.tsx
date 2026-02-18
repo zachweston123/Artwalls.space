@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { apiPost } from '../../lib/api';
+import { supabase } from '../../lib/supabase';
 
 interface AdminPasswordPromptProps {
   onVerify: () => void;
@@ -30,6 +31,9 @@ export function AdminPasswordPrompt({ onVerify, onCancel }: AdminPasswordPromptP
           // Clear any legacy raw password storage
           localStorage.removeItem('adminPassword');
         } catch {}
+        // Refresh the Supabase session so the updated user_metadata.role='admin'
+        // propagates to the frontend.
+        try { await supabase.auth.refreshSession(); } catch {}
         setPassword('');
         setIsLoading(false);
         onVerify();
