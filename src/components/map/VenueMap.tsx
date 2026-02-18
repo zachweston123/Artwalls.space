@@ -1,41 +1,57 @@
 /**
  * VenueMap — Leaflet map displaying venue pins for a city.
  *
- * Uses Leaflet directly (not react-leaflet) for smaller bundle size.
- * Loads Leaflet CSS dynamically on first mount.
+ * Loads Leaflet JS + CSS from CDN on first mount (no npm dependency).
  * OpenStreetMap tiles — free, no API key needed.
  */
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { MapVenue } from '../../lib/venueMap';
-
-// Leaflet is a runtime dep — import types + module
-import L from 'leaflet';
 import './venue-map.css';
 
-// ── Ensure Leaflet CSS is loaded ────────────────────────────────────────────
+// ── CDN loader (idempotent) ─────────────────────────────────────────────────
 
-let cssLoaded = false;
+const LEAFLET_VERSION = '1.9.4';
+const CDN_BASE = `https://unpkg.com/leaflet@${LEAFLET_VERSION}/dist`;
 
-function ensureLeafletCSS() {
-  if (cssLoaded) return;
-  cssLoaded = true;
-  const id = 'leaflet-css';
-  if (document.getElementById(id)) return;
-  const link = document.createElement('link');
-  link.id = id;
-  link.rel = 'stylesheet';
-  link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-  link.crossOrigin = '';
-  document.head.appendChild(link);
+let loadPromise: Promise<typeof L> | null = null;
+
+function loadLeaflet(): Promise<typeof L> {
+  if (window.L) return Promise.resolve(window.L);
+  if (loadPromise) return loadPromise;
+
+  loadPromise = new Promise<typeof L>((resolve, reject) => {
+    // CSS
+    if (!document.getElementById('leaflet-css')) {
+      const link = document.createElement('link');
+      link.id = 'leaflet-css';
+      link.rel = 'stylesheet';
+      link.href = `${CDN_BASE}/leaflet.css`;
+      link.crossOrigin = '';
+      document.head.appendChild(link);
+    }
+
+    // JS
+    const script = document.createElement('script');
+    script.src = `${CDN_BASE}/leaflet.js`;
+    script.crossOrigin = '';
+    script.onload = () => {
+      if (window.L) resolve(window.L);
+      else reject(new Error('Leaflet loaded but window.L is undefined'));
+    };
+    script.onerror = () => reject(new Error('Failed to load Leaflet from CDN'));
+    document.head.appendChild(script);
+  });
+
+  return loadPromise;
 }
 
-// ── Custom marker icon (uses themed CSS variable color) ─────────────────────
+// ── Custom marker icon ──────────────────────────────────────────────────────
 
-function createVenueIcon(isSelected: boolean) {
+function createVenueIcon(leaflet: typeof L, isSelected: boolean) {
   const color = isSelected ? '#3B82F6' : '#6366F1'; // blue-500 / indigo-500
   const size = isSelected ? 36 : 28;
-  return L.divIcon({
+  return leaflet.divIcon({
     className: 'aw-venue-pin',
     html: `
       <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -77,36 +93,50 @@ export function VenueMap({
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
+  const leafletRef = useRef<typeof L | null>(null);
+  const [ready, setReady] = useState(false);
 
   // Stable callback ref
   const onVenueClickRef = useRef(onVenueClick);
   onVenueClickRef.current = onVenueClick;
 
-  // Initialize map
+  // Load Leaflet from CDN + initialize map
   useEffect(() => {
-    ensureLeafletCSS();
+    let cancelled = false;
 
-    if (!containerRef.current || mapRef.current) return;
+    loadLeaflet().then((leaflet) => {
+      if (cancelled || !containerRef.current || mapRef.current) return;
 
-    const map = L.map(containerRef.current, {
-      center: [centerLat, centerLng],
-      zoom,
-      zoomControl: true,
-      attributionControl: true,
-      scrollWheelZoom: true,
+      leafletRef.current = leaflet;
+
+      const map = leaflet.map(containerRef.current, {
+        center: [centerLat, centerLng],
+        zoom,
+        zoomControl: true,
+        attributionControl: true,
+        scrollWheelZoom: true,
+      });
+
+      leaflet.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
+      }).addTo(map);
+
+      mapRef.current = map;
+      setReady(true);
+    }).catch((err) => {
+      console.warn('[VenueMap] Failed to load Leaflet:', err);
     });
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
-    }).addTo(map);
-
-    mapRef.current = map;
-
     return () => {
-      map.remove();
-      mapRef.current = null;
+      cancelled = true;
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
       markersRef.current.clear();
+      leafletRef.current = null;
+      setReady(false);
     };
   }, []); // Only once
 
@@ -120,7 +150,8 @@ export function VenueMap({
   // Sync markers
   useEffect(() => {
     const map = mapRef.current;
-    if (!map) return;
+    const leaflet = leafletRef.current;
+    if (!map || !leaflet || !ready) return;
 
     // Remove old markers
     markersRef.current.forEach((m) => m.remove());
@@ -129,8 +160,8 @@ export function VenueMap({
     // Add new markers
     venues.forEach((v) => {
       const isSelected = v.id === selectedVenueId;
-      const icon = createVenueIcon(isSelected);
-      const marker = L.marker([v.lat, v.lng], { icon }).addTo(map);
+      const icon = createVenueIcon(leaflet, isSelected);
+      const marker = leaflet.marker([v.lat, v.lng], { icon }).addTo(map);
 
       // Tooltip
       marker.bindTooltip(v.name, {
@@ -148,16 +179,19 @@ export function VenueMap({
 
     // Fit bounds if we have venues
     if (venues.length > 1) {
-      const group = L.featureGroup(Array.from(markersRef.current.values()));
+      const group = leaflet.featureGroup(Array.from(markersRef.current.values()));
       map.fitBounds(group.getBounds().pad(0.15), { maxZoom: 14 });
     }
-  }, [venues, selectedVenueId]);
+  }, [venues, selectedVenueId, ready]);
 
   // Highlight selected marker
   useEffect(() => {
+    const leaflet = leafletRef.current;
+    if (!leaflet) return;
+
     markersRef.current.forEach((marker, id) => {
       const isSelected = id === selectedVenueId;
-      marker.setIcon(createVenueIcon(isSelected));
+      marker.setIcon(createVenueIcon(leaflet, isSelected));
       if (isSelected) marker.setZIndexOffset(1000);
       else marker.setZIndexOffset(0);
     });
