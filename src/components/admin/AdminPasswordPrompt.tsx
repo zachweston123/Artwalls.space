@@ -12,8 +12,6 @@ export function AdminPasswordPrompt({ onVerify, onCancel }: AdminPasswordPromptP
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [bootstrapAvailable, setBootstrapAvailable] = useState(false);
-  const [bootstrapSuccess, setBootstrapSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,36 +43,11 @@ export function AdminPasswordPrompt({ onVerify, onCancel }: AdminPasswordPromptP
       if (msg.includes('Unauthorized') || msg.includes('AUTH_REQUIRED')) {
         setError('Please log in first to access admin features.');
       } else if (msg.includes('Forbidden') || msg.includes('ADMIN_REQUIRED')) {
-        setError("Access denied\n\nYou don't have admin access. Contact the site owner to be added to the admin list.");
-        setBootstrapAvailable(true);
+        setError("Access denied — this account does not have admin privileges.");
       } else {
         setError('Verification failed. Please try again.');
       }
       setPassword('');
-      setIsLoading(false);
-    }
-  };
-
-  const handleBootstrap = async () => {
-    setError('');
-    setIsLoading(true);
-    try {
-      const response = await apiPost<{ ok: boolean; message?: string; email?: string }>('/api/admin/bootstrap', {});
-      if (response.ok) {
-        setBootstrapSuccess(true);
-        setError('');
-        setBootstrapAvailable(false);
-      } else {
-        setError('Bootstrap failed — an admin may already exist.');
-      }
-    } catch (err: any) {
-      const msg = err?.message || '';
-      if (msg.includes('403') || msg.includes('refused')) {
-        setError('An admin already exists. Ask them to add you.');
-      } else {
-        setError(msg || 'Bootstrap request failed.');
-      }
-    } finally {
       setIsLoading(false);
     }
   };
@@ -120,32 +93,9 @@ export function AdminPasswordPrompt({ onVerify, onCancel }: AdminPasswordPromptP
           </div>
 
           {error && (
-            <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-red-700 whitespace-pre-line">{error}</p>
-            </div>
-          )}
-
-          {bootstrapSuccess && (
-            <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-sm text-green-700 font-medium">✅ You are now an admin!</p>
-              <p className="text-xs text-green-600 mt-1">Log out and back in, then re-enter your admin password.</p>
-            </div>
-          )}
-
-          {bootstrapAvailable && !bootstrapSuccess && (
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg space-y-2">
-              <p className="text-xs text-blue-700">
-                <strong>First-time setup?</strong> If no admin has been configured yet, you can promote yourself:
-              </p>
-              <button
-                type="button"
-                onClick={handleBootstrap}
-                disabled={isLoading}
-                className="w-full px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50"
-              >
-                {isLoading ? 'Setting up…' : 'Make me the first admin'}
-              </button>
+            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+              <p className="text-sm text-red-700">{error}</p>
             </div>
           )}
 

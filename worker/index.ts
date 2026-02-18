@@ -390,44 +390,16 @@ export default {
 
     /**
      * Check admin status.
-     * Priority order:
-     *   1) admin_users table (DB-backed allowlist — source of truth)
-     *   2) Supabase auth user_metadata.role === 'admin'
-     *   3) artists.role === 'admin'
-     * Checks 2 & 3 are kept for backward compat until all admins are
-     * inserted into admin_users.
+     * Only the site owner (zweston8136@sdsu.edu) has admin access.
      */
+    const ADMIN_EMAILS: string[] = [
+      'zweston8136@sdsu.edu',
+    ];
+
     async function isAdminUser(user: any): Promise<boolean> {
       if (!user?.id) return false;
-      if (!supabaseAdmin) return false;
-
-      // 1) DB-backed allowlist (preferred — service role bypasses RLS)
-      try {
-        const { data } = await supabaseAdmin
-          .from('admin_users')
-          .select('user_id')
-          .eq('user_id', user.id)
-          .maybeSingle();
-        if (data) return true;
-      } catch {
-        // Table may not exist yet; fall through to legacy checks
-      }
-
-      // 2) Auth metadata
-      const metaRole = user?.user_metadata?.role;
-      if (metaRole === 'admin') return true;
-
-      // 3) Fallback: artists table
-      try {
-        const { data } = await supabaseAdmin
-          .from('artists')
-          .select('role')
-          .eq('id', user.id)
-          .maybeSingle();
-        return data?.role === 'admin';
-      } catch {
-        return false;
-      }
+      const email = (user.email || '').toLowerCase().trim();
+      return ADMIN_EMAILS.includes(email);
     }
 
     /**
@@ -678,76 +650,6 @@ export default {
       }
 
       return json({ ok: true, deduped: insertErr?.code === '23505' });
-    }
-
-    // ─── One-time admin bootstrap ───────────────────────────────────────────
-    // POST /api/admin/bootstrap
-    // Promotes the currently authenticated user to admin, but ONLY when:
-    //   • The admin_users table has ZERO rows (no admin exists yet)
-    //   • The caller is logged in with a valid Supabase JWT
-    // After the first admin is created this endpoint permanently refuses.
-    // Safe to leave deployed — it becomes a no-op once any admin exists.
-    if (url.pathname === '/api/admin/bootstrap' && method === 'POST') {
-      if (!supabaseAdmin) {
-        return json({ error: 'Supabase not configured' }, { status: 500 });
-      }
-      const user = await getSupabaseUserFromRequest(request);
-      if (!user) {
-        return json({ error: 'Unauthorized — sign in first' }, { status: 401 });
-      }
-
-      // Check if ANY admin exists
-      const { count, error: countErr } = await supabaseAdmin
-        .from('admin_users')
-        .select('user_id', { count: 'exact', head: true });
-
-      if (countErr) {
-        // Table probably doesn't exist yet — create it inline
-        const { error: createErr } = await supabaseAdmin.rpc('exec_sql', {
-          sql: `
-            CREATE TABLE IF NOT EXISTS public.admin_users (
-              user_id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-              created_at timestamptz NOT NULL DEFAULT now()
-            );
-            ALTER TABLE public.admin_users ENABLE ROW LEVEL SECURITY;
-          `,
-        }).maybeSingle();
-
-        // If the rpc doesn't exist either, try raw insert anyway
-      }
-
-      if (count && count > 0) {
-        return json({
-          error: 'Bootstrap refused — an admin already exists. Use the admin dashboard to add more admins.',
-        }, { status: 403 });
-      }
-
-      // Create admin_users table if it doesn't exist (belt + suspenders)
-      await supabaseAdmin.from('admin_users').select('user_id').limit(0).maybeSingle().catch(() => {});
-
-      // Insert the current user as the first admin
-      const { error: insertErr } = await supabaseAdmin
-        .from('admin_users')
-        .insert({ user_id: user.id })
-        .select()
-        .maybeSingle();
-
-      if (insertErr) {
-        return json({ error: `Failed to insert admin: ${insertErr.message}` }, { status: 500 });
-      }
-
-      // Also set auth metadata so the frontend recognises the admin role
-      const { error: metaErr } = await supabaseAdmin.auth.admin.updateUserById(user.id, {
-        user_metadata: { ...user.user_metadata, role: 'admin' },
-      });
-
-      return json({
-        ok: true,
-        message: 'You are now the first admin. Log out and back in to refresh your session.',
-        userId: user.id,
-        email: user.email,
-        metadataUpdated: !metaErr,
-      });
     }
 
     // Admin-only: wall productivity metrics (proxies the RPC)
