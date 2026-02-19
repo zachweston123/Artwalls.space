@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Search, MapPin, Filter, Frame, CheckCircle, Crown } from 'lucide-react';
+import { Search, MapPin, Filter, Frame, CheckCircle, Crown, Award } from 'lucide-react';
 import { LabelChip } from '../LabelChip';
 import { VENUE_HIGHLIGHTS } from '../../data/highlights';
 import { apiGet } from '../../lib/api';
 import { resolveArtistSubscription } from '../../lib/subscription';
 import { PageHeroHeader } from '../PageHeroHeader';
+import { FoundingVenueBadge } from '../venue/FoundingVenueBadge';
 
 interface FindVenuesProps {
   onViewVenue: (venueId: string) => void;
@@ -21,6 +22,7 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
   const [filters, setFilters] = useState({
     labels: [] as string[],
     acceptingArtists: false,
+    foundingOnly: false,
     neighborhood: '',
     venueType: '',
   });
@@ -122,6 +124,8 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
             wallSpaces: (v as any).wallSpaces || 0,
             availableSpaces: (v as any).availableSpaces || 0,
             verified: (v as any).verified === true,
+            isFounding: (v as any).isFounding === true,
+            featuredUntil: (v as any).featuredUntil || null,
           })));
         }
       } catch (err) {
@@ -148,6 +152,7 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
     setFilters({
       labels: [],
       acceptingArtists: false,
+      foundingOnly: false,
       neighborhood: '',
       venueType: '',
     });
@@ -157,6 +162,7 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
   const hasActiveFilters =
     filters.labels.length > 0 ||
     filters.acceptingArtists ||
+    filters.foundingOnly ||
     filters.neighborhood ||
     filters.venueType ||
     searchQuery;
@@ -175,12 +181,20 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
     if (filters.acceptingArtists && venue.availableSpaces === 0) {
       return false;
     }
+    if (filters.foundingOnly && !venue.isFounding) {
+      return false;
+    }
     if (filters.labels.length > 0) {
       const hasMatchingLabel = filters.labels.some(label => venue.labels.includes(label));
       if (!hasMatchingLabel) return false;
     }
     return true;
   }).sort((a, b) => {
+    // Founding/featured venues always appear first
+    const aFounding = a.isFounding ? 1 : 0;
+    const bFounding = b.isFounding ? 1 : 0;
+    if (aFounding !== bFounding) return bFounding - aFounding;
+
     // Tier-based priority sorting: Higher tiers get better visibility
     const priorityOrder: Record<SubscriptionTier, number> = {
       'free': 0,
@@ -243,7 +257,7 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
             <span className="text-sm font-medium leading-none">Filters</span>
             {hasActiveFilters && (
               <span className="ml-1 px-2 py-0.5 bg-[var(--blue)] text-[var(--on-blue)] text-xs rounded-full">
-                {(filters.labels.length + (filters.acceptingArtists ? 1 : 0) + (filters.neighborhood ? 1 : 0) + (filters.venueType ? 1 : 0))}
+                {(filters.labels.length + (filters.acceptingArtists ? 1 : 0) + (filters.foundingOnly ? 1 : 0) + (filters.neighborhood ? 1 : 0) + (filters.venueType ? 1 : 0))}
               </span>
             )}
           </button>
@@ -331,6 +345,29 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
               </button>
             </div>
 
+            {/* Founding Venues Toggle */}
+            <div className="flex items-center justify-between p-3 bg-amber-500/10 rounded-lg border border-amber-500/20">
+              <label className="text-sm text-[var(--text)] flex items-center gap-2">
+                <Award className="w-4 h-4 text-amber-500" />
+                Show Founding Venues only
+              </label>
+              <button
+                type="button"
+                onClick={() => setFilters({ ...filters, foundingOnly: !filters.foundingOnly })}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  filters.foundingOnly
+                    ? 'bg-amber-500'
+                    : 'bg-[var(--border)]'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-[var(--surface-1)] transition-transform ${
+                    filters.foundingOnly ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+
             {/* Clear Filters */}
             {hasActiveFilters && (
               <button
@@ -386,6 +423,9 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
                       </h3>
                       {venue.verified && (
                         <CheckCircle className="w-4 h-4 text-[var(--green)] flex-shrink-0" />
+                      )}
+                      {venue.isFounding && (
+                        <FoundingVenueBadge variant="compact" featuredUntil={venue.featuredUntil} />
                       )}
                       {(['growth', 'pro'] as SubscriptionTier[]).includes(userTier) && venue.verified && (
                         <div className="flex items-center gap-1 px-2 py-0.5 bg-[var(--accent)] bg-opacity-20 rounded-full">

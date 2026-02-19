@@ -1331,7 +1331,7 @@ export default {
 
       let query = supabaseAdmin
         .from('venues')
-        .select('id,name,type,labels,default_venue_fee_bps,city,bio,cover_photo_url,verified,created_at')
+        .select('id,name,type,labels,default_venue_fee_bps,city,bio,cover_photo_url,verified,created_at,is_founding,founding_end,featured_until')
         .eq('suspended', false)
         .order('name', { ascending: true })
         .limit(50);
@@ -1362,6 +1362,7 @@ export default {
         }
       }
 
+      const now = new Date().toISOString();
       const venues = (data || []).map(v => ({
         id: v.id,
         name: v.name,
@@ -1375,7 +1376,18 @@ export default {
         createdAt: (v as any).created_at || null,
         wallSpaces: wallspaceCounts[v.id]?.total || 0,
         availableSpaces: wallspaceCounts[v.id]?.available || 0,
+        isFounding: (v as any).is_founding === true && (v as any).founding_end && (v as any).founding_end > now,
+        featuredUntil: (v as any).featured_until || null,
       }));
+
+      // Sort: featured/founding venues appear first, then by name
+      venues.sort((a, b) => {
+        const aFeatured = a.featuredUntil && a.featuredUntil > now ? 1 : 0;
+        const bFeatured = b.featuredUntil && b.featuredUntil > now ? 1 : 0;
+        if (aFeatured !== bFeatured) return bFeatured - aFeatured;
+        return (a.name || '').localeCompare(b.name || '');
+      });
+
       return json({ venues });
     }
 
@@ -3974,6 +3986,183 @@ export default {
         });
       }
       return json({ ok: true, status: newStatus });
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // Founding Venues — install kit request
+    // ══════════════════════════════════════════════════════════════════════════
+    if (url.pathname === '/api/venues/request-install-kit' && method === 'POST') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const user = await getSupabaseUserFromRequest(request);
+      const authErr = requireAuthOrFail(request, user);
+      if (authErr) return authErr;
+      if (user!.user_metadata?.role !== 'venue') {
+        return json({ error: 'Only venues can request install kits' }, { status: 403 });
+      }
+      const venueId = user!.id;
+      const payload = await request.json().catch(() => ({})) as Record<string, unknown>;
+      const note = String(payload?.note || '').trim();
+
+      // Prevent duplicate requests
+      const { data: existing } = await supabaseAdmin
+        .from('venue_requests')
+        .select('id')
+        .eq('venue_id', venueId)
+        .eq('type', 'install_kit')
+        .limit(1);
+      if (existing && existing.length > 0) {
+        return json({ ok: true, alreadyRequested: true });
+      }
+
+      const { error: insertErr } = await supabaseAdmin
+        .from('venue_requests')
+        .insert({ venue_id: venueId, type: 'install_kit', shipping_or_dropoff_note: note || null });
+      if (insertErr) return json({ error: insertErr.message }, { status: 500 });
+
+      // Mark the kit as requested on the venue row
+      await supabaseAdmin.from('venues').update({ founder_kit_requested_at: new Date().toISOString() }).eq('id', venueId);
+
+      return json({ ok: true });
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // Founding Venues — performance snapshot (scans by day)
+    // ══════════════════════════════════════════════════════════════════════════
+    if (url.pathname === '/api/venues/me/performance' && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const user = await getSupabaseUserFromRequest(request);
+      const authErr = requireAuthOrFail(request, user);
+      if (authErr) return authErr;
+      if (user!.user_metadata?.role !== 'venue') {
+        return json({ error: 'Venue-only endpoint' }, { status: 403 });
+      }
+      const venueId = user!.id;
+      const range = url.searchParams.get('range') === '30d' ? 30 : 7;
+      const since = new Date(Date.now() - range * 24 * 60 * 60 * 1000).toISOString();
+
+      const { data: events } = await supabaseAdmin
+        .from('events')
+        .select('event_type,artwork_id,created_at')
+        .eq('venue_id', venueId)
+        .gte('created_at', since)
+        .order('created_at', { ascending: true })
+        .limit(10000);
+
+      const rows = events || [];
+      let totalScans = 0, totalViews = 0, totalCheckouts = 0, totalPurchases = 0;
+      const byDay: Record<string, number> = {};
+      const byArtwork: Record<string, number> = {};
+
+      for (const e of rows) {
+        const day = e.created_at.slice(0, 10);
+        if (e.event_type === 'qr_scan') {
+          totalScans++;
+          byDay[day] = (byDay[day] || 0) + 1;
+          byArtwork[e.artwork_id || 'unknown'] = (byArtwork[e.artwork_id || 'unknown'] || 0) + 1;
+        } else if (e.event_type === 'view_artwork') {
+          totalViews++;
+        } else if (e.event_type === 'start_checkout') {
+          totalCheckouts++;
+        } else if (e.event_type === 'purchase') {
+          totalPurchases++;
+        }
+      }
+
+      // Fill in missing days
+      const scansByDay: { date: string; count: number }[] = [];
+      for (let i = range - 1; i >= 0; i--) {
+        const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+        const key = d.toISOString().slice(0, 10);
+        scansByDay.push({ date: key, count: byDay[key] || 0 });
+      }
+
+      // Fetch artwork titles for top artworks
+      const topIds = Object.entries(byArtwork).sort((a, b) => b[1] - a[1]).slice(0, 5);
+      let artworkTitles: Record<string, string> = {};
+      if (topIds.length > 0) {
+        const { data: artworks } = await supabaseAdmin
+          .from('artworks')
+          .select('id,title')
+          .in('id', topIds.map(t => t[0]));
+        if (artworks) {
+          for (const a of artworks) artworkTitles[a.id] = a.title || '';
+        }
+      }
+
+      const topArtworks = topIds.map(([id, scans]) => ({
+        artworkId: id,
+        title: artworkTitles[id] || id,
+        scans,
+      }));
+
+      return json({ totalScans, totalViews, totalCheckouts, totalPurchases, scansByDay, topArtworks });
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // Founding Venues — monthly commission statement
+    // ══════════════════════════════════════════════════════════════════════════
+    if (url.pathname === '/api/venues/me/statement' && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const user = await getSupabaseUserFromRequest(request);
+      const authErr = requireAuthOrFail(request, user);
+      if (authErr) return authErr;
+      if (user!.user_metadata?.role !== 'venue') {
+        return json({ error: 'Venue-only endpoint' }, { status: 403 });
+      }
+      const venueId = user!.id;
+      const monthParam = url.searchParams.get('month') || '';
+      const match = monthParam.match(/^(\d{4})-(\d{2})$/);
+      if (!match) return json({ error: 'month param must be YYYY-MM' }, { status: 400 });
+
+      const year = Number(match[1]);
+      const mo = Number(match[2]);
+      const startDate = new Date(year, mo - 1, 1).toISOString();
+      const endDate = new Date(year, mo, 1).toISOString();
+
+      const { data: orders } = await supabaseAdmin
+        .from('orders')
+        .select('id,created_at,amount_total,venue_commission,artwork_id')
+        .eq('venue_id', venueId)
+        .gte('created_at', startDate)
+        .lt('created_at', endDate)
+        .order('created_at', { ascending: false });
+
+      const rows = orders || [];
+
+      // Fetch artwork titles
+      const artworkIds = [...new Set(rows.map(o => o.artwork_id).filter(Boolean))];
+      let titles: Record<string, string> = {};
+      if (artworkIds.length > 0) {
+        const { data: artworks } = await supabaseAdmin
+          .from('artworks')
+          .select('id,title')
+          .in('id', artworkIds);
+        if (artworks) for (const a of artworks) titles[a.id] = a.title || '';
+      }
+
+      let grossSales = 0;
+      let totalCommission = 0;
+      const orderList = rows.map(o => {
+        const amount = (o.amount_total || 0) / 100; // cents to dollars
+        const commission = (o.venue_commission || 0) / 100;
+        grossSales += amount;
+        totalCommission += commission;
+        return {
+          orderId: o.id,
+          date: o.created_at,
+          artworkTitle: titles[o.artwork_id] || '',
+          amount,
+          commission,
+        };
+      });
+
+      return json({
+        month: monthParam,
+        grossSales,
+        totalCommission,
+        orderCount: rows.length,
+        orders: orderList,
+      });
     }
 
     // ── Fallback: 404 for unmatched API routes ──

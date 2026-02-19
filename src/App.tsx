@@ -54,6 +54,8 @@ const VenueCalls = lazy(() => import('./components/venue/VenueCalls').then(m => 
 const VenueCallDetail = lazy(() => import('./components/venue/VenueCallDetail').then(m => ({ default: m.VenueCallDetail })));
 const VenueAnalytics = lazy(() => import('./components/venue/VenueAnalytics').then(m => ({ default: m.VenueAnalytics })));
 const VenueWallStats = lazy(() => import('./components/venue/VenueWallStats').then(m => ({ default: m.VenueWallStats })));
+const VenuePerformance = lazy(() => import('./components/venue/VenuePerformance').then(m => ({ default: m.VenuePerformance })));
+const VenueStatement = lazy(() => import('./components/venue/VenueStatement').then(m => ({ default: m.VenueStatement })));
 
 // Shared
 const ApplicationsAndInvitations = lazy(() => import('./components/shared/ApplicationsAndInvitations').then(m => ({ default: m.ApplicationsAndInvitations })));
@@ -1253,6 +1255,8 @@ export default function App() {
             {currentPage === 'venue-sales' && <VenueSales user={currentUser} onNavigate={handleNavigate} />}
             {currentPage === 'venue-analytics' && <VenueAnalytics user={currentUser} />}
             {currentPage === 'venue-wall-stats' && <VenueWallStats user={currentUser} />}
+            {currentPage === 'venue-performance' && <VenuePerformance user={currentUser} onNavigate={handleNavigate} />}
+            {currentPage === 'venue-statement' && <VenueStatement user={currentUser} onNavigate={handleNavigate} />}
             {currentPage === 'venue-settings' && <VenueSettingsWithEmptyState />}
             {currentPage === 'venue-profile' && <VenueProfile onNavigate={handleNavigate} />}
             {currentPage === 'venue-password-security' && <VenuePasswordSecurity onBack={() => handleNavigate('venue-profile')} />}

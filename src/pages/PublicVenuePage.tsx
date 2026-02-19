@@ -9,6 +9,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { Loader2, Store } from 'lucide-react';
 import { VenueProfileView } from '../components/venue/VenueProfileView';
 import { VenueProfilePublicView, type VenuePublicData } from '../components/shared/VenueProfilePublicView';
+import { FoundingVenueBadge } from '../components/venue/FoundingVenueBadge';
 import type { User } from '../App';
 import { supabase } from '../lib/supabase';
 
@@ -23,6 +24,7 @@ export function PublicVenuePage({ venueId }: PublicVenuePageProps) {
   );
 
   const [venue, setVenue] = useState<VenuePublicData | null>(null);
+  const [foundingInfo, setFoundingInfo] = useState<{ isFounding: boolean; featuredUntil: string | null }>({ isFounding: false, featuredUntil: null });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -32,7 +34,7 @@ export function PublicVenuePage({ venueId }: PublicVenuePageProps) {
         setLoading(true);
         const { data, error } = await supabase
           .from('venues')
-          .select('id,name,cover_photo_url,address,city,bio,labels,verified,founded_year,type,website,instagram_handle')
+          .select('id,name,cover_photo_url,address,city,bio,labels,verified,founded_year,type,website,instagram_handle,is_founding,founding_end,featured_until')
           .eq('id', venueId)
           .single();
 
@@ -50,6 +52,11 @@ export function PublicVenuePage({ venueId }: PublicVenuePageProps) {
             foundedYear: data.founded_year || null,
             websiteUrl: data.website || null,
             instagramHandle: data.instagram_handle || null,
+          });
+          const now = new Date().toISOString();
+          setFoundingInfo({
+            isFounding: data.is_founding === true && data.founding_end && data.founding_end > now,
+            featuredUntil: data.featured_until || null,
           });
         }
       } catch (err) {
@@ -82,6 +89,13 @@ export function PublicVenuePage({ venueId }: PublicVenuePageProps) {
           </div>
         ) : venue ? (
           <>
+            {/* Founding Venue badge */}
+            {foundingInfo.isFounding && (
+              <div className="mb-4">
+                <FoundingVenueBadge variant="full" featuredUntil={foundingInfo.featuredUntil} />
+              </div>
+            )}
+
             {/* Shared public view header card */}
             <VenueProfilePublicView venue={venue} variant="full" />
 

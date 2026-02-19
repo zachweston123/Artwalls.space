@@ -9,6 +9,8 @@ import { EmptyState } from '../EmptyState';
 import { VenueSetupChecklist } from '../VenueSetupChecklist';
 import { VenueNextActions } from './VenueNextActions';
 import { StatCard } from '../ui/stat-card';
+import { FoundingVenueCard } from './FoundingVenueCard';
+import { VenueProfileCompleteness } from './VenueProfileCompleteness';
 
 interface VenueDashboardProps {
   onNavigate: (page: string) => void;
@@ -141,6 +143,20 @@ export function VenueDashboard({ onNavigate, user, hasAcceptedAgreement }: Venue
       {user && (
         <div className="mb-6">
           <VenuePayoutsCard user={user} />
+        </div>
+      )}
+
+      {/* Founding Venue Program */}
+      {user && (
+        <div className="mb-6">
+          <FoundingVenueCard userId={user.id} onNavigate={onNavigate} />
+        </div>
+      )}
+
+      {/* Profile Completeness */}
+      {user && (
+        <div className="mb-6">
+          <VenueProfileCompleteness userId={user.id} onNavigate={onNavigate} />
         </div>
       )}
 
