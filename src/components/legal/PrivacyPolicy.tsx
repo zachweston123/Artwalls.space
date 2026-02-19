@@ -1,4 +1,4 @@
-import { ArrowLeft } from 'lucide-react';
+import { PageHeroHeader } from '../PageHeroHeader';
 
 interface PrivacyPolicyProps {
   onNavigate: (page: string) => void;
@@ -7,14 +7,11 @@ interface PrivacyPolicyProps {
 export function PrivacyPolicy({ onNavigate }: PrivacyPolicyProps) {
   return (
     <div className="bg-[var(--bg)] text-[var(--text)]">
-      {/* Back */}
-      <button
-        onClick={() => onNavigate('policies')}
-        className="flex items-center gap-2 text-[var(--text-muted)] hover:text-[var(--text)] mb-6 transition-colors"
-      >
-        <ArrowLeft className="w-5 h-5" />
-        <span>Back to Policies</span>
-      </button>
+      <PageHeroHeader
+        title="Privacy Policy"
+        subtitle="How Artwalls collects, uses, and protects your information"
+        onBack={() => onNavigate('policies')}
+      />
 
       <div className="bg-[var(--surface-1)] rounded-xl border border-[var(--border)] p-6 sm:p-8">
         <div className="mb-6">

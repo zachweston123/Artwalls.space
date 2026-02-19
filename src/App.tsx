@@ -162,12 +162,18 @@ export default function App() {
   const ARTIST_ONBOARDING_SNOOZE_KEY = 'artistOnboardingSkipUntil';
 
   const marketingPages = new Set(['why-artwalls-artist', 'why-artwalls-venue', 'venues']);
+  const legalPages = new Set(['privacy-policy', 'terms-of-service', 'policies', 'artist-agreement', 'venue-agreement']);
 
   const getPageFromPath = (path: string) => {
     const normalized = path.toLowerCase();
     if (normalized === '/why-artwalls' || normalized === '/why-artwalls/artists') return 'why-artwalls-artist';
     if (normalized === '/venues' || normalized === '/venue/login' || normalized === '/why-artwalls/venues') return 'venues';
     if (normalized === '/onboarding/artist') return 'artist-onboarding';
+    if (normalized === '/privacy-policy') return 'privacy-policy';
+    if (normalized === '/terms-of-service') return 'terms-of-service';
+    if (normalized === '/policies') return 'policies';
+    if (normalized === '/artist-agreement') return 'artist-agreement';
+    if (normalized === '/venue-agreement') return 'venue-agreement';
     return null;
   };
 
@@ -175,6 +181,11 @@ export default function App() {
     if (page === 'why-artwalls-artist') return '/why-artwalls';
     if (page === 'why-artwalls-venue' || page === 'venues') return '/venues';
     if (page === 'artist-onboarding') return '/onboarding/artist';
+    if (page === 'privacy-policy') return '/privacy-policy';
+    if (page === 'terms-of-service') return '/terms-of-service';
+    if (page === 'policies') return '/policies';
+    if (page === 'artist-agreement') return '/artist-agreement';
+    if (page === 'venue-agreement') return '/venue-agreement';
     return null;
   };
 
@@ -891,6 +902,7 @@ export default function App() {
 
   if (!currentUser) {
     const isMarketingPage = marketingPages.has(currentPage);
+    const isLegalPage = legalPages.has(currentPage);
 
     if (isMarketingPage) {
       const showArtistsPage = currentPage === 'why-artwalls-artist';
@@ -911,6 +923,31 @@ export default function App() {
             {showVenuesPage && (
               <VenuesLandingPage onNavigate={handleNavigate} onLogin={handleLogin} viewerRole={null} />
             )}
+            </Suspense>
+          </main>
+          <Footer onNavigate={handleNavigate} />
+        </div>
+      );
+    }
+
+    // Legal pages — accessible without authentication (required for Google OAuth consent)
+    if (isLegalPage) {
+      return (
+        <div className="min-h-screen flex flex-col">
+          <Navigation
+            user={null}
+            onNavigate={handleNavigate}
+            onLogout={() => {}}
+            currentPage={currentPage}
+          />
+
+          <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 py-8 w-full">
+            <Suspense fallback={<PageLoader />}>
+              {currentPage === 'policies' && <PoliciesLanding onNavigate={handleNavigate} />}
+              {currentPage === 'privacy-policy' && <PrivacyPolicy onNavigate={handleNavigate} />}
+              {currentPage === 'terms-of-service' && <TermsOfService onNavigate={handleNavigate} />}
+              {currentPage === 'artist-agreement' && <ArtistAgreement onNavigate={handleNavigate} />}
+              {currentPage === 'venue-agreement' && <VenueAgreement onNavigate={handleNavigate} />}
             </Suspense>
           </main>
           <Footer onNavigate={handleNavigate} />
