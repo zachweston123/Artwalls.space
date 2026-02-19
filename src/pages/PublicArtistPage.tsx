@@ -3,6 +3,7 @@ import { MapPin, ExternalLink, Instagram, ArrowLeft, Loader2 } from 'lucide-reac
 import { apiGet } from '../lib/api';
 import { supabase } from '../lib/supabase';
 import { getErrorMessage } from '../lib/errors';
+import { FoundingArtistBadge } from '../components/artist/FoundingArtistBadge';
 
 type ArtworkCardData = {
   id: string;
@@ -27,6 +28,7 @@ interface ArtistData {
   cityPrimary?: string | null;
   citySecondary?: string | null;
   artTypes?: string[] | null;
+  isFoundingArtist?: boolean;
 }
 
 interface DebugInfo {
@@ -136,7 +138,7 @@ export function PublicArtistPage({ slugOrId, uid: uidProp, viewMode: viewProp, o
       // ── Attempt 2: Direct Supabase query (fallback) ──
       if (!artistRow) {
         debug.attempts.push('supabase-direct');
-        const selectCols = 'id,slug,name,bio,profile_photo_url,portfolio_url,website_url,instagram_handle,city_primary,city_secondary,art_types,is_public';
+        const selectCols = 'id,slug,name,bio,profile_photo_url,portfolio_url,website_url,instagram_handle,city_primary,city_secondary,art_types,is_public,is_founding_artist';
 
         // 2a: Try by id if UUID
         if (isUuid) {
@@ -237,6 +239,7 @@ export function PublicArtistPage({ slugOrId, uid: uidProp, viewMode: viewProp, o
         cityPrimary: artistRow.cityPrimary ?? artistRow.city_primary,
         citySecondary: artistRow.citySecondary ?? artistRow.city_secondary,
         artTypes: artistRow.artTypes ?? artistRow.art_types ?? [],
+        isFoundingArtist: !!(artistRow.isFoundingArtist ?? artistRow.is_founding_artist),
       };
       setArtist(artistData);
 
@@ -350,6 +353,7 @@ export function PublicArtistPage({ slugOrId, uid: uidProp, viewMode: viewProp, o
               </div>
               <div className="flex-1">
                 <h1 className="text-2xl sm:text-3xl font-semibold text-[var(--text)] mb-1">{artist.name}</h1>
+                {artist.isFoundingArtist && <FoundingArtistBadge variant="compact" className="mb-2" />}
                 {artist.slug && <p className="text-sm text-[var(--text-muted)] mb-3">@{artist.slug}</p>}
                 
                 {cityLine && (

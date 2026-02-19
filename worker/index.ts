@@ -54,6 +54,10 @@ type Env = {
   // Rate limiting
   RATE_LIMIT_ENABLED?: string;
   RATE_LIMIT_KV?: any;   // KV namespace binding (optional — falls back to in-memory)
+  // Founding Artist
+  STRIPE_FOUNDING_ARTIST_COUPON_ID?: string;
+  FOUNDING_ARTIST_MAX_REDEMPTIONS?: string;
+  FOUNDING_ARTIST_CUTOFF?: string;
 };
 
 /**
@@ -1398,7 +1402,7 @@ export default {
       
       let query = supabaseAdmin
         .from('artists')
-        .select('id,slug,name,email,city_primary,city_secondary,profile_photo_url,is_live,is_public,bio,art_types')
+        .select('id,slug,name,email,city_primary,city_secondary,profile_photo_url,is_live,is_public,bio,art_types,is_founding_artist')
         .order('name', { ascending: true })
         .limit(50);
 
@@ -1442,6 +1446,7 @@ export default {
         bio: (a as any).bio || '',
         artTypes: Array.isArray((a as any).art_types) ? (a as any).art_types : [],
         portfolioCount: artworkCounts[a.id] || 0,
+        isFoundingArtist: !!(a as any).is_founding_artist,
       }));
       return json({ artists });
     }
@@ -1561,6 +1566,81 @@ export default {
       return json({ cards: { scansWeek, scansMonth, conversion }, perArtwork });
     }
 
+    // ── Founding Artist: eligibility status ─────────────────────────
+
+    if (url.pathname === '/api/founding-artist/status' && method === 'GET') {
+      const user = await getSupabaseUserFromRequest(request);
+      if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+
+      // Fetch artist row
+      const { data: artist } = await supabaseAdmin
+        .from('artists')
+        .select('founding_offer_eligible,founding_offer_redeemed_at,founding_discount_ends_at,is_founding_artist,had_paid_subscription,subscription_status,subscription_tier')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      // Fetch global settings
+      const { data: settingsRows } = await supabaseAdmin
+        .from('app_settings')
+        .select('key,value')
+        .in('key', [
+          'founding_artist_offer_enabled',
+          'founding_artist_offer_max_redemptions',
+          'founding_artist_offer_cutoff',
+        ]);
+
+      const settings: Record<string, any> = {};
+      for (const row of settingsRows || []) settings[row.key] = row.value;
+
+      const offerEnabled  = settings.founding_artist_offer_enabled === true || settings.founding_artist_offer_enabled === 'true';
+      const maxRedemptions = Number(env.FOUNDING_ARTIST_MAX_REDEMPTIONS || settings.founding_artist_offer_max_redemptions || 50);
+      const cutoff = String(env.FOUNDING_ARTIST_CUTOFF || settings.founding_artist_offer_cutoff || '2026-12-31T23:59:59Z').replace(/^"|"$/g, '');
+
+      // Count current redemptions
+      const { count: redemptionCount } = await supabaseAdmin
+        .from('artists')
+        .select('id', { count: 'exact', head: true })
+        .eq('is_founding_artist', true);
+
+      const slotsRemaining = Math.max(0, maxRedemptions - (redemptionCount ?? 0));
+      const now = new Date();
+      const cutoffDate = new Date(cutoff);
+
+      // Already redeemed?
+      if (artist?.is_founding_artist || artist?.founding_offer_redeemed_at) {
+        return json({
+          eligible: false,
+          redeemed: true,
+          discountEndsAt: artist.founding_discount_ends_at,
+          slotsRemaining,
+          cutoff,
+          reason: null,
+        });
+      }
+
+      // Determine eligibility
+      let eligible = true;
+      let reason: string | null = null;
+
+      if (!offerEnabled) { eligible = false; reason = 'offer_disabled'; }
+      else if (now > cutoffDate) { eligible = false; reason = 'expired'; }
+      else if (slotsRemaining <= 0) { eligible = false; reason = 'slots_full'; }
+      else if (artist?.had_paid_subscription) { eligible = false; reason = 'already_paid_before'; }
+      else if (artist?.subscription_status === 'active' && artist?.subscription_tier && artist.subscription_tier !== 'free') {
+        eligible = false; reason = 'already_paid_before';
+      }
+
+      return json({
+        eligible,
+        redeemed: false,
+        discountEndsAt: null,
+        slotsRemaining,
+        cutoff,
+        reason,
+      });
+    }
+
     // ── Stripe Routes ──────────────────────────────────────────────
 
     // Stripe webhook – verify signature with Web Crypto, then handle event
@@ -1621,6 +1701,37 @@ export default {
                 console.error('[webhook] checkout.session.completed upsert failed', result.status);
                 return json({ error: 'DB update failed' }, { status: 500 });
               }
+
+              // ── Founding Artist redemption finalization ──
+              const isFoundingSub = session?.metadata?.foundingArtist === 'true';
+              if (isFoundingSub && supabaseAdmin) {
+                const nowIso = new Date().toISOString();
+                const discountEnds = new Date(Date.now() + 365.25 * 24 * 60 * 60 * 1000).toISOString(); // +12 months
+                const couponId = env.STRIPE_FOUNDING_ARTIST_COUPON_ID || 'founding_artist_50';
+                const { error: fErr } = await supabaseAdmin
+                  .from('artists')
+                  .update({
+                    founding_offer_redeemed_at: nowIso,
+                    founding_discount_ends_at: discountEnds,
+                    founding_coupon_id: couponId,
+                    is_founding_artist: true,
+                    had_paid_subscription: true,
+                    updated_at: nowIso,
+                  })
+                  .eq('id', artistId);
+                if (fErr) {
+                  console.error('[webhook] Founding artist update failed:', fErr.message);
+                } else {
+                  console.log('✅ Founding Artist redeemed', { artistId, discountEnds });
+                }
+              } else if (tier !== 'free' && supabaseAdmin) {
+                // Mark had_paid_subscription for non-founding paid subscriptions
+                await supabaseAdmin
+                  .from('artists')
+                  .update({ had_paid_subscription: true, updated_at: new Date().toISOString() })
+                  .eq('id', artistId);
+              }
+
               console.log('✅ Artist subscription activated', { artistId, tier, subscriptionId });
             }
           }
@@ -2260,7 +2371,7 @@ export default {
       if (!priceId) return json({ error: `Price ID not configured for ${tier}` }, { status: 500 });
 
       // Ensure Stripe customer
-      const { data: artist } = await supabaseAdmin.from('artists').select('stripe_customer_id,email,name,subscription_status,subscription_tier').eq('id', user.id).maybeSingle();
+      const { data: artist } = await supabaseAdmin.from('artists').select('stripe_customer_id,email,name,subscription_status,subscription_tier,founding_offer_redeemed_at,is_founding_artist,had_paid_subscription').eq('id', user.id).maybeSingle();
 
       // ── Block duplicate subscriptions ──
       // If the artist already has an active subscription, redirect to the
@@ -2308,20 +2419,55 @@ export default {
 
       const pagesOrigin = env.PAGES_ORIGIN || 'https://artwalls.space';
       try {
+        // ── Founding Artist coupon eligibility (server-side only) ──
+        let applyFoundingCoupon = false;
+        const foundingCouponId = env.STRIPE_FOUNDING_ARTIST_COUPON_ID;
+        if (foundingCouponId && !artist?.is_founding_artist && !artist?.founding_offer_redeemed_at && !artist?.had_paid_subscription) {
+          // Check global settings
+          const { data: settingsRows } = await supabaseAdmin
+            .from('app_settings')
+            .select('key,value')
+            .in('key', ['founding_artist_offer_enabled', 'founding_artist_offer_max_redemptions', 'founding_artist_offer_cutoff']);
+          const settingsMap: Record<string, any> = {};
+          for (const r of settingsRows || []) settingsMap[r.key] = r.value;
+
+          const offerOn = settingsMap.founding_artist_offer_enabled === true || settingsMap.founding_artist_offer_enabled === 'true';
+          const maxSlots = Number(env.FOUNDING_ARTIST_MAX_REDEMPTIONS || settingsMap.founding_artist_offer_max_redemptions || 50);
+          const cutoffStr = String(env.FOUNDING_ARTIST_CUTOFF || settingsMap.founding_artist_offer_cutoff || '2026-12-31T23:59:59Z').replace(/^"|"$/g, '');
+
+          if (offerOn && new Date() < new Date(cutoffStr)) {
+            const { count } = await supabaseAdmin.from('artists').select('id', { count: 'exact', head: true }).eq('is_founding_artist', true);
+            if ((count ?? 0) < maxSlots) {
+              applyFoundingCoupon = true;
+              console.log('[subscription] Founding Artist coupon eligible', { artistId: user.id });
+            }
+          }
+        }
+
+        const checkoutParams: Record<string, string> = {
+          mode: 'subscription',
+          success_url: `${pagesOrigin}/#/artist-dashboard?sub=success`,
+          cancel_url: `${pagesOrigin}/#/artist-dashboard?sub=cancel`,
+          customer: customerId as string,
+          'line_items[0][price]': priceId,
+          'line_items[0][quantity]': '1',
+          'metadata[artistId]': user.id,
+          'metadata[tier]': tier,
+          'subscription_data[metadata][artistId]': user.id,
+          'subscription_data[metadata][tier]': tier,
+          // Prevent user-entered promo codes when founding coupon is applied
+          allow_promotion_codes: applyFoundingCoupon ? 'false' : 'true',
+        };
+
+        if (applyFoundingCoupon) {
+          checkoutParams['discounts[0][coupon]'] = foundingCouponId as string;
+          checkoutParams['metadata[foundingArtist]'] = 'true';
+          checkoutParams['subscription_data[metadata][foundingArtist]'] = 'true';
+        }
+
         const sessResp = await stripeFetch('/v1/checkout/sessions', {
           method: 'POST',
-          body: toForm({
-            mode: 'subscription',
-            success_url: `${pagesOrigin}/#/artist-dashboard?sub=success`,
-            cancel_url: `${pagesOrigin}/#/artist-dashboard?sub=cancel`,
-            customer: customerId,
-            'line_items[0][price]': priceId,
-            'line_items[0][quantity]': '1',
-            'metadata[artistId]': user.id,
-            'metadata[tier]': tier,
-            'subscription_data[metadata][artistId]': user.id,
-            'subscription_data[metadata][tier]': tier,
-          }),
+          body: toForm(checkoutParams),
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         });
         const sess = await sessResp.json();
@@ -2583,6 +2729,7 @@ export default {
         cityPrimary: (artistRow as any).city_primary || null,
         citySecondary: (artistRow as any).city_secondary || null,
         artTypes: (artistRow as any).art_types || [],
+        isFoundingArtist: !!(artistRow as any).is_founding_artist,
       };
 
       return json({ artist, forSale, onDisplay, sets });
@@ -2664,7 +2811,7 @@ export default {
       const matchFilter = isUuid ? { id: identifier } : { slug: identifier };
       const { data, error } = await supabaseAdmin
         .from('artists')
-        .select('id,slug,name,bio,profile_photo_url,portfolio_url,website_url,instagram_handle,city_primary,city_secondary,art_types,is_public')
+        .select('id,slug,name,bio,profile_photo_url,portfolio_url,website_url,instagram_handle,city_primary,city_secondary,art_types,is_public,is_founding_artist')
         .match(matchFilter)
         .eq('is_public', true)
         .maybeSingle();
@@ -2682,6 +2829,7 @@ export default {
         cityPrimary: (data as any).city_primary || null,
         citySecondary: (data as any).city_secondary || null,
         artTypes: (data as any).art_types || [],
+        isFoundingArtist: !!(data as any).is_founding_artist,
       });
     }
 

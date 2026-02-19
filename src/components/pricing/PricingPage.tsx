@@ -6,6 +6,7 @@ import { trackEvent } from '../../lib/trackEvent';
 import { PageHeroHeader } from '../PageHeroHeader';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 import { EarningsComparisonBlurb } from './EarningsComparisonBlurb';
+import { FoundingArtistBanner } from '../artist/FoundingArtistBanner';
 
 interface PricingPageProps {
   onNavigate: (page: string) => void;
@@ -339,6 +340,11 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       />
 
       <EarningsComparisonBlurb variant="pricing" />
+
+      {/* Founding Artist promotional banner */}
+      <div className="max-w-4xl mx-auto px-2 sm:px-4 lg:px-1">
+        <FoundingArtistBanner variant="pricing" />
+      </div>
 
       {/* ── Plan Cards ─────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 lg:gap-8 mb-12 px-2 sm:px-4 lg:px-1">

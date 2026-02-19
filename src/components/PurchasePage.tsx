@@ -5,6 +5,7 @@ import { CHECKOUT_COPY } from '../lib/feeCopy';
 import { trackQrScan, trackArtworkView, trackCheckoutStart, trackEvent } from '../lib/trackEvent';
 import { ArtistProfilePublicView, type ArtistPublicData } from './shared/ArtistProfilePublicView';
 import { VenueProfilePublicView, type VenuePublicData } from './shared/VenueProfilePublicView';
+import { FoundingArtistBadge } from './artist/FoundingArtistBadge';
 
 type Artwork = {
   id: string;
@@ -37,6 +38,7 @@ export function PurchasePage({ artworkId, onBack, onNavigate }: PurchasePageProp
   const [buying, setBuying] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
+  const [isArtistFounding, setIsArtistFounding] = useState(false);
 
   // Read purchase status from hash query (?status=success|cancel)
   const purchaseStatus = useMemo(() => {
@@ -136,6 +138,10 @@ export function PurchasePage({ artworkId, onBack, onNavigate }: PurchasePageProp
                   citySecondary: raw.citySecondary ?? raw.city_secondary ?? null,
                   artTypes: raw.artTypes ?? raw.art_types ?? [],
                 });
+                // Check founding artist status
+                if (raw.isFoundingArtist || raw.is_founding_artist) {
+                  setIsArtistFounding(true);
+                }
               }
             } catch {
               if (!cancelled) setArtistProfile(null);
@@ -277,6 +283,7 @@ export function PurchasePage({ artworkId, onBack, onNavigate }: PurchasePageProp
                 ) : (
                   <span className="text-base sm:text-lg">by {artwork?.artistName || 'Artist'}</span>
                 )}
+                {isArtistFounding && <FoundingArtistBadge variant="compact" />}
               </div>
               
               <div className="mb-4">

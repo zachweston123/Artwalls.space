@@ -11,6 +11,8 @@ import { AccountStatusPanel } from './AccountStatusPanel';
 import { RecentActivity } from './RecentActivity';
 import { QuickActions } from './QuickActions';
 import { PageHeroHeader } from '../PageHeroHeader';
+import { FoundingArtistBanner } from './FoundingArtistBanner';
+import { FoundingArtistBadge } from './FoundingArtistBadge';
 
 /**
  * ConnectStatus — Stripe Connect payout state.
@@ -61,6 +63,10 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
   const [payoutLoading, setPayoutLoading] = useState(true);
   const [payoutError, setPayoutError] = useState<string | null>(null);
 
+  /** Founding Artist badge flag — fetched once from artists table */
+  const [isFoundingArtist, setIsFoundingArtist] = useState(false);
+  const [foundingDiscountEndsAt, setFoundingDiscountEndsAt] = useState<string | null>(null);
+
   /* ── Fetch: profile completeness ─────────────────────────────────── */
   useEffect(() => {
     let isMounted = true;
@@ -68,13 +74,18 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
       try {
         const { data: artist } = await supabase
           .from('artists')
-          .select('name, profile_photo_url, bio, art_types, city_primary, phone_number, portfolio_url, instagram_handle')
+          .select('name, profile_photo_url, bio, art_types, city_primary, phone_number, portfolio_url, instagram_handle, is_founding_artist, founding_discount_ends_at')
           .eq('id', user.id)
           .maybeSingle();
         if (!isMounted) return;
         if (!artist) {
           setProfileResult({ percentage: 0, completed: [], missing: ['all'], recommendations: [], isComplete: false });
           return;
+        }
+        // Founding artist badge state
+        if (artist.is_founding_artist) {
+          setIsFoundingArtist(true);
+          setFoundingDiscountEndsAt(artist.founding_discount_ends_at ?? null);
         }
         const result = calculateProfileCompleteness({
           name: artist.name ?? undefined,
@@ -238,6 +249,16 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
         title={`Welcome back, ${user?.name?.split(' ')[0] || 'Artist'}`}
         subtitle="Here's what's happening with your artwork"
       />
+
+      {/* Founding Artist badge (below header) + promotional banner */}
+      {isFoundingArtist && (
+        <div className="mb-4">
+          <FoundingArtistBadge variant="full" discountEndsAt={foundingDiscountEndsAt} />
+        </div>
+      )}
+      {!isFoundingArtist && (
+        <FoundingArtistBanner variant="dashboard" className="mb-4" />
+      )}
 
       {/* ═══════ KPI STAT CARDS (top row) ═══════ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">

@@ -4,6 +4,7 @@ import { LabelChip } from '../LabelChip';
 import { apiGet } from '../../lib/api';
 import { PageHeroHeader } from '../PageHeroHeader';
 import { EmptyState } from '../EmptyState';
+import { FoundingArtistBadge } from '../artist/FoundingArtistBadge';
 
 interface FindArtistsProps {
   onInviteArtist: (artistId: string) => void;
@@ -83,6 +84,7 @@ export function FindArtists({ onInviteArtist, onViewProfile, onNavigate }: FindA
           artTypes: Array.isArray((a as any).artTypes) ? (a as any).artTypes : [],
           openToNew: (a as any).is_live !== false,
           portfolioCount: (a as any).portfolioCount || 0,
+          isFoundingArtist: !!(a as any).isFoundingArtist,
         }));
         if (isMounted) setArtists(shaped);
       } catch {
@@ -270,6 +272,7 @@ export function FindArtists({ onInviteArtist, onViewProfile, onNavigate }: FindA
                       {artist.name}
                     </h3>
                   </button>
+                  {artist.isFoundingArtist && <FoundingArtistBadge variant="compact" className="mb-1" />}
                   <div className="flex items-center gap-2 text-sm text-[var(--text-muted)] mb-2">
                     <MapPin className="w-3 h-3" />
                     {artist.location}
