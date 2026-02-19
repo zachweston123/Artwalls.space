@@ -96,8 +96,8 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
           params.append('q', debouncedSearch);
         } else {
           // Otherwise fall back to city-based discovery
-          if (artistCities.primary) params.append('artistPrimaryCity', artistCities.primary);
-          if (artistCities.secondary) params.append('artistSecondaryCity', artistCities.secondary);
+          const cities = [artistCities.primary, artistCities.secondary].filter(Boolean).join(',');
+          if (cities) params.append('cities', cities);
         }
 
         const path = params.toString() ? `/api/venues?${params.toString()}` : '/api/venues';
@@ -114,14 +114,14 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
             id: v.id,
             name: v.name || 'Venue',
             type: v.type || 'Other',
-            coverPhoto: 'https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=800', // Placeholder or real if available
-            location: (v as any).city || 'Unknown Location', // API needs to return city
-            bio: (v as any).description || '',
+            coverPhoto: (v as any).coverPhotoUrl || 'https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=800',
+            location: (v as any).city || 'Unknown Location',
+            bio: (v as any).bio || '',
             labels: v.labels || [],
-            foundedYear: new Date().getFullYear(), // Placeholder
-            wallSpaces: 0, // Placeholder
-            availableSpaces: 0, // Placeholder
-            verified: false // Placeholder
+            foundedYear: (v as any).createdAt ? new Date((v as any).createdAt).getFullYear() : new Date().getFullYear(),
+            wallSpaces: (v as any).wallSpaces || 0,
+            availableSpaces: (v as any).availableSpaces || 0,
+            verified: (v as any).verified === true,
           })));
         }
       } catch (err) {

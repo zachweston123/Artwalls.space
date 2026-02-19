@@ -1,24 +1,13 @@
-/** @deprecated Dead service stub — emails not implemented. */
-throw new Error('Dead file: setup-emails never wired');
+/**
+ * @deprecated Dead service stub — emails not implemented. Do not import.
+ * Intentionally a no-op: the throw was removed to prevent accidental build/runtime crashes.
+ * This file is NOT wired to any production code path.
+ *
+ * Original email template code has been stripped. If email templates are needed
+ * in the future, implement them as Worker-side logic (not client-side).
+ */
+export {};
 
-// ============================================================================
-// Email Templates
-// ============================================================================
-
-export interface EmailTemplate {
-  subject: string;
-  html: string;
-  text: string;
-}
-
-// ============================================================================
-// SETUP_SUBMITTED - Email sent when venue submits setup for review
-// ============================================================================
-
-export const generateSetupSubmittedEmail = (venueName: string): EmailTemplate => {
-  const subject = `✓ We've Received Your Setup, ${venueName}!`;
-  
-  const html = `
     <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
       <h1>Setup Received! 🎉</h1>
       

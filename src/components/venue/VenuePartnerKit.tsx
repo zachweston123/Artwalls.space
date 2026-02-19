@@ -13,8 +13,8 @@ export function VenuePartnerKit({ onNavigate }: VenuePartnerKitProps) {
   const [estimatorSalesPerMonth, setEstimatorSalesPerMonth] = useState(1);
 
   const handleDownloadPDF = () => {
-    // In a real app, this would generate and download a PDF
-    alert('Downloading Partner Kit PDF...');
+    // Use browser's print dialog which allows saving as PDF
+    window.print();
   };
 
   const handleContactFormScroll = () => {

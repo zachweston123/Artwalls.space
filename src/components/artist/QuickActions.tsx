@@ -16,7 +16,7 @@ interface QuickActionsProps {
 const actions = [
   { label: 'Upload artwork', icon: Image, page: 'artist-artworks' },
   { label: 'Find venues', icon: MapPin, page: 'artist-venues' },
-  { label: 'Invite a venue', icon: Mail, page: 'artist-venues' },
+  { label: 'Invite a venue', icon: Mail, page: 'artist-invite-venue' },
 ] as const;
 
 export function QuickActions({ onNavigate }: QuickActionsProps) {

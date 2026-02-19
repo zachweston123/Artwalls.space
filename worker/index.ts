@@ -1331,7 +1331,7 @@ export default {
 
       let query = supabaseAdmin
         .from('venues')
-        .select('id,name,type,labels,default_venue_fee_bps,city')
+        .select('id,name,type,labels,default_venue_fee_bps,city,bio,cover_photo_url,verified,created_at')
         .eq('suspended', false)
         .order('name', { ascending: true })
         .limit(50);
@@ -1344,6 +1344,24 @@ export default {
       }
       const { data, error } = await query;
       if (error) return json({ error: error.message }, { status: 500 });
+
+      // Fetch wallspace counts for all returned venue IDs
+      const venueIds = (data || []).map(v => v.id);
+      let wallspaceCounts: Record<string, { total: number; available: number }> = {};
+      if (venueIds.length > 0) {
+        const { data: wsData } = await supabaseAdmin
+          .from('wallspaces')
+          .select('venue_id,current_artwork_id')
+          .in('venue_id', venueIds);
+        if (wsData) {
+          for (const ws of wsData) {
+            if (!wallspaceCounts[ws.venue_id]) wallspaceCounts[ws.venue_id] = { total: 0, available: 0 };
+            wallspaceCounts[ws.venue_id].total++;
+            if (!ws.current_artwork_id) wallspaceCounts[ws.venue_id].available++;
+          }
+        }
+      }
+
       const venues = (data || []).map(v => ({
         id: v.id,
         name: v.name,
@@ -1351,6 +1369,12 @@ export default {
         labels: v.labels,
         defaultVenueFeeBps: v.default_venue_fee_bps,
         city: (v as any).city || null,
+        bio: (v as any).bio || '',
+        coverPhotoUrl: (v as any).cover_photo_url || null,
+        verified: (v as any).verified === true,
+        createdAt: (v as any).created_at || null,
+        wallSpaces: wallspaceCounts[v.id]?.total || 0,
+        availableSpaces: wallspaceCounts[v.id]?.available || 0,
       }));
       return json({ venues });
     }
@@ -1362,7 +1386,7 @@ export default {
       
       let query = supabaseAdmin
         .from('artists')
-        .select('id,slug,name,email,city_primary,city_secondary,profile_photo_url,is_live,is_public')
+        .select('id,slug,name,email,city_primary,city_secondary,profile_photo_url,is_live,is_public,bio,art_types')
         .order('name', { ascending: true })
         .limit(50);
 
@@ -1378,6 +1402,23 @@ export default {
       
       const { data, error } = await query;
       if (error) return json({ error: error.message }, { status: 500 });
+
+      // Fetch artwork counts for all returned artist IDs
+      const artistIds = (data || []).map(a => a.id);
+      let artworkCounts: Record<string, number> = {};
+      if (artistIds.length > 0) {
+        const { data: countData } = await supabaseAdmin
+          .from('artworks')
+          .select('artist_id')
+          .in('artist_id', artistIds)
+          .eq('is_public', true);
+        if (countData) {
+          for (const row of countData) {
+            artworkCounts[row.artist_id] = (artworkCounts[row.artist_id] || 0) + 1;
+          }
+        }
+      }
+
       const artists = (data || []).map(a => ({ 
         id: a.id, 
         slug: (a as any).slug || null,
@@ -1386,6 +1427,9 @@ export default {
         profile_photo_url: a.profile_photo_url,
         location: a.city_primary || a.city_secondary || 'Local',
         is_live: a.is_live,
+        bio: (a as any).bio || '',
+        artTypes: Array.isArray((a as any).art_types) ? (a as any).art_types : [],
+        portfolioCount: artworkCounts[a.id] || 0,
       }));
       return json({ artists });
     }

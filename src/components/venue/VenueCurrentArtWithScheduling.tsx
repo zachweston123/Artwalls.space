@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { QrCode, MapPin, Calendar, X, Clock, CheckCircle } from 'lucide-react';
-import { mockInstalledArtworks } from '../../data/mockData';
 import type { InstalledArtwork } from '../../data/mockData';
 import { TimeSlotPicker } from '../scheduling/TimeSlotPicker';
 import { DurationBadge } from '../scheduling/DisplayDurationSelector';
@@ -8,7 +7,8 @@ import { createVenueBooking, API_BASE } from '../../lib/api';
 import { supabase } from '../../lib/supabase';
 
 export function VenueCurrentArtWithScheduling() {
-  const [artworks, setArtworks] = useState<InstalledArtwork[]>(mockInstalledArtworks);
+  const [artworks, setArtworks] = useState<InstalledArtwork[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'active' | 'sold' | 'ending-soon' | 'needs-pickup'>('all');
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showSchedulePicker, setShowSchedulePicker] = useState(false);
@@ -17,9 +17,70 @@ export function VenueCurrentArtWithScheduling() {
   const [currentVenueId, setCurrentVenueId] = useState<string>('');
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setCurrentVenueId(data.user?.id || '');
-    }).catch(() => setCurrentVenueId(''));
+    let isMounted = true;
+    async function loadCurrentArt() {
+      try {
+        const { data: userData } = await supabase.auth.getUser();
+        const venueId = userData.user?.id || '';
+        if (isMounted) setCurrentVenueId(venueId);
+        if (!venueId) return;
+
+        // Fetch artworks currently assigned to this venue
+        const { data, error } = await supabase
+          .from('artworks')
+          .select(`
+            id,
+            title,
+            image_url,
+            price,
+            status,
+            artist_id,
+            venue_id,
+            created_at,
+            artists(name),
+            wallspaces(id, name)
+          `)
+          .eq('venue_id', venueId)
+          .in('status', ['active', 'sold', 'ending-soon', 'needs-pickup', 'ended'])
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        if (isMounted && data) {
+          const now = new Date();
+          const mapped: InstalledArtwork[] = data.map((a: any) => {
+            const installDate = a.created_at || now.toISOString();
+            const endDate = new Date(new Date(installDate).getTime() + 90 * 24 * 60 * 60 * 1000).toISOString();
+            // Determine status: if within 7 days of end, mark as ending-soon
+            let derivedStatus = a.status as InstalledArtwork['status'];
+            if (derivedStatus === 'active') {
+              const daysLeft = (new Date(endDate).getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+              if (daysLeft <= 7 && daysLeft > 0) derivedStatus = 'ending-soon';
+            }
+            return {
+              id: a.id,
+              artworkId: a.id,
+              artworkTitle: a.title || 'Untitled',
+              artworkImage: a.image_url || '',
+              artistName: a.artists?.name || 'Unknown Artist',
+              price: a.price || 0,
+              wallSpaceId: a.wallspaces?.id || '',
+              wallSpaceName: a.wallspaces?.name || 'Main Wall',
+              installDate,
+              endDate,
+              status: derivedStatus,
+            };
+          });
+          setArtworks(mapped);
+        }
+      } catch (error) {
+        console.error('Failed to load current artworks:', error);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+    loadCurrentArt();
+    return () => { isMounted = false; };
   }, []);
 
   const filteredArtworks = artworks.filter(artwork => {
@@ -53,9 +114,28 @@ export function VenueCurrentArtWithScheduling() {
     }
   };
 
-  const confirmAction = () => {
+  const confirmAction = async () => {
     if (!selectedAction) return;
     
+    // Persist status change to Supabase
+    try {
+      let newStatus: string | null = null;
+      switch (selectedAction.action) {
+        case 'mark-sold': newStatus = 'sold'; break;
+        case 'end-display': newStatus = 'ended'; break;
+        case 'confirm-pickup': newStatus = 'ended'; break;
+        default: break;
+      }
+      if (newStatus) {
+        await supabase
+          .from('artworks')
+          .update({ status: newStatus })
+          .eq('id', selectedAction.id);
+      }
+    } catch (error) {
+      console.error('Failed to persist action:', error);
+    }
+
     setArtworks(artworks.map(artwork => {
       if (artwork.id === selectedAction.id) {
         switch (selectedAction.action) {
@@ -123,6 +203,17 @@ export function VenueCurrentArtWithScheduling() {
   const activeCount = artworks.filter(a => a.status === 'active').length;
   const soldCount = artworks.filter(a => a.status === 'sold').length;
   const endingSoonCount = artworks.filter(a => a.status === 'ending-soon').length;
+
+  if (loading) {
+    return (
+      <div className="bg-[var(--bg)] text-[var(--text)] flex items-center justify-center py-24">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-[var(--green)] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-[var(--text-muted)]">Loading current artwork…</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[var(--bg)] text-[var(--text)]">
@@ -375,7 +466,14 @@ export function VenueCurrentArtWithScheduling() {
                       >
                         Mark as Sold
                       </button>
-                      <button className="px-4 py-2 bg-[var(--surface-2)] text-[var(--blue)] rounded-lg hover:bg-[var(--surface-3)] transition-colors text-sm">
+                      <button
+                        onClick={() => {
+                          if (typeof window !== 'undefined') {
+                            window.location.hash = '#/venue-applications';
+                          }
+                        }}
+                        className="px-4 py-2 bg-[var(--surface-2)] text-[var(--blue)] rounded-lg hover:bg-[var(--surface-3)] transition-colors text-sm"
+                      >
                         Request Replacement
                       </button>
                     </>
@@ -399,7 +497,14 @@ export function VenueCurrentArtWithScheduling() {
               <p className="text-[var(--text-muted)] mb-6">
                 Review artist applications to start displaying artwork.
               </p>
-              <button className="px-6 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-colors">
+              <button
+                onClick={() => {
+                  if (typeof window !== 'undefined') {
+                    window.location.hash = '#/venue-applications';
+                  }
+                }}
+                className="px-6 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-colors"
+              >
                 View Applications
               </button>
             </>
@@ -477,7 +582,7 @@ export function VenueCurrentArtWithScheduling() {
               <p className="text-[var(--text-muted)]">Use this QR for customer purchase and info.</p>
               <div className="flex items-center justify-center">
                 <img
-                  src={`${API_BASE}/api/artworks/${qrArtwork.id}/qrcode.svg?w=240`}
+                  src={`${API_BASE}/api/artworks/${qrArtwork.artworkId || qrArtwork.id}/qrcode.svg?w=240`}
                   alt="QR Code"
                   className="w-60 h-60 border border-[var(--border)] rounded-lg bg-[var(--surface-2)]"
                 />

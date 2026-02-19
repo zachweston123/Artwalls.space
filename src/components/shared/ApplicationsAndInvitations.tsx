@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Clock, Calendar, Check, X, QrCode, Download, Eye, EyeOff, Copy, Mail, ArrowUpRight } from 'lucide-react';
-import { mockApplications } from '../../data/mockData';
 import type { Application } from '../../data/mockData';
 import { TimeSlotPicker } from '../scheduling/TimeSlotPicker';
 import { DurationBadge } from '../scheduling/DisplayDurationSelector';
@@ -40,36 +39,14 @@ interface ArtistInvite {
 }
 
 export function ApplicationsAndInvitations({ userRole, onBack, defaultTab = 'applications' }: ApplicationsAndInvitationsProps) {
-  const [applications, setApplications] = useState<Application[]>(mockApplications);
+  const [applications, setApplications] = useState<Application[]>([]);
   const [approvedArtworks, setApprovedArtworks] = useState<Artwork[]>([]);
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
   const mappedDefaultTab: 'pipeline' | 'active' = defaultTab === 'approved' ? 'active' : 'pipeline';
   const [artistTab, setArtistTab] = useState<'pipeline' | 'active'>(mappedDefaultTab);
   const [pipelineFilter, setPipelineFilter] = useState<'needs-action' | 'all' | 'applications' | 'invitations'>('needs-action');
-  const [invites, setInvites] = useState<ArtistInvite[]>([
-    {
-      id: 'invite-oakroom',
-      venueName: 'Oakroom Collective',
-      venueLocation: 'Downtown | 215 Market St.',
-      venuePhoto: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=640&q=80',
-      message: 'We are hosting a spring tasting series and would love to feature your botanicals collection on our feature wall through May.',
-      requestedDuration: 60,
-      wallspaceName: 'Atrium Feature Wall',
-      wallspaceSize: '12ft x 8ft',
-      receivedAt: new Date().toISOString(),
-      status: 'pending',
-    },
-    {
-      id: 'invite-greenhouse',
-      venueName: 'Greenhouse Cafe',
-      venueLocation: 'Mission | 134 Valencia St.',
-      venuePhoto: 'https://images.unsplash.com/photo-1529429617124-aee711fa0ca3?auto=format&fit=crop&w=640&q=80',
-      message: 'Thanks for sharing your portfolio last quarter! We have an opening for June-July and think your abstract series would be a fit.',
-      requestedDuration: 45,
-      receivedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 6).toISOString(),
-      status: 'accepted',
-    },
-  ]);
+  const [invites, setInvites] = useState<ArtistInvite[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [showSchedulePicker, setShowSchedulePicker] = useState(false);
   const [showApprovalModal, setShowApprovalModal] = useState(false);
@@ -87,6 +64,122 @@ export function ApplicationsAndInvitations({ userRole, onBack, defaultTab = 'app
     startDate: new Date(),
     installTimeOption: 'standard',
   });
+
+  // Load applications and invitations from Supabase
+  useEffect(() => {
+    let isMounted = true;
+    async function loadData() {
+      try {
+        setLoading(true);
+        const { data: user } = await supabase.auth.getUser();
+        if (!user.user?.id) return;
+
+        if (userRole === 'artist') {
+          // Fetch artist applications (artworks submitted to venues)
+          const { data: appData } = await supabase
+            .from('artworks')
+            .select(`
+              id,
+              title,
+              image_url,
+              status,
+              venue_id,
+              artist_id,
+              created_at,
+              venues(name)
+            `)
+            .eq('artist_id', user.user.id)
+            .in('status', ['pending', 'active', 'rejected'])
+            .order('created_at', { ascending: false });
+
+          if (isMounted && appData) {
+            const mapped: Application[] = appData.map((a: any) => ({
+              id: a.id,
+              artworkId: a.id,
+              artworkTitle: a.title || 'Untitled',
+              artistName: '',
+              artworkImage: a.image_url || '',
+              venueId: a.venue_id || '',
+              venueName: a.venues?.name || 'Unknown Venue',
+              status: a.status === 'active' ? 'approved' : a.status === 'rejected' ? 'rejected' : 'pending',
+              appliedDate: a.created_at || new Date().toISOString(),
+            }));
+            setApplications(mapped);
+          }
+
+          // Fetch invitations sent to this artist
+          const { data: inviteData } = await supabase
+            .from('venue_invites')
+            .select(`
+              id,
+              venue_id,
+              message,
+              status,
+              created_at,
+              venues(name, city, cover_photo_url)
+            `)
+            .eq('artist_id', user.user.id)
+            .order('created_at', { ascending: false });
+
+          if (isMounted && inviteData) {
+            const mappedInvites: ArtistInvite[] = inviteData.map((inv: any) => ({
+              id: inv.id,
+              venueName: inv.venues?.name || 'Unknown Venue',
+              venueLocation: inv.venues?.city || '',
+              venuePhoto: inv.venues?.cover_photo_url || '',
+              message: inv.message || '',
+              requestedDuration: 90,
+              receivedAt: inv.created_at || new Date().toISOString(),
+              status: inv.status === 'accepted' ? 'accepted' : inv.status === 'declined' ? 'declined' : 'pending',
+            }));
+            setInvites(mappedInvites);
+          }
+        } else {
+          // Venue: fetch applications (artworks submitted to this venue)
+          const { data: appData } = await supabase
+            .from('artworks')
+            .select(`
+              id,
+              title,
+              image_url,
+              status,
+              artist_id,
+              venue_id,
+              dimensions,
+              medium,
+              created_at,
+              artists(name)
+            `)
+            .eq('venue_id', user.user.id)
+            .in('status', ['pending', 'active', 'rejected'])
+            .order('created_at', { ascending: false });
+
+          if (isMounted && appData) {
+            const mapped: Application[] = appData.map((a: any) => ({
+              id: a.id,
+              artworkId: a.id,
+              artworkTitle: a.title || 'Untitled',
+              artistName: a.artists?.name || 'Unknown Artist',
+              artworkImage: a.image_url || '',
+              artworkDimensions: a.dimensions || '',
+              artworkMedium: a.medium || '',
+              venueId: a.venue_id || '',
+              venueName: '',
+              status: a.status === 'active' ? 'approved' : a.status === 'rejected' ? 'rejected' : 'pending',
+              appliedDate: a.created_at || new Date().toISOString(),
+            }));
+            setApplications(mapped);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load applications/invitations:', error);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+    loadData();
+    return () => { isMounted = false; };
+  }, [userRole]);
 
   // Load approved artworks for artist
   useEffect(() => {
@@ -168,7 +261,15 @@ export function ApplicationsAndInvitations({ userRole, onBack, defaultTab = 'app
     }
   };
 
-  const handleInviteResponse = (inviteId: string, status: 'accepted' | 'declined') => {
+  const handleInviteResponse = async (inviteId: string, status: 'accepted' | 'declined') => {
+    try {
+      await supabase
+        .from('venue_invites')
+        .update({ status })
+        .eq('id', inviteId);
+    } catch (error) {
+      console.error('Failed to persist invite response:', error);
+    }
     setInvites(prev => prev.map(invite =>
       invite.id === inviteId ? { ...invite, status } : invite
     ));
@@ -263,20 +364,38 @@ export function ApplicationsAndInvitations({ userRole, onBack, defaultTab = 'app
     }
   };
 
-  const confirmApproval = () => {
+  const confirmApproval = async () => {
     if (!selectedApp) return;
     
+    // Persist approval to Supabase
+    try {
+      await supabase
+        .from('artworks')
+        .update({ status: 'active' })
+        .eq('id', selectedApp.id);
+    } catch (error) {
+      console.error('Failed to persist approval:', error);
+    }
+
     setApplications(applications.map(app =>
-      app.id === selectedApplication.id 
+      app.id === selectedApp.id 
         ? { ...app, status: 'approved' as const, approvedDuration: approvalData.duration, approvedDate: new Date().toISOString() } 
         : app
     ));
     
     setShowApprovalModal(false);
-    setSelectedApplication(null);
+    setSelectedApp(null);
   };
 
-  const handleReject = (id: string) => {
+  const handleReject = async (id: string) => {
+    try {
+      await supabase
+        .from('artworks')
+        .update({ status: 'rejected' })
+        .eq('id', id);
+    } catch (error) {
+      console.error('Failed to persist rejection:', error);
+    }
     setApplications(applications.map(app =>
       app.id === id ? { ...app, status: 'rejected' as const } : app
     ));
@@ -330,7 +449,16 @@ export function ApplicationsAndInvitations({ userRole, onBack, defaultTab = 'app
 
   const pendingCount = applications.filter(a => a.status === 'pending').length;
 
-  const selectedApplication = selectedApp;
+  if (loading) {
+    return (
+      <div className="bg-[var(--bg)] text-[var(--text)] min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-[var(--blue)] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-[var(--text-muted)]">Loading applications…</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[var(--bg)] text-[var(--text)] min-h-screen">
@@ -604,8 +732,12 @@ export function ApplicationsAndInvitations({ userRole, onBack, defaultTab = 'app
 
               {showSchedulePicker && selectedApp && (
                 <TimeSlotPicker
+                  isOpen={showSchedulePicker}
+                  onClose={() => setShowSchedulePicker(false)}
+                  venueId={selectedApp.venueId}
+                  type="install"
+                  artworkTitle={selectedApp.artworkTitle}
                   onConfirm={handleTimeConfirm}
-                  onCancel={() => setShowSchedulePicker(false)}
                 />
               )}
             </>
@@ -843,7 +975,7 @@ export function ApplicationsAndInvitations({ userRole, onBack, defaultTab = 'app
           </div>
 
           {/* Approval Modal */}
-          {showApprovalModal && selectedApplication && (
+          {showApprovalModal && selectedApp && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
               <div className="bg-[var(--surface-1)] rounded-xl p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
                 <h2 className="text-2xl mb-6 text-[var(--text)]">Approve Application</h2>

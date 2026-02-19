@@ -79,10 +79,10 @@ export function FindArtists({ onInviteArtist, onViewProfile, onNavigate }: FindA
           name: a.name || 'Artist',
           avatar: a.profile_photo_url || undefined,
           location: a.location || city || 'Local',
-          bio: 'Artist on Artwalls',
-          artTypes: ['Painter'],
-          openToNew: true,
-          portfolioCount: 0,
+          bio: (a as any).bio || '',
+          artTypes: Array.isArray((a as any).artTypes) ? (a as any).artTypes : [],
+          openToNew: (a as any).is_live !== false,
+          portfolioCount: (a as any).portfolioCount || 0,
         }));
         if (isMounted) setArtists(shaped);
       } catch {
