@@ -120,18 +120,32 @@ export default {
           'Access-Control-Allow-Methods': 'GET,POST,PATCH,OPTIONS',
           'Access-Control-Allow-Headers': 'authorization, content-type, x-client-info, apikey',
           'Access-Control-Max-Age': '86400',
+          'X-Content-Type-Options': 'nosniff',
+          'X-Frame-Options': 'DENY',
+          'Referrer-Policy': 'strict-origin-when-cross-origin',
           Vary: 'Origin',
         },
       });
     }
 
-    function json(obj: unknown, init?: ResponseInit): Response {
-      const headers = new Headers(init?.headers);
-      headers.set('Content-Type', 'application/json');
+    /** Apply standard security + CORS headers to any Headers object. */
+    function applySecurityHeaders(headers: Headers): void {
       headers.set('Access-Control-Allow-Origin', allowOrigin);
       headers.set('Access-Control-Allow-Methods', 'GET,POST,PATCH,OPTIONS');
       headers.set('Access-Control-Allow-Headers', 'authorization, content-type, x-client-info, apikey');
       headers.set('Vary', 'Origin');
+      // Security headers
+      headers.set('X-Content-Type-Options', 'nosniff');
+      headers.set('X-Frame-Options', 'DENY');
+      headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+      headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+      headers.set('Content-Security-Policy', "default-src 'self'; script-src 'self'; connect-src 'self' https://*.supabase.co https://*.stripe.com; frame-src https://js.stripe.com https://hooks.stripe.com; img-src 'self' https://*.supabase.co data: blob:;");
+    }
+
+    function json(obj: unknown, init?: ResponseInit): Response {
+      const headers = new Headers(init?.headers);
+      headers.set('Content-Type', 'application/json');
+      applySecurityHeaders(headers);
       const body = JSON.stringify(obj);
       return new Response(body, { status: init?.status ?? 200, headers });
     }
@@ -139,10 +153,7 @@ export default {
     function text(body: string, init?: ResponseInit): Response {
       const headers = new Headers(init?.headers);
       headers.set('Content-Type', 'text/plain; charset=utf-8');
-      headers.set('Access-Control-Allow-Origin', allowOrigin);
-      headers.set('Access-Control-Allow-Methods', 'GET,POST,PATCH,OPTIONS');
-      headers.set('Access-Control-Allow-Headers', 'authorization, content-type, x-client-info, apikey');
-      headers.set('Vary', 'Origin');
+      applySecurityHeaders(headers);
       return new Response(body, { status: init?.status ?? 200, headers });
     }
 
@@ -430,6 +441,29 @@ export default {
       // Stash the validated user on the request for downstream use
       (req as any).__adminUser = user;
       return null; // success
+    }
+
+    /** Write a row to admin_audit_log (best-effort, never throws) */
+    async function logAdminAction(
+      adminId: string,
+      action: string,
+      targetTable?: string,
+      targetId?: string,
+      meta?: Record<string, unknown>,
+    ) {
+      if (!supabaseAdmin) return;
+      try {
+        await supabaseAdmin.from('admin_audit_log').insert({
+          admin_user_id: adminId,
+          action,
+          target_type: targetTable ?? null,
+          target_id: targetId ?? null,
+          details: meta ?? {},
+          ip_address: null, // could add request IP if needed
+        });
+      } catch (e) {
+        console.warn('[audit] Failed to write audit log:', e instanceof Error ? e.message : e);
+      }
     }
 
     async function upsertArtist(artist: { id: string; email?: string | null; name?: string | null; role?: string; phoneNumber?: string | null; cityPrimary?: string | null; citySecondary?: string | null; stripeAccountId?: string | null; stripeCustomerId?: string | null; subscriptionTier?: string | null; subscriptionStatus?: string | null; stripeSubscriptionId?: string | null; platformFeeBps?: number | null; }): Promise<Response> {
@@ -958,6 +992,7 @@ export default {
         }
       }
 
+      await logAdminAction(adminUser?.id, 'admin_verify', 'auth.users', adminUser?.id, { roleUpdated: true });
       return json({ ok: true, roleUpdated: true });
     }
 
@@ -998,8 +1033,15 @@ export default {
     // Artist stats (artworks + orders aggregates)
     if (url.pathname === '/api/stats/artist' && method === 'GET') {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const user = await getSupabaseUserFromRequest(request);
+      const authErr = requireAuthOrFail(request, user);
+      if (authErr) return authErr;
       const artistId = url.searchParams.get('artistId');
       if (!artistId) return json({ error: 'Missing artistId' }, { status: 400 });
+      // Enforce ownership: artists can only view their own stats (admins exempt)
+      if (user!.id !== artistId && !(await isAdminUser(user))) {
+        return json({ error: 'Forbidden' }, { status: 403 });
+      }
 
       const [{ count: totalArtworks }, { count: activeArtworks }, { count: soldArtworks }, { count: availableArtworks }, { data: artist }, { count: pendingApplicationsCount }] = await Promise.all([
         supabaseAdmin.from('artworks').select('id', { count: 'exact', head: true }).eq('artist_id', artistId),
@@ -1111,8 +1153,15 @@ export default {
     // Venue stats endpoint
     if (url.pathname === '/api/stats/venue' && method === 'GET') {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const user = await getSupabaseUserFromRequest(request);
+      const authErr = requireAuthOrFail(request, user);
+      if (authErr) return authErr;
       const venueId = url.searchParams.get('venueId');
       if (!venueId) return json({ error: 'Missing venueId' }, { status: 400 });
+      // Enforce ownership: venues can only view their own stats (admins exempt)
+      if (user!.id !== venueId && !(await isAdminUser(user))) {
+        return json({ error: 'Forbidden' }, { status: 403 });
+      }
 
       const [{ data: venue }, { count: totalWallSpaces }, { count: occupiedWallSpaces }] = await Promise.all([
         supabaseAdmin.from('venues').select('subscription_tier,subscription_status').eq('id', venueId).maybeSingle(),
@@ -1347,8 +1396,14 @@ export default {
     if (url.pathname === '/api/analytics/artist' && method === 'GET') {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
       const user = await getSupabaseUserFromRequest(request);
-      const artistId = url.searchParams.get('artistId') || user?.id;
+      const authErrAnalytics = requireAuthOrFail(request, user);
+      if (authErrAnalytics) return authErrAnalytics;
+      const artistId = url.searchParams.get('artistId') || user!.id;
       if (!artistId) return json({ error: 'Missing artistId' }, { status: 400 });
+      // SECURITY: Enforce ownership — artists can only view their own analytics
+      if (user!.id !== artistId && !(await isAdminUser(user))) {
+        return json({ error: 'Forbidden' }, { status: 403 });
+      }
 
       const now = new Date();
       const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
@@ -1403,8 +1458,14 @@ export default {
     if (url.pathname === '/api/analytics/venue' && method === 'GET') {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
       const user = await getSupabaseUserFromRequest(request);
-      const venueId = url.searchParams.get('venueId') || user?.id;
+      const authErrVAnalytics = requireAuthOrFail(request, user);
+      if (authErrVAnalytics) return authErrVAnalytics;
+      const venueId = url.searchParams.get('venueId') || user!.id;
       if (!venueId) return json({ error: 'Missing venueId' }, { status: 400 });
+      // SECURITY: Enforce ownership — venues can only view their own analytics
+      if (user!.id !== venueId && !(await isAdminUser(user))) {
+        return json({ error: 'Forbidden' }, { status: 403 });
+      }
 
       const now = new Date();
       const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
@@ -1546,10 +1607,11 @@ export default {
                 if (artistPayoutCents > 0 && chargeId) {
                   const { data: artist } = await supabaseAdmin
                     .from('artists')
-                    .select('stripe_account_id')
+                    .select('stripe_account_id,stripe_payouts_enabled')
                     .eq('id', order.artist_id)
                     .maybeSingle();
-                  if (artist?.stripe_account_id) {
+                  // SECURITY: Only transfer to verified accounts with payouts enabled
+                  if (artist?.stripe_account_id && artist?.stripe_payouts_enabled) {
                     try {
                       const tResp = await stripeFetch('/v1/transfers', {
                         method: 'POST',
@@ -1576,8 +1638,12 @@ export default {
                     } catch (e: unknown) {
                       payoutError = `Artist transfer error: ${getErrorMessage(e)}`;
                     }
-                  } else {
+                  } else if (!artist?.stripe_account_id) {
                     payoutError = 'Artist stripe_account_id missing';
+                  } else if (!artist?.stripe_payouts_enabled) {
+                    const msg = 'Artist payouts disabled or onboarding incomplete';
+                    payoutError = msg;
+                    payoutStatus = 'blocked_pending_onboarding';
                   }
                 }
 
@@ -2717,7 +2783,9 @@ export default {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
       const artistId = url.searchParams.get('artistId');
       const requester = await getSupabaseUserFromRequest(request);
-      const isAdmin = requester?.user_metadata?.role === 'admin' || requester?.user_metadata?.isAdmin === true;
+      // SECURITY: Never trust user_metadata.isAdmin — it's user-editable.
+      // Only use the server-side isAdminUser() check for admin elevation.
+      const isAdmin = requester ? await isAdminUser(requester) : false;
       const isOwner = requester?.id && artistId && requester.id === artistId;
       const isPublicQuery = !(isAdmin || isOwner);
       let query = supabaseAdmin
@@ -2869,10 +2937,26 @@ export default {
     }
 
     // Artwork purchase link + QR (must be before the catch-all artwork GET)
+    // ── SECURITY: requires auth + ownership (artist must own the artwork) ──
     if (url.pathname.startsWith('/api/artworks/') && method === 'GET' && url.pathname.endsWith('/link')) {
       const parts = url.pathname.split('/');
       const id = parts[3];
       if (!id) return json({ error: 'Missing artwork id' }, { status: 400 });
+
+      // Require authentication
+      const user = await getUser(request);
+      if (!user) return json({ error: 'Auth required' }, { status: 401 });
+
+      // Verify ownership: the artwork must belong to the calling user (or caller is admin)
+      if (supabaseAdmin) {
+        const { data: art } = await supabaseAdmin.from('artworks').select('artist_id').eq('id', id).maybeSingle();
+        if (!art) return json({ error: 'Artwork not found' }, { status: 404 });
+        const admin = await isAdminUser(user.id);
+        if (art.artist_id !== user.id && !admin) {
+          return json({ error: 'Forbidden' }, { status: 403 });
+        }
+      }
+
       const purchaseUrl = `${pagesOrigin}/#/purchase-${id}`;
       const qrSvg = await generateQrSvg(purchaseUrl, 300);
       if (supabaseAdmin) {
@@ -3004,7 +3088,8 @@ export default {
       // If not public, allow owner/admin to view their own listing
       if (!data) {
         const requester = await getSupabaseUserFromRequest(request);
-        const isAdmin = requester?.user_metadata?.role === 'admin' || requester?.user_metadata?.isAdmin === true;
+        // SECURITY: Never trust user_metadata.isAdmin — it's user-editable.
+        const isAdmin = requester ? await isAdminUser(requester) : false;
         const { data: privateData, error: privateError } = await supabaseAdmin
           .from('artworks')
           .select(baseSelect)
@@ -3285,6 +3370,11 @@ export default {
         if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
         const rlArtist = await applyRateLimit('profile-upsert', request);
         if (rlArtist) return rlArtist;
+
+        // SECURITY: Require authentication — no anonymous profile upserts
+        const user = await getSupabaseUserFromRequest(request);
+        const authErr = requireAuthOrFail(request, user);
+        if (authErr) return authErr;
         
         let payload: any = {};
         try {
@@ -3294,19 +3384,13 @@ export default {
           return json({ error: 'Invalid JSON body' }, { status: 400 });
         }
         
-        // Allow artistId from body OR extract from auth token
-        let id = String(payload?.artistId || '').trim();
-        if (!id) {
-          const user = await getSupabaseUserFromRequest(request);
-          if (user && (user.user_metadata?.role === 'artist' || !user.user_metadata?.role)) {
-            id = user.id;
-          }
-        }
-        if (!id) {
-          console.error('[POST /api/artists] No artistId and no valid auth token');
-          return json({ error: 'Missing artistId or Authorization token' }, { status: 400 });
-        }
+        // SECURITY: Only allow users to upsert their own profile.
+        // Admin can upsert any profile; normal users are locked to their own ID.
+        let id = String(payload?.artistId || '').trim() || user!.id;
         if (!isUUID(id)) return json({ error: 'Invalid artistId format' }, { status: 400 });
+        if (id !== user!.id && !(await isAdminUser(user))) {
+          return json({ error: 'Forbidden: cannot modify another user\'s profile' }, { status: 403 });
+        }
         const resp = await upsertArtist({
           id,
           email: clampStr(payload?.email, 254) || null,
@@ -3326,12 +3410,19 @@ export default {
     // Upsert venue profile (used by app bootstrap)
     if (url.pathname === '/api/venues' && method === 'POST') {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      // SECURITY: Require authentication — no anonymous venue upserts
+      const user = await getSupabaseUserFromRequest(request);
+      const authErr = requireAuthOrFail(request, user);
+      if (authErr) return authErr;
       const rlVenue = await applyRateLimit('profile-upsert', request);
       if (rlVenue) return rlVenue;
       const payload = await request.json().catch(() => ({}));
-      const id = String(payload?.venueId || '').trim();
-      if (!id) return json({ error: 'Missing venueId' }, { status: 400 });
+      const id = String(payload?.venueId || '').trim() || user!.id;
       if (!isUUID(id)) return json({ error: 'Invalid venueId format' }, { status: 400 });
+      // SECURITY: Only allow users to upsert their own venue profile (admins exempt)
+      if (id !== user!.id && !(await isAdminUser(user))) {
+        return json({ error: 'Forbidden: cannot modify another venue\'s profile' }, { status: 403 });
+      }
       const coverUrl = clampStr(payload?.coverPhoto || payload?.coverPhotoUrl, 2048) || null;
       if (coverUrl && !isValidUrl(coverUrl)) return json({ error: 'Invalid cover photo URL' }, { status: 400 });
       const resp = await upsertVenue({
@@ -3482,6 +3573,8 @@ export default {
 
         // Update referral status
         await supabaseAdmin.from('venue_referrals').update({ status: 'reward_granted', updated_at: now }).eq('id', ref.id);
+
+        await logAdminAction(adminUser?.id, 'referral_grant', 'venue_referrals', ref.id, { artist_user_id: ref.artist_user_id, pro_until: proUntil });
 
         return json({ ok: true });
       } catch (e) {
@@ -3813,6 +3906,9 @@ export default {
         .eq('id', msgId);
 
       if (updateErr) return json({ error: updateErr.message }, { status: 500 });
+
+      const adminUser = (request as any).__adminUser;
+      await logAdminAction(adminUser?.id, 'support_message_status', 'support_messages', msgId, { newStatus });
 
       // Return the updated message so the frontend can reflect it
       const { data: updated } = await supabaseAdmin

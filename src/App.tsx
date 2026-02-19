@@ -199,18 +199,17 @@ export default function App() {
   // Route overrides are now handled after all hooks (see bottom of component)
   // to avoid React hooks ordering violations.
 
-  // Admin email(s) — must match the ADMIN_EMAILS list in worker/index.ts
-  const ADMIN_EMAILS = ['zweston8136@sdsu.edu'];
+  // SECURITY: Admin role is determined server-side via user_metadata.role
+  // which is set by the Worker's /api/admin/verify endpoint.
+  // DO NOT hardcode admin emails in frontend code.
 
   const userFromSupabase = (supaUser: SupabaseUser | null | undefined): User | null => {
     if (!supaUser?.id) return null;
     const rawRole = (supaUser.user_metadata?.role as string | undefined | null);
-    // Check if the email matches a hardcoded admin — override role regardless of metadata.
-    const emailLower = (supaUser.email || '').toLowerCase().trim();
-    const isAdminEmail = ADMIN_EMAILS.includes(emailLower);
+    // Trust user_metadata.role which is set by the backend (Worker sets it
+    // via supabaseAdmin.auth.admin.updateUserById during /api/admin/verify).
     // Default to 'artist' when role metadata is missing (e.g. Google OAuth sign-up).
-    // Only 'venue' and 'admin' need to be explicitly set.
-    const role: UserRole = isAdminEmail ? 'admin' : (rawRole === 'venue' || rawRole === 'admin') ? rawRole : 'artist';
+    const role: UserRole = (rawRole === 'venue' || rawRole === 'admin') ? rawRole : 'artist';
     return {
       id: supaUser.id,
       name:

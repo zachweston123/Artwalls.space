@@ -24,8 +24,8 @@ interface StripeSetupProps {
 export function StripePaymentSetup({ onNavigate }: StripeSetupProps) {
   const [showPublishableKey, setShowPublishableKey] = useState(false);
   const [showSecretKey, setShowSecretKey] = useState(false);
-  const [publishableKey, setPublishableKey] = useState('pk_live_51234567890');
-  const [secretKey, setSecretKey] = useState('sk_live_abcdefghijklmnop');
+  const [publishableKey, setPublishableKey] = useState('');
+  const [secretKey, setSecretKey] = useState('');
   const [testMode, setTestMode] = useState(true);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(true);
