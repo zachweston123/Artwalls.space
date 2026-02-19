@@ -49,7 +49,7 @@
       },
       "scripts": {
             "dev": "vite",
-            "build": "vite build",
+            "build": "rm -rf functions && vite build",
             "spellcheck": "cspell --no-progress --no-summary \"**/*\" --exclude \"**/node_modules/**\" --exclude \"**/dist/**\" --exclude \"**/.git/**\"",
             "test": "vitest run"
       }

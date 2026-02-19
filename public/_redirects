@@ -1,5 +1,5 @@
-# SPA routing: serve index.html for all routes that don't match actual files
-# This rule uses 301 permanent redirect which Cloudflare properly handles
-# SPA routing: rewrite unmatched routes to index.html
-# Use 200 rewrite to avoid redirect loops and preserve asset paths
-/* /index.html 200
+# SPA routing for Cloudflare Pages
+# Cloudflare Pages serves index.html for 404s automatically when using a
+# single-page app. A catch-all /* rule causes an infinite-loop warning,
+# so we omit it and rely on Pages' built-in SPA behavior instead.
+# See: https://developers.cloudflare.com/pages/configuration/serving-pages/
