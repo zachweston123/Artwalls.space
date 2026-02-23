@@ -3801,6 +3801,285 @@ export default {
       return resp;
     }
 
+    // ══════════════════════════════════════════════════════════════════════════
+    // Venue Schedule Routes
+    // ══════════════════════════════════════════════════════════════════════════
+
+    // GET /api/venues/:venueId/schedule — read the venue's install/pickup window (public)
+    if (url.pathname.match(/^\/api\/venues\/[0-9a-f-]+\/schedule$/) && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const parts = url.pathname.split('/');
+      const venueId = parts[3];
+      if (!venueId) return json({ error: 'Missing venue id' }, { status: 400 });
+
+      const { data, error } = await supabaseAdmin
+        .from('venue_schedules')
+        .select('*')
+        .eq('venue_id', venueId)
+        .maybeSingle();
+
+      if (error) return json({ error: error.message }, { status: 500 });
+      if (!data) return json({ schedule: null });
+
+      return json({
+        schedule: {
+          id: data.id,
+          venueId: data.venue_id,
+          dayOfWeek: data.day_of_week,
+          startTime: data.start_time,
+          endTime: data.end_time,
+          slotMinutes: data.slot_minutes ?? 30,
+          installSlotIntervalMinutes: data.install_slot_interval_minutes ?? data.slot_minutes ?? 60,
+          timezone: data.timezone ?? null,
+        },
+      });
+    }
+
+    // POST /api/venues/:venueId/schedule — create or update the venue's install/pickup window
+    if (url.pathname.match(/^\/api\/venues\/[0-9a-f-]+\/schedule$/) && method === 'POST') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const user = await getSupabaseUserFromRequest(request);
+      const authErr = requireAuthOrFail(request, user);
+      if (authErr) return authErr;
+
+      const parts = url.pathname.split('/');
+      const venueId = parts[3];
+      if (!venueId) return json({ error: 'Missing venue id' }, { status: 400 });
+
+      // Only the venue owner (or admin) may set the schedule
+      const isAdmin = await isAdminUser(user);
+      if (user!.id !== venueId && !isAdmin) {
+        return json({ error: 'Forbidden: cannot modify another venue\'s schedule' }, { status: 403 });
+      }
+
+      const rlSched = await applyRateLimit('profile-upsert', request);
+      if (rlSched) return rlSched;
+
+      const body = await request.json().catch(() => ({})) as Record<string, unknown>;
+
+      // Validate required fields
+      const dayOfWeek = String(body?.dayOfWeek || '').trim();
+      const validDays = new Set(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']);
+      if (!validDays.has(dayOfWeek)) return json({ error: 'Invalid dayOfWeek. Must be Monday–Sunday.' }, { status: 400 });
+
+      const startTime = String(body?.startTime || '').trim();
+      const endTime = String(body?.endTime || '').trim();
+      const timeRe = /^\d{2}:\d{2}$/;
+      if (!timeRe.test(startTime)) return json({ error: 'startTime must be HH:MM' }, { status: 400 });
+      if (!timeRe.test(endTime)) return json({ error: 'endTime must be HH:MM' }, { status: 400 });
+      if (startTime >= endTime) return json({ error: 'startTime must be before endTime' }, { status: 400 });
+
+      const interval = typeof body?.installSlotIntervalMinutes === 'number'
+        ? body.installSlotIntervalMinutes
+        : typeof body?.slotMinutes === 'number'
+          ? body.slotMinutes
+          : 60;
+      const allowedIntervals = new Set([15, 30, 60, 120]);
+      if (!allowedIntervals.has(interval as number)) return json({ error: 'Slot interval must be 15, 30, 60, or 120' }, { status: 400 });
+
+      const timezone = typeof body?.timezone === 'string' ? body.timezone.trim() || null : null;
+
+      const { data, error } = await supabaseAdmin
+        .from('venue_schedules')
+        .upsert({
+          venue_id: venueId,
+          day_of_week: dayOfWeek,
+          start_time: startTime,
+          end_time: endTime,
+          slot_minutes: interval,
+          install_slot_interval_minutes: interval,
+          timezone,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'venue_id' })
+        .select('*')
+        .single();
+
+      if (error) return json({ error: error.message }, { status: 500 });
+
+      return json({
+        schedule: {
+          id: data.id,
+          venueId: data.venue_id,
+          dayOfWeek: data.day_of_week,
+          startTime: data.start_time,
+          endTime: data.end_time,
+          slotMinutes: data.slot_minutes ?? 30,
+          installSlotIntervalMinutes: data.install_slot_interval_minutes ?? data.slot_minutes ?? 60,
+          timezone: data.timezone ?? null,
+        },
+      }, { status: 200 });
+    }
+
+    // GET /api/venues/:venueId/availability — compute available time slots for a week (public)
+    if (url.pathname.match(/^\/api\/venues\/[0-9a-f-]+\/availability$/) && method === 'GET') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const parts = url.pathname.split('/');
+      const venueId = parts[3];
+      if (!venueId) return json({ error: 'Missing venue id' }, { status: 400 });
+
+      // Load the venue schedule
+      const { data: sched, error: schedErr } = await supabaseAdmin
+        .from('venue_schedules')
+        .select('*')
+        .eq('venue_id', venueId)
+        .maybeSingle();
+
+      if (schedErr) return json({ error: schedErr.message }, { status: 500 });
+      if (!sched) {
+        return json({
+          slots: [],
+          slotMinutes: 30,
+          slotIntervalMinutes: 60,
+          dayOfWeek: null,
+          startTime: null,
+          endTime: null,
+        });
+      }
+
+      const dayOfWeek: string = sched.day_of_week;
+      const startTime: string = sched.start_time;     // "16:00"
+      const endTime: string = sched.end_time;          // "18:00"
+      const intervalMin: number = sched.install_slot_interval_minutes ?? sched.slot_minutes ?? 60;
+
+      // Determine the week window: find the next occurrence of dayOfWeek from weekStart
+      const weekStartParam = url.searchParams.get('weekStart');
+      const now = new Date();
+      let anchor: Date;
+      if (weekStartParam) {
+        anchor = new Date(weekStartParam);
+        if (isNaN(anchor.getTime())) anchor = now;
+      } else {
+        anchor = now;
+      }
+
+      const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const targetDayIdx = dayNames.indexOf(dayOfWeek);
+      if (targetDayIdx === -1) return json({ error: 'Invalid dayOfWeek in schedule' }, { status: 500 });
+
+      // Find the next occurrence of the target day (or today if today IS that day and still in future)
+      const anchorDay = anchor.getDay();
+      let daysUntil = (targetDayIdx - anchorDay + 7) % 7;
+      // If daysUntil is 0 and the time has passed, jump to next week
+      const targetDate = new Date(anchor);
+      targetDate.setDate(targetDate.getDate() + daysUntil);
+
+      // Generate time slots
+      const [startH, startM] = startTime.split(':').map(Number);
+      const [endH, endM] = endTime.split(':').map(Number);
+      const startMin = startH * 60 + startM;
+      const endMin = endH * 60 + endM;
+      const slots: string[] = [];
+
+      for (let m = startMin; m + intervalMin <= endMin; m += intervalMin) {
+        const slotDate = new Date(targetDate);
+        slotDate.setHours(Math.floor(m / 60), m % 60, 0, 0);
+        slots.push(slotDate.toISOString());
+      }
+
+      // Filter out slots that are already booked
+      if (slots.length > 0) {
+        const { data: booked } = await supabaseAdmin
+          .from('venue_bookings')
+          .select('start_at')
+          .eq('venue_id', venueId)
+          .gte('start_at', slots[0])
+          .lte('start_at', slots[slots.length - 1]);
+
+        if (booked && booked.length > 0) {
+          const bookedSet = new Set(booked.map((b: any) => new Date(b.start_at).toISOString()));
+          const filtered = slots.filter(s => !bookedSet.has(s));
+          return json({
+            slots: filtered,
+            slotMinutes: intervalMin,
+            slotIntervalMinutes: intervalMin,
+            dayOfWeek,
+            startTime,
+            endTime,
+            windowStart: slots[0],
+            windowEnd: slots[slots.length - 1],
+          });
+        }
+      }
+
+      return json({
+        slots,
+        slotMinutes: intervalMin,
+        slotIntervalMinutes: intervalMin,
+        dayOfWeek,
+        startTime,
+        endTime,
+        windowStart: slots.length > 0 ? slots[0] : undefined,
+        windowEnd: slots.length > 0 ? slots[slots.length - 1] : undefined,
+      });
+    }
+
+    // POST /api/venues/:venueId/bookings — create a booking (authenticated artist or venue)
+    if (url.pathname.match(/^\/api\/venues\/[0-9a-f-]+\/bookings$/) && method === 'POST') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const user = await getSupabaseUserFromRequest(request);
+      const authErr = requireAuthOrFail(request, user);
+      if (authErr) return authErr;
+
+      const parts = url.pathname.split('/');
+      const venueId = parts[3];
+      if (!venueId) return json({ error: 'Missing venue id' }, { status: 400 });
+
+      const rlBook = await applyRateLimit('profile-upsert', request);
+      if (rlBook) return rlBook;
+
+      const body = await request.json().catch(() => ({})) as Record<string, unknown>;
+      const bookingType = String(body?.type || '').trim();
+      if (!['install', 'pickup'].includes(bookingType)) {
+        return json({ error: 'type must be "install" or "pickup"' }, { status: 400 });
+      }
+      const startAt = String(body?.startAt || '').trim();
+      if (!startAt || isNaN(new Date(startAt).getTime())) {
+        return json({ error: 'startAt must be a valid ISO date string' }, { status: 400 });
+      }
+
+      // Load venue schedule to compute end_at
+      const { data: sched } = await supabaseAdmin
+        .from('venue_schedules')
+        .select('install_slot_interval_minutes,slot_minutes')
+        .eq('venue_id', venueId)
+        .maybeSingle();
+
+      const intervalMin = sched?.install_slot_interval_minutes ?? sched?.slot_minutes ?? 60;
+      const startDate = new Date(startAt);
+      const endDate = new Date(startDate.getTime() + intervalMin * 60_000);
+
+      // Check for conflicts
+      const { data: conflict } = await supabaseAdmin
+        .from('venue_bookings')
+        .select('id')
+        .eq('venue_id', venueId)
+        .eq('start_at', startDate.toISOString())
+        .maybeSingle();
+
+      if (conflict) return json({ error: 'This time slot is already booked' }, { status: 409 });
+
+      const bookingId = crypto.randomUUID();
+      const { data, error } = await supabaseAdmin
+        .from('venue_bookings')
+        .insert({
+          id: bookingId,
+          venue_id: venueId,
+          artist_id: user!.id,
+          artwork_id: typeof body?.artworkId === 'string' ? body.artworkId : null,
+          type: bookingType,
+          start_at: startDate.toISOString(),
+          end_at: endDate.toISOString(),
+          status: 'confirmed',
+          created_at: new Date().toISOString(),
+        })
+        .select('id')
+        .single();
+
+      if (error) return json({ error: error.message }, { status: 500 });
+
+      return json({ booking: { id: data.id } }, { status: 201 });
+    }
+
     // ── Support System Routes ──────────────────────────────────────────────
 
     // POST /api/support/messages — public contact form submission

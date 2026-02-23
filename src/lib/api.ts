@@ -231,7 +231,35 @@ export interface VenueSchedule {
 }
 
 export async function getVenueSchedule(venueId: string) {
-  return apiGet<{ schedule: VenueSchedule | null }>(`/api/venues/${venueId}/schedule`);
+  try {
+    return await apiGet<{ schedule: VenueSchedule | null }>(`/api/venues/${venueId}/schedule`);
+  } catch (apiErr) {
+    // Fallback: read directly via Supabase (RLS allows public SELECT)
+    console.warn('[getVenueSchedule] API failed, falling back to Supabase direct read:', apiErr);
+    const { data, error } = await supabase
+      .from('venue_schedules')
+      .select('*')
+      .eq('venue_id', venueId)
+      .maybeSingle();
+
+    if (error) {
+      console.error('[getVenueSchedule] Supabase fallback failed:', error);
+      throw apiErr;
+    }
+    if (!data) return { schedule: null };
+
+    const mapped: VenueSchedule = {
+      id: data.id,
+      venueId: data.venue_id,
+      dayOfWeek: data.day_of_week,
+      startTime: data.start_time,
+      endTime: data.end_time,
+      slotMinutes: data.slot_minutes,
+      installSlotIntervalMinutes: data.install_slot_interval_minutes ?? data.slot_minutes ?? 60,
+      timezone: data.timezone,
+    };
+    return { schedule: mapped };
+  }
 }
 
 export async function saveVenueSchedule(venueId: string, schedule: Omit<VenueSchedule, 'id' | 'venueId'>) {
