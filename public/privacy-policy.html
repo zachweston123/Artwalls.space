@@ -3,18 +3,19 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Artwalls Privacy Policy — how we collect, use, and protect your information." />
+    <meta name="description" content="Artwalls Privacy Policy — how we collect, use, and protect your information, including Google user data." />
     <meta name="theme-color" content="#3B82F6" />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Privacy Policy — Artwalls" />
-    <meta property="og:description" content="How Artwalls collects, uses, and protects your information." />
+    <meta property="og:description" content="How Artwalls collects, uses, and protects your information, including Google user data." />
     <meta property="og:url" content="https://artwalls.space/privacy-policy" />
     <meta property="og:site_name" content="Artwalls" />
 
     <title>Privacy Policy — Artwalls</title>
 
+    <link rel="canonical" href="https://artwalls.space/privacy-policy" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -31,28 +32,23 @@
       }
       h1, h2, h3 { font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif; }
 
-      /* Header / Nav */
       .nav { background: #ffffff; border-bottom: 1px solid #e2e8f0; padding: 16px 0; }
       .nav-inner { max-width: 1120px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; }
       .nav-brand { display: flex; align-items: center; gap: 8px; text-decoration: none; color: #1e293b; }
       .nav-brand-icon { width: 32px; height: 32px; background: #3B82F6; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 18px; }
       .nav-brand span { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 600; }
-      .nav-link { font-size: 14px; color: #3B82F6; text-decoration: none; font-weight: 500; }
-      .nav-link:hover { text-decoration: underline; }
+      .nav-links { display: flex; gap: 20px; font-size: 14px; }
+      .nav-links a { color: #3B82F6; text-decoration: none; font-weight: 500; }
+      .nav-links a:hover { text-decoration: underline; }
 
-      /* Page container */
       .container { max-width: 800px; margin: 0 auto; padding: 32px 24px 64px; }
-
-      /* Hero header */
       .hero { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px 24px; margin-bottom: 32px; }
       .hero h1 { font-size: 28px; font-weight: 700; color: #1e293b; margin-bottom: 4px; }
       .hero p { font-size: 15px; color: #64748b; }
 
-      /* Content card */
       .card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 32px; }
       .updated { font-size: 13px; color: #94a3b8; margin-bottom: 32px; }
 
-      /* Sections */
       section { margin-bottom: 32px; }
       section:last-child { margin-bottom: 0; }
       section h2 { font-size: 20px; font-weight: 600; color: #1e293b; margin-bottom: 12px; }
@@ -61,8 +57,8 @@
       section ul li { margin-bottom: 8px; }
       section ul li strong { color: #1e293b; }
       a.link { color: #3B82F6; text-decoration: underline; }
+      .highlight-box { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 20px 24px; margin-bottom: 8px; }
 
-      /* Footer */
       .footer { background: #f1f5f9; border-top: 1px solid #e2e8f0; margin-top: 48px; padding: 32px 0; }
       .footer-inner { max-width: 1120px; margin: 0 auto; padding: 0 24px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; font-size: 13px; color: #64748b; }
       .footer a { color: #64748b; text-decoration: none; }
@@ -80,6 +76,7 @@
         section h2 { color: #f1f5f9; }
         section p, section ul { color: #cbd5e1; }
         section ul li strong { color: #f1f5f9; }
+        .highlight-box { background: #1e3a5f; border-color: #2563eb; }
         .footer { background: #1e293b; border-color: #334155; }
         .footer, .footer a { color: #94a3b8; }
         .footer a:hover { color: #e2e8f0; }
@@ -91,11 +88,15 @@
     <!-- Navigation -->
     <nav class="nav">
       <div class="nav-inner">
-        <a href="/" class="nav-brand">
+        <a href="https://artwalls.space/" class="nav-brand">
           <div class="nav-brand-icon">A</div>
           <span>Artwalls</span>
         </a>
-        <a href="/" class="nav-link">← Back to Artwalls</a>
+        <div class="nav-links">
+          <a href="https://artwalls.space/">Home</a>
+          <a href="https://artwalls.space/privacy-policy">Privacy Policy</a>
+          <a href="https://artwalls.space/terms-of-service">Terms of Service</a>
+        </div>
       </div>
     </nav>
 
@@ -113,17 +114,61 @@
         <section>
           <h2>Introduction</h2>
           <p>
-            Artwalls ("Artwalls," "we," "us") operates a marketplace that connects local artists
-            with venues for rotating artwork displays and sales. This Privacy Policy explains what
-            information we collect, how we use it, and your choices. It applies to artists, venues,
-            buyers, and all visitors of <a href="https://artwalls.space" class="link">artwalls.space</a>.
+            This privacy policy applies to <strong>Artwalls</strong> ("we," "us," "our"), the web application
+            available at <a href="https://artwalls.space" class="link">https://artwalls.space</a>.
+            Artwalls is an online marketplace that connects local artists with venues for rotating
+            artwork displays and sales.
           </p>
+          <p>
+            This policy describes the information we collect from artists, venues, buyers, and
+            visitors, how we use and share that information, and your choices. It covers all data
+            collected through our website, including data received from third-party sign-in
+            providers such as Google.
+          </p>
+        </section>
+
+        <!-- ===== GOOGLE USER DATA — DEDICATED SECTION ===== -->
+        <section>
+          <h2>Google User Data</h2>
+          <div class="highlight-box">
+            <p>
+              Artwalls offers "Sign in with Google" as an authentication option. When you choose to
+              sign in with your Google account, we receive the following information from Google:
+            </p>
+            <ul>
+              <li><strong>Google account email address</strong> — used to create and identify your Artwalls account.</li>
+              <li><strong>Display name</strong> — used to pre-fill your profile name so you don't have to type it again.</li>
+              <li><strong>Profile photo URL</strong> — used to display your avatar within the app.</li>
+            </ul>
+            <p style="margin-top: 12px;"><strong>How we use Google user data:</strong></p>
+            <ul>
+              <li>Authenticate you and create or sign in to your Artwalls account.</li>
+              <li>Pre-fill your display name and profile photo for convenience.</li>
+              <li>Communicate important account and service updates to your email address.</li>
+            </ul>
+            <p style="margin-top: 12px;"><strong>How we store Google user data:</strong></p>
+            <ul>
+              <li>Your Google email, name, and profile photo URL are stored in our database hosted on <a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" class="link">Supabase</a> infrastructure.</li>
+              <li>Authentication tokens are managed by Supabase Auth and are not directly accessible to our application code.</li>
+            </ul>
+            <p style="margin-top: 12px;"><strong>How we share Google user data:</strong></p>
+            <ul>
+              <li>We do <strong>not</strong> sell, rent, or trade your Google user data to any third party.</li>
+              <li>Your Google data is shared only with our infrastructure providers (Supabase for auth/database, Cloudflare for hosting) as necessary to operate the service.</li>
+              <li>Your display name and profile photo may appear on your public artist or venue profile if you choose to make it public.</li>
+            </ul>
+            <p style="margin-top: 12px;">
+              Artwalls' use and transfer of information received from Google APIs adheres to the
+              <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener noreferrer" class="link">Google API Services User Data Policy</a>,
+              including the Limited Use requirements.
+            </p>
+          </div>
         </section>
 
         <section>
           <h2>What We Collect</h2>
           <ul>
-            <li><strong>Account information</strong> — name, email address, password hash, and role (artist or venue).</li>
+            <li><strong>Account information</strong> — name, email address, password hash (for email sign-up), and role (artist or venue).</li>
             <li><strong>Profile information</strong> — bio, profile photo, social links, city, and public display name.</li>
             <li><strong>Venue information</strong> — venue name, address, wall dimensions, photos, and hosting preferences.</li>
             <li><strong>Artwork information</strong> — titles, descriptions, photos, pricing, dimensions, and availability.</li>
@@ -157,7 +202,7 @@
         <section>
           <h2>Authentication, Database &amp; Hosting</h2>
           <ul>
-            <li><strong>Supabase</strong> — provides authentication (including Google OAuth sign-in) and hosts our PostgreSQL database. Your account data, content, and auth tokens are stored in Supabase infrastructure.</li>
+            <li><strong>Supabase</strong> — provides authentication (email/password and Google OAuth sign-in) and hosts our PostgreSQL database. Your account data, content, and auth tokens are stored in Supabase infrastructure.</li>
             <li><strong>Cloudflare</strong> — serves the website and API via Cloudflare Pages and Workers. Cloudflare may process request logs, IP addresses, and traffic metadata as part of normal CDN operation.</li>
           </ul>
         </section>
@@ -166,7 +211,7 @@
           <h2>When We Share Information</h2>
           <ul>
             <li><strong>Public profiles</strong> — artist profiles, venue profiles, curated sets, and QR-linked artwork pages are publicly visible by design.</li>
-            <li><strong>Service providers</strong> — we share data with Stripe, Supabase, and Cloudflare solely to operate the service (see above).</li>
+            <li><strong>Service providers</strong> — we share data with Stripe (payments), Supabase (auth &amp; database), and Cloudflare (hosting) solely to operate the service.</li>
             <li><strong>Legal obligations</strong> — we may disclose information when required by law, subpoena, or to prevent harm.</li>
             <li><strong>No selling of data</strong> — we do not sell, rent, or trade your personal information to third parties for marketing purposes.</li>
           </ul>
@@ -207,8 +252,9 @@
           <h2>Your Rights</h2>
           <ul>
             <li><strong>Access &amp; update</strong> — manage your profile and account settings directly in the app.</li>
-            <li><strong>Export</strong> — request a copy of your personal data by emailing us.</li>
-            <li><strong>Deletion</strong> — request account deletion; we will confirm and process your request.</li>
+            <li><strong>Export</strong> — request a copy of your personal data by emailing us at <a href="mailto:support@artwalls.space" class="link">support@artwalls.space</a>.</li>
+            <li><strong>Deletion</strong> — request account deletion by emailing <a href="mailto:support@artwalls.space" class="link">support@artwalls.space</a>; we will confirm and process your request. This includes deletion of any Google user data we hold.</li>
+            <li><strong>Revoke Google access</strong> — you can revoke Artwalls' access to your Google account at any time via your <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer" class="link">Google Account permissions</a> page.</li>
             <li><strong>Cookies</strong> — adjust browser settings to control cookies; essential cookies may be required for core functionality.</li>
             <li><strong>Communications</strong> — opt out of non-essential emails where available.</li>
           </ul>
@@ -226,8 +272,10 @@
           <h2>Changes to This Policy</h2>
           <p>
             We may update this Privacy Policy to reflect changes in the law or our services.
-            Material changes will be noted on this page or via in-app notice. The "Last updated"
-            date at the top shows the current version.
+            Material changes will be posted on this page and, where appropriate, notified via
+            in-app notice or email. If we change how we use Google user data, we will notify
+            affected users and obtain consent where required. The "Last updated" date at the top
+            shows the current version.
           </p>
         </section>
 
@@ -236,6 +284,10 @@
           <p>
             Questions or requests about your privacy? Reach us at
             <a href="mailto:support@artwalls.space" class="link">support@artwalls.space</a>.
+          </p>
+          <p>
+            Artwalls is operated by Artwalls. Our website is
+            <a href="https://artwalls.space" class="link">https://artwalls.space</a>.
           </p>
         </section>
       </div>
@@ -246,9 +298,9 @@
       <div class="footer-inner">
         <p>&copy; 2026 Artwalls. All rights reserved.</p>
         <div class="footer-links">
-          <a href="/privacy-policy">Privacy Policy</a>
-          <a href="/terms-of-service">Terms of Service</a>
-          <a href="/policies">Policies</a>
+          <a href="https://artwalls.space/privacy-policy">Privacy Policy</a>
+          <a href="https://artwalls.space/terms-of-service">Terms of Service</a>
+          <a href="https://artwalls.space/policies">Policies</a>
           <a href="mailto:support@artwalls.space">Contact</a>
         </div>
       </div>

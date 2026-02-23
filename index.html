@@ -87,14 +87,68 @@
 
     <body>
       <div id="root"></div>
-      <noscript>
-        <div style="padding: 12px; text-align: center; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; font-size: 14px; color: #4b5563;">
-          <a href="/privacy-policy" style="margin-right: 12px; color: #111827;">Privacy Policy</a>
-          <a href="/terms-of-service" style="margin-right: 12px; color: #111827;">Terms of Service</a>
-          <a href="/policies" style="color: #111827;">Policies</a>
-        </div>
-      </noscript>
+
+      <!--
+        Static homepage content for crawlers / bots that don't execute JS.
+        React will replace #root contents once the SPA boots, so real users
+        never see this. Google's OAuth verification bot DOES see it.
+      -->
+      <div id="static-homepage" style="font-family: 'Work Sans', system-ui, -apple-system, sans-serif; color: #1e293b;">
+        <!-- Header -->
+        <header style="background: #ffffff; border-bottom: 1px solid #e2e8f0; padding: 16px 24px;">
+          <div style="max-width: 1120px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div style="width: 32px; height: 32px; background: #3B82F6; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 18px;">A</div>
+              <span style="font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 600;">Artwalls</span>
+            </div>
+            <nav style="display: flex; gap: 20px; font-size: 14px;">
+              <a href="/why-artwalls" style="color: #3B82F6; text-decoration: none;">For Artists</a>
+              <a href="/venues" style="color: #3B82F6; text-decoration: none;">For Venues</a>
+              <a href="/privacy-policy" style="color: #3B82F6; text-decoration: none;">Privacy Policy</a>
+            </nav>
+          </div>
+        </header>
+
+        <!-- Hero -->
+        <main style="max-width: 800px; margin: 0 auto; padding: 48px 24px; text-align: center;">
+          <h1 style="font-family: 'Space Grotesk', sans-serif; font-size: 36px; font-weight: 700; margin-bottom: 16px;">Artwalls — Art on Every Wall</h1>
+          <p style="font-size: 18px; color: #475569; margin-bottom: 32px; line-height: 1.6;">
+            Artwalls connects local artists with venues to display and sell artwork on real walls.
+            Find wall space, manage rotating displays, and grow your art business.
+          </p>
+          <p style="font-size: 15px; color: #64748b;">Sign in with Google or email to get started.</p>
+        </main>
+
+        <!-- Footer with prominent links -->
+        <footer style="background: #f1f5f9; border-top: 1px solid #e2e8f0; padding: 24px; margin-top: 48px;">
+          <div style="max-width: 1120px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; font-size: 13px; color: #64748b;">
+            <p>&copy; 2026 Artwalls. All rights reserved.</p>
+            <div style="display: flex; gap: 20px;">
+              <a href="/privacy-policy" style="color: #1e293b; text-decoration: underline; font-weight: 500;">Privacy Policy</a>
+              <a href="/terms-of-service" style="color: #64748b; text-decoration: none;">Terms of Service</a>
+              <a href="/policies" style="color: #64748b; text-decoration: none;">Policies</a>
+              <a href="mailto:support@artwalls.space" style="color: #64748b; text-decoration: none;">Contact</a>
+            </div>
+          </div>
+        </footer>
+      </div>
+
       <script type="module" src="/src/main.tsx"></script>
+      <script>
+        // Hide the static fallback once React mounts
+        (function() {
+          var observer = new MutationObserver(function() {
+            var root = document.getElementById('root');
+            if (root && root.children.length > 0) {
+              var fallback = document.getElementById('static-homepage');
+              if (fallback) fallback.style.display = 'none';
+              observer.disconnect();
+            }
+          });
+          var root = document.getElementById('root');
+          if (root) observer.observe(root, { childList: true });
+        })();
+      </script>
     </body>
   </html>
   
