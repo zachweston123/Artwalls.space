@@ -1,4 +1,4 @@
-import { cn } from '@/lib/utils';
+import { cn } from './utils';
 
 const sizeMap = {
   narrow: 'max-w-4xl',
