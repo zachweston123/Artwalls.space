@@ -58,21 +58,13 @@ export function ArtistProfileView({
         return;
       }
       try {
-        const profile = await apiGet<{
-          id: string;
-          name?: string | null;
-          profile_photo_url?: string | null;
-          city_primary?: string | null;
-          bio?: string | null;
-          instagram_handle?: string | null;
-          open_to_placements?: boolean | null;
-        }>(`/api/artists/${artistId}`);
+        const profile = await apiGet<any>(`/api/artists/${artistId}`);
         
         if (isMounted && profile) {
           setArtist({
             id: profile.id,
             name: profile.name || 'Artist',
-            avatar: profile.profile_photo_url || '',
+            avatar: profile.profilePhotoUrl ?? profile.profile_photo_url ?? '',
             location: profile.city_primary || '',
             bio: profile.bio || '',
             instagram: profile.instagram_handle || '',

@@ -479,9 +479,9 @@ export default {
       }
     }
 
-    async function upsertArtist(artist: { id: string; email?: string | null; name?: string | null; role?: string; phoneNumber?: string | null; cityPrimary?: string | null; citySecondary?: string | null; stripeAccountId?: string | null; stripeCustomerId?: string | null; subscriptionTier?: string | null; subscriptionStatus?: string | null; stripeSubscriptionId?: string | null; platformFeeBps?: number | null; }): Promise<Response> {
+    async function upsertArtist(artist: { id: string; email?: string | null; name?: string | null; role?: string; phoneNumber?: string | null; cityPrimary?: string | null; citySecondary?: string | null; stripeAccountId?: string | null; stripeCustomerId?: string | null; subscriptionTier?: string | null; subscriptionStatus?: string | null; stripeSubscriptionId?: string | null; platformFeeBps?: number | null; profilePhotoUrl?: string | null; }): Promise<Response> {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured - check SUPABASE_SERVICE_ROLE_KEY secret' }, { status: 500 });
-      const payload = {
+      const payload: Record<string, any> = {
         id: artist.id,
         email: artist.email ?? null,
         name: artist.name ?? null,
@@ -498,6 +498,10 @@ export default {
         is_live: true, // Ensure new artists are live by default
         updated_at: new Date().toISOString(),
       };
+      // Only include profile_photo_url if provided (avoid overwriting with null)
+      if (artist.profilePhotoUrl !== undefined && artist.profilePhotoUrl !== null) {
+        payload.profile_photo_url = artist.profilePhotoUrl;
+      }
       const { data, error } = await supabaseAdmin.from('artists').upsert(payload, { onConflict: 'id' }).select('*').single();
       if (error) {
         console.error('[upsertArtist] Error:', error.message, error.code, (error as any).hint);
@@ -1449,7 +1453,7 @@ export default {
         slug: (a as any).slug || null,
         name: a.name, 
         email: a.email,
-        profile_photo_url: a.profile_photo_url,
+        profilePhotoUrl: a.profile_photo_url || null,
         location: a.city_primary || a.city_secondary || 'Local',
         is_live: a.is_live,
         bio: (a as any).bio || '',
@@ -3615,6 +3619,8 @@ export default {
         if (id !== user!.id && !(await isAdminUser(user))) {
           return json({ error: 'Forbidden: cannot modify another user\'s profile' }, { status: 403 });
         }
+        const photoUrl = clampStr(payload?.profilePhotoUrl || payload?.avatar, 2048) || null;
+        if (photoUrl && !isValidUrl(photoUrl)) return json({ error: 'Invalid profile photo URL' }, { status: 400 });
         const resp = await upsertArtist({
           id,
           email: clampStr(payload?.email, 254) || null,
@@ -3624,6 +3630,7 @@ export default {
           cityPrimary: clampStr(payload?.cityPrimary, 100) || null,
           citySecondary: clampStr(payload?.citySecondary, 100) || null,
           subscriptionTier: clampStr(payload?.subscriptionTier, 20) || null,
+          profilePhotoUrl: photoUrl,
         });
         return resp;
       } catch (err: unknown) {
