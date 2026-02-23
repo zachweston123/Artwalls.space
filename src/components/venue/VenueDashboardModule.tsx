@@ -1,4 +1,5 @@
-import { TrendingUp, Users, Gift } from 'lucide-react';
+import { CalendarDays, Gift, TrendingUp, Users } from 'lucide-react';
+import { StatCard } from '../ui/stat-card';
 
 interface VenueDashboardModuleProps {
   onNavigate?: (page: string) => void;
@@ -26,39 +27,39 @@ export function VenueDashboardModule({ onNavigate }: VenueDashboardModuleProps) 
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="bg-[var(--surface)] rounded-lg p-6 border border-[var(--border)]">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-medium text-[var(--text-muted)]">Total Earnings</h3>
-            <TrendingUp className="w-5 h-5 text-[var(--accent)]" />
-          </div>
-          <p className="text-3xl font-bold text-[var(--text)]">${stats.totalEarnings}</p>
-          <p className="text-xs text-[var(--text-muted)] mt-2">All time</p>
-        </div>
-
-        <div className="bg-[var(--surface)] rounded-lg p-6 border border-[var(--border)]">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-medium text-[var(--text-muted)]">This Month</h3>
-            <Users className="w-5 h-5 text-green-600" />
-          </div>
-          <p className="text-3xl font-bold text-[var(--text)]">${stats.monthlyEarnings}</p>
-          <p className="text-xs text-[var(--text-muted)] mt-2">January 2026</p>
-        </div>
-
-        <div className="bg-[var(--surface)] rounded-lg p-6 border border-[var(--border)]">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-medium text-[var(--text-muted)]">Total Sales</h3>
-            <Gift className="w-5 h-5 text-blue-600" />
-          </div>
-          <p className="text-3xl font-bold text-[var(--text)]">{stats.salesCount}</p>
-          <p className="text-xs text-[var(--text-muted)] mt-2">Artworks sold from your space</p>
-        </div>
-
-        <div className="bg-[var(--accent)]/10 rounded-lg p-6 border border-[var(--accent)]/30">
-          <h3 className="text-sm font-medium text-[var(--text-muted)] mb-2">Next Payout</h3>
-          <p className="text-xl font-bold text-[var(--text)]">{stats.nextPayoutDate}</p>
-          <p className="text-xs text-[var(--text-muted)] mt-2">Direct to your account</p>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <StatCard
+          label="Total Earnings"
+          value={`$${stats.totalEarnings}`}
+          subtext="All time"
+          icon={<TrendingUp className="w-5 h-5" />}
+          accent="green"
+          className="sm:p-6"
+        />
+        <StatCard
+          label="This Month"
+          value={`$${stats.monthlyEarnings}`}
+          subtext="January 2026"
+          icon={<Users className="w-5 h-5" />}
+          accent="blue"
+          className="sm:p-6"
+        />
+        <StatCard
+          label="Total Sales"
+          value={stats.salesCount}
+          subtext="Artworks sold from your space"
+          icon={<Gift className="w-5 h-5" />}
+          accent="violet"
+          className="sm:p-6"
+        />
+        <StatCard
+          label="Next Payout"
+          value={stats.nextPayoutDate}
+          subtext="Direct to your account"
+          icon={<CalendarDays className="w-5 h-5" />}
+          accent="amber"
+          className="sm:p-6"
+        />
       </div>
 
       {/* Share Assets */}

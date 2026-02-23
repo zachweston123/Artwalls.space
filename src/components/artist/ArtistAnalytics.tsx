@@ -4,6 +4,9 @@ import { getErrorMessage } from '../../lib/errors';
 import { TrendingUp, ShoppingBag, DollarSign, BarChart3, QrCode, Eye } from 'lucide-react';
 import type { User } from '../../App';
 import { PageHeroHeader } from '../PageHeroHeader';
+import { PageShell } from '../ui/page-shell';
+import { SectionCard } from '../ui/section-card';
+import { StatCard } from '../ui/stat-card';
 
 type TimeRange = '7d' | '30d' | '90d';
 
@@ -163,8 +166,50 @@ export function ArtistAnalytics({ user }: ArtistAnalyticsProps) {
     return dollars.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 });
   };
 
+  const summaryCards = [
+    {
+      label: 'QR Scans',
+      value: summary.scans.toLocaleString(),
+      subtext: 'Times someone scanned a QR code',
+      icon: <QrCode className="w-5 h-5" />,
+      accent: 'violet' as const,
+    },
+    {
+      label: 'Artwork Views',
+      value: summary.views.toLocaleString(),
+      subtext: 'Artwork detail page loads',
+      icon: <Eye className="w-5 h-5" />,
+      accent: 'blue' as const,
+    },
+    {
+      label: 'Orders',
+      value: summary.orders.toLocaleString(),
+      icon: <ShoppingBag className="w-5 h-5" />,
+      accent: 'blue' as const,
+    },
+    {
+      label: 'Revenue',
+      value: fmt(summary.revenueCents),
+      icon: <DollarSign className="w-5 h-5" />,
+      accent: 'green' as const,
+    },
+    {
+      label: 'Your Earnings',
+      value: fmt(summary.earningsCents),
+      icon: <TrendingUp className="w-5 h-5" />,
+      accent: 'green' as const,
+    },
+    {
+      label: 'Scan → Purchase',
+      value: `${summary.conversionPct}%`,
+      subtext: 'Conversion rate',
+      icon: <BarChart3 className="w-5 h-5" />,
+      accent: 'blue' as const,
+    },
+  ];
+
   return (
-    <div className="bg-[var(--bg)] text-[var(--text)]">
+    <PageShell size="wide" className="text-[var(--text)]">
       <PageHeroHeader
         title="Analytics"
         subtitle="Track your sales performance and artwork engagement."
@@ -197,75 +242,37 @@ export function ArtistAnalytics({ user }: ArtistAnalyticsProps) {
 
       {/* Error State */}
       {!loading && error && (
-        <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-lg p-6 text-center">
+        <SectionCard className="text-center">
           <p className="text-sm text-[var(--danger)] mb-3">{error}</p>
           <button onClick={loadData} className="px-4 py-2 bg-[var(--blue)] hover:bg-[var(--blue-hover)] text-[var(--on-blue)] font-semibold text-sm rounded-lg transition-colors shadow-sm">
             Retry
           </button>
-        </div>
+        </SectionCard>
       )}
 
       {/* Data */}
       {!loading && !error && (
         <>
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
-            <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-lg p-5">
-              <div className="w-10 h-10 bg-[color:color-mix(in_srgb,var(--purple,#8b5cf6)_12%,transparent)] rounded-md flex items-center justify-center mb-3">
-                <QrCode className="w-5 h-5 text-[var(--purple,#8b5cf6)]" />
-              </div>
-              <p className="text-xs text-[var(--text-muted)] mb-1">QR Scans</p>
-              <p className="text-2xl font-bold">{summary.scans.toLocaleString()}</p>
-              <p className="text-xs text-[var(--text-muted)] mt-1">Times someone scanned a QR code</p>
-            </div>
-
-            <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-lg p-5">
-              <div className="w-10 h-10 bg-[color:color-mix(in_srgb,var(--blue)_12%,transparent)] rounded-md flex items-center justify-center mb-3">
-                <Eye className="w-5 h-5 text-[var(--blue)]" />
-              </div>
-              <p className="text-xs text-[var(--text-muted)] mb-1">Artwork Views</p>
-              <p className="text-2xl font-bold">{summary.views.toLocaleString()}</p>
-              <p className="text-xs text-[var(--text-muted)] mt-1">Artwork detail page loads</p>
-            </div>
-
-            <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-lg p-5">
-              <div className="w-10 h-10 bg-[color:color-mix(in_srgb,var(--blue)_12%,transparent)] rounded-md flex items-center justify-center mb-3">
-                <ShoppingBag className="w-5 h-5 text-[var(--blue)]" />
-              </div>
-              <p className="text-xs text-[var(--text-muted)] mb-1">Orders</p>
-              <p className="text-2xl font-bold">{summary.orders}</p>
-            </div>
-
-            <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-lg p-5">
-              <div className="w-10 h-10 bg-[color:color-mix(in_srgb,var(--green)_12%,transparent)] rounded-md flex items-center justify-center mb-3">
-                <DollarSign className="w-5 h-5 text-[var(--green)]" />
-              </div>
-              <p className="text-xs text-[var(--text-muted)] mb-1">Revenue</p>
-              <p className="text-2xl font-bold">{fmt(summary.revenueCents)}</p>
-            </div>
-
-            <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-lg p-5">
-              <div className="w-10 h-10 bg-[color:color-mix(in_srgb,var(--green)_12%,transparent)] rounded-md flex items-center justify-center mb-3">
-                <TrendingUp className="w-5 h-5 text-[var(--green)]" />
-              </div>
-              <p className="text-xs text-[var(--text-muted)] mb-1">Your Earnings</p>
-              <p className="text-2xl font-bold">{fmt(summary.earningsCents)}</p>
-            </div>
-
-            <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-lg p-5">
-              <div className="w-10 h-10 bg-[color:color-mix(in_srgb,var(--blue)_12%,transparent)] rounded-md flex items-center justify-center mb-3">
-                <BarChart3 className="w-5 h-5 text-[var(--blue)]" />
-              </div>
-              <p className="text-xs text-[var(--text-muted)] mb-1">Scan → Purchase</p>
-              <p className="text-2xl font-bold">{summary.conversionPct}%</p>
-              <p className="text-xs text-[var(--text-muted)] mt-1">Conversion rate</p>
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
+            {summaryCards.map((card) => (
+              <StatCard
+                key={card.label}
+                label={card.label}
+                value={card.value}
+                subtext={card.subtext}
+                icon={card.icon}
+                accent={card.accent}
+                className="sm:p-6"
+              />
+            ))}
           </div>
 
           {/* Top Artworks Table */}
-          <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-lg p-5">
-            <h2 className="text-xl font-semibold text-[var(--text)] mb-1">Top Artworks</h2>
-            <p className="text-sm text-[var(--text-muted)] mb-4">Your pieces ranked by total engagement (scans + views + sales).</p>
+          <SectionCard
+            title="Top Artworks"
+            subtitle="Your pieces ranked by total engagement (scans + views + sales)."
+          >
 
             {topArtworks.length === 0 ? (
               <div className="text-center py-10">
@@ -301,9 +308,9 @@ export function ArtistAnalytics({ user }: ArtistAnalyticsProps) {
                 </table>
               </div>
             )}
-          </div>
+          </SectionCard>
         </>
       )}
-    </div>
+    </PageShell>
   );
 }

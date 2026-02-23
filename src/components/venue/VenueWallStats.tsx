@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
+import { CalendarDays, QrCode, TrendingUp } from 'lucide-react';
 import { apiGet } from '../../lib/api';
 import type { User } from '../../App';
+import { PageShell } from '../ui/page-shell';
+import { SectionCard } from '../ui/section-card';
+import { StatCard } from '../ui/stat-card';
 
 interface WallStatsData {
   cards: {
@@ -25,22 +29,35 @@ export function VenueWallStats({ user }: VenueWallStatsProps) {
   }, [user.id]);
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] flex flex-col items-center justify-center px-6">
-      <h1 className="text-4xl mb-4">Today's Wall Stats</h1>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl">
-        <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl p-6 text-center">
-          <p className="text-sm text-[var(--text-muted)]">Scans (7 days)</p>
-          <p className="text-4xl">{data?.cards?.scansWeek ?? 0}</p>
+    <PageShell size="default" className="text-[var(--text)]">
+      <SectionCard
+        title="Today's Wall Stats"
+        subtitle="Rolling engagement and conversion across your venue."
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          <StatCard
+            label="Scans (7 days)"
+            value={data?.cards?.scansWeek ?? 0}
+            icon={<QrCode className="w-5 h-5" />}
+            accent="violet"
+            className="sm:p-6"
+          />
+          <StatCard
+            label="Scans (30 days)"
+            value={data?.cards?.scansMonth ?? 0}
+            icon={<CalendarDays className="w-5 h-5" />}
+            accent="blue"
+            className="sm:p-6"
+          />
+          <StatCard
+            label="Checkout → Purchase"
+            value={`${data?.cards?.conversion ?? 0}%`}
+            icon={<TrendingUp className="w-5 h-5" />}
+            accent="green"
+            className="sm:p-6"
+          />
         </div>
-        <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl p-6 text-center">
-          <p className="text-sm text-[var(--text-muted)]">Scans (30 days)</p>
-          <p className="text-4xl">{data?.cards?.scansMonth ?? 0}</p>
-        </div>
-        <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl p-6 text-center">
-          <p className="text-sm text-[var(--text-muted)]">Checkout → Purchase</p>
-          <p className="text-4xl">{data?.cards?.conversion ?? 0}%</p>
-        </div>
-      </div>
-    </div>
+      </SectionCard>
+    </PageShell>
   );
 }
