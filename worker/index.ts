@@ -522,16 +522,19 @@ export default {
         stripe_account_id: venue.stripeAccountId ?? null,
         default_venue_fee_bps: typeof venue.defaultVenueFeeBps === 'number' ? venue.defaultVenueFeeBps : null,
         labels: venue.labels ?? undefined,
-        suspended: venue.suspended ?? null,
+        // suspended is NOT NULL in the DB — only include when explicitly set
+        // (admin action). Default to false on new rows; omit on updates to
+        // preserve the existing value.
+        suspended: typeof venue.suspended === 'boolean' ? venue.suspended : false,
         updated_at: new Date().toISOString(),
       };
       // Only include bio if provided (avoid overwriting with null)
       if (venue.bio !== undefined && venue.bio !== null) {
         payload.bio = venue.bio;
       }
-      // Only include cover_photo_url if provided
-      if (venue.coverPhotoUrl !== undefined && venue.coverPhotoUrl !== null) {
-        payload.cover_photo_url = venue.coverPhotoUrl;
+      // Include cover_photo_url: set when provided, clear when explicitly empty
+      if (venue.coverPhotoUrl !== undefined) {
+        payload.cover_photo_url = venue.coverPhotoUrl || null;
       }
       // Only include address fields if provided
       if (venue.address !== undefined && venue.address !== null) {

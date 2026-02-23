@@ -181,15 +181,16 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
         </div>
 
         <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex-1 overflow-y-auto px-5 sm:px-8 py-5 sm:py-8 space-y-8">
+          <div className="flex-1 overflow-y-auto px-5 sm:px-8 py-6 sm:py-8 space-y-6">
           {/* Cover Photo */}
-          <div>
-            <label className="block text-sm text-[var(--text-muted)] mb-3">
-              Cover Photo
-            </label>
+          <section className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-5">
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-sm font-semibold text-[var(--text)]">Venue Image</p>
+              <span className="text-xs text-[var(--text-muted)]">Shown on your public profile</span>
+            </div>
             {formData.coverPhoto ? (
               <div className="relative">
-                <div className="h-48 bg-[var(--surface-2)] rounded-lg overflow-hidden">
+                <div className="h-48 bg-[var(--surface-3)] rounded-lg overflow-hidden">
                   <img
                     src={formData.coverPhoto}
                     alt="Cover"
@@ -200,7 +201,7 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
                   type="button"
                   onClick={() => document.getElementById('venue-photo-input')?.click()}
                   disabled={uploading}
-                  className="absolute top-4 right-4 flex items-center gap-2 px-4 py-2 bg-[var(--surface-1)] border border-[var(--border)] rounded-lg hover:bg-[var(--surface-3)] transition-colors shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="absolute top-3 right-3 flex items-center gap-2 px-3 py-1.5 text-sm bg-[var(--surface-1)] border border-[var(--border)] rounded-lg hover:bg-[var(--surface-3)] transition-colors shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {uploading ? (
                     <>
@@ -225,7 +226,7 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
                 <button
                   type="button"
                   onClick={() => setFormData(prev => ({ ...prev, coverPhoto: '' }))}
-                  className="mt-2 text-xs text-[var(--text-muted)] hover:text-[var(--text)] underline"
+                  className="mt-3 text-xs text-[var(--text-muted)] hover:text-[var(--danger)] underline transition-colors"
                 >
                   Remove photo
                 </button>
@@ -233,11 +234,11 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
             ) : (
               <div 
                 onClick={() => document.getElementById('venue-photo-input')?.click()}
-                className="border-2 border-dashed border-[var(--border)] rounded-xl p-12 text-center hover:border-[var(--green)] transition-colors cursor-pointer"
+                className="border-2 border-dashed border-[var(--border)] rounded-xl p-10 text-center hover:border-[var(--green)] transition-colors cursor-pointer bg-[var(--surface-3)]"
               >
-                <ImageIcon className="w-12 h-12 text-[var(--text-muted)] mx-auto mb-3" />
-                <p className="text-[var(--text-muted)] mb-1">Click to upload cover photo</p>
-                <p className="text-xs text-[var(--text-muted)]">JPG, PNG, or WebP. 1200x400px recommended, max 10MB</p>
+                <ImageIcon className="w-10 h-10 text-[var(--text-muted)] mx-auto mb-3" />
+                <p className="text-sm text-[var(--text-muted)] mb-1">Click to upload venue image</p>
+                <p className="text-xs text-[var(--text-muted)]">JPG, PNG, or WebP · 1200×400px recommended · max 10 MB</p>
                 <input
                   id="venue-photo-input"
                   type="file"
@@ -262,10 +263,10 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
                 </div>
               </div>
             )}
-          </div>
+          </section>
 
           {/* Contact */}
-          <div className="space-y-4">
+          <section className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-5 space-y-4">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-[var(--text)]">Contact</p>
               <span className="text-xs text-[var(--text-muted)]">Let artists reach you</span>
@@ -309,10 +310,10 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
                 <p className="text-xs text-[var(--text-muted)]">Sale notifications will be sent to this number.</p>
               </div>
             </div>
-          </div>
+          </section>
 
           {/* Social / Web */}
-          <div className="space-y-4">
+          <section className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-5 space-y-4">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-[var(--text)]">Social &amp; Web</p>
               <span className="text-xs text-[var(--text-muted)]">Show visitors where to follow you</span>
@@ -340,10 +341,10 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
                 />
               </div>
             </div>
-          </div>
+          </section>
 
           {/* Location */}
-          <div className="space-y-4">
+          <section className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-5 space-y-4">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-[var(--text)]">Location</p>
               <span className="text-xs text-[var(--text-muted)]">Help artists find you</span>
@@ -381,7 +382,7 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
             </div>
 
             {/* Venue Map opt-in */}
-            <div className="mt-4 p-4 bg-[var(--surface-3)] rounded-lg border border-[var(--border)]">
+            <div className="p-4 bg-[var(--surface-3)] rounded-lg border border-[var(--border)]">
               <label className="flex items-start gap-3 cursor-pointer">
                 <input
                   type="checkbox"
@@ -394,7 +395,7 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
                     Show on venue map
                   </span>
                   <p className="text-xs text-[var(--text-muted)] mt-0.5">
-                    Appear on the "Find Art Near You" public map so visitors and collectors can discover your venue. Requires a street address with coordinates.
+                    Appear on the “Find Art Near You” public map so visitors and collectors can discover your venue. Requires a street address with coordinates.
                   </p>
                 </div>
               </label>
@@ -405,12 +406,12 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
                 </p>
               )}
             </div>
-          </div>
+          </section>
 
           {/* Venue Details */}
-          <div className="space-y-4">
+          <section className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-5 space-y-4">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-[var(--text)]">Venue details</p>
+              <p className="text-sm font-semibold text-[var(--text)]">Venue Details</p>
               <span className="text-xs text-[var(--text-muted)]">What you offer</span>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -454,16 +455,16 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
                 </p>
               </div>
             </div>
-          </div>
+          </section>
 
           {/* About */}
-          <div className="space-y-4">
+          <section className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-5 space-y-4">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-[var(--text)]">About</p>
               <span className="text-xs text-[var(--text-muted)]">Tell artists your story</span>
             </div>
-            <div className="bg-[var(--surface-3)] border border-[var(--border)] rounded-lg p-4">
-              <label className="block text-sm font-semibold text-[var(--text)] mb-2">
+            <div>
+              <label className="block text-sm text-[var(--text-muted)] mb-2">
                 About Your Venue <span className="text-[var(--danger)]" aria-hidden="true">*</span>
               </label>
               <textarea
@@ -488,10 +489,10 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
                 </p>
               </div>
             </div>
-          </div>
+          </section>
 
           {/* Venue Labels */}
-          <div className="space-y-4">
+          <section className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-5 space-y-4">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-[var(--text)]">Highlights</p>
               <span className="text-xs text-[var(--text-muted)]">Select all that apply</span>
@@ -518,7 +519,7 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
             <p className="text-xs text-[var(--text-muted)]">
               {formData.labels.length} selected • Help artists find the right fit
             </p>
-          </div>
+          </section>
 
           {/* Info Box */}
           <div className="p-4 bg-[var(--green-muted)] rounded-lg border border-[var(--border)]">

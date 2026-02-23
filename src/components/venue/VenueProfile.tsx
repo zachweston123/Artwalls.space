@@ -170,12 +170,14 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
         email: data.email,
         phone_number: data.phoneNumber,
         labels: data.labels,
+        // suspended is NOT NULL — always provide a safe default for upsert
+        suspended: false,
         updated_at: new Date().toISOString()
       };
 
-      if (data.coverPhoto) {
-        updateData.cover_photo_url = data.coverPhoto;
-      }
+      // Always include cover photo (null clears it, truthy URL sets it)
+      updateData.cover_photo_url = data.coverPhoto || null;
+
       if (data.city) {
         updateData.city = data.city;
       }
@@ -473,6 +475,7 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
                                     .upsert({
                                       id: userId,
                                       bio: editedBio,
+                                      suspended: false, // NOT NULL column — always provide safe default
                                       updated_at: new Date().toISOString(),
                                     });
 
