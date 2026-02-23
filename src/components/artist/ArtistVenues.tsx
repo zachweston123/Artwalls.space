@@ -40,11 +40,11 @@ export function ArtistVenues() {
           name: v.name,
           type: v.type || null,
           city: v.city || null,
-          availableSpaces: 2,
-          wallSpaces: 3,
-          imageUrl: 'https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=1200',
+          availableSpaces: (v as any).availableSpaces || 0,
+          wallSpaces: (v as any).wallSpaces || 0,
+          imageUrl: (v as any).coverPhotoUrl || null,
           address: v.city || 'Local area',
-          description: 'Venue on Artwalls',
+          description: (v as any).bio || '',
         }));
         if (mounted) setVenues(shaped);
       } catch {
@@ -76,11 +76,17 @@ export function ArtistVenues() {
         {(venues.length ? venues : []).map((venue) => (
           <div key={venue.id} className="bg-[var(--surface-1)] rounded-xl overflow-hidden border border-[var(--border)] hover:shadow-lg transition-shadow">
             <div className="h-48 bg-[var(--surface-3)] overflow-hidden">
-              <img
-                src={venue.imageUrl}
-                alt={venue.name}
-                className="w-full h-full object-cover"
-              />
+              {venue.imageUrl ? (
+                <img
+                  src={venue.imageUrl}
+                  alt={venue.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-[var(--surface-2)] to-[var(--surface-3)] flex items-center justify-center">
+                  <MapPin className="w-10 h-10 text-[var(--text-muted)] opacity-40" />
+                </div>
+              )}
             </div>
             <div className="p-6">
               <div className="flex items-start justify-between mb-3">

@@ -116,7 +116,7 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
             id: v.id,
             name: v.name || 'Venue',
             type: v.type || 'Other',
-            coverPhoto: (v as any).coverPhotoUrl || 'https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=800',
+            coverPhoto: (v as any).coverPhotoUrl || null,
             location: (v as any).city || 'Unknown Location',
             bio: (v as any).bio || '',
             labels: v.labels || [],
@@ -402,11 +402,17 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
                 className="w-full"
               >
                 <div className="h-48 bg-[var(--surface-3)] overflow-hidden">
-                  <img
-                    src={venue.coverPhoto}
-                    alt={venue.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                  />
+                  {venue.coverPhoto ? (
+                    <img
+                      src={venue.coverPhoto}
+                      alt={venue.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-[var(--surface-2)] to-[var(--surface-3)] flex items-center justify-center">
+                      <Frame className="w-10 h-10 text-[var(--text-muted)] opacity-40" />
+                    </div>
+                  )}
                 </div>
               </button>
 
