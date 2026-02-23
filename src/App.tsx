@@ -757,7 +757,8 @@ export default function App() {
     }
 
     if (nextPage.startsWith('purchase-')) {
-      window.location.hash = `#/purchase-${nextPage.split('-')[1]}`;
+      const artworkId = nextPage.replace(/^purchase-/, '');
+      window.location.hash = `#/purchase-${artworkId}`;
     } else if (window.location.hash) {
       // Clear hash for non-purchase pages
       window.location.hash = '';

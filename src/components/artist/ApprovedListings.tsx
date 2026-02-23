@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { API_BASE } from '../../lib/api';
+import { artworkPurchaseUrl } from '../../lib/artworkQrUrl';
 import { QrCode, Download, Eye, EyeOff, Copy, Check } from 'lucide-react';
 
 interface Artwork {
@@ -70,8 +71,8 @@ export function ApprovedListings() {
   };
 
   const copyQrUrl = (id: string) => {
-    const qrUrl = `${API_BASE}/api/artworks/${id}/qrcode.svg`;
-    navigator.clipboard.writeText(qrUrl);
+    const purchaseLink = artworkPurchaseUrl(id);
+    navigator.clipboard.writeText(purchaseLink);
     setCopyStates(prev => ({ ...prev, [id]: true }));
     setTimeout(() => {
       setCopyStates(prev => ({ ...prev, [id]: false }));

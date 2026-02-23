@@ -231,6 +231,15 @@ export default {
       }
     }
 
+    /**
+     * Canonical purchase deep-link for an artwork.
+     * ALL QR codes, Stripe redirects, and purchase URLs MUST use this
+     * so the format never drifts from the SPA hash listener.
+     */
+    function artworkPurchaseUrl(artworkId: string): string {
+      return `${pagesOrigin}/#/purchase-${artworkId}`;
+    }
+
     async function generateQrSvg(data: string, size = 300): Promise<string> {
       try {
         const svg = await QRCode.toString(data, { type: 'svg', width: size, margin: 0 });
@@ -2289,11 +2298,10 @@ export default {
       }
 
       // Create Stripe Checkout Session
-      const pagesOrigin = env.PAGES_ORIGIN || 'https://artwalls.space';
       const formData: Record<string, any> = {
         mode: 'payment',
-        success_url: `${pagesOrigin}/#/purchase/${artworkId}?status=success`,
-        cancel_url: `${pagesOrigin}/#/purchase/${artworkId}?status=cancel`,
+        success_url: `${artworkPurchaseUrl(artworkId)}?status=success`,
+        cancel_url: `${artworkPurchaseUrl(artworkId)}?status=cancel`,
         'line_items[0][price_data][currency]': (artwork.currency || 'usd').toLowerCase(),
         'line_items[0][price_data][unit_amount]': String(breakdown.customerPaysCents),
         'line_items[0][price_data][product_data][name]': clampStr(artwork.title || 'Artwork', 200),
@@ -3161,7 +3169,7 @@ export default {
         }
       }
 
-      const purchaseUrl = `${pagesOrigin}/#/purchase-${id}`;
+      const purchaseUrl = artworkPurchaseUrl(id);
       const qrSvg = await generateQrSvg(purchaseUrl, 300);
       if (supabaseAdmin) {
         await supabaseAdmin.from('artworks').update({ purchase_url: purchaseUrl, qr_svg: qrSvg, updated_at: new Date().toISOString() }).eq('id', id);
@@ -3180,7 +3188,7 @@ export default {
       }
       const widthParam = url.searchParams.get('w');
       const width = widthParam && Number(widthParam) > 0 ? Number(widthParam) : 300;
-      const purchaseUrl = `${pagesOrigin}/#/purchase-${id}`;
+      const purchaseUrl = artworkPurchaseUrl(id);
       const svgString = await generateQrSvg(purchaseUrl, width);
       const headers = new Headers();
       headers.set('Content-Type', 'image/svg+xml');
@@ -3203,7 +3211,7 @@ export default {
       const width = widthParam && Number(widthParam) > 0 ? Number(widthParam) : 1024;
       const marginParam = url.searchParams.get('margin');
       const margin = marginParam && Number(marginParam) >= 0 ? Number(marginParam) : 1;
-      const purchaseUrl = `${pagesOrigin}/#/purchase-${id}`;
+      const purchaseUrl = artworkPurchaseUrl(id);
       try {
         const buf = await QRCode.toBuffer(purchaseUrl, { type: 'png', margin, width } as any);
         const headers = new Headers();
@@ -3235,7 +3243,7 @@ export default {
         if (!data) return text('Artwork not found', { status: 404 });
         art = data;
       }
-      const purchaseUrl = `${pagesOrigin}/#/purchase-${id}`;
+      const purchaseUrl = artworkPurchaseUrl(id);
       const qrSvg = await generateQrSvg(purchaseUrl, 400);
       const title = art?.title || 'Artwork';
       const artist = art?.artist_name || '';
@@ -3303,6 +3311,18 @@ export default {
         if (!privateData) return json({ error: 'Not found' }, { status: 404 });
         if (!isAdmin && requester?.id !== (privateData as any).artist_id) return json({ error: 'Forbidden' }, { status: 403 });
         data = privateData;
+      }
+
+      // ── Backfill: generate purchase_url + qr_svg for legacy rows ──
+      if (supabaseAdmin && data && !(data as any).purchase_url) {
+        const backfillUrl = artworkPurchaseUrl(data.id);
+        const backfillSvg = await generateQrSvg(backfillUrl, 300);
+        // Non-blocking persist — don't fail the read if the write fails
+        ctx.waitUntil(
+          supabaseAdmin.from('artworks').update({ purchase_url: backfillUrl, qr_svg: backfillSvg }).eq('id', data.id)
+        );
+        (data as any).purchase_url = backfillUrl;
+        (data as any).qr_svg = backfillSvg;
       }
 
       const artwork = shapePublicArtworkDetail(data);
@@ -3460,7 +3480,7 @@ export default {
       if (error) return json({ error: error.message }, { status: 500 });
 
       // Generate QR code + purchase URL for every new artwork
-      const purchaseUrl = `${pagesOrigin}/#/purchase-${data.id}`;
+      const purchaseUrl = artworkPurchaseUrl(data.id);
       const qrSvg = await generateQrSvg(purchaseUrl, 300);
       await supabaseAdmin.from('artworks').update({ purchase_url: purchaseUrl, qr_svg: qrSvg }).eq('id', data.id);
 
@@ -3542,15 +3562,15 @@ export default {
       }
       const venueName = user.user_metadata?.name || null;
       const nowIso = new Date().toISOString();
+      const purchaseUrl = artworkPurchaseUrl(id);
       const { data: updated, error } = await supabaseAdmin
         .from('artworks')
-        .update({ status: 'active', published_at: nowIso, archived_at: null, venue_id: user.id, venue_name: venueName, purchase_url: `${pagesOrigin}/#/purchase-${id}`, updated_at: nowIso })
+        .update({ status: 'active', published_at: nowIso, archived_at: null, venue_id: user.id, venue_name: venueName, purchase_url: purchaseUrl, updated_at: nowIso })
         .eq('id', id)
         .select('*')
         .maybeSingle();
       if (error) return json({ error: error.message }, { status: 500 });
       if (!updated) return json({ error: 'Not found' }, { status: 404 });
-      const purchaseUrl = `${pagesOrigin}/#/purchase-${id}`;
       const qrSvg = await generateQrSvg(purchaseUrl, 300);
       await supabaseAdmin.from('artworks').update({ qr_svg: qrSvg }).eq('id', id);
       if (updated.artist_id) {

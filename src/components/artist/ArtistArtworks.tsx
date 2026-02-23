@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Plus, X, Upload, Loader2 } from 'lucide-react';
 import { PageHeroHeader } from '../PageHeroHeader';
+import { artworkPurchaseUrl } from '../../lib/artworkQrUrl';
 type Artwork = {
   id: string;
   title: string;
@@ -235,9 +236,11 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
          console.warn('API creation failed, falling back to Supabase:', apiErr);
          
          // Fallback to direct DB insert
+         const artworkId = crypto.randomUUID();
          const { data, error: dbError } = await supabase
            .from('artworks')
            .insert({
+             id: artworkId,
              artist_id: user.id,
              artist_name: user.name,
              title: newArtwork.title,
@@ -260,7 +263,8 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
              in_space_photo_url: newArtwork.inSpacePhotoUrl || null,
              color_accuracy_ack: newArtwork.colorAccuracyAck,
              is_publishable: true,
-             status: 'available'
+             status: 'available',
+             purchase_url: artworkPurchaseUrl(artworkId),
            })
            .select()
            .single();
