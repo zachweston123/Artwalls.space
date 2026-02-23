@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { X, Upload, Image as ImageIcon, Loader2, AlertCircle } from 'lucide-react';
+import { useState } from 'react';
+import { Upload, Image as ImageIcon, Loader2, AlertCircle } from 'lucide-react';
 import { LabelChip } from '../LabelChip';
 import { CitySelect } from '../shared/CitySelect';
 import { AddressAutocomplete, type PlaceDetails } from '../shared/AddressAutocomplete';
@@ -12,6 +12,10 @@ interface VenueProfileEditProps {
   initialData?: Partial<VenueProfileData>;
   onSave: (data: VenueProfileData) => void;
   onCancel: () => void;
+  /** Show a save-in-progress spinner on the Save button */
+  isSaving?: boolean;
+  /** Externally-supplied save error (shown at top of form) */
+  saveError?: string | null;
 }
 
 export interface VenueProfileData {
@@ -33,7 +37,7 @@ export interface VenueProfileData {
   isParticipating?: boolean;
 }
 
-export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfileEditProps) {
+export function VenueProfileEdit({ initialData, onSave, onCancel, isSaving = false, saveError }: VenueProfileEditProps) {
   const [formData, setFormData] = useState<VenueProfileData>({
     name: initialData?.name ?? '',
     type: initialData?.type ?? '',
@@ -53,17 +57,6 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
   });
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        onCancel();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onCancel]);
 
   const venueTypes = [
     'Coffee Shop',
@@ -163,46 +156,72 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
   const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 sm:p-6">
-      <div className="bg-[var(--surface-1)] border border-[var(--border)] text-[var(--text)] rounded-2xl max-w-3xl w-full max-h-[90vh] shadow-2xl flex flex-col">
-        {/* Header */}
-        <div className="sticky top-0 bg-[var(--surface-1)] border-b border-[var(--border)] px-5 sm:px-6 py-4 sm:py-5 flex items-center justify-between z-10">
-          <div>
-            <p className="text-xs uppercase tracking-wide text-[var(--text-muted)] mb-1">Profile</p>
-            <h2 className="text-xl sm:text-2xl font-bold leading-tight">Edit Venue Profile</h2>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Sticky action bar */}
+      <div className="sticky top-0 z-20 -mx-px">
+        <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-xl px-5 py-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between shadow-sm">
+          <p className="text-sm text-[var(--text-muted)]">
+            Editing venue profile — unsaved changes
+          </p>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={onCancel}
+              disabled={isSaving}
+              className="px-4 py-2 text-sm bg-[var(--surface-2)] text-[var(--text)] rounded-lg hover:bg-[var(--surface-3)] transition-colors border border-[var(--border)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] disabled:opacity-60"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSaving}
+              className="px-4 py-2 text-sm font-semibold bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] disabled:opacity-60 flex items-center gap-2"
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Saving…
+                </>
+              ) : (
+                'Save Changes'
+              )}
+            </button>
           </div>
-          <button
-            onClick={onCancel}
-            aria-label="Close edit venue profile modal"
-            className="p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors text-[var(--text-muted)] hover:text-[var(--text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)]"
-          >
-            <X className="w-5 h-5" />
-          </button>
         </div>
+      </div>
 
-        <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex-1 overflow-y-auto px-5 sm:px-8 py-6 sm:py-8 space-y-6">
-          {/* Cover Photo */}
-          <section className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-5">
-            <div className="flex items-center justify-between mb-4">
-              <p className="text-sm font-semibold text-[var(--text)]">Venue Image</p>
-              <span className="text-xs text-[var(--text-muted)]">Shown on your public profile</span>
+      {/* Save error */}
+      {saveError && (
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-5 py-4 flex items-start gap-3" role="alert">
+          <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+          <div className="text-sm text-red-600">
+            <p className="font-medium">Save failed</p>
+            <p className="mt-1">{saveError}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Venue Image */}
+      <section className="bg-[var(--surface-1)] rounded-xl border border-[var(--border)] p-5">
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-sm font-semibold text-[var(--text)]">Venue Image</p>
+          <span className="text-xs text-[var(--text-muted)]">Shown on your public profile</span>
+        </div>
+        {formData.coverPhoto ? (
+          <div className="relative">
+            <div className="h-48 sm:h-56 bg-[var(--surface-2)] rounded-lg overflow-hidden">
+              <img
+                src={formData.coverPhoto}
+                alt="Cover"
+                className="w-full h-full object-cover"
+              />
             </div>
-            {formData.coverPhoto ? (
-              <div className="relative">
-                <div className="h-48 bg-[var(--surface-3)] rounded-lg overflow-hidden">
-                  <img
-                    src={formData.coverPhoto}
-                    alt="Cover"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => document.getElementById('venue-photo-input')?.click()}
-                  disabled={uploading}
-                  className="absolute top-3 right-3 flex items-center gap-2 px-3 py-1.5 text-sm bg-[var(--surface-1)] border border-[var(--border)] rounded-lg hover:bg-[var(--surface-3)] transition-colors shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
-                >
+            <button
+              type="button"
+              onClick={() => document.getElementById('venue-photo-input')?.click()}
+              disabled={uploading}
+              className="absolute top-3 right-3 flex items-center gap-2 px-3 py-1.5 text-sm bg-[var(--surface-1)] border border-[var(--border)] rounded-lg hover:bg-[var(--surface-3)] transition-colors shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
+            >
                   {uploading ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -234,7 +253,7 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
             ) : (
               <div 
                 onClick={() => document.getElementById('venue-photo-input')?.click()}
-                className="border-2 border-dashed border-[var(--border)] rounded-xl p-10 text-center hover:border-[var(--green)] transition-colors cursor-pointer bg-[var(--surface-3)]"
+                className="border-2 border-dashed border-[var(--border)] rounded-xl p-10 text-center hover:border-[var(--green)] transition-colors cursor-pointer bg-[var(--surface-2)]"
               >
                 <ImageIcon className="w-10 h-10 text-[var(--text-muted)] mx-auto mb-3" />
                 <p className="text-sm text-[var(--text-muted)] mb-1">Click to upload venue image</p>
@@ -266,7 +285,7 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
           </section>
 
           {/* Contact */}
-          <section className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-5 space-y-4">
+          <section className="bg-[var(--surface-1)] rounded-xl border border-[var(--border)] p-5 space-y-4">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-[var(--text)]">Contact</p>
               <span className="text-xs text-[var(--text-muted)]">Let artists reach you</span>
@@ -313,7 +332,7 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
           </section>
 
           {/* Social / Web */}
-          <section className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-5 space-y-4">
+          <section className="bg-[var(--surface-1)] rounded-xl border border-[var(--border)] p-5 space-y-4">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-[var(--text)]">Social &amp; Web</p>
               <span className="text-xs text-[var(--text-muted)]">Show visitors where to follow you</span>
@@ -344,7 +363,7 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
           </section>
 
           {/* Location */}
-          <section className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-5 space-y-4">
+          <section className="bg-[var(--surface-1)] rounded-xl border border-[var(--border)] p-5 space-y-4">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-[var(--text)]">Location</p>
               <span className="text-xs text-[var(--text-muted)]">Help artists find you</span>
@@ -382,7 +401,7 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
             </div>
 
             {/* Venue Map opt-in */}
-            <div className="p-4 bg-[var(--surface-3)] rounded-lg border border-[var(--border)]">
+            <div className="p-4 bg-[var(--surface-2)] rounded-lg border border-[var(--border)]">
               <label className="flex items-start gap-3 cursor-pointer">
                 <input
                   type="checkbox"
@@ -409,7 +428,7 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
           </section>
 
           {/* Venue Details */}
-          <section className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-5 space-y-4">
+          <section className="bg-[var(--surface-1)] rounded-xl border border-[var(--border)] p-5 space-y-4">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-[var(--text)]">Venue Details</p>
               <span className="text-xs text-[var(--text-muted)]">What you offer</span>
@@ -458,7 +477,7 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
           </section>
 
           {/* About */}
-          <section className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-5 space-y-4">
+          <section className="bg-[var(--surface-1)] rounded-xl border border-[var(--border)] p-5 space-y-4">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-[var(--text)]">About</p>
               <span className="text-xs text-[var(--text-muted)]">Tell artists your story</span>
@@ -492,7 +511,7 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
           </section>
 
           {/* Venue Labels */}
-          <section className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-5 space-y-4">
+          <section className="bg-[var(--surface-1)] rounded-xl border border-[var(--border)] p-5 space-y-4">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-[var(--text)]">Highlights</p>
               <span className="text-xs text-[var(--text-muted)]">Select all that apply</span>
@@ -527,26 +546,32 @@ export function VenueProfileEdit({ initialData, onSave, onCancel }: VenueProfile
               <strong>Tip:</strong> A complete profile helps artists understand your venue culture and increases quality applications. Update your installation schedule in Venue Settings.
             </p>
           </div>
-          </div>
 
-          {/* Actions */}
-          <div className="sticky bottom-0 bg-[var(--surface-1)] border-t border-[var(--border)] px-5 sm:px-6 py-4 flex flex-col gap-3 sm:flex-row sm:justify-end">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="w-full sm:w-auto px-4 py-2 bg-[var(--surface-2)] text-[var(--text)] rounded-lg hover:bg-[var(--surface-3)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)]"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="w-full sm:w-auto px-4 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)]"
-            >
-              Save Changes
-            </button>
-          </div>
-        </form>
+      {/* Bottom action bar */}
+      <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-xl px-5 py-4 flex flex-col gap-3 sm:flex-row sm:justify-end">
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={isSaving}
+          className="w-full sm:w-auto px-4 py-2 text-sm bg-[var(--surface-2)] text-[var(--text)] rounded-lg hover:bg-[var(--surface-3)] transition-colors border border-[var(--border)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] disabled:opacity-60"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          disabled={isSaving}
+          className="w-full sm:w-auto px-4 py-2 text-sm font-semibold bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] disabled:opacity-60 flex items-center justify-center gap-2"
+        >
+          {isSaving ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Saving…
+            </>
+          ) : (
+            'Save Changes'
+          )}
+        </button>
       </div>
-    </div>
+    </form>
   );
 }

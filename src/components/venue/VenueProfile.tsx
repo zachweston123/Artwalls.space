@@ -15,6 +15,7 @@ interface VenueProfileProps {
 export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfileProps) {
   const [isEditing, setIsEditing] = useState(startInEdit);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const [isEditingBio, setIsEditingBio] = useState(false);
   const [editedBio, setEditedBio] = useState('');
   const [venueId, setVenueId] = useState<string | null>(null);
@@ -136,6 +137,7 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
 
   const handleSave = async (data: VenueProfileData) => {
     setSaveError(null);
+    setIsSaving(true);
     try {
       const { data: userData } = await supabase.auth.getUser();
       const userId = userData.user?.id;
@@ -254,6 +256,8 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
       setIsEditing(false);
     } catch (err: any) {
       setSaveError(err?.message || 'Failed to save venue profile.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -287,21 +291,57 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
       <PageHeroHeader
         breadcrumb="Manage / Venue Profile"
         title="Venue profile"
-        subtitle="Manage your venue information and settings"
+        subtitle={isEditing ? 'Edit your venue information below' : 'Manage your venue information and settings'}
         actions={
-          <button
-            type="button"
-            onClick={() => {
-              setSaveError(null);
-              setIsEditing(true);
-            }}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-[var(--blue)] text-[var(--on-blue)] hover:bg-[var(--blue-hover)]"
-          >
-            Edit profile
-          </button>
+          isEditing ? (
+            <button
+              type="button"
+              onClick={() => { setIsEditing(false); setSaveError(null); }}
+              disabled={isSaving}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-[var(--surface-2)] text-[var(--text)] border border-[var(--border)] hover:bg-[var(--surface-3)] disabled:opacity-60"
+            >
+              Cancel editing
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                setSaveError(null);
+                setIsEditing(true);
+              }}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors bg-[var(--blue)] text-[var(--on-blue)] hover:bg-[var(--blue-hover)]"
+            >
+              Edit profile
+            </button>
+          )
         }
       />
 
+      {isEditing ? (
+        <VenueProfileEdit
+          initialData={{
+            name: profile.name,
+            type: profile.type,
+            email: profile.email,
+            phoneNumber: profile.phoneNumber,
+            city: profile.city,
+            coverPhoto: profile.coverPhoto,
+            bio: profile.bio,
+            labels: profile.labels,
+            address: profile.address,
+            addressLat: profile.addressLat,
+            addressLng: profile.addressLng,
+            website: profile.website,
+            instagramHandle: profile.instagram,
+            isParticipating: profile.isParticipating,
+          }}
+          onSave={handleSave}
+          onCancel={() => { setIsEditing(false); setSaveError(null); }}
+          isSaving={isSaving}
+          saveError={saveError}
+        />
+      ) : (
+      <>
       <div className="mb-4 flex justify-end">
         <button
           onClick={() => {
@@ -647,28 +687,7 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
           </div>
         </div>
       </div>
-
-      {isEditing && (
-        <VenueProfileEdit
-          initialData={{ 
-            name: profile.name, 
-            type: profile.type, 
-            email: profile.email, 
-            phoneNumber: profile.phoneNumber, 
-            city: profile.city, 
-            coverPhoto: profile.coverPhoto,
-            bio: profile.bio,
-            labels: profile.labels,
-            address: profile.address,
-            addressLat: profile.addressLat,
-            addressLng: profile.addressLng,
-            website: profile.website,
-            instagramHandle: profile.instagram,
-            isParticipating: profile.isParticipating,
-          }}
-          onSave={handleSave}
-          onCancel={() => setIsEditing(false)}
-        />
+      </>
       )}
     </div>
   );
