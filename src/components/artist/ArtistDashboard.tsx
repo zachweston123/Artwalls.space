@@ -147,6 +147,7 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
           sales: s.sales,
           momentum: s.momentum,
         });
+        return s;
       } catch {
         // Fallback to artworks listing for minimal stats
         try {
@@ -157,11 +158,21 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
           if (!isMounted) return;
           setArtworks([]);
         }
+        return null;
       }
     }
-    loadStats();
+    loadStats().then(async (firstResult) => {
+      // If user just returned from Stripe Checkout and tier is still 'free',
+      // the webhook may not have processed yet — re-fetch once after a delay.
+      if (!isMounted || !subSuccess) return;
+      const tier = firstResult?.subscription?.tier;
+      if (tier && tier !== 'free') return; // already updated
+      await new Promise(r => setTimeout(r, 3000));
+      if (!isMounted) return;
+      await loadStats();
+    });
     return () => { isMounted = false; };
-  }, [user.id]);
+  }, [user.id, subSuccess]);
 
   /* ── Fetch: payout status ────────────────────────────────────────── */
   const refreshPayoutStatus = async () => {

@@ -351,22 +351,39 @@ export default function App() {
         if (mounted) setArtistSubscriptionTier('free');
         return;
       }
-      try {
-        const { data, error } = await supabase
-          .from('artists')
-          .select('subscription_tier')
-          .eq('id', currentUser.id)
-          .single();
-        if (!error && data?.subscription_tier && mounted) {
-          const tier = data.subscription_tier as string;
-          if (tier === 'starter' || tier === 'growth' || tier === 'pro') {
-            setArtistSubscriptionTier(tier);
-          } else {
-            setArtistSubscriptionTier('free');
-          }
+
+      // Detect if user just returned from Stripe Checkout (webhook race condition).
+      // The redirect lands on /#/artist-dashboard?sub=success but the webhook may
+      // not have processed yet — poll a few times with back-off.
+      const hash = window.location.hash || '';
+      const hashQuery = hash.split('?')[1] || '';
+      const isSubSuccess = new URLSearchParams(hashQuery).get('sub') === 'success';
+      const maxAttempts = isSubSuccess ? 5 : 1;
+      const delayMs = [0, 1500, 3000, 4000, 5000]; // back-off delays
+
+      for (let attempt = 0; attempt < maxAttempts && mounted; attempt++) {
+        if (attempt > 0) {
+          await new Promise(r => setTimeout(r, delayMs[attempt] ?? 3000));
+          if (!mounted) return;
         }
-      } catch {
-        // Silently fall back to 'free'
+        try {
+          const { data, error } = await supabase
+            .from('artists')
+            .select('subscription_tier')
+            .eq('id', currentUser.id)
+            .single();
+          if (!error && data?.subscription_tier && mounted) {
+            const tier = data.subscription_tier as string;
+            if (tier === 'starter' || tier === 'growth' || tier === 'pro') {
+              setArtistSubscriptionTier(tier);
+              return; // paid tier confirmed, stop polling
+            } else {
+              setArtistSubscriptionTier('free');
+            }
+          }
+        } catch {
+          // Silently fall back to 'free'
+        }
       }
     }
     fetchSubscriptionTier();
@@ -775,7 +792,7 @@ export default function App() {
     return () => window.removeEventListener('popstate', syncPath);
   }, []);
 
-  // Initialize from URL hash (QR deep link) and keep in sync
+  // Initialize from URL hash (QR deep link / Stripe return) and keep in sync
   useEffect(() => {
     const applyHash = () => {
       const hash = window.location.hash || '';
@@ -783,6 +800,9 @@ export default function App() {
         const raw = hash.replace('#/purchase-', '');
         const pureId = raw.includes('?') ? raw.split('?')[0] : raw;
         if (pureId) setCurrentPage(`purchase-${pureId}`);
+      } else if (hash.startsWith('#/artist-dashboard')) {
+        // Handle Stripe Checkout return: /#/artist-dashboard?sub=success|cancel
+        setCurrentPage('artist-dashboard');
       }
     };
     applyHash();

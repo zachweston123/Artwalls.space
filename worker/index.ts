@@ -84,6 +84,8 @@ function resolveTierFromPriceId(
   // Fallback to metadata (may be stale after portal plan changes)
   const raw = (metadataTier || '').toLowerCase().trim();
   if (raw === 'starter' || raw === 'growth' || raw === 'pro') return raw;
+  // Backward-compat: some older docs/env-vars used 'elite' for the growth tier
+  if (raw === 'elite') return 'growth';
   return 'free';
 }
 
@@ -481,24 +483,28 @@ export default {
 
     async function upsertArtist(artist: { id: string; email?: string | null; name?: string | null; role?: string; phoneNumber?: string | null; cityPrimary?: string | null; citySecondary?: string | null; stripeAccountId?: string | null; stripeCustomerId?: string | null; subscriptionTier?: string | null; subscriptionStatus?: string | null; stripeSubscriptionId?: string | null; platformFeeBps?: number | null; profilePhotoUrl?: string | null; }): Promise<Response> {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured - check SUPABASE_SERVICE_ROLE_KEY secret' }, { status: 500 });
+      // Only include fields that were explicitly provided (not undefined).
+      // This prevents partial callers (webhooks, customer-creation flows) from
+      // accidentally wiping existing data like email, name, or stripe_account_id.
       const payload: Record<string, any> = {
         id: artist.id,
-        email: artist.email ?? null,
-        name: artist.name ?? null,
-        role: artist.role ?? 'artist',
-        phone_number: artist.phoneNumber ?? null,
-        stripe_account_id: artist.stripeAccountId ?? null,
-        stripe_customer_id: artist.stripeCustomerId ?? null,
-        subscription_tier: artist.subscriptionTier ?? 'free',
-        subscription_status: artist.subscriptionStatus ?? 'inactive',
-        stripe_subscription_id: artist.stripeSubscriptionId ?? null,
-        platform_fee_bps: artist.platformFeeBps ?? null,
-        city_primary: artist.cityPrimary ?? null,
-        city_secondary: artist.citySecondary ?? null,
-        is_live: true, // Ensure new artists are live by default
+        is_live: true, // Ensure artists are live by default
         updated_at: new Date().toISOString(),
       };
-      // Only include profile_photo_url if provided (avoid overwriting with null)
+      if (artist.email !== undefined) payload.email = artist.email;
+      if (artist.name !== undefined) payload.name = artist.name;
+      if (artist.role !== undefined) payload.role = artist.role;
+      if (artist.phoneNumber !== undefined) payload.phone_number = artist.phoneNumber;
+      if (artist.stripeAccountId !== undefined) payload.stripe_account_id = artist.stripeAccountId;
+      if (artist.stripeCustomerId !== undefined) payload.stripe_customer_id = artist.stripeCustomerId;
+      // Subscription fields: normalise null → safe defaults so NOT NULL columns stay happy
+      if (artist.subscriptionTier !== undefined) payload.subscription_tier = artist.subscriptionTier || 'free';
+      if (artist.subscriptionStatus !== undefined) payload.subscription_status = artist.subscriptionStatus || 'inactive';
+      if (artist.stripeSubscriptionId !== undefined) payload.stripe_subscription_id = artist.stripeSubscriptionId;
+      if (artist.platformFeeBps !== undefined) payload.platform_fee_bps = artist.platformFeeBps;
+      if (artist.cityPrimary !== undefined) payload.city_primary = artist.cityPrimary;
+      if (artist.citySecondary !== undefined) payload.city_secondary = artist.citySecondary;
+      // Only include profile_photo_url if provided and non-null (avoid overwriting with null)
       if (artist.profilePhotoUrl !== undefined && artist.profilePhotoUrl !== null) {
         payload.profile_photo_url = artist.profilePhotoUrl;
       }
@@ -1661,11 +1667,15 @@ export default {
 
     // Stripe webhook – verify signature with Web Crypto, then handle event
     if (url.pathname === '/api/stripe/webhook' && method === 'POST') {
+      if (!env.STRIPE_WEBHOOK_SECRET) {
+        console.error('[webhook] STRIPE_WEBHOOK_SECRET is not configured — all webhooks will fail');
+        return json({ error: 'Webhook secret not configured' }, { status: 500 });
+      }
       try {
         const body = await request.text();
         const sig = request.headers.get('stripe-signature') || '';
         const event = await verifyAndParseStripeEvent(body, sig, env.STRIPE_WEBHOOK_SECRET);
-        if (!event) return json({ error: 'Invalid signature' }, { status: 400 });
+        console.log(`[webhook] Event received: ${event.type} (${event.id})`);
 
         // ── Idempotency: skip events we've already processed ──
         if (supabaseAdmin) {
@@ -1690,6 +1700,7 @@ export default {
             const artistId = session?.metadata?.artistId;
             const subscriptionId = session.subscription;
             const customerId = session.customer;
+            console.log('[webhook] Subscription checkout completed', { artistId, subscriptionId: subscriptionId ?? null, customerId: customerId ?? null });
 
             // Resolve tier from the subscription's price ID (authoritative)
             let priceId: string | null = null;
@@ -1703,8 +1714,10 @@ export default {
               }
             }
             const tier = resolveTierFromPriceId(priceId, env, session?.metadata?.tier);
+            console.log('[webhook] Tier resolved', { priceId, metadataTier: session?.metadata?.tier, resolvedTier: tier });
 
             if (artistId && subscriptionId && typeof subscriptionId === 'string') {
+              console.log('[webhook] Upserting artist subscription', { artistId, tier, subscriptionId });
               const result = await upsertArtist({
                 id: artistId,
                 stripeCustomerId: typeof customerId === 'string' ? customerId : null,
@@ -1714,7 +1727,8 @@ export default {
                 platformFeeBps: TIER_PLATFORM_FEE_BPS[tier] ?? null,
               });
               if (result.status >= 400) {
-                console.error('[webhook] checkout.session.completed upsert failed', result.status);
+                const errBody = await result.clone().text().catch(() => 'unknown');
+                console.error('[webhook] checkout.session.completed upsert FAILED', { status: result.status, body: errBody });
                 return json({ error: 'DB update failed' }, { status: 500 });
               }
 
@@ -1904,6 +1918,7 @@ export default {
         if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.deleted') {
           const sub = event.data?.object;
           const artistId = sub?.metadata?.artistId;
+          console.log(`[webhook] ${event.type}`, { artistId: artistId ?? null, subId: sub?.id ?? null });
 
           // Resolve tier from the subscription's current price ID (authoritative)
           // This correctly handles plan changes made through the Stripe Customer Portal.
@@ -1914,6 +1929,7 @@ export default {
           const status = event.type === 'customer.subscription.deleted'
             ? 'canceled'
             : (sub?.status === 'active' ? 'active' : (sub?.status || 'inactive'));
+          console.log(`[webhook] ${event.type} resolved`, { artistId, tier, status, priceId });
 
           if (artistId) {
             const result = await upsertArtist({
@@ -1924,7 +1940,8 @@ export default {
               platformFeeBps: TIER_PLATFORM_FEE_BPS[tier] ?? null,
             });
             if (result.status >= 400) {
-              console.error(`[webhook] ${event.type} upsert failed`, result.status);
+              const errBody = await result.clone().text().catch(() => 'unknown');
+              console.error(`[webhook] ${event.type} upsert FAILED`, { status: result.status, body: errBody });
               return json({ error: 'DB update failed' }, { status: 500 });
             }
             console.log('✅ Artist subscription updated', { artistId, tier, status });
@@ -2366,8 +2383,12 @@ export default {
 
     // Create subscription checkout session
     if (url.pathname === '/api/stripe/billing/create-subscription-session' && method === 'POST') {
+      console.log('[subscription] Session creation request received');
       const user = await getSupabaseUserFromRequest(request);
-      if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
+      if (!user) {
+        console.warn('[subscription] Auth failed — no valid user from token');
+        return json({ error: 'Unauthorized' }, { status: 401 });
+      }
       if (user.user_metadata?.role === 'venue') return json({ error: 'Only artists can subscribe' }, { status: 403 });
       if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
       const rlSub = await applyRateLimit('stripe-subscription', request);
@@ -2375,7 +2396,11 @@ export default {
 
       const body = await request.json().catch(() => ({}));
       const tier = String(body?.tier || '').toLowerCase();
-      if (!['starter', 'growth', 'pro'].includes(tier)) return json({ error: 'Invalid tier' }, { status: 400 });
+      console.log('[subscription] Resolved', { artistId: user.id, tierRequested: tier });
+      if (!['starter', 'growth', 'pro'].includes(tier)) {
+        console.warn('[subscription] Invalid tier rejected:', tier);
+        return json({ error: 'Invalid tier' }, { status: 400 });
+      }
 
       const priceMap: Record<string, string | undefined> = {
         starter: env.STRIPE_PRICE_ID_STARTER || env.STRIPE_SUB_PRICE_STARTER,
@@ -2383,7 +2408,11 @@ export default {
         pro: env.STRIPE_PRICE_ID_PRO || env.STRIPE_SUB_PRICE_PRO,
       };
       const priceId = priceMap[tier];
-      if (!priceId) return json({ error: `Price ID not configured for ${tier}` }, { status: 500 });
+      if (!priceId) {
+        console.error('[subscription] Missing env var — STRIPE_PRICE_ID_' + tier.toUpperCase() + ' / STRIPE_SUB_PRICE_' + tier.toUpperCase() + ' not set');
+        return json({ error: `Price ID not configured for ${tier}. Check STRIPE_PRICE_ID_${tier.toUpperCase()} env var.` }, { status: 500 });
+      }
+      console.log('[subscription] Price resolved', { tier, priceId });
 
       // Ensure Stripe customer
       const { data: artist } = await supabaseAdmin.from('artists').select('stripe_customer_id,email,name,subscription_status,subscription_tier,founding_offer_redeemed_at,is_founding_artist,had_paid_subscription').eq('id', user.id).maybeSingle();
@@ -2487,8 +2516,10 @@ export default {
         });
         const sess = await sessResp.json();
         if (!sessResp.ok) throw new Error(sess?.error?.message || 'Checkout session failed');
+        console.log('[subscription] ✅ Checkout session created', { sessionId: sess.id, artistId: user.id, tier });
         return json({ url: sess.url });
       } catch (err: unknown) {
+        console.error('[subscription] Checkout session creation failed:', getErrorMessage(err));
         return json({ error: getErrorMessage(err) }, { status: 500 });
       }
     }
@@ -3632,7 +3663,10 @@ export default {
           phoneNumber: clampStr(payload?.phoneNumber, 30) || null,
           cityPrimary: clampStr(payload?.cityPrimary, 100) || null,
           citySecondary: clampStr(payload?.citySecondary, 100) || null,
-          subscriptionTier: clampStr(payload?.subscriptionTier, 20) || null,
+          // Only pass subscriptionTier if the caller explicitly provided it
+          // (e.g. admin override). Profile-update payloads omit this field, so
+          // it stays undefined → upsertArtist won't touch the existing tier.
+          subscriptionTier: payload?.subscriptionTier ? clampStr(payload.subscriptionTier, 20) : undefined,
           profilePhotoUrl: photoUrl,
         });
         return resp;

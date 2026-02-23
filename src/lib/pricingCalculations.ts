@@ -30,6 +30,7 @@ const ARTIST_TIER_ALIASES: Record<string, ArtistTierKey> = {
   basic: 'starter',
   tier2: 'starter',
   growth: 'growth',
+  elite: 'growth', // backward-compat: legacy docs/env-vars used 'elite' for growth
   tier3: 'growth',
   scale: 'growth',
   pro: 'pro',
