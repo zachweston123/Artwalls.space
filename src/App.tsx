@@ -803,6 +803,9 @@ export default function App() {
       } else if (hash.startsWith('#/artist-dashboard')) {
         // Handle Stripe Checkout return: /#/artist-dashboard?sub=success|cancel
         setCurrentPage('artist-dashboard');
+      } else if (hash.startsWith('#/venue-dashboard')) {
+        // Handle Stripe Connect return: /#/venue-dashboard?stripe=return|refresh
+        setCurrentPage('venue-dashboard');
       }
     };
     applyHash();

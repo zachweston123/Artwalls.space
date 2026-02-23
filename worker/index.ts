@@ -518,48 +518,30 @@ export default {
 
     async function upsertVenue(venue: { id: string; email?: string | null; name?: string | null; type?: string | null; phoneNumber?: string | null; city?: string | null; stripeAccountId?: string | null; defaultVenueFeeBps?: number | null; labels?: any; suspended?: boolean | null; bio?: string | null; coverPhotoUrl?: string | null; address?: string | null; addressLat?: number | null; addressLng?: number | null; website?: string | null; instagramHandle?: string | null; }): Promise<Response> {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured - check SUPABASE_SERVICE_ROLE_KEY secret' }, { status: 500 });
+      // Only include fields that were explicitly provided (not undefined).
+      // This prevents partial callers (Stripe Connect create-account, webhooks)
+      // from accidentally wiping existing data like type, city, phone, etc.
       const payload: Record<string, any> = {
         id: venue.id,
-        email: venue.email ?? null,
-        name: venue.name ?? null,
-        type: venue.type ?? null,
-        phone_number: venue.phoneNumber ?? null,
-        city: venue.city ?? null,
-        stripe_account_id: venue.stripeAccountId ?? null,
-        default_venue_fee_bps: typeof venue.defaultVenueFeeBps === 'number' ? venue.defaultVenueFeeBps : null,
-        labels: venue.labels ?? undefined,
-        // suspended is NOT NULL in the DB — only include when explicitly set
-        // (admin action). Default to false on new rows; omit on updates to
-        // preserve the existing value.
-        suspended: typeof venue.suspended === 'boolean' ? venue.suspended : false,
         updated_at: new Date().toISOString(),
       };
-      // Only include bio if provided (avoid overwriting with null)
-      if (venue.bio !== undefined && venue.bio !== null) {
-        payload.bio = venue.bio;
-      }
-      // Include cover_photo_url: set when provided, clear when explicitly empty
-      if (venue.coverPhotoUrl !== undefined) {
-        payload.cover_photo_url = venue.coverPhotoUrl || null;
-      }
-      // Only include address fields if provided
-      if (venue.address !== undefined && venue.address !== null) {
-        payload.address = venue.address;
-      }
-      if (venue.addressLat !== undefined && venue.addressLat !== null) {
-        payload.address_lat = venue.addressLat;
-      }
-      if (venue.addressLng !== undefined && venue.addressLng !== null) {
-        payload.address_lng = venue.addressLng;
-      }
-      // Only include website if provided
-      if (venue.website !== undefined && venue.website !== null) {
-        payload.website = venue.website;
-      }
-      // Only include instagram_handle if provided
-      if (venue.instagramHandle !== undefined && venue.instagramHandle !== null) {
-        payload.instagram_handle = venue.instagramHandle;
-      }
+      if (venue.email !== undefined) payload.email = venue.email;
+      if (venue.name !== undefined) payload.name = venue.name;
+      if (venue.type !== undefined) payload.type = venue.type;
+      if (venue.phoneNumber !== undefined) payload.phone_number = venue.phoneNumber;
+      if (venue.city !== undefined) payload.city = venue.city;
+      if (venue.stripeAccountId !== undefined) payload.stripe_account_id = venue.stripeAccountId;
+      if (typeof venue.defaultVenueFeeBps === 'number') payload.default_venue_fee_bps = venue.defaultVenueFeeBps;
+      if (venue.labels !== undefined) payload.labels = venue.labels;
+      // suspended is NOT NULL in the DB — only include when explicitly set
+      if (typeof venue.suspended === 'boolean') payload.suspended = venue.suspended;
+      if (venue.bio !== undefined && venue.bio !== null) payload.bio = venue.bio;
+      if (venue.coverPhotoUrl !== undefined) payload.cover_photo_url = venue.coverPhotoUrl || null;
+      if (venue.address !== undefined && venue.address !== null) payload.address = venue.address;
+      if (venue.addressLat !== undefined && venue.addressLat !== null) payload.address_lat = venue.addressLat;
+      if (venue.addressLng !== undefined && venue.addressLng !== null) payload.address_lng = venue.addressLng;
+      if (venue.website !== undefined && venue.website !== null) payload.website = venue.website;
+      if (venue.instagramHandle !== undefined && venue.instagramHandle !== null) payload.instagram_handle = venue.instagramHandle;
       const { data, error } = await supabaseAdmin.from('venues').upsert(payload, { onConflict: 'id' }).select('*').single();
       if (error) {
         console.error('[upsertVenue] Error:', error.message, error.code, (error as any).hint);
@@ -2100,15 +2082,25 @@ export default {
       if (!artistId) return json({ error: 'Missing artistId or userId' }, { status: 400 });
 
       const { data: artist } = await supabaseAdmin.from('artists').select('stripe_account_id').eq('id', artistId).maybeSingle();
-      if (!artist?.stripe_account_id) return json({ hasAccount: false });
+      if (!artist?.stripe_account_id) return json({ hasAccount: false, onboardingStatus: 'not_started' });
 
       try {
         const resp = await stripeFetch(`/v1/accounts/${artist.stripe_account_id}`, { method: 'GET' });
-        const account = await resp.json();
+        const account = await resp.json() as any;
         if (!resp.ok) throw new Error(account?.error?.message || 'Status fetch failed');
+
+        const onboardingStatus = account.payouts_enabled && account.charges_enabled
+          ? 'complete'
+          : account.requirements?.currently_due?.length > 0
+            ? 'restricted'
+            : account.details_submitted
+              ? 'pending'
+              : 'not_started';
+
         return json({
           hasAccount: true,
           accountId: artist.stripe_account_id,
+          onboardingStatus,
           charges_enabled: account.charges_enabled,
           payouts_enabled: account.payouts_enabled,
           details_submitted: account.details_submitted,
@@ -2123,6 +2115,93 @@ export default {
     }
 
     // ── Stripe Connect: Venue ──
+
+    // Combined onboard endpoint: create account if needed + create account link
+    // This is what VenuePayoutsCard calls (single round-trip).
+    if (url.pathname === '/api/stripe/connect/venue/onboard' && method === 'POST') {
+      const user = await getSupabaseUserFromRequest(request);
+      const authErr = requireAuthOrFail(request, user);
+      if (authErr) return authErr;
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      if (user!.user_metadata?.role !== 'venue') return json({ error: 'Venue role required' }, { status: 403 });
+      const rlOnboard = await applyRateLimit('stripe-connect-venue-onboard', request);
+      if (rlOnboard) return rlOnboard;
+
+      const { data: venue } = await supabaseAdmin.from('venues').select('stripe_account_id,email,name,default_venue_fee_bps').eq('id', user!.id).maybeSingle();
+      let accountId = venue?.stripe_account_id;
+
+      // Step 1: Create Stripe Express account if one doesn't exist
+      if (!accountId) {
+        try {
+          const resp = await stripeFetch('/v1/accounts', {
+            method: 'POST',
+            body: toForm({
+              type: 'express',
+              email: venue?.email || user!.email || undefined,
+              'capabilities[card_payments][requested]': 'true',
+              'capabilities[transfers][requested]': 'true',
+              'metadata[venueId]': user!.id,
+              'metadata[role]': 'venue',
+            }),
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          });
+          const account = await resp.json() as any;
+          if (!resp.ok) throw new Error(account?.error?.message || 'Account creation failed');
+          accountId = account.id;
+          await upsertVenue({ id: user!.id, stripeAccountId: accountId });
+          console.log('[venue-onboard] Created Stripe account', { venueId: user!.id, accountId });
+        } catch (err: unknown) {
+          return json({ error: getErrorMessage(err) }, { status: 500 });
+        }
+      }
+
+      // Step 2: Create account link for onboarding
+      const pagesOrigin = env.PAGES_ORIGIN || 'https://artwalls.space';
+      try {
+        const resp = await stripeFetch('/v1/account_links', {
+          method: 'POST',
+          body: toForm({
+            account: accountId,
+            refresh_url: `${pagesOrigin}/#/venue-dashboard?stripe=refresh`,
+            return_url: `${pagesOrigin}/#/venue-dashboard?stripe=return`,
+            type: 'account_onboarding',
+          }),
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        });
+        const link = await resp.json() as any;
+        if (!resp.ok) throw new Error(link?.error?.message || 'Account link failed');
+        console.log('[venue-onboard] Created account link', { venueId: user!.id, accountId });
+        return json({ url: link.url });
+      } catch (err: unknown) {
+        return json({ error: getErrorMessage(err) }, { status: 500 });
+      }
+    }
+
+    // Login alias — VenuePayoutsCard calls /login, worker has /login-link
+    if (url.pathname === '/api/stripe/connect/venue/login' && method === 'POST') {
+      const user = await getSupabaseUserFromRequest(request);
+      const authErr = requireAuthOrFail(request, user);
+      if (authErr) return authErr;
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+      const rlVLogin2 = await applyRateLimit('stripe-connect-venue-login', request);
+      if (rlVLogin2) return rlVLogin2;
+
+      const { data: venue } = await supabaseAdmin.from('venues').select('stripe_account_id').eq('id', user!.id).maybeSingle();
+      if (!venue?.stripe_account_id) return json({ error: 'No Stripe account yet' }, { status: 400 });
+
+      try {
+        const resp = await stripeFetch(`/v1/accounts/${venue.stripe_account_id}/login_links`, {
+          method: 'POST',
+          body: '',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        });
+        const link = await resp.json() as any;
+        if (!resp.ok) throw new Error(link?.error?.message || 'Login link failed');
+        return json({ url: link.url });
+      } catch (err: unknown) {
+        return json({ error: getErrorMessage(err) }, { status: 500 });
+      }
+    }
 
     // Create Connect Express account for venue
     if (url.pathname === '/api/stripe/connect/venue/create-account' && method === 'POST') {
@@ -2226,15 +2305,26 @@ export default {
       if (!venueId) return json({ error: 'Missing venueId or userId' }, { status: 400 });
 
       const { data: venue } = await supabaseAdmin.from('venues').select('stripe_account_id').eq('id', venueId).maybeSingle();
-      if (!venue?.stripe_account_id) return json({ hasAccount: false });
+      if (!venue?.stripe_account_id) return json({ hasAccount: false, onboardingStatus: 'not_started' });
 
       try {
         const resp = await stripeFetch(`/v1/accounts/${venue.stripe_account_id}`, { method: 'GET' });
-        const account = await resp.json();
+        const account = await resp.json() as any;
         if (!resp.ok) throw new Error(account?.error?.message || 'Status fetch failed');
+
+        // Derive onboardingStatus for the frontend badge
+        const onboardingStatus = account.payouts_enabled && account.charges_enabled
+          ? 'complete'
+          : account.requirements?.currently_due?.length > 0
+            ? 'restricted'
+            : account.details_submitted
+              ? 'pending'
+              : 'not_started';
+
         return json({
           hasAccount: true,
           accountId: venue.stripe_account_id,
+          onboardingStatus,
           charges_enabled: account.charges_enabled,
           payouts_enabled: account.payouts_enabled,
           details_submitted: account.details_submitted,

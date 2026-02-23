@@ -41,6 +41,17 @@ export function VenuePayoutsCard({ user }: VenuePayoutsCardProps) {
 
   useEffect(() => {
     refresh();
+
+    // Auto-refresh when returning from Stripe Connect onboarding
+    // (return URL includes ?stripe=return in the hash)
+    const hash = window.location.hash || '';
+    if (hash.includes('stripe=return') || hash.includes('stripe=refresh')) {
+      // Clean up the query param from the hash
+      const base = hash.split('?')[0];
+      history.replaceState(null, '', base);
+      // Stripe may take a moment to propagate — re-fetch after a short delay
+      setTimeout(() => refresh(), 2000);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user.id]);
 
@@ -92,6 +103,7 @@ export function VenuePayoutsCard({ user }: VenuePayoutsCardProps) {
     }
   };
   const isReady = !!status.hasAccount && !!status.payoutsEnabled;
+  const needsFinish = !!status.hasAccount && !status.payoutsEnabled;
   const onboardingLabel = status.onboardingStatus === 'complete'
     ? 'Connected'
     : status.onboardingStatus === 'pending'
@@ -177,7 +189,7 @@ export function VenuePayoutsCard({ user }: VenuePayoutsCardProps) {
                   className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 disabled:opacity-60"
                 >
                   {working ? <Loader2 className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-4 h-4" />}
-                  Connect Stripe to get paid
+                  {needsFinish ? 'Finish Stripe setup' : 'Connect Stripe to get paid'}
                 </button>
               ) : (
                 <button
