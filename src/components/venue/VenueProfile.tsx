@@ -94,9 +94,20 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
       try {
         const { data: venueData } = await supabase
           .from('venues')
-          .select('cover_photo_url, city, bio, labels, address, address_lat, address_lng, website, instagram_handle, is_participating')
+          .select('cover_photo_url, city, bio, labels, address, address_lat, address_lng, is_participating')
           .eq('id', user.id)
           .single();
+
+        // Attempt to load social fields (may not exist if migration hasn't run)
+        let socialData: { website?: string; instagram_handle?: string } = {};
+        try {
+          const { data: social } = await supabase
+            .from('venues')
+            .select('website, instagram_handle')
+            .eq('id', user.id)
+            .single();
+          if (social) socialData = social;
+        } catch { /* columns may not exist yet */ }
         
         if (venueData) {
           setProfile((prev) => ({
@@ -108,8 +119,8 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
             address: venueData.address || prev.address,
             addressLat: venueData.address_lat || prev.addressLat,
             addressLng: venueData.address_lng || prev.addressLng,
-            website: venueData.website || prev.website,
-            instagram: venueData.instagram_handle || prev.instagram,
+            website: socialData.website || prev.website,
+            instagram: socialData.instagram_handle || prev.instagram,
             isParticipating: Boolean(venueData.is_participating),
           }));
         }
@@ -195,12 +206,9 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
       if (data.addressLng !== undefined) {
         updateData.address_lng = data.addressLng;
       }
-      if (data.website !== undefined) {
-        updateData.website = data.website;
-      }
-      if (data.instagramHandle !== undefined) {
-        updateData.instagram_handle = data.instagramHandle;
-      }
+      // website and instagram_handle are saved via the worker API above;
+      // omit them from the direct upsert to avoid schema-cache errors
+      // if the migration hasn't been applied yet.
       if (data.isParticipating !== undefined) {
         updateData.is_participating = data.isParticipating;
       }

@@ -3752,6 +3752,8 @@ export default {
         addressLat: typeof payload?.addressLat === 'number' ? payload.addressLat : null,
         addressLng: typeof payload?.addressLng === 'number' ? payload.addressLng : null,
         defaultVenueFeeBps: typeof payload?.defaultVenueFeeBps === 'number' ? payload.defaultVenueFeeBps : 1000,
+        website: clampStr(payload?.website, 255) || null,
+        instagramHandle: clampStr(payload?.instagramHandle, 255) || null,
       });
       return resp;
     }
