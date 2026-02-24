@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Search, MapPin, Filter, Frame, CheckCircle, Crown, Award } from 'lucide-react';
+import { Search, MapPin, Filter, Frame, CheckCircle, Crown, Award, Palette } from 'lucide-react';
 import { LabelChip } from '../LabelChip';
 import { VENUE_HIGHLIGHTS } from '../../data/highlights';
 import { apiGet } from '../../lib/api';
@@ -126,6 +126,7 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
             verified: (v as any).verified === true,
             isFounding: (v as any).isFounding === true,
             featuredUntil: (v as any).featuredUntil || null,
+            preferredStyles: (v as any).preferredStyles || (v as any).preferred_styles || [],
           })));
         }
       } catch (err) {
@@ -474,6 +475,27 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
                     </span>
                   )}
                 </div>
+
+                {/* Preferred Art Styles */}
+                {venue.preferredStyles && venue.preferredStyles.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mb-3">
+                    <span className="text-xs text-[var(--text-muted)] mr-1">Looking for:</span>
+                    {venue.preferredStyles.slice(0, 4).map((style: string) => (
+                      <span
+                        key={style}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-[var(--green-muted)] text-[var(--green)] border border-[var(--border)]"
+                      >
+                        <Palette className="w-2.5 h-2.5" />
+                        {style}
+                      </span>
+                    ))}
+                    {venue.preferredStyles.length > 4 && (
+                      <span className="text-xs text-[var(--text-muted)] px-1">
+                        +{venue.preferredStyles.length - 4} more
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 {/* Bio */}
                 <p className="text-sm text-[var(--text-muted)] mb-4 line-clamp-2">

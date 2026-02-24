@@ -471,7 +471,7 @@ export default {
       return json(data);
     }
 
-    async function upsertVenue(venue: { id: string; email?: string | null; name?: string | null; type?: string | null; phoneNumber?: string | null; city?: string | null; stripeAccountId?: string | null; defaultVenueFeeBps?: number | null; labels?: any; suspended?: boolean | null; bio?: string | null; coverPhotoUrl?: string | null; address?: string | null; addressLat?: number | null; addressLng?: number | null; website?: string | null; instagramHandle?: string | null; }): Promise<Response> {
+    async function upsertVenue(venue: { id: string; email?: string | null; name?: string | null; type?: string | null; phoneNumber?: string | null; city?: string | null; stripeAccountId?: string | null; defaultVenueFeeBps?: number | null; labels?: any; suspended?: boolean | null; bio?: string | null; coverPhotoUrl?: string | null; address?: string | null; addressLat?: number | null; addressLng?: number | null; website?: string | null; instagramHandle?: string | null; artGuidelines?: string | null; preferredStyles?: string[] | null; }): Promise<Response> {
       if (!supabaseAdmin) return json({ error: 'Supabase not configured - check SUPABASE_SERVICE_ROLE_KEY secret' }, { status: 500 });
       // Only include fields that were explicitly provided (not undefined).
       // This prevents partial callers (Stripe Connect create-account, webhooks)
@@ -497,6 +497,8 @@ export default {
       if (venue.addressLng !== undefined && venue.addressLng !== null) payload.address_lng = venue.addressLng;
       if (venue.website !== undefined && venue.website !== null) payload.website = venue.website;
       if (venue.instagramHandle !== undefined && venue.instagramHandle !== null) payload.instagram_handle = venue.instagramHandle;
+      if (venue.artGuidelines !== undefined) payload.art_guidelines = venue.artGuidelines;
+      if (venue.preferredStyles !== undefined) payload.preferred_styles = venue.preferredStyles;
       const { data, error } = await supabaseAdmin.from('venues').upsert(payload, { onConflict: 'id' }).select('*').single();
       if (error) {
         console.error('[upsertVenue] Error:', error.message, error.code, (error as any).hint);
@@ -1294,7 +1296,7 @@ export default {
 
       let query = supabaseAdmin
         .from('venues')
-        .select('id,name,type,labels,default_venue_fee_bps,city,bio,cover_photo_url,verified,created_at,is_founding,founding_end,featured_until')
+        .select('id,name,type,labels,default_venue_fee_bps,city,bio,cover_photo_url,verified,created_at,is_founding,founding_end,featured_until,art_guidelines,preferred_styles')
         .eq('suspended', false)
         .order('name', { ascending: true })
         .limit(50);
@@ -1341,6 +1343,8 @@ export default {
         availableSpaces: wallspaceCounts[v.id]?.available || 0,
         isFounding: (v as any).is_founding === true && (v as any).founding_end && (v as any).founding_end > now,
         featuredUntil: (v as any).featured_until || null,
+        preferredStyles: (v as any).preferred_styles || [],
+        artGuidelines: (v as any).art_guidelines || null,
       }));
 
       // Sort: featured/founding venues appear first, then by name
@@ -3754,6 +3758,8 @@ export default {
         defaultVenueFeeBps: typeof payload?.defaultVenueFeeBps === 'number' ? payload.defaultVenueFeeBps : 1000,
         website: clampStr(payload?.website, 255) || null,
         instagramHandle: clampStr(payload?.instagramHandle, 255) || null,
+        artGuidelines: payload?.artGuidelines !== undefined ? clampStr(payload.artGuidelines, 1000) || null : undefined,
+        preferredStyles: Array.isArray(payload?.preferredStyles) ? payload.preferredStyles.slice(0, 20).map((s: any) => clampStr(s, 50)) : undefined,
       });
       return resp;
     }

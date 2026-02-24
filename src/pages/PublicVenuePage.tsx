@@ -34,7 +34,7 @@ export function PublicVenuePage({ venueId }: PublicVenuePageProps) {
         setLoading(true);
         const { data, error } = await supabase
           .from('venues')
-          .select('id,name,cover_photo_url,address,city,bio,labels,verified,founded_year,type,website,instagram_handle,is_founding,founding_end,featured_until')
+          .select('id,name,cover_photo_url,address,city,bio,labels,verified,founded_year,type,website,instagram_handle,is_founding,founding_end,featured_until,art_guidelines,preferred_styles')
           .eq('id', venueId)
           .single();
 
@@ -52,6 +52,8 @@ export function PublicVenuePage({ venueId }: PublicVenuePageProps) {
             foundedYear: data.founded_year || null,
             websiteUrl: data.website || null,
             instagramHandle: data.instagram_handle || null,
+            artGuidelines: data.art_guidelines || null,
+            preferredStyles: data.preferred_styles || [],
           });
           const now = new Date().toISOString();
           setFoundingInfo({

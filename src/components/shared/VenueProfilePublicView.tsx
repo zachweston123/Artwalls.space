@@ -10,7 +10,7 @@
  *  • PurchasePage      → variant="compact" ("About the venue" card)
  */
 
-import { MapPin, CheckCircle, Store } from 'lucide-react';
+import { MapPin, CheckCircle, Store, Palette } from 'lucide-react';
 import { SocialLinks } from './SocialLinks';
 
 // ── Shared venue-data shape (camelCase, already normalised) ──
@@ -28,6 +28,8 @@ export interface VenuePublicData {
   labels?: string[];
   verified?: boolean;
   foundedYear?: number | null;
+  preferredStyles?: string[];
+  artGuidelines?: string | null;
 }
 
 // ── Props ────────────────────────────────────────────────────
@@ -214,6 +216,32 @@ export function VenueProfilePublicView(props: VenueProfilePublicViewProps) {
                 {label}
               </span>
             ))}
+          </div>
+        )}
+
+        {/* Preferred Art Styles */}
+        {venue.preferredStyles && venue.preferredStyles.length > 0 && (
+          <div className="mb-4">
+            <p className="text-sm text-[var(--text-muted)] mb-2">Looking for</p>
+            <div className="flex flex-wrap gap-2">
+              {venue.preferredStyles.map((style) => (
+                <span
+                  key={style}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs bg-[var(--green-muted)] text-[var(--green)] border border-[var(--border)]"
+                >
+                  <Palette className="w-3 h-3" />
+                  {style}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Art Guidelines */}
+        {venue.artGuidelines && (
+          <div className="mb-4 p-4 bg-[var(--surface-2)] rounded-lg border border-[var(--border)]">
+            <p className="text-sm text-[var(--text-muted)] mb-1">Artwork preferences</p>
+            <p className="text-sm text-[var(--text)] whitespace-pre-line">{venue.artGuidelines}</p>
           </div>
         )}
 

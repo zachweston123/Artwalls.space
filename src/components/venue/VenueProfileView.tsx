@@ -7,6 +7,7 @@ import { apiGet, getVenueSchedule } from '../../lib/api';
 import type { User } from '../../App';
 import { supabase } from '../../lib/supabase';
 import { SocialLinks } from '../shared/SocialLinks';
+import { VenueArtGuidelines } from './VenueArtGuidelines';
 
 interface VenueProfileViewProps {
   isOwnProfile: boolean;
@@ -257,6 +258,13 @@ export function VenueProfileView({
           ))}
         </div>
       </div>
+
+      {/* Artwork Preferences / Guidelines — visible to artists browsing this venue */}
+      <VenueArtGuidelines
+        venueId={venueId ?? null}
+        editable={false}
+        variant="section"
+      />
 
       {/* Install Window */}
       <div className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)] mb-6">

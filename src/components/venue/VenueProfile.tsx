@@ -6,6 +6,7 @@ import { supabase } from '../../lib/supabase';
 import { PageHeroHeader } from '../PageHeroHeader';
 import { formatCurrency } from '../../utils/format';
 import { SocialLinks } from '../shared/SocialLinks';
+import { VenueArtGuidelines } from './VenueArtGuidelines';
 
 interface VenueProfileProps {
   onNavigate: (page: string) => void;
@@ -20,6 +21,8 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
   const [editedBio, setEditedBio] = useState('');
   const [venueId, setVenueId] = useState<string | null>(null);
   const bioSectionRef = useRef<HTMLDivElement>(null);
+  const guidelinesRef = useRef<HTMLDivElement>(null);
+  const [openGuidelinesEditor, setOpenGuidelinesEditor] = useState(false);
 
   const formatTime = (time: string) => {
     const [hourStr, minuteStr] = time.split(':');
@@ -594,27 +597,12 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
             </div>
           </div>
 
-          <div className="border-t border-[var(--border)] p-6">
-            <h3 className="text-lg font-semibold mb-4">Wall Space Guidelines</h3>
-            <div className="space-y-3">
-              <div className="p-4 bg-[var(--surface-2)] rounded-lg border border-[var(--border)]">
-                <p className="text-sm text-[var(--text-muted)] mb-2">
-                  <strong className="text-[var(--text)]">Artwork Requirements:</strong>
-                </p>
-                <ul className="text-sm text-[var(--text-muted)] space-y-1 list-disc list-inside">
-                  <li>Must be gallery-wrapped or framed</li>
-                  <li>Professional presentation required</li>
-                  <li>Family-friendly content only</li>
-                </ul>
-              </div>
-              <button 
-                onClick={() => onNavigate('venue-settings')}
-                className="w-full text-left px-4 py-3 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] rounded-lg transition-colors border border-[var(--border)]"
-              >
-                <p className="text-[var(--text)] mb-1">Manage Guidelines</p>
-                <p className="text-sm text-[var(--text-muted)]">Customize your venue's artwork preferences</p>
-              </button>
-            </div>
+          <div ref={guidelinesRef}>
+            <VenueArtGuidelines
+              venueId={venueId}
+              editable
+              variant="card"
+            />
           </div>
 
           <div className="border-t border-[var(--border)] p-6">
