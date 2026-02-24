@@ -346,7 +346,7 @@ export function PublicArtistPage({ slugOrId, uid: uidProp, viewMode: viewProp, o
             <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl p-6 sm:p-8 flex flex-col sm:flex-row gap-6 shadow-md">
               <div className="w-32 h-32 rounded-full overflow-hidden bg-[var(--surface-3)] border-4 border-[var(--border)] flex-shrink-0">
                 {artist.profilePhotoUrl ? (
-                  <img src={artist.profilePhotoUrl} alt={artist.name} className="w-full h-full object-cover" />
+                  <img src={artist.profilePhotoUrl} alt={artist.name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                 ) : (
                   <div className="w-full h-full bg-[var(--surface-3)]" />
                 )}
@@ -400,7 +400,7 @@ export function PublicArtistPage({ slugOrId, uid: uidProp, viewMode: viewProp, o
                   {artworks.map(artwork => (
                     <div key={artwork.id} onClick={() => openArtwork(artwork.id)} className="cursor-pointer group bg-[var(--surface-2)] rounded-xl overflow-hidden border border-[var(--border)] hover:border-[var(--border-hover)] transition-all duration-200 hover:shadow-md">
                       <div className="w-full h-48 bg-[var(--surface-3)] overflow-hidden">
-                        {artwork.imageUrl && <img src={artwork.imageUrl} alt={artwork.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />}
+                        {artwork.imageUrl && <img src={artwork.imageUrl} alt={artwork.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" decoding="async" />}
                       </div>
                       <div className="p-4">
                         <h3 className="text-lg font-semibold text-[var(--text)] truncate">{artwork.title}</h3>

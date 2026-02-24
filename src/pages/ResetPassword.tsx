@@ -173,6 +173,7 @@ export function ResetPassword({ onSuccess, onBackToLogin }: ResetPasswordProps) 
                   onClick={() => setShowNew(!showNew)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text)]"
                   tabIndex={-1}
+                  aria-label={showNew ? 'Hide password' : 'Show password'}
                 >
                   {showNew ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -202,6 +203,7 @@ export function ResetPassword({ onSuccess, onBackToLogin }: ResetPasswordProps) 
                   onClick={() => setShowConfirm(!showConfirm)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text)]"
                   tabIndex={-1}
+                  aria-label={showConfirm ? 'Hide password confirmation' : 'Show password confirmation'}
                 >
                   {showConfirm ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>

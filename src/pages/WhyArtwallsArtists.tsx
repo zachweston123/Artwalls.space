@@ -61,8 +61,12 @@ export function WhyArtwallsArtistsPage({ onNavigate, viewerRole = null }: WhyArt
   return (
     <div className="bg-[var(--bg)] text-[var(--text)]">
       <SEO
-        title="Why Artwalls for Artists"
-        description="Artwalls helps you get placed in local venues, track everything, and actually sell — with an easy QR code + artwork page process."
+        title="Artwalls for Artists — Display & Sell Your Art Locally"
+        description="Artwalls helps artists get placed in local cafés, restaurants, and venues. Upload your portfolio, apply to wall spaces, and sell artwork via QR codes."
+        ogTitle="Artwalls for Artists — Show & Sell Local Art"
+        ogDescription="Get your art on real walls in local venues. Build a portfolio, apply for wall space, and sell directly to buyers via QR codes."
+        ogUrl="https://artwalls.space/why-artwalls"
+        canonical="https://artwalls.space/why-artwalls"
       />
 
       {/* Hero */}

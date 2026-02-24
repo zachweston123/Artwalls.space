@@ -4,6 +4,7 @@ import { apiGet, apiPost } from '../../lib/api';
 import { supabase } from '../../lib/supabase';
 import { uploadWallspacePhoto } from '../../lib/storage';
 import { PageHeroHeader } from '../PageHeroHeader';
+import { EmptyState } from '../EmptyState';
 
 type WallSpace = {
   id: string;
@@ -303,6 +304,7 @@ export function VenueWalls() {
               <button
                 onClick={() => setEditingWall(null)}
                 className="p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
+                aria-label="Close dialog"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -327,7 +329,7 @@ export function VenueWalls() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm text-[var(--text-muted)] mb-2">Width (feet)</label>
                   <input
@@ -415,6 +417,7 @@ export function VenueWalls() {
                           type="button"
                           onClick={() => removeEditPhoto(index)}
                           className="absolute top-2 right-2 p-1 bg-[var(--danger)] text-[var(--accent-contrast)] rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                          aria-label={`Remove photo ${index + 1}`}
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -467,6 +470,7 @@ export function VenueWalls() {
               <button
                 onClick={() => setShowAddForm(false)}
                 className="p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
+                aria-label="Close dialog"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -491,7 +495,7 @@ export function VenueWalls() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm text-[var(--text-muted)] mb-2">Width (feet)</label>
                   <input
@@ -567,6 +571,7 @@ export function VenueWalls() {
                           type="button"
                           onClick={() => removePhoto(index)}
                           className="absolute top-2 right-2 p-1 bg-[var(--danger)] text-[var(--accent-contrast)] rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                          aria-label={`Remove photo ${index + 1}`}
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -619,6 +624,8 @@ export function VenueWalls() {
                     src={currentPhoto}
                     alt={wall.name}
                     className="w-full h-full object-cover"
+                    loading="lazy"
+                    decoding="async"
                   />
                   {photos.length > 1 && (
                     <>
@@ -721,19 +728,15 @@ export function VenueWalls() {
       </div>
 
       {wallSpaces.length === 0 && (
-        <div className="text-center py-16">
-          <div className="w-16 h-16 bg-[var(--surface-3)] rounded-full flex items-center justify-center mx-auto mb-4">
-            <Frame className="w-8 h-8 text-[var(--text-muted)]" />
-          </div>
-          <h3 className="text-xl mb-2">No wall spaces yet</h3>
-          <p className="text-[var(--text-muted)] mb-6">Add your first wall space to start displaying artwork</p>
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="px-6 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-opacity"
-          >
-            Add Your First Wall Space
-          </button>
-        </div>
+        <EmptyState
+          icon={<Frame className="w-8 h-8" />}
+          title="No wall spaces yet"
+          description="Add your first wall space to start displaying artwork"
+          primaryAction={{
+            label: 'Add Your First Wall Space',
+            onClick: () => setShowAddForm(true),
+          }}
+        />
       )}
     </div>
   );

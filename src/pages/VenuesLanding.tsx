@@ -100,8 +100,12 @@ export function VenuesLandingPage({ onNavigate, onLogin, viewerRole = null }: Ve
   return (
     <div className="bg-[var(--bg)] text-[var(--text)]">
       <SEO
-        title="Artwalls for Venues"
-        description="Artwalls makes it easy to host rotating local art without turning your business into a gallery."
+        title="Artwalls for Venues — Host Local Art, Earn Commission"
+        description="Transform your blank walls into a rotating art gallery. Artwalls connects your venue with local artists, increases foot traffic, and earns you commission on sales."
+        ogTitle="Artwalls for Venues — Host Art, Earn More"
+        ogDescription="Turn your blank walls into rotating art galleries. Support local artists and earn commission on sales — all managed through Artwalls."
+        ogUrl="https://artwalls.space/venues"
+        canonical="https://artwalls.space/venues"
       />
 
       {/* Hero */}

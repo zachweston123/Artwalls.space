@@ -127,6 +127,7 @@ export function PasswordSecurity({ onBack }: PasswordSecurityProps) {
                     type="button"
                     onClick={() => setShowCurrent(!showCurrent)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text)]"
+                    aria-label={showCurrent ? 'Hide current password' : 'Show current password'}
                   >
                     {showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -148,6 +149,7 @@ export function PasswordSecurity({ onBack }: PasswordSecurityProps) {
                     type="button"
                     onClick={() => setShowNew(!showNew)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text)]"
+                    aria-label={showNew ? 'Hide new password' : 'Show new password'}
                   >
                     {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -170,6 +172,7 @@ export function PasswordSecurity({ onBack }: PasswordSecurityProps) {
                     type="button"
                     onClick={() => setShowConfirm(!showConfirm)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text)]"
+                    aria-label={showConfirm ? 'Hide password confirmation' : 'Show password confirmation'}
                   >
                     {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>

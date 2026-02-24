@@ -407,6 +407,8 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
                       src={venue.coverPhoto}
                       alt={venue.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      loading="lazy"
+                      decoding="async"
                     />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-[var(--surface-2)] to-[var(--surface-3)] flex items-center justify-center">

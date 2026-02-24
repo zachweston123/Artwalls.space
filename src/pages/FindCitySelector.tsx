@@ -12,6 +12,7 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { MapPin, Search, ArrowRight, Palette } from 'lucide-react';
+import { SEO } from '../components/SEO';
 import { getUniqueCities, toCitySlug, searchCities } from '../data/cities';
 import type { City } from '../data/cities';
 
@@ -72,6 +73,15 @@ export function FindCitySelector({ onNavigate }: FindCitySelectorProps) {
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
+      <SEO
+        title="Find Art Near You — Artwalls"
+        description="Discover local venues hosting original artwork on their walls. Browse the map, find art displays in your city, and buy directly from local artists."
+        ogTitle="Find Art Near You — Artwalls"
+        ogDescription="Explore local venues hosting original artwork. Browse by city, discover artists, and buy art directly from the wall."
+        ogUrl="https://artwalls.space/find"
+        canonical="https://artwalls.space/find"
+      />
+
       {/* Branding header */}
       <header className="bg-[var(--surface-2)] border-b border-[var(--border)]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">

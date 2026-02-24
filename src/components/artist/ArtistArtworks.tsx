@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Plus, X, Upload, Loader2 } from 'lucide-react';
 import { PageHeroHeader } from '../PageHeroHeader';
+import { EmptyState } from '../EmptyState';
 import { artworkPurchaseUrl } from '../../lib/artworkQrUrl';
 type Artwork = {
   id: string;
@@ -391,6 +392,7 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
               <button
                 onClick={() => setShowAddForm(false)}
                 className="p-2 hover:bg-[var(--surface-3)] rounded-lg transition-colors text-[var(--text)]"
+                aria-label="Close dialog"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -671,6 +673,8 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
                 src={artwork.imageUrl}
                 alt={artwork.title}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                loading="lazy"
+                decoding="async"
               />
             </div>
             <div className="p-4">
@@ -735,19 +739,15 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
       </div>
 
       {!loading && artworks.length === 0 && (
-        <div className="text-center py-16">
-          <div className="w-16 h-16 bg-[var(--surface-2)] border border-[var(--border)] rounded-full flex items-center justify-center mx-auto mb-4">
-            <Plus className="w-8 h-8 text-[var(--text-muted)]" />
-          </div>
-          <h3 className="text-lg font-semibold mb-2">No artworks yet</h3>
-          <p className="text-[var(--text-muted)] mb-6">Start by adding your first piece</p>
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="px-6 py-2 bg-[var(--blue)] text-[var(--on-blue)] rounded-lg hover:bg-[var(--blue-hover)] transition-colors"
-          >
-            Add Your First Artwork
-          </button>
-        </div>
+        <EmptyState
+          icon={<Plus className="w-8 h-8" />}
+          title="No artworks yet"
+          description="Start by adding your first piece"
+          primaryAction={{
+            label: 'Add Your First Artwork',
+            onClick: () => setShowAddForm(true),
+          }}
+        />
       )}
     </div>
   );

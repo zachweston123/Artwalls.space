@@ -10,6 +10,8 @@ import { Login } from './components/Login';
 import { Footer } from './components/Footer';
 import { AgreementBanner } from './components/legal/AgreementBanner';
 import { ProfileCompletion } from './components/ProfileCompletion';
+import { SkipLink } from './components/SkipLink';
+import { AriaLiveRegion } from './components/AriaLiveRegion';
 
 // ─── Lazy-loaded route components ─────────────────────────────────────────────
 // Each chunk is only downloaded when the corresponding page is first visited.
@@ -882,7 +884,7 @@ export default function App() {
           onLogout={() => {}}
           currentPage="public-artist-profile"
         />
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+        <main id="main-content" className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
           <Suspense fallback={<PageLoader />}>
           <PublicArtistPage slugOrId={slugOrId} onNavigate={handleNavigate} />
           </Suspense>
@@ -934,6 +936,7 @@ export default function App() {
 
       return (
         <div className="min-h-screen">
+          <SkipLink />
           <Navigation
             user={null}
             onNavigate={handleNavigate}
@@ -941,7 +944,7 @@ export default function App() {
             currentPage={currentPage}
           />
 
-          <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+          <main id="main-content" className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
             <Suspense fallback={<PageLoader />}>
             {showArtistsPage && <WhyArtwallsArtistsPage onNavigate={handleNavigate} viewerRole={null} />}
             {showVenuesPage && (
@@ -958,6 +961,7 @@ export default function App() {
     if (isLegalPage) {
       return (
         <div className="min-h-screen flex flex-col">
+          <SkipLink />
           <Navigation
             user={null}
             onNavigate={handleNavigate}
@@ -965,7 +969,7 @@ export default function App() {
             currentPage={currentPage}
           />
 
-          <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 py-8 w-full">
+          <main id="main-content" className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 py-8 w-full">
             <Suspense fallback={<PageLoader />}>
               {currentPage === 'policies' && <PoliciesLanding onNavigate={handleNavigate} />}
               {currentPage === 'privacy-policy' && <PrivacyPolicy onNavigate={handleNavigate} />}
@@ -1160,6 +1164,8 @@ export default function App() {
 
   return (
     <ErrorBoundary>
+    <SkipLink />
+    <AriaLiveRegion />
     <div className="min-h-screen">
       <Navigation 
         user={currentUser} 
@@ -1179,7 +1185,7 @@ export default function App() {
         currentPage={currentPage}
       />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <main id="main-content" className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         {/* Background is controlled by system dark mode preference set on html/body */}
         {/* Agreement Banner */}
         {hasAcceptedAgreement === false && 

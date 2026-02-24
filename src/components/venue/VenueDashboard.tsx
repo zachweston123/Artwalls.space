@@ -118,7 +118,7 @@ export function VenueDashboard({ onNavigate, user, hasAcceptedAgreement }: Venue
   ];
 
   return (
-    <div className="bg-[var(--bg)] text-[var(--text)]">
+    <div className="bg-[var(--bg)] text-[var(--text)] min-h-screen">
       <PageHeroHeader
         breadcrumb="Manage / Dashboard"
         title="Venue dashboard"

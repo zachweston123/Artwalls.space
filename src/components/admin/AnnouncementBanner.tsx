@@ -75,6 +75,7 @@ export function AnnouncementBanner({
             <button
               onClick={onDismiss}
               className={`flex-shrink-0 p-1 rounded hover:bg-[var(--surface-2)] transition-colors ${styles.text}`}
+              aria-label="Dismiss announcement"
             >
               <X className="w-4 h-4" />
             </button>

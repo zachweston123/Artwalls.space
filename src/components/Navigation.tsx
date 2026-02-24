@@ -1,6 +1,6 @@
 // SETTINGS_PATCH_TEST_NAV
 import { useEffect, useRef, useState } from 'react';
-import { Palette, Store, LogOut, Menu, Bell, ChevronDown, Grid, BarChart, Compass, Settings as SettingsIcon, Shield, HelpCircle, BookOpen, ChevronRight } from 'lucide-react';
+import { Palette, Store, LogOut, Menu, Bell, ChevronDown, Grid, BarChart, Compass, Settings as SettingsIcon, Shield, HelpCircle, BookOpen, ChevronRight, MapPin } from 'lucide-react';
 import type { User } from '../App';
 import { getMyNotifications, setNotificationReadState } from '../lib/api';
 
@@ -72,7 +72,7 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
     ];
 
     return (
-      <nav className="bg-[var(--surface-2)] border-b border-[var(--border)]">
+      <nav className="bg-[var(--surface-2)] border-b border-[var(--border)]" aria-label="Main navigation">
         <div className="max-w-7xl mx-auto px-6 sm:px-8">
           <div className="flex items-center justify-between h-16 gap-4">
             <div className="flex items-center gap-2">
@@ -81,6 +81,15 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
             </div>
 
             <div className="flex items-center gap-3">
+              <a
+                href="/find"
+                onClick={(e) => { e.preventDefault(); onNavigate('/find'); window.location.href = '/find'; }}
+                className={`hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-lg transition-colors text-[var(--text-muted)] hover:bg-[var(--surface-3)]`}
+              >
+                <MapPin className="w-4 h-4" />
+                Find Art
+              </a>
+
               <div className="relative" ref={menuRef}>
                 <button
                   onClick={() => setOpenMenu(openMenu === 'learn' ? null : 'learn')}
@@ -265,7 +274,7 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
   );
 
   return (
-    <nav className="bg-[var(--surface-2)] border-b border-[var(--border)]" ref={menuRef}>
+    <nav className="bg-[var(--surface-2)] border-b border-[var(--border)]" ref={menuRef} aria-label="Main navigation">
       <div className="max-w-7xl mx-auto px-6 sm:px-8">
         <div className="flex items-center justify-between h-16 gap-4">
           <div className="flex items-center gap-6">

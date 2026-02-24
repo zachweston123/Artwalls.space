@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Sitemap: https://artwalls.space/sitemap.xml
+
+# Disallow authenticated-only areas from crawling
+Disallow: /api/
