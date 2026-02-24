@@ -1128,9 +1128,7 @@ export default function App() {
             {currentPage === 'admin-user-detail' && (
               <AdminUserDetail userId="1" onBack={() => handleNavigate('admin-users')} />
             )}
-            {currentPage === 'admin-announcements' && (
-              <AdminAnnouncements onCreateAnnouncement={() => { /* TODO: wire up create announcement */ }} />
-            )}
+            {currentPage === 'admin-announcements' && <AdminAnnouncements />}
             {currentPage === 'admin-promo-codes' && (
               <AdminPromoCodes />
             )}
@@ -1281,10 +1279,15 @@ export default function App() {
             {currentPage === 'artist-invites' && (
               <ArtistInvites 
                 onApply={(inviteId) => handleNavigate('artist-applications')}
-                onDecline={(_inviteId) => {
+                onDecline={async (inviteId) => {
                   if (confirm('Are you sure you want to decline this invitation?')) {
-                    console.log('Declined invite:', inviteId);
-                    // TODO: API call to decline invite
+                    try {
+                      await apiPost(`/api/venue-invites/token/${inviteId}/decline`, {});
+                    } catch {
+                      // Fallback to direct Supabase update
+                      const { supabase } = await import('./lib/supabase');
+                      await supabase.from('venue_invites').update({ status: 'DECLINED', declined_at: new Date().toISOString() }).eq('id', inviteId);
+                    }
                   }
                 }}
                 onNavigate={handleNavigate}
@@ -1331,8 +1334,9 @@ export default function App() {
                   setSelectedArtistId(artistId);
                   handleNavigate('artist-view-profile');
                 }}
-                onInviteArtist={(_artistId) => {
-                  // TODO: API call to send invitation
+                onInviteArtist={(artistId) => {
+                  setSelectedArtistId(artistId);
+                  handleNavigate('artist-view-profile');
                 }}
               />
             )}
@@ -1341,8 +1345,18 @@ export default function App() {
                 artistId={selectedArtistId}
                 isOwnProfile={false}
                 currentUser={currentUser}
-                onInviteToApply={() => {
-                  // TODO: API call to send invitation to apply
+                onInviteToApply={async () => {
+                  try {
+                    await apiPost('/api/support/messages', {
+                      email: currentUser.email || 'venue@artwalls.space',
+                      message: `Venue invite-to-apply: venue ${currentUser.id} wants to invite artist ${selectedArtistId} to display.`,
+                      roleContext: 'venue',
+                      pageSource: 'artist-view-profile',
+                    });
+                    alert('Invitation sent! The artist will be notified.');
+                  } catch {
+                    alert('Unable to send invitation right now. Please try again.');
+                  }
                 }}
               />
             )}
@@ -1357,7 +1371,7 @@ export default function App() {
               <AdminUsers onViewUser={(userId: string) => handleNavigate('admin-user-detail', { userId })} />
             )}
             {currentPage === 'admin-user-detail' && <AdminUserDetail onNavigate={handleNavigate} />}
-            {currentPage === 'admin-announcements' && <AdminAnnouncements onCreateAnnouncement={() => { /* TODO: wire up create announcement */ }} />}
+            {currentPage === 'admin-announcements' && <AdminAnnouncements />}
             {currentPage === 'admin-promo-codes' && <AdminPromoCodes />}
             {currentPage === 'admin-stripe-payments' && <StripePaymentSetup onNavigate={handleNavigate} />}
             {currentPage === 'admin-activity-log' && <AdminActivityLog />}

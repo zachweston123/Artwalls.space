@@ -13,6 +13,8 @@ import { QuickActions } from './QuickActions';
 import { PageHeroHeader } from '../PageHeroHeader';
 import { FoundingArtistBanner } from './FoundingArtistBanner';
 import { FoundingArtistBadge } from './FoundingArtistBadge';
+import { AnnouncementBanner } from '../admin/AnnouncementBanner';
+import { useAnnouncements } from '../../hooks/useAnnouncements';
 
 /**
  * ConnectStatus — Stripe Connect payout state.
@@ -48,6 +50,7 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
     momentum?: { eligible: boolean; reason: string | null; dismissed: boolean; showBanner: boolean };
   } | null>(null);
   const [momentumDismissed, setMomentumDismissed] = useState(false);
+  const { announcements: activeAnnouncements, dismiss: dismissAnnouncement } = useAnnouncements('artists');
 
   /**
    * Profile completeness — now stores the FULL result so we can pass
@@ -254,6 +257,11 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
           onDismiss={() => setMomentumDismissed(true)}
         />
       )}
+
+      {/* ── Admin announcements ── */}
+      {activeAnnouncements.map(a => (
+        <AnnouncementBanner key={a.id} type={a.type} title={a.title} message={a.body ?? undefined} onDismiss={() => dismissAnnouncement(a.id)} />
+      ))}
 
       {/* ═══════ HEADER ═══════ */}
       <PageHeroHeader

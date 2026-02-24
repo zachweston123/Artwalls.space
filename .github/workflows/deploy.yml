@@ -13,8 +13,34 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  test:
+    name: Lint, type-check & test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Build (type-check)
+        run: npm run build
+        env:
+          VITE_API_BASE_URL: https://api.artwalls.space
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+      - name: Run tests
+        run: npm test
+
   pages:
     name: Build and deploy Pages
+    needs: test
     # Run only if you opt in via repo VAR DEPLOY_PAGES_VIA_GHA = 'true'
     if: vars.DEPLOY_PAGES_VIA_GHA == 'true'
     runs-on: ubuntu-latest
@@ -47,6 +73,7 @@ jobs:
 
   worker:
     name: Deploy Worker (api.artwalls.space)
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

@@ -11,6 +11,8 @@ import { VenueNextActions } from './VenueNextActions';
 import { StatCard } from '../ui/stat-card';
 import { FoundingVenueCard } from './FoundingVenueCard';
 import { VenueProfileCompleteness } from './VenueProfileCompleteness';
+import { AnnouncementBanner } from '../admin/AnnouncementBanner';
+import { useAnnouncements } from '../../hooks/useAnnouncements';
 
 interface VenueDashboardProps {
   onNavigate: (page: string) => void;
@@ -25,6 +27,7 @@ export function VenueDashboard({ onNavigate, user, hasAcceptedAgreement }: Venue
     sales: { total: number; totalEarnings: number };
   } | null>(null);
   const [payoutsConnected, setPayoutsConnected] = useState<boolean | null>(null);
+  const { announcements: activeAnnouncements, dismiss: dismissAnnouncement } = useAnnouncements('venues');
 
   useEffect(() => {
     let isMounted = true;
@@ -139,6 +142,11 @@ export function VenueDashboard({ onNavigate, user, hasAcceptedAgreement }: Venue
           </>
         }
       />
+
+      {/* ── Admin announcements ── */}
+      {activeAnnouncements.map(a => (
+        <AnnouncementBanner key={a.id} type={a.type} title={a.title} message={a.body ?? undefined} onDismiss={() => dismissAnnouncement(a.id)} />
+      ))}
 
       {user && (
         <div className="mb-6">

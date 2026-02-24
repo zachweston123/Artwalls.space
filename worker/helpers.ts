@@ -75,3 +75,55 @@ export function getErrorMessage(err: unknown): string {
   if (typeof err === 'string') return err;
   return 'An unexpected error occurred';
 }
+
+// ── Venue-invite helpers ──
+
+export function isValidInviteToken(token: string): boolean {
+  return /^[a-f0-9]{16,64}$/i.test(token || '');
+}
+
+export function statusAfterOpen(current: string): string {
+  if (current === 'DRAFT' || current === 'SENT') return 'CLICKED';
+  return current;
+}
+
+const INVITE_TRANSITIONS: Record<string, string[]> = {
+  DRAFT: ['SENT', 'CLICKED', 'DECLINED', 'EXPIRED'],
+  SENT: ['CLICKED', 'ACCEPTED', 'DECLINED', 'EXPIRED'],
+  CLICKED: ['ACCEPTED', 'DECLINED', 'EXPIRED'],
+  ACCEPTED: [],
+  DECLINED: [],
+  EXPIRED: [],
+};
+
+export function isStatusTransitionAllowed(current: string, next: string): boolean {
+  if (current === next) return true;
+  return INVITE_TRANSITIONS[current]?.includes(next) || false;
+}
+
+export function mapVenueInviteRow(r: any) {
+  if (!r) return null;
+  return {
+    id: r.id,
+    token: r.token,
+    artistId: r.artist_id,
+    placeId: r.place_id,
+    venueName: r.venue_name,
+    venueAddress: r.venue_address,
+    googleMapsUrl: r.google_maps_url,
+    websiteUrl: r.website_url,
+    phone: r.phone,
+    venueEmail: r.venue_email,
+    personalLine: r.personal_line,
+    subject: r.subject,
+    bodyTemplateVersion: r.body_template_version,
+    status: r.status,
+    sentAt: r.sent_at,
+    firstClickedAt: r.first_clicked_at,
+    clickCount: r.click_count,
+    acceptedAt: r.accepted_at,
+    declinedAt: r.declined_at,
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+  };
+}
