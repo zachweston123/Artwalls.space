@@ -10,7 +10,6 @@ import { Login } from './components/Login';
 import { Footer } from './components/Footer';
 import { AgreementBanner } from './components/legal/AgreementBanner';
 import { ProfileCompletion } from './components/ProfileCompletion';
-import { SkipLink } from './components/SkipLink';
 import { AriaLiveRegion } from './components/AriaLiveRegion';
 
 // ─── Lazy-loaded route components ─────────────────────────────────────────────
@@ -936,7 +935,6 @@ export default function App() {
 
       return (
         <div className="min-h-screen">
-          <SkipLink />
           <Navigation
             user={null}
             onNavigate={handleNavigate}
@@ -961,7 +959,6 @@ export default function App() {
     if (isLegalPage) {
       return (
         <div className="min-h-screen flex flex-col">
-          <SkipLink />
           <Navigation
             user={null}
             onNavigate={handleNavigate}
@@ -1164,7 +1161,6 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-    <SkipLink />
     <AriaLiveRegion />
     <div className="min-h-screen">
       <Navigation 
