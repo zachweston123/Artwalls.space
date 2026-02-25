@@ -1,6 +1,23 @@
-# Artwalls server (Stripe Connect marketplace: artist + venue splits)
+# server/ — DEPRECATED (Legacy Express Backend)
 
-This is a minimal **production-starter** backend for a multi-vendor marketplace where:
+> **⚠️ DO NOT USE — This directory is kept for reference only.**
+>
+> All API routes have been fully migrated to the **Cloudflare Worker** at
+> [`worker/index.ts`](../worker/index.ts). The Worker serves all traffic
+> from `api.artwalls.space` via Wrangler.
+
+## Status
+
+| Aspect | Detail |
+|---|---|
+| **Current status** | Deprecated — `server/index.js` throws on startup |
+| **Replacement** | `worker/index.ts` (Cloudflare Worker) |
+| **Production URL** | `https://api.artwalls.space/*` |
+| **When to delete** | After the migration is fully verified in production |
+
+## What was here
+
+This was a minimal **production-starter** Express.js backend for a multi-vendor marketplace where:
 
 - **Artists** and **venues** onboard to Stripe Connect Express (KYC + bank via Stripe-hosted onboarding).
 - Artists create listings -> the server auto-creates a Stripe **Product** + **Price**.

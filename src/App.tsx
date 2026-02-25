@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { supabase } from './lib/supabase';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { apiPost } from './lib/api';
@@ -16,102 +16,39 @@ import { ProfileCompletion } from './components/ProfileCompletion';
 import { AriaLiveRegion } from './components/AriaLiveRegion';
 
 // ─── Lazy-loaded route components ─────────────────────────────────────────────
-// Each chunk is only downloaded when the corresponding page is first visited.
-
-// Artist
-const ArtistDashboard = lazy(() => import('./components/artist/ArtistDashboard').then(m => ({ default: m.ArtistDashboard })));
-const ArtistArtworks = lazy(() => import('./components/artist/ArtistArtworks').then(m => ({ default: m.ArtistArtworks })));
-const ArtistSales = lazy(() => import('./components/artist/ArtistSales').then(m => ({ default: m.ArtistSales })));
-const ArtistProfile = lazy(() => import('./components/artist/ArtistProfile').then(m => ({ default: m.ArtistProfile })));
-const ArtistProfileView = lazy(() => import('./components/artist/ArtistProfileView').then(m => ({ default: m.ArtistProfileView })));
-const PasswordSecurity = lazy(() => import('./components/artist/PasswordSecurity').then(m => ({ default: m.PasswordSecurity })));
-const NotificationPreferences = lazy(() => import('./components/artist/NotificationPreferences').then(m => ({ default: m.NotificationPreferences })));
-const ArtistInvites = lazy(() => import('./components/artist/ArtistInvites').then(m => ({ default: m.ArtistInvites })));
-const ArtistInviteVenue = lazy(() => import('./components/artist/ArtistInviteVenue').then(m => ({ default: m.ArtistInviteVenue })));
-const ArtistReferrals = lazy(() => import('./components/artist/ArtistReferrals').then(m => ({ default: m.ArtistReferrals })));
-const ArtistAnalytics = lazy(() => import('./components/artist/ArtistAnalytics').then(m => ({ default: m.ArtistAnalytics })));
-const ArtistOnboardingWizard = lazy(() => import('./components/onboarding/ArtistOnboardingWizard').then(m => ({ default: m.ArtistOnboardingWizard })));
-const CuratedSets = lazy(() => import('./components/artist/CuratedSets').then(m => ({ default: m.CuratedSets })));
-const FindVenues = lazy(() => import('./components/artist/FindVenues').then(m => ({ default: m.FindVenues })));
-
-// Venue
-const VenueDashboard = lazy(() => import('./components/venue/VenueDashboard').then(m => ({ default: m.VenueDashboard })));
-const VenueWalls = lazy(() => import('./components/venue/VenueWalls').then(m => ({ default: m.VenueWalls })));
-const VenueCurrentArtWithScheduling = lazy(() => import('./components/venue/VenueCurrentArtWithScheduling').then(m => ({ default: m.VenueCurrentArtWithScheduling })));
-const VenueSales = lazy(() => import('./components/venue/VenueSales').then(m => ({ default: m.VenueSales })));
-const VenueSettingsWithEmptyState = lazy(() => import('./components/venue/VenueSettingsWithEmptyState').then(m => ({ default: m.VenueSettingsWithEmptyState })));
-const VenueProfile = lazy(() => import('./components/venue/VenueProfile').then(m => ({ default: m.VenueProfile })));
-const VenueProfileView = lazy(() => import('./components/venue/VenueProfileView').then(m => ({ default: m.VenueProfileView })));
-const VenuePasswordSecurity = lazy(() => import('./components/venue/VenuePasswordSecurity').then(m => ({ default: m.VenuePasswordSecurity })));
-const VenueNotificationPreferences = lazy(() => import('./components/venue/VenueNotificationPreferences').then(m => ({ default: m.VenueNotificationPreferences })));
-const VenueWallsPublic = lazy(() => import('./components/venue/VenueWallsPublic').then(m => ({ default: m.VenueWallsPublic })));
-const FindArtists = lazy(() => import('./components/venue/FindArtists').then(m => ({ default: m.FindArtists })));
-const VenueProfilePage = lazy(() => import('./components/venue/VenueProfilePage').then(m => ({ default: m.VenueProfilePage })));
-const FindArtHub = lazy(() => import('./components/venue/FindArtHub').then(m => ({ default: m.FindArtHub })));
-const CuratedSetsMarketplace = lazy(() => import('./components/venue/CuratedSetsMarketplace').then(m => ({ default: m.CuratedSetsMarketplace })));
-const VenuePartnerKitEmbedded = lazy(() => import('./components/venue/VenuePartnerKitEmbedded').then(m => ({ default: m.VenuePartnerKitEmbedded })));
-const VenueSetupWizard = lazy(() => import('./components/venue/VenueSetupWizard').then(m => ({ default: m.VenueSetupWizard })));
-const VenueHostingPolicy = lazy(() => import('./components/venue/VenueHostingPolicy').then(m => ({ default: m.VenueHostingPolicy })));
-const VenueApplication = lazy(() => import('./components/venue/VenueApplication').then(m => ({ default: m.VenueApplication })));
-const ReferralProgram = lazy(() => import('./components/venue/ReferralProgram').then(m => ({ default: m.ReferralProgram })));
-const VenueCalls = lazy(() => import('./components/venue/VenueCalls').then(m => ({ default: m.VenueCalls })));
-const VenueCallDetail = lazy(() => import('./components/venue/VenueCallDetail').then(m => ({ default: m.VenueCallDetail })));
-const VenueAnalytics = lazy(() => import('./components/venue/VenueAnalytics').then(m => ({ default: m.VenueAnalytics })));
-const VenueWallStats = lazy(() => import('./components/venue/VenueWallStats').then(m => ({ default: m.VenueWallStats })));
-const VenuePerformance = lazy(() => import('./components/venue/VenuePerformance').then(m => ({ default: m.VenuePerformance })));
-const VenueStatement = lazy(() => import('./components/venue/VenueStatement').then(m => ({ default: m.VenueStatement })));
-
-// Shared
-const ApplicationsAndInvitations = lazy(() => import('./components/shared/ApplicationsAndInvitations').then(m => ({ default: m.ApplicationsAndInvitations })));
-const NotificationsList = lazy(() => import('./components/notifications/NotificationsList').then(m => ({ default: m.NotificationsList })));
-const RoleMismatchPage = lazy(() => import('./components/shared/RoleMismatchPage').then(m => ({ default: m.RoleMismatchPage })));
-const Settings = lazy(() => import('./components/settings/Settings').then(m => ({ default: m.Settings })));
-
-// Pages
-const WhyArtwallsArtistsPage = lazy(() => import('./pages/WhyArtwallsArtists').then(m => ({ default: m.WhyArtwallsArtistsPage })));
-const VenuesLandingPage = lazy(() => import('./pages/VenuesLanding').then(m => ({ default: m.VenuesLandingPage })));
-const PublicArtistProfilePage = lazy(() => import('./pages/public/PublicArtistProfilePage').then(m => ({ default: m.PublicArtistProfilePage })));
-const PublicArtistPage = lazy(() => import('./pages/PublicArtistPage').then(m => ({ default: m.PublicArtistPage })));
-const PublicArtistSetPage = lazy(() => import('./pages/PublicArtistSetPage').then(m => ({ default: m.PublicArtistSetPage })));
-const PublicVenuePage = lazy(() => import('./pages/PublicVenuePage').then(m => ({ default: m.PublicVenuePage })));
-const FindCitySelector = lazy(() => import('./pages/FindCitySelector').then(m => ({ default: m.FindCitySelector })));
-const CityVenueMap = lazy(() => import('./pages/CityVenueMap').then(m => ({ default: m.CityVenueMap })));
-const ForgotPassword = lazy(() => import('./pages/ForgotPassword').then(m => ({ default: m.ForgotPassword })));
-const ResetPassword = lazy(() => import('./pages/ResetPassword').then(m => ({ default: m.ResetPassword })));
-const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
-const VenueInviteLanding = lazy(() => import('./pages/VenueInviteLanding'));
-const VenueSignup = lazy(() => import('./pages/VenueSignup'));
-const PurchasePage = lazy(() => import('./components/PurchasePage').then(m => ({ default: m.PurchasePage })));
-
-// Legal
-const PoliciesLanding = lazy(() => import('./components/legal/PoliciesLanding').then(m => ({ default: m.PoliciesLanding })));
-const ArtistAgreement = lazy(() => import('./components/legal/ArtistAgreement').then(m => ({ default: m.ArtistAgreement })));
-const VenueAgreement = lazy(() => import('./components/legal/VenueAgreement').then(m => ({ default: m.VenueAgreement })));
-const PrivacyPolicy = lazy(() => import('./components/legal/PrivacyPolicy').then(m => ({ default: m.PrivacyPolicy })));
-const TermsOfService = lazy(() => import('./components/legal/TermsOfService').then(m => ({ default: m.TermsOfService })));
-const PricingPage = lazy(() => import('./components/pricing/PricingPage').then(m => ({ default: m.PricingPage })));
-
-// Calls
-const CallPublicPage = lazy(() => import('./components/calls/CallPublicPage').then(m => ({ default: m.CallPublicPage })));
-const CallApplyPage = lazy(() => import('./components/calls/CallApplyPage').then(m => ({ default: m.CallApplyPage })));
-
-// Admin
-const AdminSidebar = lazy(() => import('./components/admin/AdminSidebar').then(m => ({ default: m.AdminSidebar })));
-const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
-const AdminWallProductivity = lazy(() => import('./components/admin/AdminWallProductivity').then(m => ({ default: m.AdminWallProductivity })));
-const AdminUsers = lazy(() => import('./components/admin/AdminUsers').then(m => ({ default: m.AdminUsers })));
-const AdminUserDetail = lazy(() => import('./components/admin/AdminUserDetail').then(m => ({ default: m.AdminUserDetail })));
-const AdminAnnouncements = lazy(() => import('./components/admin/AdminAnnouncements').then(m => ({ default: m.AdminAnnouncements })));
-const AdminPromoCodes = lazy(() => import('./components/admin/AdminPromoCodes').then(m => ({ default: m.AdminPromoCodes })));
-const AdminActivityLog = lazy(() => import('./components/admin/AdminActivityLog').then(m => ({ default: m.AdminActivityLog })));
-const AdminInvites = lazy(() => import('./components/admin/AdminInvites').then(m => ({ default: m.AdminInvites })));
-const AdminReferrals = lazy(() => import('./components/admin/AdminReferrals').then(m => ({ default: m.AdminReferrals })));
-const AdminSalesPage = lazy(() => import('./components/admin/AdminSales').then(m => ({ default: m.AdminSales })));
-const AdminCurrentDisplays = lazy(() => import('./components/admin/AdminCurrentDisplays').then(m => ({ default: m.AdminCurrentDisplays })));
-const AdminSupport = lazy(() => import('./components/admin/AdminSupport').then(m => ({ default: m.AdminSupport })));
-const StripePaymentSetup = lazy(() => import('./components/admin/StripePaymentSetup').then(m => ({ default: m.StripePaymentSetup })));
-const SupportInbox = lazy(() => import('./components/admin/SupportInbox').then(m => ({ default: m.SupportInbox })));
-const SupportMessageDetail = lazy(() => import('./components/admin/SupportMessageDetail').then(m => ({ default: m.SupportMessageDetail })));
+// Centralised in src/routes/lazyPages.ts; App.tsx only imports what it renders directly.
+import {
+  ForgotPassword,
+  ResetPassword,
+  VerifyEmail,
+  VenueInviteLanding,
+  VenueSignup,
+  PurchasePage,
+  WhyArtwallsArtistsPage,
+  VenuesLandingPage,
+  PublicArtistProfilePage,
+  PublicArtistPage,
+  PublicArtistSetPage,
+  PublicVenuePage,
+  FindCitySelector,
+  CityVenueMap,
+  PoliciesLanding,
+  ArtistAgreement,
+  VenueAgreement,
+  PrivacyPolicy,
+  TermsOfService,
+  PricingPage,
+  CallPublicPage,
+  CallApplyPage,
+  VenueHostingPolicy,
+  VenueApplication,
+  VenueProfilePage,
+  ReferralProgram,
+  RoleMismatchPage,
+} from './routes/lazyPages';
+import { ArtistPages } from './routes/ArtistPages';
+import { VenuePages } from './routes/VenuePages';
+import { AdminConsole } from './routes/AdminConsole';
 
 // Suspense loading fallback
 const PageLoader = () => (
@@ -120,14 +57,10 @@ const PageLoader = () => (
   </div>
 );
 
-export type UserRole = 'artist' | 'venue' | 'admin' | null;
-
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: UserRole;
-}
+// Re-export types so existing consumers (Login, MobileSidebar, etc.) can still
+// import { User, UserRole } from '../App' without changes.
+import type { UserRole, User } from './types/app';
+export type { UserRole, User };
 
 export default function App() {
   const normalizePage = (page: string) => (page === 'venue-profile-edit' ? 'venue-profile' : page);
@@ -1172,52 +1105,14 @@ export default function App() {
   // Admin Console Layout (different from main app)
   if (currentUser.role === 'admin') {
     return (
-      <Suspense fallback={<PageLoader />}>
-      <div className="flex min-h-screen">
-        <AdminSidebar
-          currentPage={currentPage}
-          onNavigate={handleNavigate}
-          onLogout={handleLogout}
-          userName={currentUser.name}
-          userEmail={currentUser.email}
-        />
-        <div className="flex-1 flex flex-col">
-          <main className="flex-1 p-8 overflow-y-auto">
-            {currentPage === 'admin-dashboard' && <AdminDashboard onNavigate={handleNavigate} />}
-            {currentPage === 'admin-wall-productivity' && <AdminWallProductivity onNavigate={handleNavigate} />}
-            {currentPage === 'admin-users' && (
-              <AdminUsers onViewUser={(_userId) => handleNavigate('admin-user-detail')} />
-            )}
-            {currentPage === 'admin-user-detail' && (
-              <AdminUserDetail userId="1" onBack={() => handleNavigate('admin-users')} />
-            )}
-            {currentPage === 'admin-announcements' && <AdminAnnouncements />}
-            {currentPage === 'admin-promo-codes' && (
-              <AdminPromoCodes />
-            )}
-            {currentPage === 'admin-stripe-payments' && <StripePaymentSetup onNavigate={handleNavigate} />}
-            {currentPage === 'admin-activity-log' && <AdminActivityLog />}
-            {currentPage === 'admin-invites' && <AdminInvites />}
-            {currentPage === 'admin-referrals' && <AdminReferrals />}
-            {currentPage === 'admin-sales' && <AdminSalesPage />}
-            {currentPage === 'admin-current-displays' && <AdminCurrentDisplays />}
-            {currentPage === 'admin-support' && <AdminSupport />}
-            {currentPage === 'admin-support-messages' && (
-              <SupportInbox onSelectMessage={(messageId) => {
-                setSelectedMessageId(messageId);
-                handleNavigate('admin-support-message-detail');
-              }} />
-            )}
-            {currentPage === 'admin-support-message-detail' && selectedMessageId && (
-              <SupportMessageDetail
-                messageId={selectedMessageId}
-                onBack={() => handleNavigate('admin-support-messages')}
-              />
-            )}
-          </main>
-        </div>
-      </div>
-      </Suspense>
+      <AdminConsole
+        currentPage={currentPage}
+        currentUser={currentUser}
+        onNavigate={handleNavigate}
+        onLogout={handleLogout}
+        selectedMessageId={selectedMessageId}
+        setSelectedMessageId={setSelectedMessageId}
+      />
     );
   }
 
@@ -1308,144 +1203,30 @@ export default function App() {
         )}
 
         {currentUser.role === 'artist' && (
-          <>
-            {currentPage === 'artist-onboarding' && <ArtistOnboardingWizard user={currentUser} onComplete={() => { setArtistOnboarding({ completed: true, step: null }); handleNavigate('artist-dashboard'); }} onSkip={() => { snoozeArtistOnboarding(); handleNavigate('artist-dashboard'); }} />}
-            {currentPage === 'artist-dashboard' && <ArtistDashboard onNavigate={handleNavigate} user={currentUser} />}
-            {currentPage === 'artist-artworks' && <ArtistArtworks user={currentUser} />}
-            {currentPage === 'artist-curated-sets' && <CuratedSets user={currentUser} onNavigate={handleNavigate} />}
-            {currentPage === 'artist-analytics' && <ArtistAnalytics user={currentUser} />}
-            {currentPage === 'artist-approved' && <ApplicationsAndInvitations userRole="artist" defaultTab="approved" onBack={() => handleNavigate('artist-dashboard')} />}
-            {currentPage === 'artist-venues' && (
-              <FindVenues 
-                onViewVenue={(venueId) => {
-                  setSelectedVenueId(venueId);
-                  handleNavigate('venue-view-profile');
-                }} 
-                onViewWallspaces={(venueId) => {
-                  setSelectedVenueId(venueId);
-                  handleNavigate('venue-view-wallspaces');
-                }} 
-              />
-            )}
-            {currentPage === 'venue-view-profile' && (
-              <VenueProfileView 
-                isOwnProfile={false}
-                venueId={selectedVenueId || undefined}
-                onViewWallspaces={() => handleNavigate('venue-view-wallspaces')}
-                onNavigate={handleNavigate}
-                currentUser={currentUser}
-              />
-            )}
-            {currentPage === 'venue-view-wallspaces' && (
-              <VenueWallsPublic venueId={selectedVenueId || undefined} onBack={() => handleNavigate('artist-venues')} />
-            )}
-            {currentPage === 'artist-applications' && <ApplicationsAndInvitations userRole="artist" onBack={() => handleNavigate('artist-profile')} />}
-            {currentPage === 'artist-invites' && (
-              <ArtistInvites 
-                onApply={(inviteId) => handleNavigate('artist-applications')}
-                onDecline={async (inviteId) => {
-                  if (confirm('Are you sure you want to decline this invitation?')) {
-                    try {
-                      await apiPost(`/api/venue-invites/token/${inviteId}/decline`, {});
-                    } catch {
-                      // Fallback to direct Supabase update
-                      const { supabase } = await import('./lib/supabase');
-                      await supabase.from('venue_invites').update({ status: 'DECLINED', declined_at: new Date().toISOString() }).eq('id', inviteId);
-                    }
-                  }
-                }}
-                onNavigate={handleNavigate}
-                artistId={currentUser.id}
-              />
-            )}
-            {currentPage === 'artist-invite-venue' && <ArtistInviteVenue onNavigate={handleNavigate} />}
-            {currentPage === 'artist-referrals' && <ArtistReferrals />}
-            {currentPage === 'artist-sales' && <ArtistSales user={currentUser} onNavigate={handleNavigate} />}
-            {currentPage === 'artist-profile' && <ArtistProfile onNavigate={handleNavigate} />}
-            {currentPage === 'artist-password-security' && <PasswordSecurity onBack={() => handleNavigate('artist-profile')} />}
-            {currentPage === 'artist-notifications' && <NotificationPreferences onBack={() => handleNavigate('artist-profile')} />}
-            {currentPage === 'artist-notifications-center' && <NotificationsList user={currentUser} onNavigate={handleNavigate} />}
-            {currentPage === 'artist-notifications-legacy' && <NotificationsList user={currentUser} onNavigate={handleNavigate} />}
-            {currentPage === 'artist-settings' && <Settings onNavigate={handleNavigate} />}
-          </>
+          <ArtistPages
+            currentPage={currentPage}
+            currentUser={currentUser}
+            onNavigate={handleNavigate}
+            selectedVenueId={selectedVenueId}
+            setSelectedVenueId={setSelectedVenueId}
+            artistOnboarding={artistOnboarding}
+            setArtistOnboarding={setArtistOnboarding}
+            snoozeArtistOnboarding={snoozeArtistOnboarding}
+          />
         )}
         
         {currentUser.role === 'venue' && (
-          <>
-            {currentPage === 'venue-dashboard' && <VenueDashboard onNavigate={handleNavigate} user={currentUser} hasAcceptedAgreement={hasAcceptedAgreement} />}
-            {currentPage === 'venue-setup' && <VenueSetupWizard onNavigate={handleNavigate} onComplete={() => handleNavigate('venue-dashboard')} />}
-            {currentPage === 'venue-partner-kit' && <VenuePartnerKitEmbedded onNavigate={handleNavigate} />}
-            {currentPage === 'venue-walls' && <VenueWalls />}
-            {currentPage === 'venue-calls' && <VenueCalls user={currentUser} onViewCall={(callId) => handleNavigate('venue-call-detail', { callId })} />}
-            {currentPage === 'venue-call-detail' && selectedCallId && <VenueCallDetail callId={selectedCallId} onBack={() => handleNavigate('venue-calls')} />}
-            {currentPage === 'venue-applications' && <ApplicationsAndInvitations userRole="venue" onBack={() => handleNavigate('venue-dashboard')} />}
-            {currentPage === 'venue-current' && <VenueCurrentArtWithScheduling />}
-            {currentPage === 'venue-sales' && <VenueSales user={currentUser} onNavigate={handleNavigate} />}
-            {currentPage === 'venue-analytics' && <VenueAnalytics user={currentUser} />}
-            {currentPage === 'venue-wall-stats' && <VenueWallStats user={currentUser} />}
-            {currentPage === 'venue-performance' && <VenuePerformance user={currentUser} onNavigate={handleNavigate} />}
-            {currentPage === 'venue-statement' && <VenueStatement user={currentUser} onNavigate={handleNavigate} />}
-            {currentPage === 'venue-settings' && <VenueSettingsWithEmptyState />}
-            {currentPage === 'venue-profile' && <VenueProfile onNavigate={handleNavigate} />}
-            {currentPage === 'venue-password-security' && <VenuePasswordSecurity onBack={() => handleNavigate('venue-profile')} />}
-            {currentPage === 'venue-notifications' && <VenueNotificationPreferences onBack={() => handleNavigate('venue-profile')} />}
-            {currentPage === 'venue-notifications-center' && <NotificationsList user={currentUser} onNavigate={handleNavigate} />}
-            {currentPage === 'find-art' && <FindArtHub onNavigate={handleNavigate} />}
-            {currentPage === 'venue-curated-sets' && <CuratedSetsMarketplace onNavigate={handleNavigate} />}
-            {currentPage === 'venue-find-artists' && (
-              <FindArtists
-                onViewProfile={(artistId) => {
-                  setSelectedArtistId(artistId);
-                  handleNavigate('artist-view-profile');
-                }}
-                onInviteArtist={(artistId) => {
-                  setSelectedArtistId(artistId);
-                  handleNavigate('artist-view-profile');
-                }}
-              />
-            )}
-            {currentPage === 'artist-view-profile' && selectedArtistId && (
-              <ArtistProfileView
-                artistId={selectedArtistId}
-                isOwnProfile={false}
-                currentUser={currentUser}
-                onInviteToApply={async () => {
-                  try {
-                    await apiPost('/api/support/messages', {
-                      email: currentUser.email || 'venue@artwalls.space',
-                      message: `Venue invite-to-apply: venue ${currentUser.id} wants to invite artist ${selectedArtistId} to display.`,
-                      roleContext: 'venue',
-                      pageSource: 'artist-view-profile',
-                    });
-                    alert('Invitation sent! The artist will be notified.');
-                  } catch {
-                    alert('Unable to send invitation right now. Please try again.');
-                  }
-                }}
-              />
-            )}
-          </>
+          <VenuePages
+            currentPage={currentPage}
+            currentUser={currentUser}
+            onNavigate={handleNavigate}
+            selectedCallId={selectedCallId}
+            selectedArtistId={selectedArtistId}
+            setSelectedArtistId={setSelectedArtistId}
+            hasAcceptedAgreement={hasAcceptedAgreement}
+          />
         )}
         
-        {currentUser.role === 'admin' && (
-          <>
-            {currentPage === 'admin-dashboard' && <AdminDashboard onNavigate={handleNavigate} />}
-            {currentPage === 'admin-wall-productivity' && <AdminWallProductivity onNavigate={handleNavigate} />}
-            {currentPage === 'admin-users' && (
-              <AdminUsers onViewUser={(userId: string) => handleNavigate('admin-user-detail', { userId })} />
-            )}
-            {currentPage === 'admin-user-detail' && <AdminUserDetail onNavigate={handleNavigate} />}
-            {currentPage === 'admin-announcements' && <AdminAnnouncements />}
-            {currentPage === 'admin-promo-codes' && <AdminPromoCodes />}
-            {currentPage === 'admin-stripe-payments' && <StripePaymentSetup onNavigate={handleNavigate} />}
-            {currentPage === 'admin-activity-log' && <AdminActivityLog />}
-            {currentPage === 'admin-invites' && <AdminInvites />}
-            {currentPage === 'admin-referrals' && <AdminReferrals />}
-            {currentPage === 'admin-sales' && <AdminSalesPage />}
-            {currentPage === 'admin-current-displays' && <AdminCurrentDisplays />}
-            {currentPage === 'admin-support' && <AdminSupport />}
-          </>
-        )}
         </Suspense>
       </main>
       <Footer onNavigate={handleNavigate} />
