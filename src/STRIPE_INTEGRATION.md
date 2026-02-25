@@ -9,7 +9,7 @@
 ## Accessing Stripe Payment Setup
 
 ### Navigation Path:
-1. Login to admin portal (Ctrl+Shift+A + password: `StormBL26`)
+1. Login to admin portal (Ctrl+Shift+A — your email must be on the `ADMIN_EMAILS` allowlist)
 2. Click **"Stripe Payments"** in the left sidebar
 3. Access the Stripe configuration interface
 

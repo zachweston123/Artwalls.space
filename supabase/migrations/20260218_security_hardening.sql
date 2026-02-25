@@ -255,7 +255,6 @@ SET search_path = public, auth
 AS $$
 DECLARE
   uid uuid := auth.uid();
-  user_email text;
 BEGIN
   -- Service role is always admin
   IF auth.role() = 'service_role' THEN
@@ -266,18 +265,8 @@ BEGIN
     RETURN false;
   END IF;
 
-  -- Check the user's email against the admin list.
-  -- ONLY server-set app_metadata.role = 'admin' or email match is trusted.
-  SELECT email INTO user_email
-  FROM auth.users
-  WHERE id = uid;
-
-  -- Hardcoded admin email (must match Worker ADMIN_EMAILS)
-  IF lower(coalesce(user_email, '')) = 'zweston8136@sdsu.edu' THEN
-    RETURN true;
-  END IF;
-
-  -- Trust app_metadata.role (set by service role only, not user-editable)
+  -- Admin is determined solely by app_metadata.role = 'admin', which only the
+  -- Worker (via service_role) can set.  No hardcoded emails in SQL.
   IF (SELECT raw_app_meta_data ->> 'role' FROM auth.users WHERE id = uid) = 'admin' THEN
     RETURN true;
   END IF;

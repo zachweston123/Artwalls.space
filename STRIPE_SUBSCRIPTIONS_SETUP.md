@@ -86,7 +86,7 @@ Example:
 
 Access the admin console with:
 - **Shortcut:** Cmd+Shift+A (Mac) or Ctrl+Shift+A (Windows/Linux)
-- **Password:** StormBL26
+- **Auth:** Server verifies your email is on the `ADMIN_EMAILS` allowlist
 
 From the Stripe Payments section, you can:
 - View connection status

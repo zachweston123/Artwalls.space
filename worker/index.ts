@@ -370,17 +370,23 @@ export default {
     }
 
     /**
-     * Check admin status.
-     * Only the site owner (zweston8136@sdsu.edu) has admin access.
+     * Check admin status — server-enforced, role-based admin via email allowlist.
+     *
+     * The allowlist is read from the Wrangler secret `ADMIN_EMAILS` (comma-separated).
+     * Fallback: if the env var is unset the list is empty → no one is admin until
+     * you run:  wrangler secret put ADMIN_EMAILS
+     *
+     * See SECURITY.md for the full admin-access model.
      */
-    const ADMIN_EMAILS: string[] = [
-      'zweston8136@sdsu.edu',
-    ];
+    const ADMIN_EMAILS: string[] = (env.ADMIN_EMAILS || '')
+      .split(',')
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean);
 
     async function isAdminUser(user: any): Promise<boolean> {
       if (!user?.id) return false;
       const email = (user.email || '').toLowerCase().trim();
-      return ADMIN_EMAILS.includes(email);
+      return ADMIN_EMAILS.length > 0 && ADMIN_EMAILS.includes(email);
     }
 
     /**

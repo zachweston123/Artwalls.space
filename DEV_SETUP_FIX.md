@@ -15,14 +15,14 @@ The backend API server is not running, so the frontend can't create artwork or e
 
 ### Step 1: Add Your Supabase Service Role Key
 
-1. Go to: https://supabase.com/dashboard/project/twclqgysvpefufpnmjcl/settings/api
+1. Go to: https://supabase.com/dashboard/project/YOUR_PROJECT_REF/settings/api
 2. Copy the **service_role** key (NOT the anon key - this is the secret one)
 3. Open `~/Artwalls.space/server/.env`
 4. Replace `YOUR_SERVICE_ROLE_KEY_HERE` with your actual key
 
 The line should look like:
 ```env
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3Y2xxZ3lzdnBlZnVmcG5tamNsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NzAzODY2MiwiZXhwIjoyMDgyNjE0NjYyfQ...
+SUPABASE_SERVICE_ROLE_KEY=YOUR_SERVICE_ROLE_KEY
 ```
 
 ### Step 2: Start the Backend Server
@@ -75,7 +75,7 @@ cd ~/Artwalls.space/server && node index.js
 Check `~/Artwalls.space/server/.env`:
 - Line should NOT say `YOUR_SERVICE_ROLE_KEY_HERE`
 - Should be a long JWT token starting with `eyJ...`
-- Get it from: https://supabase.com/dashboard/project/twclqgysvpefufpnmjcl/settings/api
+- Get it from: https://supabase.com/dashboard/project/YOUR_PROJECT_REF/settings/api
 
 **3. Wrong port?**
 Frontend .env should have:
@@ -117,9 +117,9 @@ If you don't see these, the frontend isn't reaching the backend.
 ### Frontend: `.env` (root directory)
 ```env
 VITE_API_BASE_URL=http://localhost:4242
-VITE_SUPABASE_URL=https://twclqgysvpefufpnmjcl.supabase.co
+VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 VITE_SUPABASE_ANON_KEY=your_actual_anon_key_here
-VITE_ADMIN_PASSWORD=StormBL26
+# Note: Admin auth is server-side (ADMIN_EMAILS Wrangler secret). No frontend password needed.
 ```
 
 ### Backend: `server/.env`
@@ -131,10 +131,10 @@ CORS_ORIGIN=http://localhost:3000
 STRIPE_SECRET_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 
-SUPABASE_URL=https://twclqgysvpefufpnmjcl.supabase.co
+SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
 
-ADMIN_PASSWORD=StormBL26
+# Note: Admin auth uses ADMIN_EMAILS Wrangler secret, not a password env var.
 ```
 
 ## ✨ What's Working Now

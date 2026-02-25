@@ -18,7 +18,7 @@
 | File | Change |
 |------|--------|
 | `src/components/admin/AdminPasswordPrompt.tsx` | Replaced `localStorage.setItem('adminPassword', password)` with `sessionStorage.setItem('adminSessionToken', token)`. Password is no longer persisted in plaintext; token lives only for the browser session. |
-| `server/index.js` | Removed hardcoded `StormBL26` dev password fallback and `?admin=1` query-string bypass from `isAdmin()`. *(Dead code — server throws on line 13 — but sanitized for safety.)* |
+| `server/index.js` | Removed hardcoded dev password fallback and `?admin=1` query-string bypass from `isAdmin()`. *(Dead code — server throws on line 13 — but sanitised for safety.)* |
 | `src/App.tsx` | Added `sessionStorage.removeItem('adminSessionToken')` to the logout handler so admin tokens are cleared on sign-out. |
 
 ### P0-C: RLS / GRANT Fixes

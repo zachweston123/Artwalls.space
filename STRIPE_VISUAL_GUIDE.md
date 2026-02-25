@@ -8,7 +8,7 @@ Login Page
     ↓
 Press: Ctrl+Shift+A
     ↓
-Enter Password: StormBL26
+Server verifies admin email
     ↓
 Click: Verify
     ↓

@@ -332,7 +332,7 @@ Then test with real card (refund after):
 ### Security Testing
 
 - [ ] Admin access requires correct password
-- [ ] Old password (StormBL26) doesn't work
+- [ ] Legacy dev credentials no longer grant access
 - [ ] JWT authentication working
 - [ ] CORS properly configured
 - [ ] No sensitive data in frontend

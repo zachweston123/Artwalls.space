@@ -1,0 +1,105 @@
+name: "Security: secret scanning & lint"
+
+# Runs on every PR and on pushes to main.
+# Fails if known secret patterns are detected in the diff.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  # ── 1. Gitleaks secret scan ─────────────────────────────────────────────
+  gitleaks:
+    name: Gitleaks secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # full history so gitleaks can diff
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}   # optional for public repos
+
+  # ── 2. Grep-based secret pattern guard ──────────────────────────────────
+  # A lightweight fallback that doesn't need a third-party action.
+  secret-patterns:
+    name: Grep for secret patterns
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Scan for known secret patterns
+        run: |
+          set +e   # don't exit on first match; collect all
+          FOUND=0
+
+          # Patterns that should NEVER appear in tracked files
+          PATTERNS=(
+            'sk_live_[A-Za-z0-9]'
+            'sk_test_[A-Za-z0-9]{10,}'
+            'whsec_[A-Za-z0-9]'
+            'SUPABASE_SERVICE_ROLE_KEY=eyJ'
+            'service_role.*eyJhbGci'
+            'ADMIN_PASSWORD=[^${\n]'
+            'PRIVATE_KEY=-----'
+          )
+
+          for pat in "${PATTERNS[@]}"; do
+            if grep -rEnl --include='*.ts' --include='*.tsx' --include='*.js' \
+                          --include='*.md' --include='*.json' --include='*.env*' \
+                          --include='*.yml' --include='*.yaml' --include='*.sh' \
+                          --include='*.patch' \
+                  "$pat" . 2>/dev/null | grep -v node_modules | grep -v '.git/'; then
+              echo "::error::Secret pattern matched: $pat"
+              FOUND=1
+            fi
+          done
+
+          # Also check for the specific leaked password that was in the repo
+          if grep -rn 'StormBL26\|artwalls-admin-2024' --include='*.ts' --include='*.tsx' \
+                       --include='*.md' --include='*.env*' --include='*.json' \
+                       --include='*.patch' . 2>/dev/null | grep -v node_modules; then
+            echo "::error::Legacy plaintext credential found in repo"
+            FOUND=1
+          fi
+
+          if [ "$FOUND" -eq 1 ]; then
+            echo ""
+            echo "❌  Secret-like patterns detected. See errors above."
+            echo "   Fix: replace real values with placeholders or move to env/secrets."
+            exit 1
+          fi
+
+          echo "✅  No secret patterns found."
+
+  # ── 3. Build smoke test ─────────────────────────────────────────────────
+  build:
+    name: Build check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Build (type-check + bundle)
+        run: npm run build
+        env:
+          VITE_API_BASE_URL: https://api.artwalls.space
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}

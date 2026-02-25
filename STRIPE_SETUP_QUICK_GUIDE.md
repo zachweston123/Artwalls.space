@@ -2,7 +2,7 @@
 
 ## 🚀 Quick Access
 
-1. **Login to Admin**: Ctrl+Shift+A + enter password `StormBL26`
+1. **Login to Admin**: Ctrl+Shift+A (your email must be on the `ADMIN_EMAILS` allowlist)
 2. **Navigate to**: Stripe Payments (in left sidebar)
 3. **You're in**: Stripe configuration interface
 

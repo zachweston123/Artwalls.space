@@ -536,11 +536,9 @@ export default function App() {
   }, [currentUser?.role]);
 
   const handleLogin = (user: User) => {
-    // Enforce admin email check — callers (e.g. Login.tsx) may not know about
-    // ADMIN_EMAILS, so re-check here before committing state.
-    const emailLower = (user.email || '').toLowerCase().trim();
-    const isAdmin = ADMIN_EMAILS.includes(emailLower);
-    const effectiveUser: User = isAdmin ? { ...user, role: 'admin' } : user;
+    // Trust the role determined by Login.tsx (which reads user_metadata.role set
+    // by the Worker).  No client-side admin email list.
+    const effectiveUser: User = user;
     setCurrentUser(effectiveUser);
     setCurrentPage(defaultDashboardForRole(effectiveUser.role));
   };
@@ -602,9 +600,8 @@ export default function App() {
         console.warn('Profile provision failed', e);
       }
 
-      // Update local state — enforce admin email check
-      const emailLower = (googleUser.email || '').toLowerCase().trim();
-      const effectiveRole: UserRole = ADMIN_EMAILS.includes(emailLower) ? 'admin' : role;
+      // Update local state — trust server-assigned role in user_metadata
+      const effectiveRole: UserRole = (googleUser.user_metadata?.role as string) === 'admin' ? 'admin' : role;
       const user: User = {
         id: googleUser.id,
         name: googleUser.user_metadata?.name || googleUser.email?.split('@')[0] || 'User',
@@ -654,10 +651,9 @@ export default function App() {
         console.warn('Profile provision with phone failed', e);
       }
 
-      // Now proceed to dashboard — enforce admin email check
+      // Now proceed to dashboard — trust server-assigned admin role
       const rawRole = googleUser.user_metadata?.role as UserRole;
-      const emailLower = (googleUser.email || '').toLowerCase().trim();
-      const effectiveRole: UserRole = ADMIN_EMAILS.includes(emailLower) ? 'admin' : rawRole;
+      const effectiveRole: UserRole = rawRole === 'admin' ? 'admin' : rawRole;
       const user: User = {
         id: googleUser.id,
         name: googleUser.user_metadata?.name || googleUser.email?.split('@')[0] || 'User',
@@ -682,10 +678,9 @@ export default function App() {
     try {
       setShowProfileCompletion(false);
       
-      // Proceed without phone number — enforce admin email check
+      // Proceed without phone number — trust server-assigned admin role
       const rawRole = googleUser.user_metadata?.role as UserRole;
-      const emailLower = (googleUser.email || '').toLowerCase().trim();
-      const effectiveRole: UserRole = ADMIN_EMAILS.includes(emailLower) ? 'admin' : rawRole;
+      const effectiveRole: UserRole = rawRole === 'admin' ? 'admin' : rawRole;
       const user: User = {
         id: googleUser.id,
         name: googleUser.user_metadata?.name || googleUser.email?.split('@')[0] || 'User',

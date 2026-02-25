@@ -5,49 +5,18 @@
 
 ## 🚨 Critical Security Issues
 
-### 1. **Hardcoded Admin Password** 
-- **Location:** `src/components/admin/AdminPasswordPrompt.tsx` (Line 16)
-- **Issue:** Admin password `StormBL26` is hardcoded in the source code
-- **Risk:** HIGH - Anyone with code access knows the admin password
-- **Fix Required:**
-  ```typescript
-  // BEFORE (Line 16):
-  const ADMIN_PASSWORD = 'StormBL26';
-  
-  // AFTER:
-  const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || '';
-  ```
-- **Action:** 
-  1. Add `VITE_ADMIN_PASSWORD` to environment variables
-  2. Generate a strong password (min 16 characters, mixed case, numbers, symbols)
-  3. Never commit the actual password to the repository
-  4. Update all documentation that mentions `StormBL26`
+### 1. **Admin Authentication — ✅ RESOLVED** 
+- Admin access is now enforced server-side via email allowlist (`ADMIN_EMAILS` Wrangler secret)
+- No passwords or hashes in source code
+- See [SECURITY.md](SECURITY.md) for the current model
 
-### 2. **Admin Password in Documentation**
-- **Locations:** 
-  - `ADMIN_ACCESS_GUIDE.md`
-  - `ADMIN_SECURITY_CHANGES.md`
-  - `STRIPE_SETUP_QUICK_GUIDE.md`
-  - Multiple other docs
-- **Issue:** Password publicly documented in 10+ files
-- **Action:** Remove password from all documentation or replace with placeholder
+### 2. **Credentials in Documentation — ✅ RESOLVED**
+- All plaintext credentials removed from documentation
+- Replaced with placeholders and references to SECURITY.md
 
-### 3. **Backend Admin Password Fallback**
-- **Location:** `server/index.js` (Line 780)
-- **Issue:** Fallback password hardcoded: `'StormBL26'`
-- **Fix Required:**
-  ```javascript
-  // BEFORE:
-  const envPass = process.env.ADMIN_PASSWORD || process.env.ADMIN_SECRET || 'StormBL26';
-  
-  // AFTER:
-  const envPass = process.env.ADMIN_PASSWORD || process.env.ADMIN_SECRET;
-  if (!envPass && isProd) {
-    // Reject in production if no password set
-    res.status(403).json({ error: 'Admin access not configured' });
-    return null;
-  }
-  ```
+### 3. **Backend Admin Password Fallback — ✅ RESOLVED**
+- `server/index.js` is deprecated (throws on startup)
+- Admin auth handled entirely by Cloudflare Worker email allowlist
 
 ## ⚠️ High Priority Issues
 
@@ -120,8 +89,7 @@
 ## 📋 Pre-Launch Checklist
 
 ### Environment Variables
-- [ ] Set `VITE_ADMIN_PASSWORD` to strong, unique password (frontend)
-- [ ] Set `ADMIN_PASSWORD` to same password (backend)
+- [ ] Set `ADMIN_EMAILS` Wrangler secret (comma-separated admin emails)
 - [ ] Verify `STRIPE_SECRET_KEY` is `sk_live_...`
 - [ ] Verify `STRIPE_WEBHOOK_SECRET` is `whsec_live_...`
 - [ ] Verify `VITE_STRIPE_PUBLISHABLE_KEY` is `pk_live_...`
@@ -142,8 +110,8 @@
 - [ ] Enable Connect for venue payouts
 
 ### Code Changes Required
-- [ ] Fix hardcoded admin password in `AdminPasswordPrompt.tsx`
-- [ ] Fix admin password fallback in `server/index.js`
+- [x] Admin auth consolidated to email allowlist (no passwords in code)
+- [x] Remove legacy password fallback in `server/index.js`
 - [ ] Connect admin components to real APIs (remove mock data)
 - [ ] Resolve or document all TODO comments
 - [ ] Add error boundary for crash handling
@@ -177,8 +145,8 @@
 - [ ] Set up alerts for failed transactions
 
 ### Documentation
-- [ ] Update all docs to remove `StormBL26` password
-- [ ] Document actual admin password storage procedure
+- [x] All plaintext credentials removed from docs
+- [ ] Document admin email allowlist procedure (see SECURITY.md)
 - [ ] Update deployment guides with production URLs
 - [ ] Document rollback procedure
 - [ ] Create incident response plan

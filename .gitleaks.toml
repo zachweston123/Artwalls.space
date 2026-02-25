@@ -1,0 +1,78 @@
+# Gitleaks configuration for Artwalls.space
+# https://github.com/gitleaks/gitleaks#configuration
+
+title = "Artwalls secret scanning rules"
+
+# ── Allowlist (false positives) ──────────────────────────────────────────
+[allowlist]
+  # Placeholder patterns that are NOT secrets
+  regexes = [
+    '''sk_test_REPLACE_ME''',
+    '''whsec_REPLACE_ME''',
+    '''price_REPLACE_ME''',
+    '''YOUR_SERVICE_ROLE_KEY''',
+    '''YOUR_PROJECT_REF''',
+    '''your_actual_anon_key_here''',
+    '''your_service_role_key_here''',
+  ]
+  paths = [
+    '''node_modules/''',
+    '''dist/''',
+    '''.gitleaks.toml''',
+  ]
+
+# ── Custom rules ─────────────────────────────────────────────────────────
+
+[[rules]]
+  id = "stripe-live-secret"
+  description = "Stripe live secret key"
+  regex = '''sk_live_[A-Za-z0-9]{20,}'''
+  tags = ["stripe", "secret"]
+
+[[rules]]
+  id = "stripe-test-secret"
+  description = "Stripe test secret key (long form)"
+  regex = '''sk_test_[A-Za-z0-9]{20,}'''
+  tags = ["stripe", "secret"]
+
+[[rules]]
+  id = "stripe-webhook-secret"
+  description = "Stripe webhook signing secret"
+  regex = '''whsec_[A-Za-z0-9]{20,}'''
+  tags = ["stripe", "secret"]
+
+[[rules]]
+  id = "supabase-service-role-jwt"
+  description = "Supabase service_role JWT"
+  regex = '''service_role.*eyJhbGci[A-Za-z0-9+/=._-]{50,}'''
+  tags = ["supabase", "jwt"]
+
+[[rules]]
+  id = "supabase-key-assignment"
+  description = "Supabase key assigned to a real JWT value"
+  regex = '''SUPABASE_SERVICE_ROLE_KEY=eyJ[A-Za-z0-9+/=._-]{50,}'''
+  tags = ["supabase", "jwt"]
+
+[[rules]]
+  id = "admin-password-plaintext"
+  description = "Hardcoded admin password value"
+  regex = '''ADMIN_PASSWORD=[A-Za-z0-9!@#$%^&*]{4,}'''
+  tags = ["password"]
+
+[[rules]]
+  id = "legacy-password-stormbl"
+  description = "Legacy dev password that must not reappear"
+  regex = '''StormBL26'''
+  tags = ["password", "legacy"]
+
+[[rules]]
+  id = "legacy-password-artwalls-admin"
+  description = "Legacy dev password that must not reappear"
+  regex = '''artwalls-admin-2024'''
+  tags = ["password", "legacy"]
+
+[[rules]]
+  id = "private-key-pem"
+  description = "PEM private key"
+  regex = '''-----BEGIN (RSA |EC |DSA )?PRIVATE KEY-----'''
+  tags = ["private-key"]

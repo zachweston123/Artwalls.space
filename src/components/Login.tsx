@@ -189,10 +189,10 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
 
       const currentRole = (data.user.user_metadata?.role as UserRole) || null;
 
-      // Admin emails — must match the list in App.tsx / worker/index.ts
-      const ADMIN_EMAILS = ['zweston8136@sdsu.edu'];
-      const emailLower = (data.user.email || '').toLowerCase().trim();
-      const isAdminEmail = ADMIN_EMAILS.includes(emailLower);
+      // Admin role is determined server-side: the Worker's /api/admin/verify
+      // endpoint sets user_metadata.role = 'admin' via supabaseAdmin.  We trust
+      // that stored value here — no hardcoded email list in client code.
+      const isAdminEmail = (data.user.user_metadata?.role as string) === 'admin';
 
       // Determine effective role: admin email overrides everything
       const effectiveRole: UserRole = isAdminEmail

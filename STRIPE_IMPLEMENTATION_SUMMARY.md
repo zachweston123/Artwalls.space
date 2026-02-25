@@ -110,7 +110,7 @@ Displays enabled features when connected:
 ## 📋 How to Access
 
 1. **Login to Admin**: Press Ctrl+Shift+A on login page
-2. **Enter Password**: `StormBL26`
+2. **Verify**: Server checks your email against `ADMIN_EMAILS` allowlist
 3. **Click "Stripe Payments"** in left sidebar
 4. **Manage your payment settings**
 
