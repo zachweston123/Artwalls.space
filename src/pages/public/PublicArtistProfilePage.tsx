@@ -13,6 +13,8 @@ import { Loader2, Palette } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { apiGet } from '../../lib/api';
 import { ArtistProfilePublicView, type ArtistPublicData } from '../../components/shared/ArtistProfilePublicView';
+import { SEO } from '../../components/SEO';
+import { StructuredData, artistSchema } from '../../components/StructuredData';
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -267,8 +269,38 @@ export function PublicArtistProfilePage({ slug }: Props) {
   useEffect(() => { loadProfile(); }, [loadProfile]);
 
   // ── Render ─────────────────────────────────────────────────
+  const seoTitle = artist ? `${artist.name} — Artist on Artwalls` : 'Artist Profile — Artwalls';
+  const seoDesc = artist?.bio
+    ? artist.bio.slice(0, 160)
+    : `View ${artist?.name ?? 'this artist'}'s portfolio and available artwork on Artwalls.`;
+  const canonicalUrl = artist?.slug
+    ? `https://artwalls.space/p/artist/${encodeURIComponent(artist.slug)}`
+    : `https://artwalls.space/p/artist/${encodeURIComponent(slug)}`;
+  const sameAs: string[] = [];
+  if (artist?.instagramHandle) sameAs.push(`https://instagram.com/${artist.instagramHandle.replace('@', '')}`);
+  if (artist?.websiteUrl) sameAs.push(artist.websiteUrl);
+
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
+      <SEO
+        title={seoTitle}
+        description={seoDesc}
+        ogTitle={seoTitle}
+        ogDescription={seoDesc}
+        ogImage={artist?.profilePhotoUrl || undefined}
+        ogUrl={canonicalUrl}
+        canonical={canonicalUrl}
+        twitterCard="summary_large_image"
+      />
+      {artist && (
+        <StructuredData data={artistSchema({
+          name: artist.name,
+          description: artist.bio || undefined,
+          image: artist.profilePhotoUrl || undefined,
+          url: canonicalUrl,
+          sameAs,
+        })} />
+      )}
       {/* Minimal public header */}
       <header className="border-b border-[var(--border)] bg-[var(--surface-1)]">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center gap-3">

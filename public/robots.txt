@@ -1,6 +1,26 @@
 User-agent: *
 Allow: /
+
+# Dynamic sitemap served by Cloudflare Worker
 Sitemap: https://artwalls.space/sitemap.xml
 
-# Disallow authenticated-only areas from crawling
+# Allow all public pages
+Allow: /why-artwalls
+Allow: /venues
+Allow: /find
+Allow: /p/artist/
+Allow: /artists/
+Allow: /venues/
+Allow: /pricing
+Allow: /policies
+Allow: /privacy-policy
+Allow: /terms-of-service
+Allow: /artist-agreement
+Allow: /venue-agreement
+
+# Disallow API and authenticated-only areas
 Disallow: /api/
+Disallow: /verify-email
+Disallow: /reset-password
+Disallow: /onboarding/
+Disallow: /venue/signup

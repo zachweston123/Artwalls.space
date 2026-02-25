@@ -24,6 +24,35 @@
       <link rel="canonical" href="https://artwalls.space/" />
       <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
 
+      <!-- JSON-LD Structured Data: Organization + WebSite (static for crawlers) -->
+      <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "name": "Artwalls",
+            "url": "https://artwalls.space",
+            "logo": "https://artwalls.space/og-image.png",
+            "description": "Artwalls connects local artists with cafés, restaurants, and venues to display, rotate, and sell artwork on real walls."
+          },
+          {
+            "@type": "WebSite",
+            "name": "Artwalls",
+            "url": "https://artwalls.space",
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": {
+                "@type": "EntryPoint",
+                "urlTemplate": "https://artwalls.space/find/{city_slug}"
+              },
+              "query-input": "required name=city_slug"
+            }
+          }
+        ]
+      }
+      </script>
+
       <title>Artwalls — Art on Every Wall</title>
 
       <!-- Fonts: Work Sans (body) + Space Grotesk (headings) -->

@@ -12,6 +12,7 @@ import { VenueProfilePublicView, type VenuePublicData } from '../components/shar
 import { FoundingVenueBadge } from '../components/venue/FoundingVenueBadge';
 import type { User } from '../App';
 import { supabase } from '../lib/supabase';
+import { SEO } from '../components/SEO';
 
 interface PublicVenuePageProps {
   venueId: string;
@@ -72,8 +73,24 @@ export function PublicVenuePage({ venueId }: PublicVenuePageProps) {
     return () => { cancelled = true; };
   }, [venueId]);
 
+  const seoTitle = venue ? `${venue.name} — Venue on Artwalls` : 'Venue Profile — Artwalls';
+  const seoDesc = venue?.bio
+    ? venue.bio.slice(0, 160)
+    : `View ${venue?.name ?? 'this venue'}'s profile and hosted artwork on Artwalls.`;
+  const canonicalUrl = `https://artwalls.space/venues/${encodeURIComponent(venueId)}`;
+
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
+      <SEO
+        title={seoTitle}
+        description={seoDesc}
+        ogTitle={seoTitle}
+        ogDescription={seoDesc}
+        ogImage={venue?.coverPhotoUrl || undefined}
+        ogUrl={canonicalUrl}
+        canonical={canonicalUrl}
+        twitterCard="summary_large_image"
+      />
       {/* Minimal branding header – matches PublicArtistProfilePage */}
       <header className="bg-[var(--surface-2)] border-b border-[var(--border)]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">

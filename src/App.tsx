@@ -3,6 +3,8 @@ import { supabase } from './lib/supabase';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { apiPost } from './lib/api';
 import { trackAnalyticsEvent, setAnalyticsContext } from './lib/analytics';
+import { StructuredData, siteSchemas } from './components/StructuredData';
+import { SEO } from './components/SEO';
 
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Navigation } from './components/Navigation';
@@ -994,8 +996,22 @@ export default function App() {
 
     // Legal pages — accessible without authentication (required for Google OAuth consent)
     if (isLegalPage) {
+      const legalMeta: Record<string, { title: string; desc: string }> = {
+        'policies': { title: 'Policies — Artwalls', desc: 'Review Artwalls policies including privacy, terms of service, and agreements for artists and venues.' },
+        'privacy-policy': { title: 'Privacy Policy — Artwalls', desc: 'Learn how Artwalls collects, uses, and protects your personal information.' },
+        'terms-of-service': { title: 'Terms of Service — Artwalls', desc: 'Read the terms governing your use of the Artwalls platform.' },
+        'artist-agreement': { title: 'Artist Agreement — Artwalls', desc: 'The agreement between artists and Artwalls for displaying and selling artwork.' },
+        'venue-agreement': { title: 'Venue Agreement — Artwalls', desc: 'The agreement between venues and Artwalls for hosting artwork.' },
+      };
+      const meta = legalMeta[currentPage] || { title: 'Artwalls', desc: '' };
       return (
         <div className="min-h-screen flex flex-col">
+          <SEO
+            title={meta.title}
+            description={meta.desc}
+            ogUrl={`https://artwalls.space/${currentPage}`}
+            canonical={`https://artwalls.space/${currentPage}`}
+          />
           <Navigation
             user={null}
             onNavigate={handleNavigate}
@@ -1105,6 +1121,15 @@ export default function App() {
 
     return (
       <div className="min-h-screen flex flex-col bg-[var(--bg)]">
+        <StructuredData data={siteSchemas()} />
+        <SEO
+          title="Artwalls — Art on Every Wall"
+          description="Artwalls connects artists with venues to display and sell artwork on real walls. Find wall space, manage displays, and grow your art business."
+          ogUrl="https://artwalls.space"
+          canonical="https://artwalls.space/"
+          twitterCard="summary_large_image"
+          ogImage="https://artwalls.space/og-image.png"
+        />
         <div className="flex-1">
           {currentPage === 'forgot-password' ? (
             <Suspense fallback={<PageLoader />}><ForgotPassword onBack={() => setCurrentPage('login')} /></Suspense>

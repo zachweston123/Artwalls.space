@@ -6,6 +6,8 @@ import { trackQrScan, trackArtworkView, trackCheckoutStart, trackEvent } from '.
 import { ArtistProfilePublicView, type ArtistPublicData } from './shared/ArtistProfilePublicView';
 import { VenueProfilePublicView, type VenuePublicData } from './shared/VenueProfilePublicView';
 import { FoundingArtistBadge } from './artist/FoundingArtistBadge';
+import { SEO } from './SEO';
+import { StructuredData, artworkSchema } from './StructuredData';
 
 type Artwork = {
   id: string;
@@ -224,8 +226,36 @@ export function PurchasePage({ artworkId, onBack, onNavigate }: PurchasePageProp
   };
 
 
+  const seoTitle = artwork ? `${artwork.title} by ${artwork.artistName || 'Artist'} — Artwalls` : 'Artwork — Artwalls';
+  const seoDesc = artwork?.description
+    ? artwork.description.slice(0, 160)
+    : `${artwork?.title ?? 'Artwork'} — original art available for purchase on Artwalls.`;
+  const artworkUrl = `https://artwalls.space/#/purchase-${artworkId}`;
+
   return (
     <div className="min-h-screen bg-[var(--bg)]">
+      <SEO
+        title={seoTitle}
+        description={seoDesc}
+        ogTitle={seoTitle}
+        ogDescription={seoDesc}
+        ogImage={artwork?.imageUrl || undefined}
+        ogUrl={artworkUrl}
+        canonical={artworkUrl}
+        twitterCard="summary_large_image"
+      />
+      {artwork && (
+        <StructuredData data={artworkSchema({
+          name: artwork.title,
+          description: artwork.description,
+          image: artwork.imageUrl,
+          price: artwork.price,
+          currency: artwork.currency,
+          artistName: artwork.artistName,
+          url: artworkUrl,
+          availability: artwork.status === 'sold' ? 'SoldOut' : 'InStock',
+        })} />
+      )}
       {/* Header */}
       <div className="bg-[var(--surface-2)] border-b border-[var(--border)]">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4">

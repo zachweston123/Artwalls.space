@@ -23,6 +23,7 @@ import type { City } from '../data/cities';
 import { fetchVenuesForCity, fetchNearbyVenues } from '../lib/venueMap';
 import type { MapVenue } from '../lib/venueMap';
 import { VenueMapCard, VenueMapCardSkeleton } from '../components/map/VenueMapCard';
+import { SEO } from '../components/SEO';
 
 // Lazy-load the map (Leaflet is heavy)
 const VenueMap = lazy(
@@ -138,8 +139,20 @@ export function CityVenueMap({ citySlug }: CityVenueMapProps) {
 
   // ── Main layout ───────────────────────────────────────────────────────────
 
+  const seoTitle = `Art in ${city.name}, ${city.state} — Artwalls | Find Local Venues & Artwork`;
+  const seoDesc = `Discover venues hosting original local artwork in ${city.name}, ${city.state}. Browse the map, find art near you, and support local artists.`;
+  const canonicalUrl = `https://artwalls.space/find/${toCitySlug(city.name)}`;
+
   return (
     <div className="min-h-screen flex flex-col bg-[var(--bg)] text-[var(--text)]">
+      <SEO
+        title={seoTitle}
+        description={seoDesc}
+        ogTitle={seoTitle}
+        ogDescription={seoDesc}
+        ogUrl={canonicalUrl}
+        canonical={canonicalUrl}
+      />
       <Header />
 
       {/* Toolbar */}
