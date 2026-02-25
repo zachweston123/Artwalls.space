@@ -418,15 +418,15 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
             <div className="flex items-start justify-between mb-6">
               <div>
                 <h2 className="text-2xl mb-2">{profile.name}</h2>
-                <div className="flex flex-wrap gap-2">
-                  <span className="inline-flex px-3 py-1 rounded-full text-sm bg-[var(--surface-3)] text-[var(--text-muted)] border border-[var(--border)]">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm leading-none bg-[var(--surface-3)] text-[var(--text-muted)] border border-[var(--border)]">
                     Venue Account
                   </span>
-                  <span className="inline-flex px-3 py-1 rounded-full text-sm bg-[var(--green-muted)] text-[var(--green)] border border-[var(--border)]">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm leading-none bg-[var(--green-muted)] text-[var(--green)] border border-[var(--border)]">
                     {profile.type}
                   </span>
-                  <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm ${statusToneStyles[profileStatus.tone]}`}>
-                    <span className={`h-2 w-2 rounded-full ${statusDotStyles[profileStatus.tone]}`} aria-hidden="true" />
+                  <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm leading-none ${statusToneStyles[profileStatus.tone]}`}>
+                    <span className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${statusDotStyles[profileStatus.tone]}`} aria-hidden="true" />
                     <span className="font-medium">{profileStatus.label}</span>
                   </span>
                 </div>
