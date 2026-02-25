@@ -1,0 +1,62 @@
+name: Lighthouse CI
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# Cancel in-flight runs for the same branch
+concurrency:
+  group: lighthouse-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lighthouse:
+    name: Lighthouse audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build
+
+      # Serve the built SPA on localhost:5173 using a simple static server
+      - name: Start static server
+        run: npx serve -s dist -l 5173 &
+        env:
+          CI: true
+
+      - name: Wait for server
+        run: npx wait-on http://localhost:5173 --timeout 15000
+
+      - name: Run Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v12
+        with:
+          # Audit a representative set of pages.
+          # The SPA renders client-side, so we test the main HTML shell
+          # and hash-based routes that resolve to specific views.
+          urls: |
+            http://localhost:5173/
+            http://localhost:5173/why-artwalls
+            http://localhost:5173/venues
+            http://localhost:5173/pricing
+          budgetPath: .github/lighthouse/budget.json
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+          runs: 1
+
+      - name: Upload Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-reports
+          path: .lighthouseci/
+          retention-days: 14

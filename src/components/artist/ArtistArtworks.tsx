@@ -3,6 +3,7 @@ import { Plus, X, Upload, Loader2 } from 'lucide-react';
 import { PageHeroHeader } from '../PageHeroHeader';
 import { EmptyState } from '../EmptyState';
 import { artworkPurchaseUrl } from '../../lib/artworkQrUrl';
+import { trackAnalyticsEvent } from '../../lib/analytics';
 type Artwork = {
   id: string;
   title: string;
@@ -285,6 +286,13 @@ export function ArtistArtworks({ user }: ArtistArtworksProps) {
       }
 
       setArtworks([createdItem, ...artworks]);
+
+      // ─── Funnel analytics ──────────────────────────────────────────────
+      trackAnalyticsEvent('artwork_publish', {
+        artworkId: createdItem.id,
+        isFirstPublish: artworks.length === 0,
+      });
+
       setNewArtwork({
         title: '',
         description: '',

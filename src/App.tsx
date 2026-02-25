@@ -2,6 +2,7 @@ import { useState, useEffect, lazy, Suspense } from 'react';
 import { supabase } from './lib/supabase';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { apiPost } from './lib/api';
+import { trackAnalyticsEvent, setAnalyticsContext } from './lib/analytics';
 
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Navigation } from './components/Navigation';
@@ -237,6 +238,38 @@ export default function App() {
   // Persist currentPage to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('currentPage', currentPage);
+  }, [currentPage]);
+
+  // ─── Analytics: CWV + page views + context sync ───────────────────────────
+  useEffect(() => {
+    // Initialize Core Web Vitals collection once on mount
+    import('./lib/analytics/cwv').then(m => m.initCoreWebVitals()).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    // Sync analytics context whenever role or page changes
+    setAnalyticsContext({ userRole: currentUser?.role ?? null, route: currentPage });
+  }, [currentUser?.role, currentPage]);
+
+  useEffect(() => {
+    // Track page view on every SPA navigation (skip the initial 'login' page)
+    if (currentPage && currentPage !== 'login') {
+      trackAnalyticsEvent('page_view', {
+        page: currentPage,
+        path: window.location.pathname + window.location.hash,
+      });
+    }
+    // Fire landing_view for marketing/entry pages with UTM params
+    const landingPages = new Set(['login', 'why-artwalls-artist', 'why-artwalls-venue', 'venues', 'pricing']);
+    if (landingPages.has(currentPage)) {
+      const params = new URLSearchParams(window.location.search);
+      trackAnalyticsEvent('landing_view', {
+        entryPath: window.location.pathname,
+        utmSource: params.get('utm_source') || undefined,
+        utmMedium: params.get('utm_medium') || undefined,
+        utmCampaign: params.get('utm_campaign') || undefined,
+      });
+    }
   }, [currentPage]);
 
   // ─── Global scroll-to-top on page change ──────────────────────────────────
@@ -602,6 +635,15 @@ export default function App() {
 
       // Update local state — trust server-assigned role in user_metadata
       const effectiveRole: UserRole = (googleUser.user_metadata?.role as string) === 'admin' ? 'admin' : role;
+
+      // ─── Funnel analytics (Google OAuth role selection) ────────────────
+      trackAnalyticsEvent('role_selected', { role: role || 'artist', source: 'google_oauth' });
+      trackAnalyticsEvent('auth_complete', {
+        action: 'signup',
+        method: 'google',
+        role: effectiveRole || 'artist',
+      });
+
       const user: User = {
         id: googleUser.id,
         name: googleUser.user_metadata?.name || googleUser.email?.split('@')[0] || 'User',

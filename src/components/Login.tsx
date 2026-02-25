@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Palette, Store, MapPin, Image, DollarSign, Users, Star, Shield } from 'lucide-react';
 import { SEO } from './SEO';
 import type { User, UserRole } from '../App';
+import { trackAnalyticsEvent } from '../lib/analytics';
 
 // Google OAuth icon component
 const GoogleIcon = () => (
@@ -170,6 +171,14 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
           console.warn('Profile provision failed', e);
         }
 
+        // ─── Funnel analytics (signup success) ────────────────────────────
+        trackAnalyticsEvent('role_selected', { role: selectedRole || 'artist', source: 'signup_form' });
+        trackAnalyticsEvent('auth_complete', {
+          action: 'signup',
+          method: 'email',
+          role: (supaUser.user_metadata?.role as string) || selectedRole || 'artist',
+        });
+
         onLogin({
           id: supaUser.id,
           name: (supaUser.user_metadata?.name as string | undefined) || safeName || 'User',
@@ -219,6 +228,14 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
       } catch (e) {
         console.warn('Profile provision failed', e);
       }
+
+      // ─── Funnel analytics ──────────────────────────────────────────────
+      trackAnalyticsEvent('role_selected', { role: selectedRole || 'artist', source: 'signup_form' });
+      trackAnalyticsEvent('auth_complete', {
+        action: isSignup ? 'signup' : 'login',
+        method: 'email',
+        role: effectiveRole || selectedRole || 'artist',
+      });
 
       onLogin({
         id: data.user.id,

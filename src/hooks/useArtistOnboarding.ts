@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { calculateProfileCompleteness } from '../lib/profileCompleteness';
 import { getErrorMessage } from '../lib/errors';
+import { trackAnalyticsEvent } from '../lib/analytics';
 import type { PlanId } from '../lib/entitlements';
 
 export interface ArtistOnboardingProfile {
@@ -264,6 +265,14 @@ export function useArtistOnboarding(userId?: string) {
         skippedPlanSelection: extras?.skippedPlanSelection ?? prev.skippedPlanSelection,
         plan: (extras?.selectedPlan ?? prev.plan) as PlanId,
       }));
+
+      // ─── Funnel analytics ──────────────────────────────────────────
+      const stepNames = ['', 'basics', 'style', 'artworks', 'payouts', 'plan', 'review'];
+      trackAnalyticsEvent('onboarding_step', {
+        step: nextStep,
+        stepName: stepNames[nextStep] || `step_${nextStep}`,
+        action: 'completed',
+      });
     },
     [state.plan, state.skippedPlanSelection, state.step, userId]
   );
@@ -303,7 +312,13 @@ export function useArtistOnboarding(userId?: string) {
       .from('artist_onboarding')
       .upsert({ user_id: userId, current_step: 6, completed_at: now, updated_at: now });
     setState((prev) => ({ ...prev, completed: true, step: 6 }));
-  }, [state.step, userId]);
+
+    // ─── Funnel analytics ──────────────────────────────────────────────
+    trackAnalyticsEvent('onboarding_finished', {
+      stepsCompleted: Math.max(state.step, 6),
+      skippedPlanSelection: state.skippedPlanSelection,
+    });
+  }, [state.step, state.skippedPlanSelection, userId]);
 
   const requirementsSatisfied = useMemo(() => {
     return state.requirementsMet.basics && state.requirementsMet.style && state.requirementsMet.artworks;

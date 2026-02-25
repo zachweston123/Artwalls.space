@@ -323,6 +323,16 @@ export default {
       : null;
 
     /**
+     * Hash an IP address using SHA-256 for privacy-safe analytics.
+     * We store only a truncated hash — never the raw IP.
+     */
+    async function hashIp(ip: string): Promise<string> {
+      const data = new TextEncoder().encode(ip);
+      const buf = await crypto.subtle.digest('SHA-256', data);
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
+    }
+
+    /**
      * Validate the Supabase access token from the Authorization header.
      * Returns the user object on success, or null if:
      *   - No Authorization header / invalid Bearer scheme
@@ -655,6 +665,62 @@ export default {
       }
 
       return json({ ok: true, deduped: insertErr?.code === '23505' });
+    }
+
+    // =========================================================================
+    // Unified analytics endpoint — accepts batched measurement events.
+    // Writes to analytics_events table (separate from app_events).
+    // =========================================================================
+    if (url.pathname === '/api/analytics' && method === 'POST') {
+      if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+
+      const rlAnalytics = await applyRateLimit('track', request);
+      if (rlAnalytics) return rlAnalytics;
+
+      const body = await request.json().catch(() => ({}));
+      const events = Array.isArray(body?.events) ? body.events : [];
+      if (events.length === 0) return json({ error: 'Empty events array' }, { status: 400 });
+      if (events.length > 25) return json({ error: 'Too many events (max 25)' }, { status: 400 });
+
+      const user = await getSupabaseUserFromRequest(request);
+      const clientIp = request.headers.get('cf-connecting-ip') || request.headers.get('x-forwarded-for') || null;
+
+      // Validate and build rows
+      const allowedNames = new Set([
+        'cwv', 'page_view', 'landing_view', 'role_selected', 'auth_complete',
+        'onboarding_step', 'onboarding_finished', 'artwork_publish',
+        'qr_scan', 'artwork_view', 'checkout_start', 'purchase_success',
+      ]);
+
+      const rows: Record<string, unknown>[] = [];
+      for (const evt of events) {
+        const name = String(evt?.name || '').trim();
+        if (!allowedNames.has(name)) continue; // skip unknown events silently
+
+        const sessionId = String(evt?.sessionId || '').trim();
+        if (!sessionId) continue;
+
+        rows.push({
+          event_name: name,
+          session_id: sessionId,
+          user_id: user?.id || null,
+          user_role: String(evt?.userRole || '').slice(0, 20) || null,
+          route: String(evt?.route || '').slice(0, 500),
+          properties: evt?.properties || {},
+          client_timestamp: evt?.timestamp || null,
+          ip_hash: clientIp ? await hashIp(clientIp) : null,
+        });
+      }
+
+      if (rows.length === 0) return json({ ok: true, inserted: 0 });
+
+      const { error: insertErr } = await supabaseAdmin.from('analytics_events').insert(rows);
+      if (insertErr) {
+        console.error('analytics_events insert error:', insertErr.message);
+        return json({ error: 'Failed to store events' }, { status: 500 });
+      }
+
+      return json({ ok: true, inserted: rows.length });
     }
 
     // Admin-only: wall productivity metrics (proxies the RPC)
