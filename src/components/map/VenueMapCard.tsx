@@ -22,10 +22,17 @@ export function VenueMapCard({
   onViewProfile,
 }: VenueMapCardProps) {
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       onClick={() => onSelect?.(venue)}
-      className="w-full text-left rounded-xl transition-all duration-150 outline-none focus-visible:ring-2 focus-visible:ring-[var(--blue)]"
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onSelect?.(venue);
+        }
+      }}
+      className="w-full text-left rounded-xl transition-all duration-150 outline-none focus-visible:ring-2 focus-visible:ring-[var(--blue)] cursor-pointer"
       style={{
         background: isSelected ? 'var(--surface-3)' : 'var(--surface-1)',
         border: isSelected
@@ -123,7 +130,7 @@ export function VenueMapCard({
                 e.stopPropagation();
                 onViewProfile(venue);
               }}
-              className="shrink-0 text-xs font-medium flex items-center gap-1 hover:underline"
+              className="shrink-0 text-xs font-medium flex items-center gap-1 rounded-md px-2 py-1 hover:bg-[var(--surface-2)] transition-colors focus-visible:ring-2 focus-visible:ring-[var(--blue)] outline-none"
               style={{ color: 'var(--blue)' }}
             >
               View <ExternalLink className="w-3 h-3" />
@@ -131,7 +138,7 @@ export function VenueMapCard({
           )}
         </div>
       )}
-    </button>
+    </div>
   );
 }
 

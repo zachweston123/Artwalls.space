@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Palette, Store, MapPin, Image, DollarSign, Users, Star, Shield } from 'lucide-react';
+import { Palette, Store, MapPin, Image, DollarSign, Users, Star, Shield, ArrowRight, ChevronRight } from 'lucide-react';
 import { SEO } from './SEO';
 import { FreshnessProof } from './shared/FreshnessProof';
 import { FoundingStorySection } from './FoundingStorySection';
+import { Button } from './ui/button';
 import type { User, UserRole } from '../App';
 import { trackAnalyticsEvent } from '../lib/analytics';
 
@@ -268,47 +269,72 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
           canonical="https://artwalls.space/"
         />
 
-        {/* ── Hero Section ────────────────────────────────────── */}
-        <section className="px-6 py-16 sm:py-24">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[var(--text)] mb-4 font-display tracking-tight">
-              Art on Every Wall
-            </h1>
-            <p className="text-base sm:text-lg text-[var(--text-muted)] max-w-2xl mx-auto mb-8 leading-relaxed">
-              The easiest way for artists to get placed in real venues — and for venues to host art without the hassle.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <button
-                onClick={() => setSelectedRole('artist')}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[var(--blue)] text-[var(--on-blue)] font-medium hover:bg-[var(--blue-hover)] transition-colors text-sm sm:text-base"
-              >
-                <Palette className="w-5 h-5" />
-                Get Placed in Venues
-              </button>
-              <button
-                onClick={() => setSelectedRole('venue')}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[var(--green)] text-[var(--accent-contrast)] font-medium hover:brightness-95 transition-colors text-sm sm:text-base"
-              >
-                <Store className="w-5 h-5" />
-                Host Art Effortlessly
-              </button>
+        {/* ── Hero Section ─── 2-col on desktop, stacked on mobile ─── */}
+        <section className="px-6 pt-16 pb-12 sm:pt-24 sm:pb-16">
+          <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            {/* Left: copy + CTA */}
+            <div className="max-w-xl">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[var(--text)] mb-5 font-display tracking-tight leading-[1.15]">
+                Art on Every Wall
+              </h1>
+              <p className="text-base sm:text-lg text-[var(--text-muted)] mb-8 leading-relaxed">
+                The easiest way for artists to get placed in real venues&nbsp;— and for venues to host art without the hassle.
+              </p>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <a
+                  href="/find"
+                  onClick={(e) => { e.preventDefault(); onNavigate?.('find-art'); window.location.href = '/find'; }}
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[var(--blue)] text-[var(--on-blue)] font-medium hover:bg-[var(--blue-hover)] transition-colors text-sm sm:text-base"
+                >
+                  <MapPin className="w-5 h-5" />
+                  Explore Art Near You
+                </a>
+                <button
+                  onClick={() => onNavigate?.('login')}
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] font-medium hover:bg-[var(--surface-2)] transition-colors text-sm sm:text-base"
+                >
+                  Log In
+                </button>
+              </div>
+              <div className="mt-4 flex items-center gap-4">
+                <button
+                  onClick={() => onNavigate?.('why-artwalls-artist')}
+                  className="inline-flex items-center gap-1 text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
+                >
+                  Learn more <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
-            <div className="mt-4">
-              <a
-                href="/find"
-                onClick={(e) => { e.preventDefault(); onNavigate?.('find-art'); window.location.href = '/find'; }}
-                className="inline-flex items-center gap-1 text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
-              >
-                <MapPin className="w-4 h-4" />
-                Or explore art near you →
-              </a>
+
+            {/* Right: role quick-picks (visual teaser) */}
+            <div className="hidden lg:flex flex-col gap-4">
+              <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--border)] p-6 flex items-center gap-4 hover:border-[var(--blue)] transition-colors cursor-pointer" onClick={() => setSelectedRole('artist')} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedRole('artist'); } }}>
+                <div className="w-12 h-12 rounded-full bg-[var(--blue-muted)] flex items-center justify-center shrink-0">
+                  <Palette className="w-6 h-6 text-[var(--blue)]" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-[var(--text)]">I'm an Artist</p>
+                  <p className="text-xs text-[var(--text-muted)]">Get placed in venues, sell directly to buyers</p>
+                </div>
+                <ArrowRight className="w-5 h-5 text-[var(--text-muted)] ml-auto shrink-0" />
+              </div>
+              <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--border)] p-6 flex items-center gap-4 hover:border-[var(--green)] transition-colors cursor-pointer" onClick={() => setSelectedRole('venue')} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedRole('venue'); } }}>
+                <div className="w-12 h-12 rounded-full bg-[var(--green-muted)] flex items-center justify-center shrink-0">
+                  <Store className="w-6 h-6 text-[var(--green)]" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-[var(--text)]">I'm a Venue</p>
+                  <p className="text-xs text-[var(--text-muted)]">Host art for free, earn on every sale</p>
+                </div>
+                <ArrowRight className="w-5 h-5 text-[var(--text-muted)] ml-auto shrink-0" />
+              </div>
             </div>
           </div>
         </section>
 
-        {/* ── Role Selection CTA ──────────────────────────────── */}
-        <section className="px-6 pb-12">
-          <div className="max-w-4xl mx-auto">
+        {/* ── Role Selection Cards ────────────────────────────── */}
+        <section className="px-6 pb-12 sm:pb-16">
+          <div className="max-w-5xl mx-auto">
             <h2 className="text-xl sm:text-2xl font-semibold text-[var(--text)] text-center mb-2 font-display tracking-tight">
               Choose Your Path
             </h2>
@@ -316,82 +342,100 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
               Whether you make art or host it — you can be live in under 10 minutes.
             </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 max-w-3xl mx-auto">
-              <button
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-4xl mx-auto">
+              {/* Artist card */}
+              <div
+                role="button"
+                tabIndex={0}
                 onClick={() => setSelectedRole('artist')}
-                className="group bg-[var(--blue-muted)] rounded-2xl p-6 sm:p-8 border-2 border-[var(--blue)] hover:brightness-95 transition-all active:scale-[0.98] text-left"
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedRole('artist'); } }}
+                className="group bg-[var(--surface-1)] rounded-2xl p-6 sm:p-8 border border-[var(--border)] hover:border-[var(--blue)] transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[var(--focus)] outline-none"
               >
                 <div className="flex flex-col items-center text-center gap-4">
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[var(--blue)]/10 flex items-center justify-center">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[var(--blue-muted)] flex items-center justify-center">
                     <Palette className="w-7 h-7 sm:w-8 sm:h-8 text-[var(--blue)]" />
                   </div>
                   <div>
-                    <h3 className="text-xl mb-1 text-[var(--blue)] font-semibold">Get Placed in Venues</h3>
+                    <h3 className="text-xl mb-1 text-[var(--blue)] font-semibold font-display">Get Placed in Venues</h3>
                     <p className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
                       Publish your work, apply to local venues, and sell directly to buyers — all from one dashboard.
                     </p>
                     <p className="text-xs text-[var(--blue)] mt-2 font-medium">Subscribers keep up to 85% of every sale</p>
                   </div>
-                  <span className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-[var(--blue)] text-[var(--on-blue)] text-sm font-medium">
-                    Start as Artist — Free
+                  <span className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-[var(--blue)] text-[var(--on-blue)] text-sm font-medium group-hover:bg-[var(--blue-hover)] transition-colors">
+                    Continue as Artist — Free
                   </span>
                 </div>
-                {/* 3-step quick-start strip */}
-                <div className="mt-4 pt-4 border-t border-[var(--blue)]/20">
-                  <div className="flex flex-col gap-2 text-xs text-[var(--text-muted)]">
-                    <div className="flex items-center gap-2"><span className="w-5 h-5 rounded-full bg-[var(--blue)]/10 text-[var(--blue)] flex items-center justify-center text-[10px] font-bold">1</span> Create your profile</div>
-                    <div className="flex items-center gap-2"><span className="w-5 h-5 rounded-full bg-[var(--blue)]/10 text-[var(--blue)] flex items-center justify-center text-[10px] font-bold">2</span> Publish 1 artwork</div>
-                    <div className="flex items-center gap-2"><span className="w-5 h-5 rounded-full bg-[var(--blue)]/10 text-[var(--blue)] flex items-center justify-center text-[10px] font-bold">3</span> Apply to a venue or call</div>
+                {/* 3-step quick-start */}
+                <div className="mt-5 pt-5 border-t border-[var(--border)]">
+                  <div className="flex flex-col gap-2.5 text-xs text-[var(--text-muted)]">
+                    {[
+                      { n: '1', t: 'Create your profile' },
+                      { n: '2', t: 'Publish 1 artwork' },
+                      { n: '3', t: 'Apply to a venue or call' },
+                    ].map((s) => (
+                      <div key={s.n} className="flex items-center gap-2">
+                        <span className="w-5 h-5 rounded-full bg-[var(--blue-muted)] text-[var(--blue)] flex items-center justify-center text-[10px] font-bold shrink-0">{s.n}</span>
+                        {s.t}
+                      </div>
+                    ))}
                   </div>
                 </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onNavigate?.('why-artwalls-artist');
-                  }}
-                  className="mt-3 text-xs text-[var(--blue)] hover:underline w-full text-center"
+                <a
+                  href="/why-artwalls"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); onNavigate?.('why-artwalls-artist'); }}
+                  className="mt-4 block text-xs text-[var(--blue)] hover:underline text-center"
                 >
                   Learn more →
-                </button>
-              </button>
+                </a>
+              </div>
 
-              <button
+              {/* Venue card */}
+              <div
+                role="button"
+                tabIndex={0}
                 onClick={() => setSelectedRole('venue')}
-                className="group bg-[var(--green-muted)] rounded-2xl p-6 sm:p-8 border-2 border-[var(--green)] hover:brightness-95 transition-all active:scale-[0.98] text-left"
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedRole('venue'); } }}
+                className="group bg-[var(--surface-1)] rounded-2xl p-6 sm:p-8 border border-[var(--border)] hover:border-[var(--green)] transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[var(--focus)] outline-none"
               >
                 <div className="flex flex-col items-center text-center gap-4">
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[var(--green)]/10 flex items-center justify-center">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[var(--green-muted)] flex items-center justify-center">
                     <Store className="w-7 h-7 sm:w-8 sm:h-8 text-[var(--green)]" />
                   </div>
                   <div>
-                    <h3 className="text-xl mb-1 text-[var(--green)] font-semibold">Host Art Effortlessly</h3>
+                    <h3 className="text-xl mb-1 text-[var(--green)] font-semibold font-display">Host Art Effortlessly</h3>
                     <p className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
                       List your walls, receive artist applications, and earn a commission on every sale — zero cost to you.
                     </p>
                     <p className="text-xs text-[var(--green)] mt-2 font-medium">Always free for venues — earn 15% on every sale</p>
                   </div>
-                  <span className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-[var(--green)] text-[var(--accent-contrast)] text-sm font-medium">
-                    Start as Venue — Free Forever
+                  <span className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-[var(--green)] text-[var(--accent-contrast)] text-sm font-medium group-hover:brightness-95 transition-all">
+                    Continue as Venue — Free Forever
                   </span>
                 </div>
-                {/* 3-step quick-start strip */}
-                <div className="mt-4 pt-4 border-t border-[var(--green)]/20">
-                  <div className="flex flex-col gap-2 text-xs text-[var(--text-muted)]">
-                    <div className="flex items-center gap-2"><span className="w-5 h-5 rounded-full bg-[var(--green)]/10 text-[var(--green)] flex items-center justify-center text-[10px] font-bold">1</span> Create your venue</div>
-                    <div className="flex items-center gap-2"><span className="w-5 h-5 rounded-full bg-[var(--green)]/10 text-[var(--green)] flex items-center justify-center text-[10px] font-bold">2</span> Add 1 wall space</div>
-                    <div className="flex items-center gap-2"><span className="w-5 h-5 rounded-full bg-[var(--green)]/10 text-[var(--green)] flex items-center justify-center text-[10px] font-bold">3</span> Post a call for art</div>
+                {/* 3-step quick-start */}
+                <div className="mt-5 pt-5 border-t border-[var(--border)]">
+                  <div className="flex flex-col gap-2.5 text-xs text-[var(--text-muted)]">
+                    {[
+                      { n: '1', t: 'Create your venue' },
+                      { n: '2', t: 'Add 1 wall space' },
+                      { n: '3', t: 'Post a call for art' },
+                    ].map((s) => (
+                      <div key={s.n} className="flex items-center gap-2">
+                        <span className="w-5 h-5 rounded-full bg-[var(--green-muted)] text-[var(--green)] flex items-center justify-center text-[10px] font-bold shrink-0">{s.n}</span>
+                        {s.t}
+                      </div>
+                    ))}
                   </div>
                 </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onNavigate?.('why-artwalls-venue');
-                  }}
-                  className="mt-3 text-xs text-[var(--green)] hover:underline w-full text-center"
+                <a
+                  href="/venues"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); onNavigate?.('why-artwalls-venue'); }}
+                  className="mt-4 block text-xs text-[var(--green)] hover:underline text-center"
                 >
                   Learn more →
-                </button>
-              </button>
+                </a>
+              </div>
             </div>
           </div>
         </section>
@@ -404,45 +448,49 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
         />
 
         {/* ── How It Works ────────────────────────────────────── */}
-        <section className="px-6 py-12 sm:py-16 bg-[var(--surface-1)] border-y border-[var(--border)]">
+        <section className="px-6 py-14 sm:py-20">
           <div className="max-w-5xl mx-auto">
             <h2 className="text-xl sm:text-2xl font-semibold text-[var(--text)] text-center mb-10 font-display tracking-tight">
               How Artwalls Works
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Artist path */}
-              <div className="bg-[var(--bg)] rounded-xl p-6 border border-[var(--border)]">
-                <h3 className="text-base font-semibold text-[var(--blue)] mb-4 flex items-center gap-2 font-display"><Palette className="w-5 h-5" /> For Artists</h3>
-                <div className="space-y-3">
+              <div className="bg-[var(--surface-1)] rounded-2xl p-6 border border-[var(--border)]">
+                <h3 className="text-base font-semibold text-[var(--blue)] mb-5 flex items-center gap-2 font-display">
+                  <Palette className="w-5 h-5" /> For Artists
+                </h3>
+                <div className="space-y-4">
                   {[
                     { step: '1', title: 'Create your profile', desc: 'Add your bio, city, and art style in 2 minutes.' },
                     { step: '2', title: 'Publish your first artwork', desc: 'Upload a photo, set a price — it\'s now discoverable.' },
                     { step: '3', title: 'Apply to a venue or call', desc: 'Browse open calls or apply directly. Get placed.' },
                   ].map((s) => (
                     <div key={s.step} className="flex items-start gap-3">
-                      <span className="w-6 h-6 rounded-full bg-[var(--blue)]/10 text-[var(--blue)] flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">{s.step}</span>
+                      <span className="w-7 h-7 rounded-full bg-[var(--blue-muted)] text-[var(--blue)] flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">{s.step}</span>
                       <div>
                         <p className="text-sm font-medium text-[var(--text)]">{s.title}</p>
-                        <p className="text-xs text-[var(--text-muted)]">{s.desc}</p>
+                        <p className="text-xs text-[var(--text-muted)] mt-0.5">{s.desc}</p>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
               {/* Venue path */}
-              <div className="bg-[var(--bg)] rounded-xl p-6 border border-[var(--border)]">
-                <h3 className="text-base font-semibold text-[var(--green)] mb-4 flex items-center gap-2 font-display"><Store className="w-5 h-5" /> For Venues</h3>
-                <div className="space-y-3">
+              <div className="bg-[var(--surface-1)] rounded-2xl p-6 border border-[var(--border)]">
+                <h3 className="text-base font-semibold text-[var(--green)] mb-5 flex items-center gap-2 font-display">
+                  <Store className="w-5 h-5" /> For Venues
+                </h3>
+                <div className="space-y-4">
                   {[
                     { step: '1', title: 'Create your venue', desc: 'Add your space, hours, and vibe in 2 minutes.' },
                     { step: '2', title: 'Add a wall space', desc: 'Describe one wall — dimensions, location, lighting.' },
                     { step: '3', title: 'Post a call for art', desc: 'Artists apply to you. Pick the best fit.' },
                   ].map((s) => (
                     <div key={s.step} className="flex items-start gap-3">
-                      <span className="w-6 h-6 rounded-full bg-[var(--green)]/10 text-[var(--green)] flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">{s.step}</span>
+                      <span className="w-7 h-7 rounded-full bg-[var(--green-muted)] text-[var(--green)] flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">{s.step}</span>
                       <div>
                         <p className="text-sm font-medium text-[var(--text)]">{s.title}</p>
-                        <p className="text-xs text-[var(--text-muted)]">{s.desc}</p>
+                        <p className="text-xs text-[var(--text-muted)] mt-0.5">{s.desc}</p>
                       </div>
                     </div>
                   ))}
@@ -453,15 +501,15 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
         </section>
 
         {/* ── Value Props ─────────────────────────────────────── */}
-        <section className="px-6 py-12 sm:py-16">
+        <section className="px-6 py-14 sm:py-20 bg-[var(--surface-1)]">
           <div className="max-w-5xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 sm:gap-14">
               {/* Artists column */}
               <div>
-                <h3 className="text-lg font-semibold text-[var(--blue)] mb-4 font-display flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-[var(--blue)] mb-5 font-display flex items-center gap-2">
                   <Palette className="w-5 h-5" /> For Artists
                 </h3>
-                <ul className="space-y-3 text-sm text-[var(--text-muted)]">
+                <ul className="space-y-4 text-sm text-[var(--text-muted)]">
                   {[
                     { icon: <Image className="w-4 h-4 text-[var(--blue)]" />, text: 'Build a professional portfolio visible to venues and collectors' },
                     { icon: <MapPin className="w-4 h-4 text-[var(--blue)]" />, text: 'Get your art on real walls in cafés, offices, and restaurants' },
@@ -469,18 +517,18 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
                     { icon: <Star className="w-4 h-4 text-[var(--blue)]" />, text: 'Gain exposure, build your reputation, and grow your career' },
                   ].map((item, i) => (
                     <li key={i} className="flex items-start gap-3">
-                      <span className="mt-0.5 shrink-0">{item.icon}</span>
-                      <span>{item.text}</span>
+                      <span className="mt-0.5 shrink-0 w-8 h-8 rounded-lg bg-[var(--blue-muted)] flex items-center justify-center">{item.icon}</span>
+                      <span className="pt-1">{item.text}</span>
                     </li>
                   ))}
                 </ul>
               </div>
               {/* Venues column */}
               <div>
-                <h3 className="text-lg font-semibold text-[var(--green)] mb-4 font-display flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-[var(--green)] mb-5 font-display flex items-center gap-2">
                   <Store className="w-5 h-5" /> For Venues
                 </h3>
-                <ul className="space-y-3 text-sm text-[var(--text-muted)]">
+                <ul className="space-y-4 text-sm text-[var(--text-muted)]">
                   {[
                     { icon: <Image className="w-4 h-4 text-[var(--green)]" />, text: 'Transform blank walls into rotating art galleries — for free' },
                     { icon: <Users className="w-4 h-4 text-[var(--green)]" />, text: 'Attract art-loving customers and increase foot traffic' },
@@ -488,8 +536,8 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
                     { icon: <Shield className="w-4 h-4 text-[var(--green)]" />, text: 'Full scheduling, install/deinstall support, and damage protection' },
                   ].map((item, i) => (
                     <li key={i} className="flex items-start gap-3">
-                      <span className="mt-0.5 shrink-0">{item.icon}</span>
-                      <span>{item.text}</span>
+                      <span className="mt-0.5 shrink-0 w-8 h-8 rounded-lg bg-[var(--green-muted)] flex items-center justify-center">{item.icon}</span>
+                      <span className="pt-1">{item.text}</span>
                     </li>
                   ))}
                 </ul>
@@ -504,27 +552,33 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
     );
   }
 
+  const accentColor = selectedRole === 'artist' ? 'blue' : 'green';
+  const ringClass = selectedRole === 'artist' ? 'focus:ring-[var(--focus)]' : 'focus:ring-[var(--green)]';
+  const inputClass = `w-full px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] placeholder:text-[var(--text-muted)]/60 focus:outline-none focus:ring-2 ${ringClass} transition-shadow text-sm`;
+
   return (
     <div className="min-h-svh bg-[var(--bg)] flex items-center justify-center px-6 py-12">
       <div className="w-full max-w-md">
+        {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 mb-4">
+          <div className="inline-flex items-center gap-2.5 mb-3">
             {selectedRole === 'artist' ? (
               <Palette className="w-8 h-8 text-[var(--blue)]" />
             ) : (
               <Store className="w-8 h-8 text-[var(--green)]" />
             )}
-            <h1 className="text-3xl font-semibold text-[var(--text)]">Artwalls</h1>
+            <h1 className="text-3xl font-bold text-[var(--text)] font-display tracking-tight">Artwalls</h1>
           </div>
-          <p className="text-[var(--text-muted)]">
+          <p className="text-sm text-[var(--text-muted)]">
             {isSignup ? 'Create your account' : 'Sign in to continue'}
           </p>
         </div>
 
-        <div className="bg-[var(--surface-1)] rounded-2xl p-8 border border-[var(--border)]">
+        {/* Form card */}
+        <div className="bg-[var(--surface-2)] rounded-2xl p-7 sm:p-8 border border-[var(--border)] shadow-sm">
           <div
             className={
-              "inline-flex px-3 py-1 rounded-full text-sm mb-6 border " +
+              "inline-flex px-3 py-1 rounded-full text-xs font-medium mb-6 border " +
               (selectedRole === 'artist'
                 ? 'bg-[var(--blue-muted)] border-[var(--blue)] text-[var(--blue)]'
                 : 'bg-[var(--green-muted)] border-[var(--green)] text-[var(--green)]')
@@ -537,9 +591,9 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
             <div
               id="login-feedback"
               className={
-                'mb-4 rounded-lg border px-4 py-3 text-sm ' +
+                'mb-5 rounded-xl border px-4 py-3 text-sm ' +
                 (errorMessage
-                  ? 'bg-[var(--surface-1)] border-[var(--border)] text-[var(--danger)]'
+                  ? 'bg-[var(--surface-1)] border-[var(--danger)]/30 text-[var(--danger)]'
                   : 'bg-[var(--surface-1)] border-[var(--border)] text-[var(--text)]')
               }
               role={errorMessage ? 'alert' : 'status'}
@@ -551,7 +605,7 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignup && (
               <div>
-                <label htmlFor="signup-name" className="block text-sm text-[var(--text-muted)] mb-1">
+                <label htmlFor="signup-name" className="block text-sm font-medium text-[var(--text)] mb-1.5">
                   {selectedRole === 'artist' ? 'Artist Name' : 'Venue Name'}
                 </label>
                 <input
@@ -559,10 +613,7 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className={
-                    "w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 " +
-                    (selectedRole === 'artist' ? 'focus:ring-[var(--focus)]' : 'focus:ring-[var(--green)]')
-                  }
+                  className={inputClass}
                   placeholder={selectedRole === 'artist' ? 'Your name' : 'Your venue name'}
                 />
               </div>
@@ -570,34 +621,28 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
 
             {isSignup && (
               <div>
-                <label htmlFor="signup-phone" className="block text-sm text-[var(--text-muted)] mb-1">Phone Number</label>
+                <label htmlFor="signup-phone" className="block text-sm font-medium text-[var(--text)] mb-1.5">Phone Number</label>
                 <input
                   id="signup-phone"
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className={
-                    "w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 " +
-                    (selectedRole === 'artist' ? 'focus:ring-[var(--focus)]' : 'focus:ring-[var(--green)]')
-                  }
+                  className={inputClass}
                   placeholder="e.g. +15551234567"
                   aria-describedby="phone-hint"
                 />
-                <p id="phone-hint" className="text-xs text-[var(--text-muted)] mt-1">We'll send sale notifications to this number.</p>
+                <p id="phone-hint" className="text-xs text-[var(--text-muted)] mt-1.5">We'll send sale notifications to this number.</p>
               </div>
             )}
 
             <div>
-              <label htmlFor="login-email" className="block text-sm text-[var(--text-muted)] mb-1">Email</label>
+              <label htmlFor="login-email" className="block text-sm font-medium text-[var(--text)] mb-1.5">Email</label>
               <input
                 id="login-email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className={
-                  "w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 " +
-                  (selectedRole === 'artist' ? 'focus:ring-[var(--focus)]' : 'focus:ring-[var(--green)]')
-                }
+                className={inputClass}
                 placeholder="your@email.com"
                 aria-describedby={errorMessage ? 'login-feedback' : undefined}
                 aria-invalid={!!errorMessage || undefined}
@@ -605,16 +650,13 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
             </div>
 
             <div>
-              <label htmlFor="login-password" className="block text-sm text-[var(--text-muted)] mb-1">Password</label>
+              <label htmlFor="login-password" className="block text-sm font-medium text-[var(--text)] mb-1.5">Password</label>
               <input
                 id="login-password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className={
-                  "w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 " +
-                  (selectedRole === 'artist' ? 'focus:ring-[var(--focus)]' : 'focus:ring-[var(--green)]')
-                }
+                className={inputClass}
                 placeholder="••••••••"
                 aria-describedby={errorMessage ? 'login-feedback' : undefined}
                 aria-invalid={!!errorMessage || undefined}
@@ -636,7 +678,7 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
               type="submit"
               disabled={isLoading}
               className={
-                "w-full py-3 rounded-lg hover:brightness-95 transition disabled:opacity-60 disabled:cursor-not-allowed " +
+                "w-full py-3 rounded-xl font-medium text-sm hover:brightness-95 transition disabled:opacity-60 disabled:cursor-not-allowed mt-2 " +
                 (selectedRole === 'artist'
                   ? 'bg-[var(--blue)] text-[var(--on-blue)]'
                   : 'bg-[var(--green)] text-[var(--accent-contrast)]')
@@ -645,12 +687,12 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
               {isLoading ? 'Please wait…' : isSignup ? 'Create Account' : 'Sign In'}
             </button>
 
-            <div className="relative my-6">
+            <div className="relative my-5">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-[var(--border)]"></div>
               </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-[var(--surface-1)] text-[var(--text-muted)]">Or continue with</span>
+              <div className="relative flex justify-center text-xs">
+                <span className="px-3 bg-[var(--surface-2)] text-[var(--text-muted)]">Or continue with</span>
               </div>
             </div>
 
@@ -658,7 +700,7 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
               type="button"
               onClick={handleGoogleSignIn}
               disabled={isLoading}
-              className="w-full py-3 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] hover:brightness-95 transition disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full py-3 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm font-medium hover:bg-[var(--surface-1)] transition disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               <GoogleIcon />
               {isLoading ? 'Connecting…' : 'Sign in with Google'}
@@ -668,17 +710,17 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
           <div className="mt-6 text-center">
             <button
               onClick={() => setIsSignup(!isSignup)}
-              className="text-sm text-[var(--text-muted)] hover:text-[var(--text)]"
+              className="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
             >
               {isSignup ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
             </button>
           </div>
 
           {!lockRole && (
-            <div className="mt-4 text-center">
+            <div className="mt-3 text-center">
               <button
                 onClick={() => setSelectedRole(null)}
-                className="text-sm text-[var(--text-muted)] hover:text-[var(--text)]"
+                className="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
               >
                 ← Back to Login
               </button>
@@ -688,7 +730,7 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
           <div className="mt-3 text-center">
             <button
               onClick={() => onNavigate?.(selectedRole === 'artist' ? 'why-artwalls-artist' : 'why-artwalls-venue')}
-              className="text-sm text-[var(--text-muted)] hover:text-[var(--text)]"
+              className="text-xs text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
             >
               Why Artwalls? →
             </button>

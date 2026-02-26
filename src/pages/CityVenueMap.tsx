@@ -128,20 +128,15 @@ export function CityVenueMap({ citySlug }: CityVenueMapProps) {
   if (!city) {
     return (
       <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
-        <Header />
         <div className="max-w-md mx-auto px-4 py-24 text-center">
-          <MapPin className="w-12 h-12 mx-auto mb-4" style={{ color: 'var(--text-muted)' }} />
+          <MapPin className="w-12 h-12 mx-auto mb-4 text-[var(--text-muted)]" />
           <h2 className="text-xl font-semibold mb-2">City not found</h2>
-          <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>
+          <p className="text-sm mb-6 text-[var(--text-muted)]">
             We couldn't find a city matching "{citySlug}".
           </p>
           <a
             href="/find"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-            style={{
-              background: 'var(--blue)',
-              color: '#fff',
-            }}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-[var(--blue)] text-[var(--on-blue)] hover:bg-[var(--blue-hover)] transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Browse all cities
@@ -167,23 +162,15 @@ export function CityVenueMap({ citySlug }: CityVenueMapProps) {
         ogUrl={canonicalUrl}
         canonical={canonicalUrl}
       />
-      <Header />
 
       {/* Toolbar */}
-      <div
-        className="border-b px-4 sm:px-6 py-3"
-        style={{
-          background: 'var(--surface-1)',
-          borderColor: 'var(--border)',
-        }}
-      >
+      <div className="bg-[var(--surface-1)] border-b border-[var(--border)] px-4 sm:px-6 py-3">
         <div className="max-w-[1600px] mx-auto flex items-center justify-between gap-4">
           {/* Left: back + city name */}
           <div className="flex items-center gap-3 min-w-0">
             <a
               href="/find"
-              className="shrink-0 p-1.5 rounded-lg transition-colors hover:bg-[var(--surface-3)]"
-              style={{ color: 'var(--text-muted)' }}
+              className="shrink-0 p-1.5 rounded-lg transition-colors text-[var(--text-muted)] hover:bg-[var(--surface-3)]"
               aria-label="Back to city list"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -192,7 +179,7 @@ export function CityVenueMap({ citySlug }: CityVenueMapProps) {
               <h1 className="text-lg font-semibold truncate font-display tracking-tight">
                 {city.name}, {city.state}
               </h1>
-              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+              <p className="text-xs text-[var(--text-muted)]">
                 {loading
                   ? 'Loading venues…'
                   : `${venues.length} venue${venues.length !== 1 ? 's' : ''} found`}
@@ -203,46 +190,44 @@ export function CityVenueMap({ citySlug }: CityVenueMapProps) {
           {/* Right: search + mobile toggle */}
           <div className="flex items-center gap-2">
             <div className="relative hidden sm:block">
-              <Search
-                className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4"
-                style={{ color: 'var(--text-muted)' }}
-              />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
               <input
                 type="text"
                 placeholder="Filter venues…"
                 value={filterQuery}
                 onChange={(e) => setFilterQuery(e.target.value)}
                 className="pl-8 pr-3 py-1.5 text-xs rounded-lg w-48 outline-none
+                           bg-[var(--bg)] text-[var(--text)] border border-[var(--border)]
+                           placeholder:text-[var(--text-muted)]/60
                            focus:ring-2 focus:ring-[var(--blue)]"
-                style={{
-                  background: 'var(--surface-2)',
-                  color: 'var(--text)',
-                  border: '1px solid var(--border)',
-                }}
               />
             </div>
 
             {/* Mobile map/list toggle */}
-            <div className="flex sm:hidden rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+            <div className="flex sm:hidden rounded-lg overflow-hidden border border-[var(--border)]" role="radiogroup" aria-label="View mode">
               <button
                 type="button"
+                role="radio"
+                aria-checked={mobileView === 'map'}
                 onClick={() => setMobileView('map')}
-                className="px-3 py-1.5 text-xs font-medium flex items-center gap-1 transition-colors"
-                style={{
-                  background: mobileView === 'map' ? 'var(--blue)' : 'var(--surface-2)',
-                  color: mobileView === 'map' ? '#fff' : 'var(--text-muted)',
-                }}
+                className={`px-3 py-1.5 text-xs font-medium flex items-center gap-1 transition-colors ${
+                  mobileView === 'map'
+                    ? 'bg-[var(--blue)] text-[var(--on-blue)]'
+                    : 'bg-[var(--surface-2)] text-[var(--text-muted)]'
+                }`}
               >
                 <MapIcon className="w-3.5 h-3.5" /> Map
               </button>
               <button
                 type="button"
+                role="radio"
+                aria-checked={mobileView === 'list'}
                 onClick={() => setMobileView('list')}
-                className="px-3 py-1.5 text-xs font-medium flex items-center gap-1 transition-colors"
-                style={{
-                  background: mobileView === 'list' ? 'var(--blue)' : 'var(--surface-2)',
-                  color: mobileView === 'list' ? '#fff' : 'var(--text-muted)',
-                }}
+                className={`px-3 py-1.5 text-xs font-medium flex items-center gap-1 transition-colors ${
+                  mobileView === 'list'
+                    ? 'bg-[var(--blue)] text-[var(--on-blue)]'
+                    : 'bg-[var(--surface-2)] text-[var(--text-muted)]'
+                }`}
               >
                 <List className="w-3.5 h-3.5" /> List
               </button>
@@ -252,10 +237,7 @@ export function CityVenueMap({ citySlug }: CityVenueMapProps) {
       </div>
 
       {/* Filter chips */}
-      <div
-        className="border-b px-4 sm:px-6 py-2"
-        style={{ background: 'var(--bg)', borderColor: 'var(--border)' }}
-      >
+      <div className="bg-[var(--bg)] border-b border-[var(--border)] px-4 sm:px-6 py-2">
         <div className="max-w-[1600px] mx-auto flex items-center gap-2 overflow-x-auto">
           {([
             { key: 'all', label: 'All venues' },
@@ -266,12 +248,11 @@ export function CityVenueMap({ citySlug }: CityVenueMapProps) {
               key={key}
               type="button"
               onClick={() => setFilterChip(filterChip === key ? 'all' : key)}
-              className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full border transition-colors"
-              style={{
-                background: filterChip === key ? 'var(--blue)' : 'var(--surface-1)',
-                color: filterChip === key ? '#fff' : 'var(--text)',
-                borderColor: filterChip === key ? 'var(--blue)' : 'var(--border)',
-              }}
+              className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full border transition-colors ${
+                filterChip === key
+                  ? 'bg-[var(--blue)] text-[var(--on-blue)] border-[var(--blue)]'
+                  : 'bg-[var(--surface-1)] text-[var(--text)] border-[var(--border)] hover:bg-[var(--surface-2)]'
+              }`}
             >
               {Icon && <Icon className="w-3 h-3" />}
               {label}
@@ -279,12 +260,7 @@ export function CityVenueMap({ citySlug }: CityVenueMapProps) {
           ))}
           <a
             href="/calls"
-            className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full border transition-colors hover:bg-[var(--surface-2)]"
-            style={{
-              background: 'var(--surface-1)',
-              color: 'var(--text)',
-              borderColor: 'var(--border)',
-            }}
+            className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] transition-colors hover:bg-[var(--surface-2)]"
           >
             <Megaphone className="w-3 h-3" />
             Browse all calls
@@ -319,31 +295,21 @@ export function CityVenueMap({ citySlug }: CityVenueMapProps) {
         <div
           className={`${
             mobileView === 'map' ? 'hidden sm:flex' : 'flex'
-          } sm:flex-[2] flex-col overflow-hidden`}
-          style={{
-            borderLeft: '1px solid var(--border)',
-            background: 'var(--bg)',
-          }}
+          } sm:flex-[2] flex-col overflow-hidden border-l border-[var(--border)] bg-[var(--bg)]`}
         >
           {/* Mobile search (visible only on small screens) */}
           <div className="sm:hidden px-3 pt-3">
             <div className="relative">
-              <Search
-                className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4"
-                style={{ color: 'var(--text-muted)' }}
-              />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
               <input
                 type="text"
                 placeholder="Filter venues…"
                 value={filterQuery}
                 onChange={(e) => setFilterQuery(e.target.value)}
                 className="w-full pl-8 pr-3 py-2 text-xs rounded-lg outline-none
+                           bg-[var(--surface-1)] text-[var(--text)] border border-[var(--border)]
+                           placeholder:text-[var(--text-muted)]/60
                            focus:ring-2 focus:ring-[var(--blue)]"
-                style={{
-                  background: 'var(--surface-2)',
-                  color: 'var(--text)',
-                  border: '1px solid var(--border)',
-                }}
               />
             </div>
           </div>
@@ -374,14 +340,8 @@ export function CityVenueMap({ citySlug }: CityVenueMapProps) {
 
           {/* Nearby cities */}
           {nearbyCities.length > 0 && !loading && (
-            <div
-              className="border-t px-3 py-3 shrink-0"
-              style={{ borderColor: 'var(--border)' }}
-            >
-              <p
-                className="text-xs font-medium mb-2"
-                style={{ color: 'var(--text-muted)' }}
-              >
+            <div className="border-t border-[var(--border)] px-3 py-3 shrink-0">
+              <p className="text-xs font-medium mb-2 text-[var(--text-muted)]">
                 Nearby cities
               </p>
               <div className="flex flex-wrap gap-1.5">
@@ -390,12 +350,7 @@ export function CityVenueMap({ citySlug }: CityVenueMapProps) {
                     key={`${c.name}-${c.state}`}
                     type="button"
                     onClick={() => handleCitySwitch(c)}
-                    className="text-xs px-2.5 py-1 rounded-full transition-colors hover:bg-[var(--surface-3)]"
-                    style={{
-                      background: 'var(--surface-2)',
-                      color: 'var(--text)',
-                      border: '1px solid var(--border)',
-                    }}
+                    className="text-xs px-2.5 py-1 rounded-full transition-colors bg-[var(--surface-2)] text-[var(--text)] border border-[var(--border)] hover:bg-[var(--surface-3)] hover:border-[var(--blue)]"
                   >
                     {c.name}, {c.state}
                   </button>
@@ -411,43 +366,10 @@ export function CityVenueMap({ citySlug }: CityVenueMapProps) {
 
 // ── Sub-components ──────────────────────────────────────────────────────────
 
-function Header() {
-  return (
-    <header
-      className="border-b"
-      style={{
-        background: 'var(--surface-2)',
-        borderColor: 'var(--border)',
-      }}
-    >
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
-        <a
-          href="/"
-          className="text-lg tracking-tight hover:opacity-80 transition-opacity"
-          style={{ color: 'var(--text)' }}
-        >
-          Artwalls
-        </a>
-        <a
-          href="/find"
-          className="text-xs font-medium flex items-center gap-1 hover:underline"
-          style={{ color: 'var(--text-muted)' }}
-        >
-          <MapPin className="w-3.5 h-3.5" />
-          All cities
-        </a>
-      </div>
-    </header>
-  );
-}
-
 function MapSkeleton() {
   return (
-    <div
-      className="w-full h-full flex items-center justify-center animate-pulse"
-      style={{ background: 'var(--surface-2)' }}
-    >
-      <MapPin className="w-8 h-8" style={{ color: 'var(--text-muted)' }} />
+    <div className="w-full h-full flex items-center justify-center animate-pulse bg-[var(--surface-2)]">
+      <MapPin className="w-8 h-8 text-[var(--text-muted)]" />
     </div>
   );
 }
@@ -463,11 +385,11 @@ function EmptyState({
 }) {
   return (
     <div className="text-center py-12 px-4">
-      <Store className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
+      <Store className="w-10 h-10 mx-auto mb-3 text-[var(--text-muted)]" />
       <h3 className="text-base font-semibold mb-1">
         No venues in {city.name} yet
       </h3>
-      <p className="text-xs mb-6" style={{ color: 'var(--text-muted)' }}>
+      <p className="text-xs mb-6 text-[var(--text-muted)]">
         Venues are joining Artwalls every week. Check back soon or try a nearby city.
       </p>
       {nearbyCities.length > 0 && (
@@ -477,12 +399,7 @@ function EmptyState({
               key={`${c.name}-${c.state}`}
               type="button"
               onClick={() => onCityClick(c)}
-              className="text-xs px-3 py-1.5 rounded-full font-medium transition-colors"
-              style={{
-                background: 'var(--surface-2)',
-                color: 'var(--text)',
-                border: '1px solid var(--border)',
-              }}
+              className="text-xs px-3 py-1.5 rounded-full font-medium transition-colors bg-[var(--surface-2)] text-[var(--text)] border border-[var(--border)] hover:bg-[var(--surface-3)] hover:border-[var(--blue)]"
             >
               {c.name}, {c.state}
             </button>

@@ -14,6 +14,7 @@ import { Footer } from './components/Footer';
 import { AgreementBanner } from './components/legal/AgreementBanner';
 import { ProfileCompletion } from './components/ProfileCompletion';
 import { AriaLiveRegion } from './components/AriaLiveRegion';
+import { PublicLayout } from './components/layout/PublicLayout';
 
 // ─── Lazy-loaded route components ─────────────────────────────────────────────
 // Centralised in src/routes/lazyPages.ts; App.tsx only imports what it renders directly.
@@ -936,7 +937,11 @@ export default function App() {
 
   // /find — city selector (public venue map entry point)
   if (pathname === '/find' || pathname === '/find/') {
-    return <Suspense fallback={<PageLoader />}><FindCitySelector onNavigate={handleNavigate} /></Suspense>;
+    return (
+      <PublicLayout onNavigate={handleNavigate} currentPage="find-art">
+        <Suspense fallback={<PageLoader />}><FindCitySelector onNavigate={handleNavigate} /></Suspense>
+      </PublicLayout>
+    );
   }
 
   // /find/:citySlug — city venue map (map + list split view)
@@ -944,7 +949,11 @@ export default function App() {
     const parts = pathname.split('/').filter(Boolean);
     const citySlug = parts[1] || '';
     if (citySlug) {
-      return <Suspense fallback={<PageLoader />}><CityVenueMap citySlug={citySlug} /></Suspense>;
+      return (
+        <PublicLayout onNavigate={handleNavigate} currentPage="find-art" hideFooter>
+          <Suspense fallback={<PageLoader />}><CityVenueMap citySlug={citySlug} /></Suspense>
+        </PublicLayout>
+      );
     }
   }
 
@@ -1115,7 +1124,7 @@ export default function App() {
     }
 
     return (
-      <div className="min-h-screen flex flex-col bg-[var(--bg)]">
+      <PublicLayout onNavigate={handleNavigate} currentPage="login" hideNav hideFooter={false}>
         <StructuredData data={siteSchemas()} />
         <SEO
           title="Artwalls — Art on Every Wall"
@@ -1125,42 +1134,12 @@ export default function App() {
           twitterCard="summary_large_image"
           ogImage="https://artwalls.space/og-image.png"
         />
-        <div className="flex-1">
-          {currentPage === 'forgot-password' ? (
-            <Suspense fallback={<PageLoader />}><ForgotPassword onBack={() => setCurrentPage('login')} /></Suspense>
-          ) : (
-            <Login onLogin={handleLogin} onNavigate={handleNavigate} />
-          )}
-        </div>
-        <div className="border-t border-[var(--border)] bg-[var(--surface-2)]">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-[var(--text-muted)]">
-            <p className="text-center sm:text-left">© 2026 Artwalls. All rights reserved.</p>
-            <div className="flex items-center gap-4">
-              <a
-                href="/privacy-policy"
-                onClick={(e) => { e.preventDefault(); handleNavigate('privacy-policy'); }}
-                className="hover:text-[var(--text)] transition-colors"
-              >
-                Privacy Policy
-              </a>
-              <a
-                href="/terms-of-service"
-                onClick={(e) => { e.preventDefault(); handleNavigate('terms-of-service'); }}
-                className="hover:text-[var(--text)] transition-colors"
-              >
-                Terms of Service
-              </a>
-              <a
-                href="/policies"
-                onClick={(e) => { e.preventDefault(); handleNavigate('policies'); }}
-                className="hover:text-[var(--text)] transition-colors"
-              >
-                Policies
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
+        {currentPage === 'forgot-password' ? (
+          <Suspense fallback={<PageLoader />}><ForgotPassword onBack={() => setCurrentPage('login')} /></Suspense>
+        ) : (
+          <Login onLogin={handleLogin} onNavigate={handleNavigate} />
+        )}
+      </PublicLayout>
     );
   }
 
