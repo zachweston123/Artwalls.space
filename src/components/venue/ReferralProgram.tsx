@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { CheckCircle, Users, Gift } from 'lucide-react';
 import { PageHeroHeader } from '../PageHeroHeader';
+import { apiPost } from '../../lib/api';
 
 interface ReferralProgramProps {
   onNavigate?: (page: string) => void;
@@ -28,18 +29,11 @@ export function ReferralProgram({ onNavigate }: ReferralProgramProps) {
     e.preventDefault();
 
     try {
-      const response = await fetch('http://localhost:4242/api/referrals', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        setSubmitted(true);
-        setTimeout(() => {
-          onNavigate?.('venue-dashboard');
-        }, 3000);
-      }
+      await apiPost('/api/referrals', formData);
+      setSubmitted(true);
+      setTimeout(() => {
+        onNavigate?.('venue-dashboard');
+      }, 3000);
     } catch (error) {
       console.error('Submission failed:', error);
     }
@@ -114,19 +108,19 @@ export function ReferralProgram({ onNavigate }: ReferralProgramProps) {
               <div className="bg-[var(--surface)] rounded-lg p-8 border border-[var(--border)]">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
-                    <h4 className="font-semibold text-[var(--text)] mb-2">For Venues</h4>
+                    <h4 className="font-semibold text-[var(--text)] mb-2">For Venues (you)</h4>
                     <ul className="space-y-2 text-[var(--text-muted)] text-sm">
-                      <li>✓ Successful referral = 30-day featured placement</li>
-                      <li>✓ They'll appear in "Featured Spaces" section</li>
-                      <li>✓ Extra visibility = more artist connections</li>
+                      <li>✓ 30-day featured placement when they join</li>
+                      <li>✓ Appear in "Featured Spaces" section</li>
+                      <li>✓ More visibility = more artist connections</li>
                     </ul>
                   </div>
                   <div>
-                    <h4 className="font-semibold text-[var(--text)] mb-2">For Artists</h4>
+                    <h4 className="font-semibold text-[var(--text)] mb-2">For Artists who refer</h4>
                     <ul className="space-y-2 text-[var(--text-muted)] text-sm">
-                      <li>✓ Successful referral = 30-day featured placement</li>
-                      <li>✓ They'll appear in "Featured Artists" section</li>
-                      <li>✓ Extra visibility = more venue connections</li>
+                      <li>✓ 1 free month of Starter when venue publishes first call</li>
+                      <li>✓ Expand your network of local venues</li>
+                      <li>✓ Help build the art community in your city</li>
                     </ul>
                   </div>
                 </div>

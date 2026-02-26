@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { apiPost } from '../../lib/api';
-import { CheckCircle, AlertCircle } from 'lucide-react';
+import { CheckCircle, AlertCircle, Gift } from 'lucide-react';
 
 interface ArtistInviteVenueProps {
   onNavigate?: (page: string) => void;
@@ -88,6 +88,17 @@ export function ArtistInviteVenue({ onNavigate }: ArtistInviteVenueProps) {
           <span>{error}</span>
         </div>
       )}
+
+      {/* Reward callout */}
+      <div className="flex items-start gap-3 bg-[var(--surface-1)] border border-[var(--border)] rounded-xl p-4">
+        <Gift className="w-5 h-5 text-[var(--blue)] shrink-0 mt-0.5" />
+        <div>
+          <p className="text-sm font-medium text-[var(--text)]">Earn 1 free month of Starter</p>
+          <p className="text-xs text-[var(--text-muted)] mt-0.5">
+            When your invited venue signs up and publishes their first call for art, you get a free month of Starter ($9 value).
+          </p>
+        </div>
+      </div>
 
       <form onSubmit={handleSubmit} className="bg-[var(--surface-1)] border border-[var(--border)] rounded-2xl p-6 space-y-5">
         <div>

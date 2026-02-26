@@ -22,4 +22,9 @@ export type {
   ArtworkViewProperties,
   CheckoutStartProperties,
   PurchaseSuccessProperties,
+  SignupCompleteProperties,
+  FirstArtworkPublishedProperties,
+  FirstCallPublishedProperties,
+  FirstApplicationSubmittedProperties,
+  TimeToFirstWinProperties,
 } from './types';

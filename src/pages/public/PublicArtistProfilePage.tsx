@@ -9,7 +9,7 @@
  */
 
 import { useEffect, useState, useCallback } from 'react';
-import { Loader2, Palette } from 'lucide-react';
+import { Loader2, Palette, Share2, MapPin, Sparkles } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { apiGet } from '../../lib/api';
 import { ArtistProfilePublicView, type ArtistPublicData } from '../../components/shared/ArtistProfilePublicView';
@@ -350,6 +350,53 @@ export function PublicArtistProfilePage({ slug }: Props) {
             {/* Shared profile header card (matches in-app profile style) */}
             <ArtistProfilePublicView artist={artist} variant="full" />
 
+            {/* ── Share + Invite Actions ── */}
+            <div className="flex flex-wrap items-center gap-3 mt-4">
+              <button
+                onClick={() => {
+                  const url = canonicalUrl;
+                  if (navigator.share) {
+                    navigator.share({ title: `${artist.name} on Artwalls`, url }).catch(() => {});
+                  } else {
+                    navigator.clipboard.writeText(url).then(() => {
+                      alert('Profile link copied!');
+                    }).catch(() => {});
+                  }
+                }}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--border)] text-sm text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+              >
+                <Share2 className="w-4 h-4" /> Share Profile
+              </button>
+              <a
+                href={`mailto:?subject=${encodeURIComponent(`Check out ${artist.name} on Artwalls`)}&body=${encodeURIComponent(`I found this artist on Artwalls: ${canonicalUrl}`)}`}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--blue)] text-[var(--on-blue)] text-sm font-medium hover:bg-[var(--blue-hover)] transition-colors"
+              >
+                Invite to My Venue
+              </a>
+            </div>
+
+            {/* ── Currently Showing At ── */}
+            {(() => {
+              const showing = artworks.filter(aw => aw.venueName);
+              const uniqueVenues = [...new Map(showing.map(aw => [aw.venueName, aw])).values()];
+              if (uniqueVenues.length === 0) return null;
+              return (
+                <section className="mt-8">
+                  <h2 className="text-lg font-semibold text-[var(--text)] mb-3 flex items-center gap-2">
+                    <MapPin className="w-5 h-5 text-[var(--accent)]" /> Currently showing at
+                  </h2>
+                  <div className="flex flex-wrap gap-2">
+                    {uniqueVenues.map((aw) => (
+                      <span key={aw.venueName} className="inline-flex items-center gap-1 px-3 py-1.5 bg-[var(--surface-1)] border border-[var(--border)] rounded-full text-sm text-[var(--text)]">
+                        {aw.venueName}
+                        {aw.venueCity && <span className="text-[var(--text-muted)] text-xs">· {aw.venueCity}</span>}
+                      </span>
+                    ))}
+                  </div>
+                </section>
+              );
+            })()}
+
             {/* ── On Display Now ── */}
             <section className="mt-10">
               <h2 className="text-2xl mb-6 text-[var(--text)]">On Display Now</h2>
@@ -406,6 +453,34 @@ export function PublicArtistProfilePage({ slug }: Props) {
           </>
         )}
       </main>
+
+      {/* ── Soft Subscription Upsell ── */}
+      {!loading && artist && (
+        <section className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
+          <div className="bg-gradient-to-r from-[var(--blue)]/5 to-[var(--accent)]/5 border border-[var(--blue)]/20 rounded-xl p-6 sm:p-8 text-center">
+            <Sparkles className="w-6 h-6 text-[var(--accent)] mx-auto mb-2" />
+            <h3 className="text-lg font-semibold text-[var(--text)] mb-2">Are you an artist?</h3>
+            <p className="text-sm text-[var(--text-muted)] max-w-lg mx-auto mb-4">
+              Join Artwalls to create your own profile, publish artwork, and get placed in venues near you.
+              Free artists get 1 artwork listing. Subscribers unlock more artworks, featured placement, and up to 85% of every sale.
+            </p>
+            <div className="flex flex-wrap justify-center gap-3">
+              <a
+                href="/"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[var(--blue)] text-[var(--on-blue)] text-sm font-medium rounded-lg hover:bg-[var(--blue-hover)] transition-colors"
+              >
+                Create Your Profile — Free
+              </a>
+              <a
+                href="/#plans-pricing"
+                className="inline-flex items-center gap-2 px-5 py-2.5 border border-[var(--blue)] text-[var(--blue)] text-sm font-medium rounded-lg hover:bg-[var(--blue)]/5 transition-colors"
+              >
+                See Plans
+              </a>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Minimal public footer */}
       <footer className="border-t border-[var(--border)] mt-16 bg-[var(--surface-1)]">

@@ -85,6 +85,7 @@ export const PricingPage = lazy(() => import('../components/pricing/PricingPage'
 // ─── Calls ─────────────────────────────────────────────────────────────────────
 export const CallPublicPage = lazy(() => import('../components/calls/CallPublicPage').then(m => ({ default: m.CallPublicPage })));
 export const CallApplyPage = lazy(() => import('../components/calls/CallApplyPage').then(m => ({ default: m.CallApplyPage })));
+export const CallsBrowsePage = lazy(() => import('../pages/CallsBrowsePage').then(m => ({ default: m.CallsBrowsePage })));
 
 // ─── Admin ─────────────────────────────────────────────────────────────────────
 export const AdminSidebar = lazy(() => import('../components/admin/AdminSidebar').then(m => ({ default: m.AdminSidebar })));

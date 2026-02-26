@@ -41,6 +41,7 @@ import {
   PricingPage,
   CallPublicPage,
   CallApplyPage,
+  CallsBrowsePage,
   VenueHostingPolicy,
   VenueApplication,
   VenueProfilePage,
@@ -859,6 +860,11 @@ export default function App() {
     return <Suspense fallback={<PageLoader />}><VenueInviteLanding /></Suspense>;
   }
 
+  // /calls — public browse page for all open calls
+  if (pathname === '/calls' || pathname === '/calls/') {
+    return <Suspense fallback={<PageLoader />}><CallsBrowsePage /></Suspense>;
+  }
+
   // Direct-route override for calls pages
   if (pathname.startsWith('/calls/')) {
     const parts = pathname.split('/').filter(Boolean);
@@ -873,6 +879,15 @@ export default function App() {
     const slug = parts[2] || '';
     if (slug) {
       return <Suspense fallback={<PageLoader />}><PublicArtistProfilePage slug={slug} /></Suspense>;
+    }
+  }
+
+  // /artist/:handle — clean public artist URL (alias for /p/artist/:handle)
+  if (pathname.startsWith('/artist/') && !pathname.startsWith('/artists/')) {
+    const parts = pathname.split('/').filter(Boolean);
+    const handle = parts[1] || '';
+    if (handle) {
+      return <Suspense fallback={<PageLoader />}><PublicArtistProfilePage slug={handle} /></Suspense>;
     }
   }
 

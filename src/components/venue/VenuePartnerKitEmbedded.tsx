@@ -166,6 +166,85 @@ interface VenuePartnerKitEmbeddedProps {
   onNavigate?: (page: string) => void;
 }
 
+/**
+ * "Get my venue live" intake form — stores in DB + notifies admin.
+ */
+function GetMyVenueLiveForm() {
+  const [form, setForm] = useState({ venue_name: '', contact_name: '', contact_email: '', city: '', notes: '', company: '' });
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    if (form.company) { setSubmitted(true); return; } // honeypot
+    if (!form.venue_name || !form.contact_email) { setError('Venue name and email are required.'); return; }
+
+    try {
+      const response = await fetch('/api/support/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: form.contact_email,
+          message: `[Get My Venue Live] Venue: ${form.venue_name}, Contact: ${form.contact_name}, City: ${form.city}, Notes: ${form.notes}`,
+          role_context: 'venue',
+          page_source: 'partner_kit_intake',
+        }),
+      });
+      if (!response.ok) throw new Error('Failed');
+      setSubmitted(true);
+    } catch {
+      setError('Unable to submit. Please try again.');
+    }
+  };
+
+  return (
+    <div className="mb-12 bg-gradient-to-r from-[var(--green)]/5 to-[var(--accent)]/5 border border-[var(--green)]/30 rounded-lg p-8">
+      <h2 className="text-2xl font-bold text-[var(--text)] mb-2">Get My Venue Live</h2>
+      <p className="text-[var(--text-muted)] mb-6">
+        Fill out this quick form and our team will help you get set up within 48 hours.
+      </p>
+
+      {submitted ? (
+        <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
+          <p className="text-green-700 font-semibold">We've got your info!</p>
+          <p className="text-sm text-green-600 mt-1">We'll reach out within 48 hours to help you go live.</p>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {error && <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-sm text-red-700">{error}</div>}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-[var(--text)] mb-1">Venue Name *</label>
+              <input type="text" value={form.venue_name} onChange={e => setForm({ ...form, venue_name: e.target.value })} className="w-full px-4 py-2 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-[var(--text)]" placeholder="The Corner Gallery" />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-[var(--text)] mb-1">Contact Name</label>
+              <input type="text" value={form.contact_name} onChange={e => setForm({ ...form, contact_name: e.target.value })} className="w-full px-4 py-2 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-[var(--text)]" placeholder="Your name" />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-[var(--text)] mb-1">Email *</label>
+              <input type="email" value={form.contact_email} onChange={e => setForm({ ...form, contact_email: e.target.value })} className="w-full px-4 py-2 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-[var(--text)]" placeholder="you@venue.com" />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-[var(--text)] mb-1">City</label>
+              <input type="text" value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} className="w-full px-4 py-2 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-[var(--text)]" placeholder="Los Angeles" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-[var(--text)] mb-1">Anything else?</label>
+            <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} className="w-full px-4 py-2 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-[var(--text)] resize-none" rows={2} placeholder="Number of walls, preferred art styles, opening date…" />
+          </div>
+          <input type="hidden" name="company" value={form.company} onChange={e => setForm({ ...form, company: e.target.value })} />
+          <button type="submit" className="px-6 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg font-semibold hover:opacity-90 transition-opacity">
+            Get Started
+          </button>
+        </form>
+      )}
+    </div>
+  );
+}
+
 export function VenuePartnerKitEmbedded({ onNavigate }: VenuePartnerKitEmbeddedProps) {
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     economics: true,
@@ -606,18 +685,115 @@ export function VenuePartnerKitEmbedded({ onNavigate }: VenuePartnerKitEmbeddedP
         {/* Next Steps */}
         <ContactFormSection />
 
+        {/* ── Wall Spec Checklist + Install-Day Expectations ── */}
+        <PartnerKitSection
+          id="wall-spec"
+          title="Wall Spec & Install-Day Checklist"
+          icon={<CheckCircle className="w-6 h-6" />}
+          expanded={expandedSections.wallSpec ?? false}
+          onToggle={() => toggleSection('wallSpec')}
+        >
+          <div className="space-y-6">
+            <p className="text-[var(--text-muted)]">
+              Before an artist shows up, make sure each wall is ready. Use this checklist for every new display spot.
+            </p>
+
+            <div className="space-y-3">
+              <p className="font-semibold text-[var(--text)]">Wall Readiness</p>
+              {[
+                'Measure wall dimensions (width × height) and note in your Artwalls profile',
+                'Check weight capacity — can the wall hold the artwork safely?',
+                'Verify adequate lighting (natural or spot) reaches the display area',
+                'Ensure hanging hardware is in place (hooks, picture rail, or D-ring mounts)',
+                'Clear the wall area of furniture, signage, or obstructions',
+                'Photograph the empty wall from 6 ft away, straight-on',
+              ].map((item, i) => (
+                <div key={i} className="flex items-start gap-3 p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)]">
+                  <CheckCircle className="w-4 h-4 text-[var(--accent)] shrink-0 mt-0.5" />
+                  <span className="text-sm text-[var(--text-muted)]">{item}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="space-y-3">
+              <p className="font-semibold text-[var(--text)]">Install-Day Expectations</p>
+              {[
+                'Artist arrives with wrapped artwork; allow 15–30 min for install',
+                'Venue provides access to wall and any needed step stool or ladder',
+                'Both parties confirm placement, level, and lighting before artist leaves',
+                'Venue places QR label next to artwork within 24 hours',
+                'Take a "live" photo together — great for social media!',
+              ].map((item, i) => (
+                <div key={i} className="flex items-start gap-3 p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)]">
+                  <Zap className="w-4 h-4 text-[var(--accent)] shrink-0 mt-0.5" />
+                  <span className="text-sm text-[var(--text-muted)]">{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </PartnerKitSection>
+
+        {/* ── Wall Photo Guidance ────────────────────────── */}
+        <PartnerKitSection
+          id="wall-photos"
+          title="Wall Photo Examples & Guidance"
+          icon={<BookOpen className="w-6 h-6" />}
+          expanded={expandedSections.wallPhotos ?? false}
+          onToggle={() => toggleSection('wallPhotos')}
+        >
+          <div className="space-y-4">
+            <p className="text-[var(--text-muted)]">
+              Great wall photos attract better artist applications. Here's what to aim for:
+            </p>
+            {[
+              {
+                title: '✅ Good: Clean, well-lit, straight-on shot',
+                desc: 'Stand 6–8 feet back, center the wall, make sure the floor line is level. Natural daylight works best.',
+              },
+              {
+                title: '✅ Good: Context shot with surroundings',
+                desc: 'Show 2–3 feet of surrounding space so artists can imagine their work in your environment.',
+              },
+              {
+                title: '✅ Good: Detail shot of hardware/lighting',
+                desc: 'Close-up of your hanging system or spotlight rig helps artists plan their install.',
+              },
+              {
+                title: '❌ Avoid: Dark, blurry, or angled shots',
+                desc: 'Low-quality photos make your space look less inviting. Take 30 seconds to frame it right.',
+              },
+            ].map((example, idx) => (
+              <div key={idx} className="p-4 bg-[var(--surface-2)] rounded-lg border border-[var(--border)]">
+                <p className="font-semibold text-[var(--text)] text-sm mb-1">{example.title}</p>
+                <p className="text-sm text-[var(--text-muted)]">{example.desc}</p>
+              </div>
+            ))}
+          </div>
+        </PartnerKitSection>
+
+        {/* ── "Get My Venue Live" intake form ────────────── */}
+        <GetMyVenueLiveForm />
+
         <div className="mt-12 p-8 bg-gradient-to-r from-[var(--accent)]/10 to-[var(--accent)]/5 border border-[var(--accent)]/30 rounded-lg">
           <h2 className="text-2xl font-bold text-[var(--text)] mb-4">Start Your Art Journey</h2>
           <p className="text-[var(--text-muted)] mb-6">
             You have the guide. Now bring the art to your walls and the community to your door.
           </p>
-          <button
-            onClick={() => onNavigate?.('venue-dashboard')}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-[var(--accent)] text-[var(--accent-contrast)] rounded-lg font-semibold hover:opacity-90 transition"
-          >
-            Go to Dashboard
-            <ArrowRight className="w-5 h-5" />
-          </button>
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={() => onNavigate?.('venue-dashboard')}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-[var(--accent)] text-[var(--accent-contrast)] rounded-lg font-semibold hover:opacity-90 transition"
+            >
+              Go to Dashboard
+              <ArrowRight className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => onNavigate?.('venue-calls')}
+              className="inline-flex items-center gap-2 px-6 py-3 border border-[var(--accent)] text-[var(--accent)] rounded-lg font-semibold hover:bg-[var(--accent)]/5 transition"
+            >
+              Post Your First Call
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -17,6 +17,8 @@ import {
   ChevronDown,
   List,
   Map as MapIcon,
+  Megaphone,
+  Sparkles,
 } from 'lucide-react';
 import { getCityBySlug, toCitySlug, getUniqueCities, getNearestCities } from '../data/cities';
 import type { City } from '../data/cities';
@@ -48,6 +50,7 @@ export function CityVenueMap({ citySlug }: CityVenueMapProps) {
   const [selectedVenueId, setSelectedVenueId] = useState<string | null>(null);
   const [mobileView, setMobileView] = useState<'map' | 'list'>('map');
   const [filterQuery, setFilterQuery] = useState('');
+  const [filterChip, setFilterChip] = useState<'all' | 'accepting' | 'new'>('all');
 
   // Nearby cities
   const nearbyCities = useMemo(() => {
@@ -84,17 +87,28 @@ export function CityVenueMap({ citySlug }: CityVenueMapProps) {
     };
   }, [citySlug, city]);
 
-  // Filter venues by search
+  // Filter venues by search + chip filters
   const filteredVenues = useMemo(() => {
-    if (!filterQuery.trim()) return venues;
+    let result = venues;
+
+    // Chip filters
+    if (filterChip === 'accepting') {
+      result = result.filter((v) => v.hasOpenCalls);
+    } else if (filterChip === 'new') {
+      const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+      result = result.filter((v) => v.createdAt && new Date(v.createdAt).getTime() > weekAgo);
+    }
+
+    // Text search
+    if (!filterQuery.trim()) return result;
     const q = filterQuery.toLowerCase();
-    return venues.filter(
+    return result.filter(
       (v) =>
         v.name.toLowerCase().includes(q) ||
         (v.type && v.type.toLowerCase().includes(q)) ||
         (v.address && v.address.toLowerCase().includes(q))
     );
-  }, [venues, filterQuery]);
+  }, [venues, filterQuery, filterChip]);
 
   // Navigate to venue profile
   const handleViewProfile = useCallback((venue: MapVenue) => {
@@ -234,6 +248,47 @@ export function CityVenueMap({ citySlug }: CityVenueMapProps) {
               </button>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Filter chips */}
+      <div
+        className="border-b px-4 sm:px-6 py-2"
+        style={{ background: 'var(--bg)', borderColor: 'var(--border)' }}
+      >
+        <div className="max-w-[1600px] mx-auto flex items-center gap-2 overflow-x-auto">
+          {([
+            { key: 'all', label: 'All venues' },
+            { key: 'accepting', label: 'Accepting submissions', icon: Megaphone },
+            { key: 'new', label: 'New this week', icon: Sparkles },
+          ] as const).map(({ key, label, icon: Icon }) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setFilterChip(filterChip === key ? 'all' : key)}
+              className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full border transition-colors"
+              style={{
+                background: filterChip === key ? 'var(--blue)' : 'var(--surface-1)',
+                color: filterChip === key ? '#fff' : 'var(--text)',
+                borderColor: filterChip === key ? 'var(--blue)' : 'var(--border)',
+              }}
+            >
+              {Icon && <Icon className="w-3 h-3" />}
+              {label}
+            </button>
+          ))}
+          <a
+            href="/calls"
+            className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full border transition-colors hover:bg-[var(--surface-2)]"
+            style={{
+              background: 'var(--surface-1)',
+              color: 'var(--text)',
+              borderColor: 'var(--border)',
+            }}
+          >
+            <Megaphone className="w-3 h-3" />
+            Browse all calls
+          </a>
         </div>
       </div>
 

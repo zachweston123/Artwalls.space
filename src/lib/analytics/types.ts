@@ -114,6 +114,35 @@ export interface PageViewProperties {
   path: string;
 }
 
+// ─── First-Win Measurement Events ────────────────────────────────────────────
+
+export interface SignupCompleteProperties {
+  role: 'artist' | 'venue';
+  method: 'email' | 'google';
+}
+
+export interface FirstArtworkPublishedProperties {
+  artworkId: string;
+  /** Minutes since signup (client-computed) */
+  minutesSinceSignup?: number;
+}
+
+export interface FirstCallPublishedProperties {
+  callId?: string;
+  minutesSinceSignup?: number;
+}
+
+export interface FirstApplicationSubmittedProperties {
+  applicationId?: string;
+  minutesSinceSignup?: number;
+}
+
+export interface TimeToFirstWinProperties {
+  role: 'artist' | 'venue';
+  /** Minutes from signup to all checklist items complete */
+  minutes: number;
+}
+
 // ─── Union of all event names ────────────────────────────────────────────────
 
 export type AnalyticsEventName =
@@ -128,7 +157,12 @@ export type AnalyticsEventName =
   | 'qr_scan'
   | 'artwork_view'
   | 'checkout_start'
-  | 'purchase_success';
+  | 'purchase_success'
+  | 'signup_complete'
+  | 'first_artwork_published'
+  | 'first_call_published'
+  | 'first_application_submitted'
+  | 'time_to_first_win';
 
 /**
  * Union type for all event property bags.
@@ -146,7 +180,12 @@ export type AnalyticsEventProperties =
   | QrScanProperties
   | ArtworkViewProperties
   | CheckoutStartProperties
-  | PurchaseSuccessProperties;
+  | PurchaseSuccessProperties
+  | SignupCompleteProperties
+  | FirstArtworkPublishedProperties
+  | FirstCallPublishedProperties
+  | FirstApplicationSubmittedProperties
+  | TimeToFirstWinProperties;
 
 /**
  * Envelope sent to the /api/analytics endpoint.

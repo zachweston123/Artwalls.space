@@ -15,6 +15,7 @@ import { FoundingArtistBanner } from './FoundingArtistBanner';
 import { FoundingArtistBadge } from './FoundingArtistBadge';
 import { AnnouncementBanner } from '../admin/AnnouncementBanner';
 import { useAnnouncements } from '../../hooks/useAnnouncements';
+import { GettingStartedChecklist } from '../shared/GettingStartedChecklist';
 
 /**
  * ConnectStatus — Stripe Connect payout state.
@@ -278,6 +279,9 @@ export function ArtistDashboard({ onNavigate, user }: ArtistDashboardProps) {
       {!isFoundingArtist && (
         <FoundingArtistBanner variant="dashboard" className="mb-4" />
       )}
+
+      {/* ═══════ GETTING STARTED CHECKLIST ═══════ */}
+      <GettingStartedChecklist role="artist" userId={user.id} onNavigate={onNavigate} />
 
       {/* ═══════ KPI STAT CARDS (top row) ═══════ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">

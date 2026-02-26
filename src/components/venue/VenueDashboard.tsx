@@ -13,6 +13,7 @@ import { FoundingVenueCard } from './FoundingVenueCard';
 import { VenueProfileCompleteness } from './VenueProfileCompleteness';
 import { AnnouncementBanner } from '../admin/AnnouncementBanner';
 import { useAnnouncements } from '../../hooks/useAnnouncements';
+import { GettingStartedChecklist } from '../shared/GettingStartedChecklist';
 
 interface VenueDashboardProps {
   onNavigate: (page: string) => void;
@@ -166,6 +167,11 @@ export function VenueDashboard({ onNavigate, user, hasAcceptedAgreement }: Venue
         <div className="mb-6">
           <VenueProfileCompleteness userId={user.id} onNavigate={onNavigate} />
         </div>
+      )}
+
+      {/* Getting Started Checklist (first-win) */}
+      {user && (
+        <GettingStartedChecklist role="venue" userId={user.id} onNavigate={onNavigate} />
       )}
 
       {user && (

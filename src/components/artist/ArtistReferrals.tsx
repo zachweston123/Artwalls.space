@@ -14,16 +14,16 @@ interface Referral {
 const statusLabel = (status: string) => {
   switch (status) {
     case 'opened':
-      return { label: 'Opened', icon: Mail };
+      return { label: 'Opened invite', icon: Mail };
     case 'venue_signed_up':
       return { label: 'Signed up', icon: CheckCircle };
     case 'qualified':
-      return { label: 'Qualified', icon: Gift };
+      return { label: 'Published first call — reward pending', icon: Gift };
     case 'reward_granted':
-      return { label: 'Reward granted', icon: Gift };
+      return { label: '1 month Starter earned!', icon: Gift };
     case 'sent':
     default:
-      return { label: 'Sent', icon: Mail };
+      return { label: 'Invite sent', icon: Mail };
   }
 };
 
@@ -86,7 +86,7 @@ export function ArtistReferrals() {
 
       <div className="text-xs text-[var(--text-muted)] flex items-center gap-2">
         <Clock className="w-4 h-4" />
-        Status updates automatically when a venue creates their first wall or call.
+        You earn 1 free month of Starter when an invited venue publishes their first call.
       </div>
     </div>
   );

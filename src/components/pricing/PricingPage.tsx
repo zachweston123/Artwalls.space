@@ -346,6 +346,106 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
         <FoundingArtistBanner variant="pricing" />
       </div>
 
+      {/* ── Tier Picker — "How many active artworks?" ──────── */}
+      <div className="max-w-2xl mx-auto px-4 mb-10">
+        <p className="text-center text-sm text-[var(--text-muted)] mb-3">How many active artworks do you want?</p>
+        <div className="flex items-center justify-center gap-2 flex-wrap">
+          {([
+            { label: '1', plan: 'free' as const },
+            { label: 'Up to 10', plan: 'starter' as const },
+            { label: 'Up to 30', plan: 'growth' as const },
+            { label: 'Unlimited', plan: 'pro' as const },
+          ]).map(({ label, plan: pickPlan }) => (
+            <button
+              key={pickPlan}
+              onClick={() => {
+                // Scroll to the matching plan card
+                const el = document.getElementById(`plan-card-${pickPlan}`);
+                el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                el?.classList.add('ring-2', 'ring-[var(--accent)]');
+                setTimeout(() => el?.classList.remove('ring-2', 'ring-[var(--accent)]'), 2000);
+              }}
+              className={`px-4 py-2 rounded-full text-sm font-medium border transition-all ${
+                pickPlan === currentPlan
+                  ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+                  : 'bg-[var(--surface-1)] text-[var(--text)] border-[var(--border)] hover:border-[var(--accent)] hover:text-[var(--accent)]'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── "Who it's for" blocks ─────────────────────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10 px-2 sm:px-4 lg:px-1">
+        {([
+          {
+            id: 'free',
+            title: 'Free',
+            bestFor: 'Best for trying Artwalls',
+            situations: [
+              'You want to test the waters with 1 artwork',
+              'You\'re curious if local venues will accept your work',
+              'You want to see how the QR-to-sale flow works',
+            ],
+            outcome: 'You\'ll have a live artwork in a venue within your first week.',
+          },
+          {
+            id: 'starter',
+            title: 'Starter',
+            bestFor: 'Best for emerging artists',
+            situations: [
+              'You have 2\u201310 pieces ready to show',
+              'You\'re applying to a few venues in your city',
+              'You want to keep 80% instead of 60% per sale',
+            ],
+            outcome: 'You\'ll have art in multiple venues and sales rolling in.',
+          },
+          {
+            id: 'growth',
+            title: 'Growth',
+            bestFor: 'Best for active, full-time artists',
+            situations: [
+              'You\'re juggling 10\u201330 artworks across venues',
+              'You need priority visibility to get picked first',
+              'You want unlimited venue applications',
+            ],
+            outcome: 'You\'ll be a go-to artist for venues in your area.',
+          },
+          {
+            id: 'pro',
+            title: 'Pro',
+            bestFor: 'Best for high-volume professionals',
+            situations: [
+              'You have an extensive catalog and multiple shows',
+              'You want free damage protection on every piece',
+              'You\'re ready for featured placement and maximum earnings',
+            ],
+            outcome: 'You\'ll run your art business end-to-end from one dashboard.',
+          },
+        ]).map((tier) => (
+          <div
+            key={tier.id}
+            className="bg-[var(--surface-1)] border border-[var(--border)] rounded-xl p-4 hover:shadow-sm transition-shadow"
+          >
+            <p className="text-xs font-semibold text-[var(--accent)] mb-1">{tier.title}</p>
+            <p className="text-sm font-medium text-[var(--text)] mb-2">{tier.bestFor}</p>
+            <ul className="space-y-1.5 mb-3">
+              {tier.situations.map((s, i) => (
+                <li key={i} className="flex items-start gap-2 text-xs text-[var(--text-muted)]">
+                  <Check className="w-3.5 h-3.5 text-[var(--accent)] shrink-0 mt-0.5" />
+                  <span>{s}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="text-xs text-[var(--text)] font-medium border-t border-[var(--border)] pt-2">
+              \u2192 {tier.outcome}
+            </p>
+          </div>
+        ))}
+      </div>
+
       {/* ── Plan Cards ─────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 lg:gap-8 mb-12 px-2 sm:px-4 lg:px-1">
         {plans.map((plan) => {
@@ -353,6 +453,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
           return (
             <div
               key={plan.id}
+              id={`plan-card-${plan.id}`}
               className={`relative ${plan.popular ? 'pt-3' : ''}`}
             >
               {/* "Most Popular" badge — sits in the outer wrapper so it's never clipped */}
