@@ -168,10 +168,12 @@ export async function handleArtists(wc: WorkerContext): Promise<Response | null>
     // so the ilike filter can match both "San Diego" and "San Diego, CA".
     const cityName = rawCity.includes(',') ? rawCity.split(',')[0].trim() : rawCity;
     
-    // Select only safe public fields — no email, no Stripe IDs, no payout info
+    // Use select('*') for resilience — column-specific selects fail with a
+    // 400 if any migration hasn't been applied yet.  The response mapping
+    // below only returns safe public fields (no email, Stripe IDs, etc.).
     let query = supabaseAdmin
       .from('artists')
-      .select('id,slug,name,city_primary,city_secondary,profile_photo_url,is_live,is_public,bio,art_types,is_founding_artist')
+      .select('*')
       .order('name', { ascending: true })
       .limit(50);
 
@@ -198,21 +200,45 @@ export async function handleArtists(wc: WorkerContext): Promise<Response | null>
       query = query.ilike('name', `%${q}%`);
     }
     
-    const { data, error } = await query;
+    let { data, error } = await query;
+
+    // Fallback: if the filtered query failed (e.g. is_public / is_live
+    // columns missing because a migration wasn't applied yet), retry
+    // with a plain unfiltered query so venues can still discover artists.
+    if (error) {
+      console.warn('[GET /api/artists] Filtered query failed, retrying unfiltered:', error.message);
+      let fallbackQuery = supabaseAdmin
+        .from('artists')
+        .select('*')
+        .order('name', { ascending: true })
+        .limit(50);
+
+      // Re-apply search filters that only depend on base-schema columns
+      if (q) {
+        fallbackQuery = fallbackQuery.ilike('name', `%${q}%`);
+      }
+
+      const fallback = await fallbackQuery;
+      data = fallback.data;
+      error = fallback.error;
+    }
+
     if (error) {
       console.error('[GET /api/artists] Query error:', error.message);
       return json({ error: error.message }, { status: 500 });
     }
 
-    // Fetch artwork counts for all returned artist IDs
-    const artistIds = (data || []).map(a => a.id);
+    // Fetch artwork counts for all returned artist IDs.
+    // NOTE: artworks table does NOT have is_public — filter by displayable
+    // statuses instead (available, active, sold).
+    const artistIds = (data || []).map((a: any) => a.id);
     let artworkCounts: Record<string, number> = {};
     if (artistIds.length > 0) {
       const { data: countData } = await supabaseAdmin
         .from('artworks')
         .select('artist_id')
         .in('artist_id', artistIds)
-        .eq('is_public', true);
+        .in('status', ['available', 'active', 'sold']);
       if (countData) {
         for (const row of countData) {
           artworkCounts[row.artist_id] = (artworkCounts[row.artist_id] || 0) + 1;
@@ -220,19 +246,20 @@ export async function handleArtists(wc: WorkerContext): Promise<Response | null>
       }
     }
 
-    // Return only safe public fields — no email or sensitive data
-    const artists = (data || []).map(a => ({ 
+    // Return only safe public fields — no email or sensitive data.
+    // Access all fields via (a as any) to handle missing columns gracefully.
+    const artists = (data || []).map((a: any) => ({ 
       id: a.id, 
-      slug: (a as any).slug || null,
-      name: a.name, 
+      slug: a.slug || null,
+      name: a.name || 'Artist', 
       profilePhotoUrl: a.profile_photo_url || null,
       location: a.city_primary || a.city_secondary || 'Local',
-      is_live: a.is_live,
+      is_live: a.is_live ?? null,
       openToNewPlacements: a.is_live !== false,  // null → true (default open)
-      bio: (a as any).bio || '',
-      artTypes: Array.isArray((a as any).art_types) ? (a as any).art_types : [],
+      bio: a.bio || '',
+      artTypes: Array.isArray(a.art_types) ? a.art_types : [],
       portfolioCount: artworkCounts[a.id] || 0,
-      isFoundingArtist: !!(a as any).is_founding_artist,
+      isFoundingArtist: !!a.is_founding_artist,
     }));
 
     // Include metadata so the frontend can diagnose empty results
