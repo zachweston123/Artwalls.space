@@ -85,7 +85,7 @@ export function createWorkerContext(
   function applySecurityHeaders(headers: Headers): void {
     headers.set('Access-Control-Allow-Origin', allowOrigin);
     headers.set('Access-Control-Allow-Methods', 'GET,POST,PATCH,OPTIONS');
-    headers.set('Access-Control-Allow-Headers', 'authorization, content-type, x-client-info, apikey');
+    headers.set('Access-Control-Allow-Headers', 'authorization, content-type, x-client-info, apikey, x-http-method-override');
     headers.set('Vary', 'Origin');
     headers.set('X-Content-Type-Options', 'nosniff');
     headers.set('X-Frame-Options', 'DENY');

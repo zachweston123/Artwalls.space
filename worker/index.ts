@@ -67,7 +67,7 @@ export default {
         headers: {
           'Access-Control-Allow-Origin': allowOrigin,
           'Access-Control-Allow-Methods': 'GET,POST,PATCH,OPTIONS',
-          'Access-Control-Allow-Headers': 'authorization, content-type, x-client-info, apikey',
+          'Access-Control-Allow-Headers': 'authorization, content-type, x-client-info, apikey, x-http-method-override',
           'Access-Control-Max-Age': '86400',
           'X-Content-Type-Options': 'nosniff',
           'X-Frame-Options': 'DENY',
@@ -97,7 +97,7 @@ export default {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': allowOrigin,
         'Access-Control-Allow-Methods': 'GET,POST,PATCH,OPTIONS',
-        'Access-Control-Allow-Headers': 'authorization, content-type, x-client-info, apikey',
+        'Access-Control-Allow-Headers': 'authorization, content-type, x-client-info, apikey, x-http-method-override',
         Vary: 'Origin',
       });
       return new Response(
