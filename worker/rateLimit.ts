@@ -221,6 +221,10 @@ export const ROUTE_LIMITS: Record<string, RateLimitRule[]> = {
     ipRule('connect-login-ip', 'connect-artist-login', 15, 60),
   ],
   // ── Stripe Connect (venue) ──
+  'stripe-connect-venue-onboard': [
+    ipRule('connect-vonboard-ip', 'connect-venue-onboard', 10, 60),
+    userRule('connect-vonboard-user', 'connect-venue-onboard', 20, 3600),
+  ],
   'stripe-connect-venue-create': [
     ipRule('connect-vcreate-ip', 'connect-venue-create', 10, 60),
     userRule('connect-vcreate-user', 'connect-venue-create', 20, 3600),

@@ -530,7 +530,19 @@ export async function handleStripe(wc: WorkerContext): Promise<Response | null> 
     const authErr = requireAuthOrFail(request, user);
     if (authErr) return authErr;
     if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
-    if (user!.user_metadata?.role !== 'venue') return json({ error: 'Venue role required' }, { status: 403 });
+    // Mirror artist pattern: only block explicit artists; allow null/undefined/venue roles.
+    // Many signup paths leave user_metadata.role unset — the old strict check (role !== 'venue')
+    // rejected those users with 403 "Venue role required".
+    if (user!.user_metadata?.role === 'artist') return json({ error: 'Venue endpoint — artist accounts should use the artist Connect flow' }, { status: 403 });
+
+    // Auto-heal: if user_metadata.role isn't 'venue', set it now so future
+    // requests (login-link, dashboard refreshes) work without a re-login.
+    if (user!.user_metadata?.role !== 'venue') {
+      await supabaseAdmin.auth.admin.updateUserById(user!.id, {
+        user_metadata: { ...user!.user_metadata, role: 'venue' },
+      }).catch((err: unknown) => console.warn('[venue-onboard] role heal failed:', err));
+    }
+
     const rlOnboard = await applyRateLimit('stripe-connect-venue-onboard', request);
     if (rlOnboard) return rlOnboard;
 
@@ -615,7 +627,7 @@ export async function handleStripe(wc: WorkerContext): Promise<Response | null> 
     const authErr = requireAuthOrFail(request, user);
     if (authErr) return authErr;
     if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
-    if (user!.user_metadata?.role !== 'venue') return json({ error: 'Venue role required' }, { status: 403 });
+    if (user!.user_metadata?.role === 'artist') return json({ error: 'Venue endpoint — artist accounts should use the artist Connect flow' }, { status: 403 });
     const rlVCreate = await applyRateLimit('stripe-connect-venue-create', request);
     if (rlVCreate) return rlVCreate;
 
@@ -650,7 +662,7 @@ export async function handleStripe(wc: WorkerContext): Promise<Response | null> 
     const authErr = requireAuthOrFail(request, user);
     if (authErr) return authErr;
     if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
-    if (user!.user_metadata?.role !== 'venue') return json({ error: 'Venue role required' }, { status: 403 });
+    if (user!.user_metadata?.role === 'artist') return json({ error: 'Venue endpoint — artist accounts should use the artist Connect flow' }, { status: 403 });
     const rlVLink = await applyRateLimit('stripe-connect-venue-link', request);
     if (rlVLink) return rlVLink;
 

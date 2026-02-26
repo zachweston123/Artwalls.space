@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { CreditCard, ExternalLink, Loader2, ShieldCheck } from 'lucide-react';
 import type { User } from '../../App';
 import { apiGet, apiPost } from '../../lib/api';
-import { supabase } from '../../lib/supabase';
 
 type ConnectStatus = {
   hasAccount: boolean;
@@ -60,24 +59,21 @@ export function VenuePayoutsCard({ user }: VenuePayoutsCardProps) {
       setWorking(true);
       setError(null);
 
-      const { data } = await supabase.auth.getSession();
-      const token = data.session?.access_token;
-      if (!token) {
-        setError('Please sign in to set up venue payouts.');
-        return;
-      }
-
       const { url } = await apiPost<{ url: string }>(
         '/api/stripe/connect/venue/onboard',
         {},
       );
+
+      if (!url) {
+        setError('Did not receive a Stripe onboarding link. Please try again.');
+        return;
+      }
 
       window.location.href = url;
     } catch (e: any) {
       setError(e?.message || 'Unable to start Stripe onboarding');
     } finally {
       setWorking(false);
-      setTimeout(() => refresh(), 2000);
     }
   };
 
@@ -85,12 +81,6 @@ export function VenuePayoutsCard({ user }: VenuePayoutsCardProps) {
     try {
       setWorking(true);
       setError(null);
-      const { data } = await supabase.auth.getSession();
-      const token = data.session?.access_token;
-      if (!token) {
-        setError('Please sign in to manage venue payouts.');
-        return;
-      }
       const { url } = await apiPost<{ url: string }>(
         '/api/stripe/connect/venue/login',
         {},
@@ -150,18 +140,9 @@ export function VenuePayoutsCard({ user }: VenuePayoutsCardProps) {
             {error && (
               <div className="bg-[var(--surface-2)] rounded-lg p-3 border border-[var(--danger)]">
                 <p className="text-sm text-[var(--danger)]">{error}</p>
-                <div className="mt-2 text-xs text-[var(--text-muted)]">
-                  <p>Common fixes:</p>
-                  <ul className="list-disc list-inside">
-                    <li>Sign in first (required)</li>
-                    <li>Check site settings → VITE_API_BASE_URL</li>
-                    <li>Add STRIPE_WEBHOOK_SECRET to Worker</li>
-                    <li>Server CORS should allow your Pages domain</li>
-                  </ul>
-                  <p className="mt-1">
-                    <a href="/Third-Grader-Setup-Guide.html" target="_blank" rel="noopener noreferrer" className="underline">Open setup guide</a>
-                  </p>
-                </div>
+                <p className="mt-1 text-xs text-[var(--text-muted)]">
+                  Try refreshing the page. If this keeps happening, sign out and back in.
+                </p>
               </div>
             )}
 
