@@ -1,10 +1,11 @@
 /**
  * Login.tsx — Artwalls public landing + auth form.
  *
- * Removed duplicate role selectors (hero quick-picks vs. Choose Your Path cards);
- * removed duplicate step lists (in-card 3-step vs. page-level steps section);
- * standardised "How it works" naming — homepage uses "Getting Started" for
- * onboarding steps; WhyArtwalls keeps "How Artwalls Works" for the buy-flow.
+ * Layout pass: consistent vertical rhythm via Section/Container helpers,
+ * alternating surface backgrounds (base ↔ raised), softer card borders
+ * (border-subtle + shadow-sm), 3 bullets per role card (not 4), centered
+ * hero, focus-visible on all CTAs, and responsive spacing across all
+ * breakpoints.  Auth logic and CTA destinations are untouched.
  */
 
 import { useState, useEffect } from 'react';
@@ -14,6 +15,8 @@ import { FreshnessProof } from './shared/FreshnessProof';
 import { FoundingStorySection } from './FoundingStorySection';
 import type { User, UserRole } from '../App';
 import { trackAnalyticsEvent } from '../lib/analytics';
+import { Section } from './public/Section';
+import { Container } from './public/Container';
 
 // Google OAuth icon component
 const GoogleIcon = () => (
@@ -277,90 +280,84 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
           canonical="https://artwalls.space/"
         />
 
-        {/* ── Hero Section ─── 2-col on desktop, stacked on mobile ─── */}
-        <section className="px-6 pt-16 pb-12 sm:pt-24 sm:pb-16">
-          <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-            {/* Left: copy + CTA */}
-            <div className="max-w-xl">
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[var(--text)] mb-5 font-display tracking-tight leading-[1.15]">
+        {/* ── Hero ────────────────────────────────────────────── */}
+        <Section size="hero">
+          <Container>
+            <div className="max-w-2xl mx-auto text-center">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[var(--text)] font-display tracking-tight leading-tight">
                 Art on Every Wall
               </h1>
-              <p className="text-base sm:text-lg text-[var(--text-muted)] mb-8 leading-relaxed">
+              <p className="mt-5 text-base sm:text-lg text-[var(--text-muted)] leading-relaxed max-w-prose mx-auto">
                 The easiest way for artists to get placed in real venues&nbsp;— and for venues to host art without the hassle.
               </p>
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3">
                 <a
                   href="/find"
                   onClick={(e) => { e.preventDefault(); onNavigate?.('find-art'); window.location.href = '/find'; }}
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[var(--blue)] text-[var(--on-blue)] font-medium hover:bg-[var(--blue-hover)] transition-colors text-sm sm:text-base"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[var(--blue)] text-[var(--on-blue)] font-medium hover:bg-[var(--blue-hover)] transition-colors text-sm sm:text-base focus-visible:ring-2 focus-visible:ring-[var(--focus)] outline-none"
                 >
                   <MapPin className="w-5 h-5" />
                   Explore Art Near You
                 </a>
                 <button
                   onClick={() => onNavigate?.('login')}
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] font-medium hover:bg-[var(--surface-2)] transition-colors text-sm sm:text-base"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] font-medium hover:bg-[var(--surface-2)] transition-colors text-sm sm:text-base focus-visible:ring-2 focus-visible:ring-[var(--focus)] outline-none"
                 >
                   Log In
                 </button>
               </div>
-              <div className="mt-4 flex items-center gap-4">
-                <button
-                  onClick={() => onNavigate?.('why-artwalls-artist')}
-                  className="inline-flex items-center gap-1 text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
-                >
-                  Learn more <ChevronRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
+              <button
+                onClick={() => onNavigate?.('why-artwalls-artist')}
+                className="mt-5 inline-flex items-center gap-1 text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors focus-visible:ring-2 focus-visible:ring-[var(--focus)] rounded-md outline-none"
+              >
+                Learn more <ChevronRight className="w-3.5 h-3.5" />
+              </button>
             </div>
-          </div>
-        </section>
+          </Container>
+        </Section>
 
-        {/* ── Role Selection Cards ────────────────────────────── */}
-        <section className="px-6 pb-12 sm:pb-16">
-          <div className="max-w-5xl mx-auto">
-            <h2 className="text-xl sm:text-2xl font-semibold text-[var(--text)] text-center mb-2 font-display tracking-tight">
+        {/* ── Choose Your Path ───────────────────────────────── */}
+        <Section surface="raised">
+          <Container size="narrow">
+            <h2 className="text-xl sm:text-2xl font-semibold text-[var(--text)] text-center mb-3 font-display tracking-tight leading-tight">
               Choose Your Path
             </h2>
-            <p className="text-[var(--text-muted)] text-sm sm:text-base max-w-md mx-auto text-center mb-8">
-              Whether you make art or host it — you can be live in under 10 minutes.
+            <p className="text-[var(--text-muted)] text-sm sm:text-base max-w-md mx-auto text-center mb-10 leading-relaxed">
+              Whether you make art or host it — you can be live in under 10&nbsp;minutes.
             </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-4xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
               {/* Artist card */}
               <div
                 role="button"
                 tabIndex={0}
                 onClick={() => setSelectedRole('artist')}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedRole('artist'); } }}
-                className="group bg-[var(--surface-1)] rounded-2xl p-6 sm:p-8 border border-[var(--border)] hover:border-[var(--blue)] transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[var(--focus)] outline-none"
+                className="group bg-[var(--surface-2)] rounded-2xl p-6 md:p-8 border border-[var(--border-subtle)] shadow-sm hover:border-[var(--blue)] hover:shadow-md transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[var(--focus)] outline-none"
               >
-                <div className="flex flex-col items-center text-center gap-4">
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[var(--blue-muted)] flex items-center justify-center">
-                    <Palette className="w-7 h-7 sm:w-8 sm:h-8 text-[var(--blue)]" />
+                <div className="flex flex-col items-center text-center space-y-4">
+                  <div className="w-14 h-14 rounded-full bg-[var(--blue-muted)] flex items-center justify-center">
+                    <Palette className="w-7 h-7 text-[var(--blue)]" />
                   </div>
-                  <div>
-                    <h3 className="text-xl mb-1 text-[var(--blue)] font-semibold font-display">Get Placed in Venues</h3>
-                    <p className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
-                      Publish your work, apply to local venues, and sell directly to buyers — all from one dashboard.
+                  <div className="space-y-1.5">
+                    <h3 className="text-lg font-semibold text-[var(--blue)] font-display leading-tight">Get Placed in Venues</h3>
+                    <p className="text-sm text-[var(--text-muted)] leading-relaxed">
+                      Publish your work, apply to local venues, and sell directly to buyers.
                     </p>
-                    <p className="text-xs text-[var(--blue)] mt-2 font-medium">Take home up to 85% per sale</p>
                   </div>
-                  <span className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-[var(--blue)] text-[var(--on-blue)] text-sm font-medium group-hover:bg-[var(--blue-hover)] transition-colors">
+                  <span className="inline-flex items-center gap-1 px-5 py-2.5 rounded-xl bg-[var(--blue)] text-[var(--on-blue)] text-sm font-medium group-hover:bg-[var(--blue-hover)] transition-colors">
                     Continue as Artist — Free
                   </span>
                 </div>
-                {/* Benefit bullets */}
-                <ul className="mt-5 pt-5 border-t border-[var(--border)] space-y-2 text-xs text-[var(--text-muted)]">
-                  <li className="flex items-center gap-2"><MapPin className="w-3.5 h-3.5 text-[var(--blue)] shrink-0" />Get placed on real walls in cafés, offices, and restaurants</li>
-                  <li className="flex items-center gap-2"><DollarSign className="w-3.5 h-3.5 text-[var(--blue)] shrink-0" />Sell via QR codes — take home up to 85% per sale</li>
-                  <li className="flex items-center gap-2"><Image className="w-3.5 h-3.5 text-[var(--blue)] shrink-0" />Build a portfolio visible to venues and collectors</li>
-                  <li className="flex items-center gap-2"><Star className="w-3.5 h-3.5 text-[var(--blue)] shrink-0" />Track placements, payouts, and reviews in one dashboard</li>
+                <ul className="mt-6 pt-5 border-t border-[var(--border-subtle)] space-y-3 text-sm text-[var(--text-muted)]">
+                  <li className="flex items-start gap-3"><MapPin className="w-4 h-4 text-[var(--blue)] shrink-0 mt-0.5" />Get placed on real walls in cafés, restaurants, and offices</li>
+                  <li className="flex items-start gap-3"><DollarSign className="w-4 h-4 text-[var(--blue)] shrink-0 mt-0.5" />Sell via QR codes — take home up to 85% per sale</li>
+                  <li className="flex items-start gap-3"><Image className="w-4 h-4 text-[var(--blue)] shrink-0 mt-0.5" />Build a portfolio visible to venues and collectors</li>
                 </ul>
                 <a
                   href="/why-artwalls"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); onNavigate?.('why-artwalls-artist'); }}
-                  className="mt-4 block text-xs text-[var(--blue)] hover:underline text-center"
+                  className="mt-4 block text-xs text-[var(--text-muted)] hover:text-[var(--blue)] text-center transition-colors"
                 >
                   Learn more →
                 </a>
@@ -372,41 +369,38 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
                 tabIndex={0}
                 onClick={() => setSelectedRole('venue')}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedRole('venue'); } }}
-                className="group bg-[var(--surface-1)] rounded-2xl p-6 sm:p-8 border border-[var(--border)] hover:border-[var(--green)] transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[var(--focus)] outline-none"
+                className="group bg-[var(--surface-2)] rounded-2xl p-6 md:p-8 border border-[var(--border-subtle)] shadow-sm hover:border-[var(--green)] hover:shadow-md transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[var(--focus)] outline-none"
               >
-                <div className="flex flex-col items-center text-center gap-4">
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[var(--green-muted)] flex items-center justify-center">
-                    <Store className="w-7 h-7 sm:w-8 sm:h-8 text-[var(--green)]" />
+                <div className="flex flex-col items-center text-center space-y-4">
+                  <div className="w-14 h-14 rounded-full bg-[var(--green-muted)] flex items-center justify-center">
+                    <Store className="w-7 h-7 text-[var(--green)]" />
                   </div>
-                  <div>
-                    <h3 className="text-xl mb-1 text-[var(--green)] font-semibold font-display">Host Art Effortlessly</h3>
-                    <p className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
-                      List your walls, receive artist applications, and earn a commission on every sale — zero cost to you.
+                  <div className="space-y-1.5">
+                    <h3 className="text-lg font-semibold text-[var(--green)] font-display leading-tight">Host Art Effortlessly</h3>
+                    <p className="text-sm text-[var(--text-muted)] leading-relaxed">
+                      List your walls, receive artist applications, and earn a commission on every sale.
                     </p>
-                    <p className="text-xs text-[var(--green)] mt-2 font-medium">Always free for venues — earn 15% on every sale</p>
                   </div>
-                  <span className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-[var(--green)] text-[var(--accent-contrast)] text-sm font-medium group-hover:brightness-95 transition-all">
+                  <span className="inline-flex items-center gap-1 px-5 py-2.5 rounded-xl bg-[var(--green)] text-[var(--accent-contrast)] text-sm font-medium group-hover:brightness-95 transition-all">
                     Continue as Venue — Free Forever
                   </span>
                 </div>
-                {/* Benefit bullets */}
-                <ul className="mt-5 pt-5 border-t border-[var(--border)] space-y-2 text-xs text-[var(--text-muted)]">
-                  <li className="flex items-center gap-2"><Image className="w-3.5 h-3.5 text-[var(--green)] shrink-0" />Transform blank walls into rotating art galleries</li>
-                  <li className="flex items-center gap-2"><Users className="w-3.5 h-3.5 text-[var(--green)] shrink-0" />Attract art-loving customers and increase foot traffic</li>
-                  <li className="flex items-center gap-2"><DollarSign className="w-3.5 h-3.5 text-[var(--green)] shrink-0" />Earn a venue commission on every artwork sold</li>
-                  <li className="flex items-center gap-2"><Shield className="w-3.5 h-3.5 text-[var(--green)] shrink-0" />Scheduling, install support, and damage protection included</li>
+                <ul className="mt-6 pt-5 border-t border-[var(--border-subtle)] space-y-3 text-sm text-[var(--text-muted)]">
+                  <li className="flex items-start gap-3"><Image className="w-4 h-4 text-[var(--green)] shrink-0 mt-0.5" />Transform blank walls into rotating art galleries</li>
+                  <li className="flex items-start gap-3"><DollarSign className="w-4 h-4 text-[var(--green)] shrink-0 mt-0.5" />Earn a commission on every artwork sold from your walls</li>
+                  <li className="flex items-start gap-3"><Shield className="w-4 h-4 text-[var(--green)] shrink-0 mt-0.5" />Scheduling, install support, and damage protection included</li>
                 </ul>
                 <a
                   href="/venues"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); onNavigate?.('why-artwalls-venue'); }}
-                  className="mt-4 block text-xs text-[var(--green)] hover:underline text-center"
+                  className="mt-4 block text-xs text-[var(--text-muted)] hover:text-[var(--green)] text-center transition-colors"
                 >
                   Learn more →
                 </a>
               </div>
             </div>
-          </div>
-        </section>
+          </Container>
+        </Section>
 
         {/* ── Founding Story + First-Win CTAs ─────────────────── */}
         <FoundingStorySection
@@ -416,18 +410,18 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
         />
 
         {/* ── Getting Started (onboarding steps) ─────────────── */}
-        <section className="px-6 py-14 sm:py-20">
-          <div className="max-w-5xl mx-auto">
-            <h2 className="text-xl sm:text-2xl font-semibold text-[var(--text)] text-center mb-3 font-display tracking-tight">
+        <Section surface="raised">
+          <Container size="narrow">
+            <h2 className="text-xl sm:text-2xl font-semibold text-[var(--text)] text-center mb-3 font-display tracking-tight leading-tight">
               Getting Started
             </h2>
-            <p className="text-[var(--text-muted)] text-sm sm:text-base max-w-md mx-auto text-center mb-10">
+            <p className="text-[var(--text-muted)] text-sm sm:text-base max-w-md mx-auto text-center mb-10 leading-relaxed">
               From sign-up to your first placement in three steps.
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
               {/* Artist path */}
-              <div className="bg-[var(--surface-1)] rounded-2xl p-6 border border-[var(--border)]">
-                <h3 className="text-base font-semibold text-[var(--blue)] mb-5 flex items-center gap-2 font-display">
+              <div className="bg-[var(--surface-2)] rounded-2xl p-6 md:p-8 border border-[var(--border-subtle)] shadow-sm">
+                <h3 className="text-base font-semibold text-[var(--blue)] mb-6 flex items-center gap-2 font-display">
                   <Palette className="w-5 h-5" /> For Artists
                 </h3>
                 <div className="space-y-4">
@@ -438,17 +432,17 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
                   ].map((s) => (
                     <div key={s.step} className="flex items-start gap-3">
                       <span className="w-7 h-7 rounded-full bg-[var(--blue-muted)] text-[var(--blue)] flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">{s.step}</span>
-                      <div>
-                        <p className="text-sm font-medium text-[var(--text)]">{s.title}</p>
-                        <p className="text-xs text-[var(--text-muted)] mt-0.5">{s.desc}</p>
+                      <div className="space-y-0.5">
+                        <p className="text-sm font-medium text-[var(--text)] leading-snug">{s.title}</p>
+                        <p className="text-xs text-[var(--text-muted)] leading-relaxed">{s.desc}</p>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
               {/* Venue path */}
-              <div className="bg-[var(--surface-1)] rounded-2xl p-6 border border-[var(--border)]">
-                <h3 className="text-base font-semibold text-[var(--green)] mb-5 flex items-center gap-2 font-display">
+              <div className="bg-[var(--surface-2)] rounded-2xl p-6 md:p-8 border border-[var(--border-subtle)] shadow-sm">
+                <h3 className="text-base font-semibold text-[var(--green)] mb-6 flex items-center gap-2 font-display">
                   <Store className="w-5 h-5" /> For Venues
                 </h3>
                 <div className="space-y-4">
@@ -459,28 +453,28 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
                   ].map((s) => (
                     <div key={s.step} className="flex items-start gap-3">
                       <span className="w-7 h-7 rounded-full bg-[var(--green-muted)] text-[var(--green)] flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">{s.step}</span>
-                      <div>
-                        <p className="text-sm font-medium text-[var(--text)]">{s.title}</p>
-                        <p className="text-xs text-[var(--text-muted)] mt-0.5">{s.desc}</p>
+                      <div className="space-y-0.5">
+                        <p className="text-sm font-medium text-[var(--text)] leading-snug">{s.title}</p>
+                        <p className="text-xs text-[var(--text-muted)] leading-relaxed">{s.desc}</p>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
-          </div>
-        </section>
+          </Container>
+        </Section>
 
         {/* ── Value Props ─────────────────────────────────────── */}
-        <section className="px-6 py-14 sm:py-20 bg-[var(--surface-1)]">
-          <div className="max-w-5xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 sm:gap-14">
+        <Section>
+          <Container>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16">
               {/* Artists column */}
               <div>
-                <h3 className="text-lg font-semibold text-[var(--blue)] mb-5 font-display flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-[var(--blue)] mb-6 font-display flex items-center gap-2">
                   <Palette className="w-5 h-5" /> For Artists
                 </h3>
-                <ul className="space-y-4 text-sm text-[var(--text-muted)]">
+                <ul className="space-y-5 text-sm text-[var(--text-muted)] leading-relaxed">
                   {[
                     { icon: <Image className="w-4 h-4 text-[var(--blue)]" />, text: 'Build a professional portfolio visible to venues and collectors' },
                     { icon: <MapPin className="w-4 h-4 text-[var(--blue)]" />, text: 'Get your art on real walls in cafés, offices, and restaurants' },
@@ -496,10 +490,10 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
               </div>
               {/* Venues column */}
               <div>
-                <h3 className="text-lg font-semibold text-[var(--green)] mb-5 font-display flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-[var(--green)] mb-6 font-display flex items-center gap-2">
                   <Store className="w-5 h-5" /> For Venues
                 </h3>
-                <ul className="space-y-4 text-sm text-[var(--text-muted)]">
+                <ul className="space-y-5 text-sm text-[var(--text-muted)] leading-relaxed">
                   {[
                     { icon: <Image className="w-4 h-4 text-[var(--green)]" />, text: 'Transform blank walls into rotating art galleries — for free' },
                     { icon: <Users className="w-4 h-4 text-[var(--green)]" />, text: 'Attract art-loving customers and increase foot traffic' },
@@ -514,11 +508,13 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
                 </ul>
               </div>
             </div>
-          </div>
-        </section>
+          </Container>
+        </Section>
 
         {/* ── Freshness Proof ─────────────────────────────────── */}
-        <FreshnessProof modules={['venues', 'artists']} limit={4} heading="Growing every week" />
+        <div className="pb-8 md:pb-12">
+          <FreshnessProof modules={['venues', 'artists']} limit={4} heading="Growing every week" />
+        </div>
       </div>
     );
   }
