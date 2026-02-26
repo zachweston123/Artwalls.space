@@ -177,11 +177,14 @@ export async function handleArtists(wc: WorkerContext): Promise<Response | null>
 
     // Visibility: treat null is_public as visible (upsertArtist never sets
     // is_public, so most rows are null). Exclude only explicit opt-outs.
-    query = query.neq('is_public', false);
+    // IMPORTANT: `.neq('is_public', false)` does NOT work — in SQL,
+    // NULL <> false evaluates to NULL, which excludes the row.
+    // We must use `.or()` to explicitly include NULLs.
+    query = query.or('is_public.eq.true,is_public.is.null');
 
-    // Liveness: treat null is_live as live (same reasoning — upsertArtist
-    // defaults is_live to true but some older rows may be null).
-    query = query.neq('is_live', false);
+    // Liveness / "open to placements": treat null is_live as open.
+    // Same NULL-safety reasoning as is_public above.
+    query = query.or('is_live.eq.true,is_live.is.null');
 
     // City filter — match the extracted city name against primary or
     // secondary city. Using just the city name (without state) ensures
@@ -225,6 +228,7 @@ export async function handleArtists(wc: WorkerContext): Promise<Response | null>
       profilePhotoUrl: a.profile_photo_url || null,
       location: a.city_primary || a.city_secondary || 'Local',
       is_live: a.is_live,
+      openToNewPlacements: a.is_live !== false,  // null → true (default open)
       bio: (a as any).bio || '',
       artTypes: Array.isArray((a as any).art_types) ? (a as any).art_types : [],
       portfolioCount: artworkCounts[a.id] || 0,
@@ -346,6 +350,12 @@ export async function handleArtists(wc: WorkerContext): Promise<Response | null>
         // it stays undefined → upsertArtist won't touch the existing tier.
         subscriptionTier: payload?.subscriptionTier ? clampStr(payload.subscriptionTier, 20) : undefined,
         profilePhotoUrl: photoUrl,
+        // "Open to new placements" opt-out. If the caller explicitly passes
+        // false, persist it; otherwise leave undefined so upsertArtist keeps
+        // the existing value (or defaults to true for new rows).
+        isLive: payload?.openToNewPlacements !== undefined
+          ? !!payload.openToNewPlacements
+          : undefined,
       });
       return resp;
     } catch (err: unknown) {

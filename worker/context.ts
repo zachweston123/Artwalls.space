@@ -335,9 +335,13 @@ export function createWorkerContext(
     if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
     const payload: Record<string, any> = {
       id: artist.id,
-      is_live: true,
       updated_at: new Date().toISOString(),
     };
+    // "Open to new placements" — only overwrite is_live when the caller
+    // explicitly passes it. New rows still get `true` via the DB default
+    // (migration adds DEFAULT true). Existing rows keep their value
+    // unless the artist toggles opt-out.
+    if (artist.isLive !== undefined) payload.is_live = artist.isLive;
     if (artist.email !== undefined) payload.email = artist.email;
     if (artist.name !== undefined) payload.name = artist.name;
     if (artist.role !== undefined) payload.role = artist.role;

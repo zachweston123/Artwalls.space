@@ -147,6 +147,8 @@ export interface UpsertArtistPayload {
   stripeSubscriptionId?: string | null;
   platformFeeBps?: number | null;
   profilePhotoUrl?: string | null;
+  /** Open to new placements. Maps to DB `is_live`. Default true for new rows. */
+  isLive?: boolean;
 }
 
 export interface UpsertVenuePayload {

@@ -280,7 +280,7 @@ export async function handlePublic(wc: WorkerContext): Promise<Response | null> 
     const matchFilter = isUuid ? { id: identifier } : { slug: identifier };
     const { data, error } = await supabaseAdmin
       .from('artists')
-      .select('id,slug,name,bio,profile_photo_url,portfolio_url,website_url,instagram_handle,city_primary,city_secondary,art_types,is_public,is_founding_artist')
+      .select('id,slug,name,bio,profile_photo_url,portfolio_url,website_url,instagram_handle,city_primary,city_secondary,art_types,is_public,is_founding_artist,is_live')
       .match(matchFilter)
       .eq('is_public', true)
       .maybeSingle();
@@ -299,6 +299,7 @@ export async function handlePublic(wc: WorkerContext): Promise<Response | null> 
       citySecondary: (data as any).city_secondary || null,
       artTypes: (data as any).art_types || [],
       isFoundingArtist: !!(data as any).is_founding_artist,
+      openToNewPlacements: (data as any).is_live !== false,  // null → true
     });
   }
 

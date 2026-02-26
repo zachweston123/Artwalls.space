@@ -4,7 +4,7 @@
  * Bug history:
  *   1. is_public was never set by upsertArtist → all rows null →
  *      `.eq('is_public', true)` excluded everyone.
- *      Fix: use `.neq('is_public', false)` — null passes through.
+ *      Fix: use `.or('is_public.eq.true,is_public.is.null')`.
  *   2. city param was ignored by the backend.
  *      Fix: extract city name, filter with ilike.
  *   3. City format mismatch: venues store "San Diego, CA" but artists
@@ -12,6 +12,13 @@
  *      Fix: extract city name before comma for the filter.
  *   4. email was leaked in the public response.
  *      Fix: removed from select + response mapping.
+ *   5. `.neq('is_public', false)` / `.neq('is_live', false)` silently
+ *      excluded NULL rows — in SQL, `NULL <> false` is NULL, not TRUE.
+ *      Fix: reverted to `.or('is_public.eq.true,is_public.is.null')` and
+ *      `.or('is_live.eq.true,is_live.is.null')`.
+ *   6. "Open to new placements" toggle was cosmetic-only — never persisted.
+ *      Fix: added isLive to UpsertArtistPayload, POST handler, and
+ *      ArtistProfile save. DB migration backfills NULL → true.
  *
  * These tests run against the handleArtists route handler with a
  * minimal WorkerContext stub — no real Supabase calls.
@@ -162,7 +169,7 @@ describe('GET /api/artists — venue Find Artists', () => {
 
     const safeKeys = new Set([
       'id', 'slug', 'name', 'profilePhotoUrl', 'location',
-      'is_live', 'bio', 'artTypes', 'portfolioCount', 'isFoundingArtist',
+      'is_live', 'openToNewPlacements', 'bio', 'artTypes', 'portfolioCount', 'isFoundingArtist',
     ]);
     for (const artist of body.artists) {
       for (const key of Object.keys(artist)) {
@@ -205,12 +212,25 @@ describe('GET /api/artists — venue Find Artists', () => {
     expect(artistsBuilder).toBeDefined();
   });
 
-  test('uses neq instead of or for is_public/is_live (null passes through)', async () => {
+  test('uses .or() for is_public/is_live to include NULL rows (not .neq)', async () => {
     const wc = stubContext('/api/artists', '', sampleArtists);
     const resp = await handleArtists(wc);
     const body = await parseBody(resp);
 
-    // Should return both artists — null is_public and null is_live pass .neq(false)
+    // Should return both artists — null is_public and null is_live are
+    // included by `.or('is_public.eq.true,is_public.is.null')` etc.
+    // (`.neq('is_public', false)` would EXCLUDE nulls in SQL.)
     expect(body.artists.length).toBe(2);
+  });
+
+  test('response includes openToNewPlacements field (null → true)', async () => {
+    const wc = stubContext('/api/artists', '', sampleArtists);
+    const resp = await handleArtists(wc);
+    const body = await parseBody(resp);
+
+    // Alice has is_live: true → openToNewPlacements: true
+    expect(body.artists[0].openToNewPlacements).toBe(true);
+    // Bob has is_live: null → openToNewPlacements: true (null is treated as open)
+    expect(body.artists[1].openToNewPlacements).toBe(true);
   });
 });

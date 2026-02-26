@@ -104,6 +104,7 @@ export function FindArtists({ onInviteArtist, onViewProfile, onNavigate }: FindA
           location?: string;
           bio?: string;
           artTypes?: string[];
+          openToNewPlacements?: boolean;
           is_live?: boolean;
           portfolioCount?: number;
           isFoundingArtist?: boolean;
@@ -125,7 +126,8 @@ export function FindArtists({ onInviteArtist, onViewProfile, onNavigate }: FindA
         location: a.location || city || 'Local',
         bio: a.bio || '',
         artTypes: Array.isArray(a.artTypes) ? a.artTypes : [],
-        openToNew: a.is_live !== false,
+        // Use explicit openToNewPlacements field; fall back to is_live; null/undefined → true
+        openToNew: a.openToNewPlacements ?? (a.is_live !== false),
         portfolioCount: a.portfolioCount || 0,
         isFoundingArtist: !!a.isFoundingArtist,
       }));
@@ -143,6 +145,7 @@ export function FindArtists({ onInviteArtist, onViewProfile, onNavigate }: FindA
             location?: string;
             bio?: string;
             artTypes?: string[];
+            openToNewPlacements?: boolean;
             is_live?: boolean;
             portfolioCount?: number;
             isFoundingArtist?: boolean;
@@ -157,7 +160,7 @@ export function FindArtists({ onInviteArtist, onViewProfile, onNavigate }: FindA
             location: a.location || 'Nearby',
             bio: a.bio || '',
             artTypes: Array.isArray(a.artTypes) ? a.artTypes : [],
-            openToNew: a.is_live !== false,
+            openToNew: a.openToNewPlacements ?? (a.is_live !== false),
             portfolioCount: a.portfolioCount || 0,
             isFoundingArtist: !!a.isFoundingArtist,
           })));

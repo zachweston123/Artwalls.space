@@ -45,6 +45,9 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
+  // Open to new placements (maps to is_live in DB)
+  const [openToNewPlacements, setOpenToNewPlacements] = useState(true);
+
   // Student fields
   const [isStudent, setIsStudent] = useState(false);
   const [pronouns, setPronouns] = useState('');
@@ -118,6 +121,8 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
           setSchoolName((row.school_name as string) || '');
           setIsStudentVerified((row.is_student_verified as boolean) || false);
           setStudentDiscountActive((row.student_discount_active as boolean) || false);
+          // Open to new placements: null/undefined → true (default open)
+          setOpenToNewPlacements(row.is_live !== false);
           const tier = (row.subscription_tier as 'free' | 'starter' | 'growth' | 'pro') || 'free';
           setCurrentPlan(tier);
           setAvatar((row.profile_photo_url as string) || (user.user_metadata?.avatar as string) || '');
@@ -253,6 +258,7 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
           pronouns: pronouns || null,
           schoolId: schoolId || null,
           schoolName: schoolName || null,
+          openToNewPlacements,
         });
       } catch (apiErr: any) {
         console.warn('API update failed, falling back to direct database update:', apiErr);
@@ -278,6 +284,7 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
             pronouns: pronouns || null,
             school_id: schoolId || null,
             school_name: schoolName || null,
+            is_live: openToNewPlacements,
             updated_at: new Date().toISOString()
           })
           .eq('id', user.id);
@@ -478,6 +485,24 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
                     </div>
                   </div>
                 )}
+
+                {/* Open to Placements Status */}
+                <div className="flex items-start gap-3 p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg">
+                  <div className="flex-1">
+                    <label className="block text-sm text-[var(--text-muted)] mb-1">Discovery Status</label>
+                    {openToNewPlacements ? (
+                      <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[var(--green-muted)] text-[var(--green)] rounded-full text-sm">
+                        <div className="w-2 h-2 bg-[var(--green)] rounded-full"></div>
+                        Open to new placements
+                      </div>
+                    ) : (
+                      <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[var(--surface-3)] text-[var(--text-muted)] rounded-full text-sm">
+                        <div className="w-2 h-2 bg-[var(--text-muted)] rounded-full"></div>
+                        Not currently accepting placements
+                      </div>
+                    )}
+                  </div>
+                </div>
 
                 <div className="flex items-start gap-3 p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg">
                   <Mail className="w-5 h-5 text-[var(--text-muted)] mt-0.5" />
@@ -715,6 +740,33 @@ export function ArtistProfile({ onNavigate }: ArtistProfileProps) {
                   <label className="block text-sm text-[var(--text-muted)] mb-1">Instagram Handle</label>
                   <input value={instagramHandle} onChange={(e) => setInstagramHandle(e.target.value)} className="w-full px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)]" placeholder="@yourinstagram" />
                   <p className="text-xs text-[var(--text-muted)] mt-1">Venues can find and follow your work</p>
+                </div>
+
+                {/* Open to New Placements Toggle */}
+                <div className="p-4 bg-[var(--surface-2)] rounded-lg border border-[var(--blue)]">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <label className="block text-sm font-medium text-[var(--text)] mb-1">Open to new placements</label>
+                      <p className="text-xs text-[var(--text-muted)]">
+                        Let venues know you're actively seeking display opportunities. When enabled, you'll appear in venue discovery searches.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setOpenToNewPlacements(prev => !prev)}
+                      className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors ${
+                        openToNewPlacements
+                          ? 'bg-[var(--blue)]'
+                          : 'bg-[var(--border)]'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-[var(--surface-1)] transition-transform ${
+                          openToNewPlacements ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Student Information Section */}
