@@ -92,7 +92,7 @@ export function WhyArtwalls({ userRole, onNavigate, onBack }: WhyArtwalksProps) 
           Canonical "How Artwalls Works" section — describes the buy-flow
           (QR → scan → payout). The homepage uses "Getting Started" for
           onboarding steps to avoid duplicate naming. Keep these distinct. */}
-      <section className="py-12 sm:py-16 px-4 bg-[var(--surface)]">
+      <section className="py-12 sm:py-16 px-4">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-2xl font-bold text-center mb-12 text-[var(--text)]">
             How Artwalls Works
@@ -271,7 +271,7 @@ export function WhyArtwalls({ userRole, onNavigate, onBack }: WhyArtwalksProps) 
       </section>
 
       {/* Transparent Earnings Callout */}
-      <section className="py-12 sm:py-16 px-4 bg-[var(--surface)]">
+      <section className="py-12 sm:py-16 px-4">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-2xl font-bold text-center mb-8 text-[var(--text)]">
             📊 Transparent Earnings
@@ -368,7 +368,7 @@ export function WhyArtwalls({ userRole, onNavigate, onBack }: WhyArtwalksProps) 
       </section>
 
       {/* Have Questions Section */}
-      <section className="py-12 sm:py-16 px-4 bg-[var(--surface)]">
+      <section className="py-12 sm:py-16 px-4">
         <div className="max-w-2xl mx-auto">
           <h2 className="text-2xl font-bold text-center mb-3 text-[var(--text)]">
             Have questions?
@@ -378,19 +378,19 @@ export function WhyArtwalls({ userRole, onNavigate, onBack }: WhyArtwalksProps) 
           </p>
 
           {contactSubmitted ? (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
-              <p className="text-green-800 font-medium">
+            <div className="bg-[var(--green-muted)] border border-[var(--green)]/30 rounded-lg p-6 text-center">
+              <p className="text-[var(--green)] font-medium">
                 ✅ Thanks! Your message has been sent.
               </p>
-              <p className="text-sm text-green-700 mt-2">
+              <p className="text-sm text-[var(--text-muted)] mt-2">
                 We usually respond within 1–2 business days.
               </p>
             </div>
           ) : (
             <form onSubmit={handleContactSubmit} className="bg-[var(--surface-1)] rounded-lg border border-[var(--border)] p-6 sm:p-8">
               {contactError && (
-                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-red-800 text-sm">{contactError}</p>
+                <div className="mb-4 p-4 bg-[var(--danger-muted)] border border-[var(--danger)]/30 rounded-lg">
+                  <p className="text-[var(--danger)] text-sm">{contactError}</p>
                 </div>
               )}
 

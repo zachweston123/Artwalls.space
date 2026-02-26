@@ -1,11 +1,10 @@
 /**
  * Login.tsx — Artwalls public landing + auth form.
  *
- * Layout pass: consistent vertical rhythm via Section/Container helpers,
- * alternating surface backgrounds (base ↔ raised), softer card borders
- * (border-subtle + shadow-sm), 3 bullets per role card (not 4), centered
- * hero, focus-visible on all CTAs, and responsive spacing across all
- * breakpoints.  Auth logic and CTA destinations are untouched.
+ * Theme-congruent: ONE page background (--bg) everywhere. Visual separation
+ * comes from elevated card surfaces (--surface-1 + border + shadow-sm), not
+ * alternating section backgrounds. Section wrappers are purely for spacing
+ * (py rhythm) and never set a bg colour. Works identically in light & dark.
  */
 
 import { useState, useEffect } from 'react';
@@ -317,7 +316,7 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
         </Section>
 
         {/* ── Choose Your Path ───────────────────────────────── */}
-        <Section surface="raised">
+        <Section>
           <Container size="narrow">
             <h2 className="text-xl sm:text-2xl font-semibold text-[var(--text)] text-center mb-3 font-display tracking-tight leading-tight">
               Choose Your Path
@@ -333,7 +332,7 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
                 tabIndex={0}
                 onClick={() => setSelectedRole('artist')}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedRole('artist'); } }}
-                className="group bg-[var(--surface-2)] rounded-2xl p-6 md:p-8 border border-[var(--border-subtle)] shadow-sm hover:border-[var(--blue)] hover:shadow-md transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[var(--focus)] outline-none"
+                className="group bg-[var(--surface-1)] rounded-2xl p-6 md:p-8 border border-[var(--border)] shadow-sm hover:border-[var(--blue)] hover:shadow-md transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[var(--focus)] outline-none"
               >
                 <div className="flex flex-col items-center text-center space-y-4">
                   <div className="w-14 h-14 rounded-full bg-[var(--blue-muted)] flex items-center justify-center">
@@ -349,7 +348,7 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
                     Continue as Artist — Free
                   </span>
                 </div>
-                <ul className="mt-6 pt-5 border-t border-[var(--border-subtle)] space-y-3 text-sm text-[var(--text-muted)]">
+                <ul className="mt-6 pt-5 border-t border-[var(--border)] space-y-3 text-sm text-[var(--text-muted)]">
                   <li className="flex items-start gap-3"><MapPin className="w-4 h-4 text-[var(--blue)] shrink-0 mt-0.5" />Get placed on real walls in cafés, restaurants, and offices</li>
                   <li className="flex items-start gap-3"><DollarSign className="w-4 h-4 text-[var(--blue)] shrink-0 mt-0.5" />Sell via QR codes — take home up to 85% per sale</li>
                   <li className="flex items-start gap-3"><Image className="w-4 h-4 text-[var(--blue)] shrink-0 mt-0.5" />Build a portfolio visible to venues and collectors</li>
@@ -369,7 +368,7 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
                 tabIndex={0}
                 onClick={() => setSelectedRole('venue')}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedRole('venue'); } }}
-                className="group bg-[var(--surface-2)] rounded-2xl p-6 md:p-8 border border-[var(--border-subtle)] shadow-sm hover:border-[var(--green)] hover:shadow-md transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[var(--focus)] outline-none"
+                className="group bg-[var(--surface-1)] rounded-2xl p-6 md:p-8 border border-[var(--border)] shadow-sm hover:border-[var(--green)] hover:shadow-md transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[var(--focus)] outline-none"
               >
                 <div className="flex flex-col items-center text-center space-y-4">
                   <div className="w-14 h-14 rounded-full bg-[var(--green-muted)] flex items-center justify-center">
@@ -385,7 +384,7 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
                     Continue as Venue — Free Forever
                   </span>
                 </div>
-                <ul className="mt-6 pt-5 border-t border-[var(--border-subtle)] space-y-3 text-sm text-[var(--text-muted)]">
+                <ul className="mt-6 pt-5 border-t border-[var(--border)] space-y-3 text-sm text-[var(--text-muted)]">
                   <li className="flex items-start gap-3"><Image className="w-4 h-4 text-[var(--green)] shrink-0 mt-0.5" />Transform blank walls into rotating art galleries</li>
                   <li className="flex items-start gap-3"><DollarSign className="w-4 h-4 text-[var(--green)] shrink-0 mt-0.5" />Earn a commission on every artwork sold from your walls</li>
                   <li className="flex items-start gap-3"><Shield className="w-4 h-4 text-[var(--green)] shrink-0 mt-0.5" />Scheduling, install support, and damage protection included</li>
@@ -410,7 +409,7 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
         />
 
         {/* ── Getting Started (onboarding steps) ─────────────── */}
-        <Section surface="raised">
+        <Section>
           <Container size="narrow">
             <h2 className="text-xl sm:text-2xl font-semibold text-[var(--text)] text-center mb-3 font-display tracking-tight leading-tight">
               Getting Started
@@ -420,7 +419,7 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
               {/* Artist path */}
-              <div className="bg-[var(--surface-2)] rounded-2xl p-6 md:p-8 border border-[var(--border-subtle)] shadow-sm">
+              <div className="bg-[var(--surface-1)] rounded-2xl p-6 md:p-8 border border-[var(--border)] shadow-sm">
                 <h3 className="text-base font-semibold text-[var(--blue)] mb-6 flex items-center gap-2 font-display">
                   <Palette className="w-5 h-5" /> For Artists
                 </h3>
@@ -441,7 +440,7 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
                 </div>
               </div>
               {/* Venue path */}
-              <div className="bg-[var(--surface-2)] rounded-2xl p-6 md:p-8 border border-[var(--border-subtle)] shadow-sm">
+              <div className="bg-[var(--surface-1)] rounded-2xl p-6 md:p-8 border border-[var(--border)] shadow-sm">
                 <h3 className="text-base font-semibold text-[var(--green)] mb-6 flex items-center gap-2 font-display">
                   <Store className="w-5 h-5" /> For Venues
                 </h3>
@@ -541,7 +540,7 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
         </div>
 
         {/* Form card */}
-        <div className="bg-[var(--surface-2)] rounded-2xl p-7 sm:p-8 border border-[var(--border)] shadow-sm">
+        <div className="bg-[var(--surface-1)] rounded-2xl p-7 sm:p-8 border border-[var(--border)] shadow-sm">
           <div
             className={
               "inline-flex px-3 py-1 rounded-full text-xs font-medium mb-6 border " +
@@ -658,7 +657,7 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
                 <div className="w-full border-t border-[var(--border)]"></div>
               </div>
               <div className="relative flex justify-center text-xs">
-                <span className="px-3 bg-[var(--surface-2)] text-[var(--text-muted)]">Or continue with</span>
+                <span className="px-3 bg-[var(--surface-1)] text-[var(--text-muted)]">Or continue with</span>
               </div>
             </div>
 

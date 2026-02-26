@@ -1,15 +1,14 @@
 /**
  * Section — consistent vertical-rhythm wrapper for public pages.
  *
- * Enforces a shared py pattern so every section on the homepage
- * has the same breathing room (py-16 → py-20 → py-24 across breakpoints).
+ * Purely a spacing/rhythm wrapper — never sets a background colour.
+ * The page has ONE canonical background (--bg) and visual separation
+ * comes from elevated card surfaces (--surface-1) + borders + shadows.
  */
 import type { ReactNode } from 'react';
 
 interface SectionProps {
   children: ReactNode;
-  /** "base" = page background, "raised" = surface-1 (alternates) */
-  surface?: 'base' | 'raised';
   /** "default" = standard, "sm" = compact, "hero" = generous top */
   size?: 'default' | 'sm' | 'hero';
   className?: string;
@@ -19,12 +18,10 @@ interface SectionProps {
 
 export function Section({
   children,
-  surface = 'base',
   size = 'default',
   className = '',
   ...rest
 }: SectionProps) {
-  const bg = surface === 'raised' ? 'bg-[var(--surface-1)]' : '';
   const py =
     size === 'hero'
       ? 'pt-20 pb-16 md:pt-28 md:pb-20 lg:pt-32 lg:pb-24'
@@ -34,7 +31,7 @@ export function Section({
 
   return (
     <section
-      className={[bg, py, className].filter(Boolean).join(' ')}
+      className={[py, className].filter(Boolean).join(' ')}
       {...rest}
     >
       {children}
