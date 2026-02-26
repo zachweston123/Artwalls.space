@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Palette, Store, MapPin, Image, DollarSign, Users, Star, Shield } from 'lucide-react';
 import { SEO } from './SEO';
 import { FreshnessProof } from './shared/FreshnessProof';
+import { FoundingStorySection } from './FoundingStorySection';
 import type { User, UserRole } from '../App';
 import { trackAnalyticsEvent } from '../lib/analytics';
 
@@ -394,6 +395,13 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
             </div>
           </div>
         </section>
+
+        {/* ── Founding Story + First-Win CTAs ─────────────────── */}
+        <FoundingStorySection
+          onSelectRole={(role) => setSelectedRole(role)}
+          onNavigate={onNavigate}
+          isLoggedIn={false}
+        />
 
         {/* ── How It Works ────────────────────────────────────── */}
         <section className="px-6 py-12 sm:py-16 bg-[var(--surface-1)] border-y border-[var(--border)]">

@@ -519,7 +519,15 @@ export default function App() {
     // by the Worker).  No client-side admin email list.
     const effectiveUser: User = user;
     setCurrentUser(effectiveUser);
-    setCurrentPage(defaultDashboardForRole(effectiveUser.role));
+
+    // Check for a pending deep-link redirect (e.g. from the Founding Story CTAs).
+    const pendingRedirect = localStorage.getItem('pendingRedirect');
+    if (pendingRedirect) {
+      localStorage.removeItem('pendingRedirect');
+      setCurrentPage(pendingRedirect);
+    } else {
+      setCurrentPage(defaultDashboardForRole(effectiveUser.role));
+    }
   };
 
   // Venue signup early return moved below all hooks (see render section)
