@@ -71,7 +71,7 @@ export function FindArtists({ onInviteArtist, onViewProfile, onNavigate }: FindA
           path += `?${params.toString()}`;
         }
 
-        const resp = await apiGet<{ artists: Array<{ id: string; name?: string | null; email?: string | null; profile_photo_url?: string | null; location?: string }> }>(
+        const resp = await apiGet<{ artists: Array<{ id: string; name?: string | null; profile_photo_url?: string | null; location?: string }> }>(
           path
         );
         const apiArtists = resp?.artists || [];

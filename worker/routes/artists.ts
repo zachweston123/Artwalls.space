@@ -157,25 +157,34 @@ export async function handleArtists(wc: WorkerContext): Promise<Response | null>
     });
   }
 
-  // ── Public artist listing ──
+  // ── Public artist listing (used by venue Find Artists) ──
   if (url.pathname === '/api/artists' && method === 'GET') {
     if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
     const q = (url.searchParams.get('q') || '').trim();
+    const city = (url.searchParams.get('city') || '').trim();
     
+    // Select only safe public fields — no email, no Stripe IDs, no payout info
     let query = supabaseAdmin
       .from('artists')
-      .select('id,slug,name,email,city_primary,city_secondary,profile_photo_url,is_live,is_public,bio,art_types,is_founding_artist')
+      .select('id,slug,name,city_primary,city_secondary,profile_photo_url,is_live,is_public,bio,art_types,is_founding_artist')
       .order('name', { ascending: true })
       .limit(50);
 
-    query = query.eq('is_public', true);
+    // Treat null is_public as visible (artists who haven't explicitly opted out).
+    // upsertArtist does not set is_public, so most rows are null.
+    query = query.or('is_public.eq.true,is_public.is.null');
 
     // Allow discovery of active artists; if is_live is null, still include for visibility
     query = query.or('is_live.eq.true,is_live.is.null');
+
+    // City filter — match against primary or secondary city
+    if (city) {
+      query = query.or(`city_primary.ilike.%${city}%,city_secondary.ilike.%${city}%`);
+    }
     
-    // Search by name or email if a query is provided
+    // Search by name only (never expose email in search)
     if (q) {
-      query = query.or(`name.ilike.%${q}%,email.ilike.%${q}%`);
+      query = query.ilike('name', `%${q}%`);
     }
     
     const { data, error } = await query;
@@ -197,11 +206,11 @@ export async function handleArtists(wc: WorkerContext): Promise<Response | null>
       }
     }
 
+    // Return only safe public fields — no email or sensitive data
     const artists = (data || []).map(a => ({ 
       id: a.id, 
       slug: (a as any).slug || null,
       name: a.name, 
-      email: a.email,
       profilePhotoUrl: a.profile_photo_url || null,
       location: a.city_primary || a.city_secondary || 'Local',
       is_live: a.is_live,
