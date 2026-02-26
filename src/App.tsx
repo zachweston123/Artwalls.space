@@ -21,6 +21,7 @@ import {
   ForgotPassword,
   ResetPassword,
   VerifyEmail,
+  AuthCallback,
   VenueInviteLanding,
   VenueSignup,
   PurchasePage,
@@ -247,6 +248,10 @@ export default function App() {
     });
 
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (import.meta.env?.DEV) {
+        console.log('[Auth] onAuthStateChange:', event, session?.user?.id, 'role:', session?.user?.user_metadata?.role);
+      }
+
       // Handle OAuth sign-up - need role selection
       if (event === 'SIGNED_IN' && session?.user) {
         const userRole = (session.user.user_metadata?.role as UserRole) || null;
@@ -261,8 +266,13 @@ export default function App() {
       
       const nextUser = userFromSupabase(session?.user);
       setCurrentUser(nextUser);
-      // Only reset page for logout; preserve all other pages during auth updates
+      // Only reset page for logout; preserve all other pages during auth updates.
+      // Skip page changes while on /auth/callback — the AuthCallback component
+      // handles its own routing after processing the OAuth tokens.
       setCurrentPage((prevPage) => {
+        if (typeof window !== 'undefined' && window.location.pathname === '/auth/callback') {
+          return prevPage; // Let AuthCallback handle routing
+        }
         if (!nextUser) {
           localStorage.removeItem('currentPage');
           const pageFromPath = getPageFromPath(window.location.pathname);
@@ -795,6 +805,35 @@ export default function App() {
   // Direct-route override for email verification page
   if (pathname === '/verify-email') {
     return <Suspense fallback={<PageLoader />}><VerifyEmail /></Suspense>;
+  }
+
+  // Direct-route override for OAuth callback page.
+  // MUST be before the !currentUser guard — the session doesn't exist yet
+  // when Google redirects back; this page establishes it.
+  if (pathname === '/auth/callback') {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <AuthCallback
+          onAuth={() => {
+            // Session is now established. Re-read it and route to dashboard.
+            // The onAuthStateChange listener will also fire, but we do an
+            // explicit read here to ensure we don't race.
+            supabase.auth.getSession().then(({ data }) => {
+              const user = userFromSupabase(data.session?.user);
+              if (user) {
+                setCurrentUser(user);
+                setCurrentPage(defaultDashboardForRole(user.role));
+              } else {
+                // User signed in via Google but has no role yet —
+                // onAuthStateChange will show the role selection modal.
+                setCurrentPage('login');
+              }
+            });
+          }}
+          onNavigate={handleNavigate}
+        />
+      </Suspense>
+    );
   }
 
   // Direct-route override for password reset page

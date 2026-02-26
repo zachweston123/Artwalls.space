@@ -11,4 +11,22 @@ if (!supabaseAnonKey) {
   throw new Error('Missing VITE_SUPABASE_ANON_KEY');
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+/**
+ * Singleton Supabase client — created once, imported everywhere.
+ *
+ * Auth config:
+ *   - persistSession: true  — store session in localStorage across refreshes
+ *   - detectSessionFromUrl: true — process OAuth callback tokens in the URL
+ *     (access_token fragment or PKCE code param) on initial page load
+ *   - autoRefreshToken: true — silently refresh the JWT before it expires
+ *   - flowType: 'pkce' — Proof Key for Code Exchange (Supabase v2 default,
+ *     explicit here for clarity; required for OAuth redirect flows)
+ */
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    detectSessionFromUrl: true,
+    autoRefreshToken: true,
+    flowType: 'pkce',
+  },
+});

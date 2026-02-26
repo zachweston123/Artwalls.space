@@ -58,6 +58,7 @@ export const RoleMismatchPage = lazy(() => import('../components/shared/RoleMism
 export const Settings = lazy(() => import('../components/settings/Settings').then(m => ({ default: m.Settings })));
 
 // ─── Pages ─────────────────────────────────────────────────────────────────────
+export const AuthCallback = lazy(() => import('../pages/AuthCallback').then(m => ({ default: m.AuthCallback })));
 export const WhyArtwallsArtistsPage = lazy(() => import('../pages/WhyArtwallsArtists').then(m => ({ default: m.WhyArtwallsArtistsPage })));
 export const VenuesLandingPage = lazy(() => import('../pages/VenuesLanding').then(m => ({ default: m.VenuesLandingPage })));
 export const PublicArtistProfilePage = lazy(() => import('../pages/public/PublicArtistProfilePage').then(m => ({ default: m.PublicArtistProfilePage })));

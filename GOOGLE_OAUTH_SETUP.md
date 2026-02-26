@@ -3,37 +3,32 @@
 ## Overview
 Google Sign-In has been integrated into the Artwalls login flow. Users can now sign up and sign in using their Google account.
 
-## Setup Steps
+## Setup Checklist
 
-### 1. Create Google OAuth Credentials
+### 1. Google Cloud Console — Authorized Redirect URIs
 
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project (or use existing)
-3. Enable Google+ API:
-   - Search for "Google+ API" in the search bar
-   - Click Enable
-4. Create OAuth 2.0 credentials:
-   - Go to "Credentials" in the left sidebar
-   - Click "Create Credentials" → "OAuth 2.0 Client ID"
-   - Choose "Web application"
-   - Add authorized redirect URIs (both development and production):
-     - `http://localhost:3000/auth/v1/callback` (development)
-     - `http://localhost:5173/auth/v1/callback` (Vite dev)
-     - `https://artwalls.app/auth/v1/callback` (production)
-     - `https://your-supabase-project.supabase.co/auth/v1/callback` (Supabase)
-   - Copy the Client ID and Client Secret
+Go to [Google Cloud Console → Credentials → OAuth 2.0 Client ID](https://console.cloud.google.com/apis/credentials) and ensure these **Authorized redirect URIs** are listed:
 
-### 2. Configure Supabase
+```
+https://<YOUR_SUPABASE_PROJECT>.supabase.co/auth/v1/callback
+```
 
-1. Go to [Supabase Dashboard](https://app.supabase.com/)
-2. Select your Artwalls project
-3. Go to Authentication → Providers
-4. Find "Google" and click to expand
-5. Enable Google provider
-6. Paste your Google OAuth credentials:
-   - Client ID
-   - Client Secret
-7. Save
+> **Only the Supabase callback URL goes in Google Console.** The `redirectTo` in app
+> code tells Supabase where to send the user *after* it finishes the token exchange.
+
+### 2. Supabase Dashboard — Auth Settings
+
+Go to [Supabase Dashboard → Authentication → URL Configuration](https://app.supabase.com/):
+
+| Setting | Value |
+|---------|-------|
+| **Site URL** | `https://artwalls.space` |
+| **Additional Redirect URLs** | `https://artwalls.space/auth/callback`, `http://localhost:5173/auth/callback`, `http://localhost:3000/auth/callback` |
+
+Then go to **Authentication → Providers → Google**:
+- Enable Google provider
+- Paste your **Client ID** and **Client Secret** from Google Cloud Console
+- Save
 
 ### 3. Test Google Sign-In
 
@@ -41,8 +36,9 @@ Google Sign-In has been integrated into the Artwalls login flow. Users can now s
 2. Select "Artist" or "Venue" role
 3. Click "Sign in with Google"
 4. You'll be redirected to Google login
-5. After authentication, you'll be asked to select your role (Artist or Venue)
-6. You'll be logged in and redirected to your dashboard
+5. After authentication, the app processes the callback at `/auth/callback`
+6. New users see a role selection screen (Artist or Venue)
+7. You'll be logged in and redirected to your dashboard
 
 ## How It Works
 
@@ -112,10 +108,13 @@ No new environment variables needed. All configuration is done in Supabase dashb
 
 ## Production Deployment
 
-1. Update Google Cloud Console with production redirect URIs:
-   - `https://artwalls.app/auth/v1/callback`
-   - Your Supabase project URL
+1. Verify Google Cloud Console has the Supabase callback URI:
+   - `https://<YOUR_PROJECT>.supabase.co/auth/v1/callback`
 
-2. Test in production environment before going live
+2. Verify Supabase Dashboard → Auth → URL Configuration:
+   - Site URL: `https://artwalls.space`
+   - Additional Redirect URLs includes: `https://artwalls.space/auth/callback`
 
-3. Monitor authentication failures in Supabase logs
+3. Test in production environment before going live
+
+4. Monitor authentication failures in Supabase logs
