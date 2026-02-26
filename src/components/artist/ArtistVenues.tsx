@@ -1,40 +1,67 @@
 import { useEffect, useState } from 'react';
 import { MapPin, Users, X, Image as ImageIcon } from 'lucide-react';
-import { mockArtworks, mockWallSpaces } from '../../data/mockData';
-import type { Venue } from '../../data/mockData';
 import { apiGet } from '../../lib/api';
+import { supabase } from '../../lib/supabase';
+
+interface SimpleArtwork {
+  id: string;
+  title: string;
+  imageUrl: string;
+  price: number;
+  status: string;
+}
 
 export function ArtistVenues() {
-  const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null);
+  const [selectedVenue, setSelectedVenue] = useState<any | null>(null);
   const [selectedArtworkId, setSelectedArtworkId] = useState('');
   const [showApplicationForm, setShowApplicationForm] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const availableArtworks = mockArtworks.filter(a => a.status === 'available');
+  const [availableArtworks, setAvailableArtworks] = useState<SimpleArtwork[]>([]);
   const [venues, setVenues] = useState<Array<{ id: string; name: string; type?: string | null; city?: string | null; availableSpaces?: number; wallSpaces?: number; imageUrl?: string; address?: string; description?: string }>>([]);
 
   useEffect(() => {
     let mounted = true;
-    async function loadRecommendedVenues() {
+    async function loadData() {
       try {
+        // Load artist's available artworks from Supabase
+        const { data: authData } = await supabase.auth.getUser();
+        const artistId = authData?.user?.id;
+        if (artistId) {
+          const { data: artworks } = await supabase
+            .from('artworks')
+            .select('id, title, image_url, price, status')
+            .eq('artist_id', artistId)
+            .eq('status', 'available');
+          if (mounted && artworks) {
+            setAvailableArtworks(artworks.map((a: any) => ({
+              id: a.id,
+              title: a.title || 'Untitled',
+              imageUrl: a.image_url || '',
+              price: (a.price || 0) / 100,
+              status: a.status,
+            })));
+          }
+        }
+
         // Fetch current artist profile to read preferred cities
         const me = await apiGet<{ role: string; profile: { id: string; city_primary?: string | null; city_secondary?: string | null } }>(
           '/api/profile/me'
         );
-        const artistId = me?.profile?.id;
+        const meId = me?.profile?.id;
         const cp = (me?.profile?.city_primary || '').trim();
         const cs = (me?.profile?.city_secondary || '').trim();
         let path = '/api/venues';
-        if (artistId || cp || cs) {
+        if (meId || cp || cs) {
           const cities = [cp, cs].filter(Boolean).join(',');
           if (cities) {
             path = `/api/venues?cities=${encodeURIComponent(cities)}`;
-          } else if (artistId) {
-            path = `/api/venues?artistId=${encodeURIComponent(artistId)}`;
+          } else if (meId) {
+            path = `/api/venues?artistId=${encodeURIComponent(meId)}`;
           }
         }
         const resp = await apiGet<{ venues: Array<{ id: string; name: string; type?: string | null; city?: string | null }> }>(path);
         const vns = resp?.venues || [];
-        // Shape with demo fields for UI continuity
         const shaped = vns.map(v => ({
           id: v.id,
           name: v.name,
@@ -51,18 +78,30 @@ export function ArtistVenues() {
         if (mounted) setVenues([]);
       }
     }
-    loadRecommendedVenues();
-    return () => {
-      mounted = false;
-    };
+    loadData();
+    return () => { mounted = false; };
   }, []);
 
-  const handleApply = () => {
-    // Mock application submission
-    alert('Application submitted! The venue will review your artwork.');
-    setShowApplicationForm(false);
-    setSelectedVenue(null);
-    setSelectedArtworkId('');
+  const handleApply = async () => {
+    if (!selectedArtworkId || !selectedVenue) return;
+    setSubmitting(true);
+    try {
+      // Set artwork's venue_id and status to 'pending' to create an application
+      const { error } = await supabase
+        .from('artworks')
+        .update({ venue_id: selectedVenue.id, status: 'pending' })
+        .eq('id', selectedArtworkId);
+      if (error) throw error;
+      // Remove from available list
+      setAvailableArtworks(prev => prev.filter(a => a.id !== selectedArtworkId));
+      setShowApplicationForm(false);
+      setSelectedVenue(null);
+      setSelectedArtworkId('');
+    } catch (err) {
+      console.error('Failed to submit application:', err);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -106,36 +145,13 @@ export function ArtistVenues() {
 
               <p className="text-sm text-[var(--text-muted)] mb-4 line-clamp-2">{venue.description}</p>
 
-              {/* Wall Spaces Preview */}
-              <div className="mb-4">
-                <h4 className="text-sm mb-2">Available Wall Spaces</h4>
-                <div className="space-y-2">
-                  {mockWallSpaces.filter(w => w.available).slice(0, 2).map((wall) => (
-                    <div key={wall.id} className="p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg">
-                      <div className="flex items-center gap-3">
-                        {wall.photos && wall.photos.length > 0 && (
-                          <div className="w-16 h-16 bg-[var(--surface-3)] border border-[var(--border)] rounded overflow-hidden flex-shrink-0">
-                            <img
-                              src={wall.photos[0]}
-                              alt={wall.name}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm mb-1 text-[var(--text)]">{wall.name}</p>
-                          <p className="text-xs text-[var(--text-muted)]">{wall.width}" × {wall.height}"</p>
-                          {wall.photos && wall.photos.length > 0 && (
-                            <div className="flex items-center gap-1 text-xs text-[var(--text-muted)] mt-1">
-                              <ImageIcon className="w-3 h-3" />
-                              {wall.photos.length} photo{wall.photos.length !== 1 ? 's' : ''}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              {/* Wall Spaces Info */}
+              <div className="mb-4 p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)]">
+                <p className="text-sm text-[var(--text-muted)]">
+                  {venue.availableSpaces > 0
+                    ? `${venue.availableSpaces} wall space${venue.availableSpaces !== 1 ? 's' : ''} available`
+                    : 'No spaces currently available'}
+                </p>
               </div>
 
               <div className="flex items-center justify-between pt-4 border-t border-[var(--border)]">
@@ -243,10 +259,10 @@ export function ArtistVenues() {
                     </button>
                     <button
                       onClick={handleApply}
-                      disabled={!selectedArtworkId}
+                      disabled={!selectedArtworkId || submitting}
                       className="flex-1 px-4 py-2 bg-[var(--blue)] text-[var(--on-blue)] rounded-lg hover:bg-[var(--blue-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Submit Application
+                      {submitting ? 'Submitting…' : 'Submit Application'}
                     </button>
                   </div>
                 </>

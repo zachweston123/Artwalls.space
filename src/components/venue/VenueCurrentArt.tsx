@@ -1,15 +1,91 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { QrCode, MapPin, Calendar, X } from 'lucide-react';
-import { mockInstalledArtworks } from '../../data/mockData';
-import type { InstalledArtwork } from '../../data/mockData';
 import { API_BASE } from '../../lib/api';
+import { supabase } from '../../lib/supabase';
+
+interface InstalledArtwork {
+  id: string;
+  artworkId: string;
+  artworkTitle: string;
+  artworkImage: string;
+  artistName: string;
+  price: number;
+  wallSpaceId: string;
+  wallSpaceName: string;
+  installDate: string;
+  endDate: string;
+  status: 'active' | 'sold' | 'ending-soon' | 'needs-pickup' | 'ended';
+}
 
 export function VenueCurrentArt() {
-  const [artworks, setArtworks] = useState<InstalledArtwork[]>(mockInstalledArtworks);
+  const [artworks, setArtworks] = useState<InstalledArtwork[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'active' | 'sold' | 'ending-soon' | 'needs-pickup'>('all');
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [selectedAction, setSelectedAction] = useState<{ id: string; action: string } | null>(null);
   const [qrArtwork, setQrArtwork] = useState<InstalledArtwork | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    async function loadCurrentArt() {
+      try {
+        const { data: authData } = await supabase.auth.getUser();
+        const venueId = authData?.user?.id;
+        if (!venueId) { setLoading(false); return; }
+
+        // Get all artworks installed at this venue (active, sold, etc.)
+        const { data: artworkRows } = await supabase
+          .from('artworks')
+          .select('id, title, image_url, price, status, artist_id, venue_id, created_at')
+          .eq('venue_id', venueId)
+          .in('status', ['active', 'sold'])
+          .order('created_at', { ascending: false });
+
+        const rows = artworkRows || [];
+        const artistIds = [...new Set(rows.map((a: any) => a.artist_id).filter(Boolean))];
+        let artistMap: Record<string, string> = {};
+        if (artistIds.length > 0) {
+          const { data: artists } = await supabase.from('artists').select('id, name').in('id', artistIds);
+          for (const ar of (artists || [])) artistMap[ar.id] = ar.name || 'Unknown Artist';
+        }
+
+        // Get wallspace assignments
+        const artworkIds = rows.map((a: any) => a.id);
+        let wallMap: Record<string, string> = {};
+        if (artworkIds.length > 0) {
+          const { data: walls } = await supabase
+            .from('wallspaces')
+            .select('id, name, current_artwork_id')
+            .eq('venue_id', venueId)
+            .in('current_artwork_id', artworkIds);
+          for (const w of (walls || [])) {
+            if (w.current_artwork_id) wallMap[w.current_artwork_id] = w.name || 'Wall Space';
+          }
+        }
+
+        const mapped: InstalledArtwork[] = rows.map((a: any) => ({
+          id: a.id,
+          artworkId: a.id,
+          artworkTitle: a.title || 'Untitled',
+          artworkImage: a.image_url || '',
+          artistName: artistMap[a.artist_id] || 'Unknown Artist',
+          price: (a.price || 0) / 100,
+          wallSpaceId: '',
+          wallSpaceName: wallMap[a.id] || 'Unassigned',
+          installDate: a.created_at || new Date().toISOString(),
+          endDate: new Date(new Date(a.created_at || Date.now()).getTime() + 90 * 24 * 60 * 60 * 1000).toISOString(),
+          status: a.status === 'sold' ? 'sold' : 'active',
+        }));
+        if (mounted) setArtworks(mapped);
+      } catch {
+        if (mounted) setArtworks([]);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+    loadCurrentArt();
+    return () => { mounted = false; };
+  }, []);
 
   const filteredArtworks = artworks.filter(artwork => {
     if (filter === 'all') return true;

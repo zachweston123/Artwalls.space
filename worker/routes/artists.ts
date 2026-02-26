@@ -246,6 +246,54 @@ export async function handleArtists(wc: WorkerContext): Promise<Response | null>
     });
   }
 
+  // ── Artist sales history ──
+  if (url.pathname === '/api/sales/artist' && method === 'GET') {
+    if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
+    const user = await getUser(request);
+    const authErr = requireAuthOrFail(request, user);
+    if (authErr) return authErr;
+    const artistId = url.searchParams.get('artistId') || user!.id;
+    if (!artistId) return json({ error: 'Missing artistId' }, { status: 400 });
+    if (user!.id !== artistId && !(await isAdminUser(user))) {
+      return json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const { data: orders, error: ordErr } = await supabaseAdmin
+      .from('orders')
+      .select('id,amount_cents,artist_payout_cents,artwork_id,venue_id,created_at')
+      .eq('artist_id', artistId)
+      .order('created_at', { ascending: false })
+      .limit(500);
+    if (ordErr) return json({ error: ordErr.message }, { status: 500 });
+
+    const rows = orders || [];
+    // Batch-fetch artwork titles & images
+    const artworkIds = [...new Set(rows.map((o: any) => o.artwork_id).filter(Boolean))];
+    const venueIds = [...new Set(rows.map((o: any) => o.venue_id).filter(Boolean))];
+    let artworkMap: Record<string, { title: string; image_url: string | null }> = {};
+    let venueMap: Record<string, string> = {};
+    if (artworkIds.length > 0) {
+      const { data: artworks } = await supabaseAdmin.from('artworks').select('id,title,image_url').in('id', artworkIds);
+      for (const a of (artworks || [])) artworkMap[a.id] = { title: a.title || '', image_url: a.image_url || null };
+    }
+    if (venueIds.length > 0) {
+      const { data: venues } = await supabaseAdmin.from('venues').select('id,name').in('id', venueIds);
+      for (const v of (venues || [])) venueMap[v.id] = v.name || '';
+    }
+
+    const sales = rows.map((o: any) => ({
+      id: o.id,
+      price: (o.amount_cents || 0) / 100,
+      artistEarnings: (o.artist_payout_cents || 0) / 100,
+      artworkTitle: artworkMap[o.artwork_id]?.title || 'Untitled',
+      artworkImage: artworkMap[o.artwork_id]?.image_url || null,
+      venueName: venueMap[o.venue_id] || null,
+      saleDate: o.created_at,
+    }));
+
+    return json({ sales });
+  }
+
   // ── Artist analytics aggregation ──
   if (url.pathname === '/api/analytics/artist' && method === 'GET') {
     if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });

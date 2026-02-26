@@ -1,17 +1,75 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CheckCircle, XCircle, Clock, Calendar } from 'lucide-react';
-import { mockApplications } from '../../data/mockData';
-import type { Application } from '../../data/mockData';
+import { supabase } from '../../lib/supabase';
 import { TimeSlotPicker } from '../scheduling/TimeSlotPicker';
 import { InstallRules } from '../scheduling/InstallRules';
 import { DurationBadge } from '../scheduling/DisplayDurationSelector';
 import { createVenueBooking, API_BASE } from '../../lib/api';
 
+interface Application {
+  id: string;
+  artworkId: string;
+  artworkTitle: string;
+  artistName: string;
+  artworkImage: string;
+  venueId: string;
+  venueName: string;
+  status: 'pending' | 'approved' | 'rejected';
+  appliedDate: string;
+  approvedDuration?: number;
+}
+
 export function ArtistApplicationsWithScheduling() {
-  const [applications, setApplications] = useState<Application[]>(mockApplications);
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [showSchedulePicker, setShowSchedulePicker] = useState(false);
   const [scheduledInstalls, setScheduledInstalls] = useState<{ [key: string]: { label: string; bookingId: string; links?: { ics: string; google: string } } }>({});
+
+  useEffect(() => {
+    let mounted = true;
+    async function loadApplications() {
+      try {
+        const { data: authData } = await supabase.auth.getUser();
+        const artistId = authData?.user?.id;
+        if (!artistId) { setLoading(false); return; }
+
+        const { data: artworks } = await supabase
+          .from('artworks')
+          .select('id, title, image_url, status, venue_id, created_at')
+          .eq('artist_id', artistId)
+          .in('status', ['pending', 'active', 'rejected'])
+          .order('created_at', { ascending: false });
+
+        const rows = artworks || [];
+        const venueIds = [...new Set(rows.map((a: any) => a.venue_id).filter(Boolean))];
+        let venueMap: Record<string, string> = {};
+        if (venueIds.length > 0) {
+          const { data: venues } = await supabase.from('venues').select('id, name').in('id', venueIds);
+          for (const v of (venues || [])) venueMap[v.id] = v.name || 'Unknown Venue';
+        }
+
+        const mapped: Application[] = rows.map((a: any) => ({
+          id: a.id,
+          artworkId: a.id,
+          artworkTitle: a.title || 'Untitled',
+          artistName: '',
+          artworkImage: a.image_url || '',
+          venueId: a.venue_id || '',
+          venueName: venueMap[a.venue_id] || 'Unknown Venue',
+          status: a.status === 'active' ? 'approved' : a.status === 'rejected' ? 'rejected' : 'pending',
+          appliedDate: a.created_at || new Date().toISOString(),
+        }));
+        if (mounted) setApplications(mapped);
+      } catch {
+        if (mounted) setApplications([]);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+    loadApplications();
+    return () => { mounted = false; };
+  }, []);
 
   const handleScheduleInstall = (app: Application) => {
     setSelectedApp(app);

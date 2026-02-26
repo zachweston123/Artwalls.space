@@ -1,9 +1,9 @@
 import { MapPin, Edit, Flag, Eye, Instagram } from 'lucide-react';
 import { LabelChip } from '../LabelChip';
-import { mockArtworks } from '../../data/mockData';
 import type { User } from '../../App';
 import { useEffect, useState } from 'react';
 import { apiGet } from '../../lib/api';
+import { supabase } from '../../lib/supabase';
 
 interface ArtistProfileViewProps {
   artistId?: string;
@@ -49,6 +49,7 @@ export function ArtistProfileView({
     totalSales: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [artworks, setArtworks] = useState<Array<{ id: string; title: string; imageUrl: string; price: number; status: string }>>([]);
 
   useEffect(() => {
     let isMounted = true;
@@ -80,7 +81,32 @@ export function ArtistProfileView({
         if (isMounted) setLoading(false);
       }
     }
+
+    async function loadArtworks() {
+      if (!artistId) return;
+      try {
+        const { data } = await supabase
+          .from('artworks')
+          .select('id, title, image_url, price, status')
+          .eq('artist_id', artistId)
+          .order('created_at', { ascending: false })
+          .limit(50);
+        if (isMounted && data) {
+          setArtworks(data.map((a: any) => ({
+            id: a.id,
+            title: a.title || 'Untitled',
+            imageUrl: a.image_url || '',
+            price: (a.price || 0) / 100,
+            status: a.status || 'available',
+          })));
+        }
+      } catch {
+        // Non-critical
+      }
+    }
+
     loadArtistProfile();
+    loadArtworks();
     return () => {
       isMounted = false;
     };
@@ -208,12 +234,12 @@ export function ArtistProfileView({
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl">Portfolio</h2>
           <span className="text-sm text-[var(--text-muted)]">
-            {mockArtworks.length} artworks
+            {artworks.length} artworks
           </span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {mockArtworks.map((artwork) => (
+          {artworks.map((artwork) => (
             <button
               key={artwork.id}
               onClick={() => onViewArtwork?.(artwork.id)}
@@ -245,7 +271,7 @@ export function ArtistProfileView({
           ))}
         </div>
 
-        {mockArtworks.length === 0 && (
+        {artworks.length === 0 && (
           <div className="text-center py-16 bg-[var(--surface-1)] rounded-xl border border-[var(--border)]">
             <div className="w-16 h-16 bg-[var(--surface-2)] border border-[var(--border)] rounded-full flex items-center justify-center mx-auto mb-4">
               <Eye className="w-8 h-8 text-[var(--text-muted)]" />

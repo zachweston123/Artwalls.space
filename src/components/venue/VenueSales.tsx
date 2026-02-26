@@ -1,11 +1,22 @@
+import { useEffect, useState } from 'react';
 import { DollarSign, TrendingUp, Package } from 'lucide-react';
-import { mockSales } from '../../data/mockData';
 import { PageHeroHeader } from '../PageHeroHeader';
 import { EmptyState } from '../EmptyState';
 import { formatCurrency, safeDivide } from '../../utils/format';
 import { VenuePayoutsCard } from './VenuePayoutsCard';
 import type { User } from '../../App';
 import { StatCard } from '../ui/stat-card';
+import { supabase } from '../../lib/supabase';
+
+interface VenueSale {
+  id: string;
+  artworkTitle: string;
+  artworkImage: string;
+  artistName: string;
+  price: number;
+  venueEarnings: number;
+  saleDate: string;
+}
 
 interface VenueSalesProps {
   onNavigate?: (page: string) => void;
@@ -13,8 +24,65 @@ interface VenueSalesProps {
 }
 
 export function VenueSales({ onNavigate, user }: VenueSalesProps) {
-  const totalEarnings = mockSales.reduce((sum, sale) => sum + sale.venueEarnings, 0);
-  const totalSales = mockSales.length;
+  const [sales, setSales] = useState<VenueSale[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    async function loadSales() {
+      try {
+        const { data: authData } = await supabase.auth.getUser();
+        const venueId = user?.id || authData?.user?.id;
+        if (!venueId) { setLoading(false); return; }
+
+        const { data: orders } = await supabase
+          .from('orders')
+          .select('id, amount_cents, venue_commission_cents, artwork_id, created_at')
+          .eq('venue_id', venueId)
+          .order('created_at', { ascending: false })
+          .limit(500);
+
+        const rows = orders || [];
+        const artworkIds = [...new Set(rows.map((o: any) => o.artwork_id).filter(Boolean))];
+        let artworkMap: Record<string, { title: string; image_url: string | null; artist_name: string }> = {};
+        if (artworkIds.length > 0) {
+          const { data: artworks } = await supabase
+            .from('artworks')
+            .select('id, title, image_url, artist_id')
+            .in('id', artworkIds);
+          const artistIds = [...new Set((artworks || []).map((a: any) => a.artist_id).filter(Boolean))];
+          let artistMap: Record<string, string> = {};
+          if (artistIds.length > 0) {
+            const { data: artists } = await supabase.from('artists').select('id, name').in('id', artistIds);
+            for (const ar of (artists || [])) artistMap[ar.id] = ar.name || 'Unknown Artist';
+          }
+          for (const a of (artworks || [])) {
+            artworkMap[a.id] = { title: a.title || 'Untitled', image_url: a.image_url || null, artist_name: artistMap[a.artist_id] || 'Unknown Artist' };
+          }
+        }
+
+        const shaped: VenueSale[] = rows.map((o: any) => ({
+          id: o.id,
+          artworkTitle: artworkMap[o.artwork_id]?.title || 'Untitled',
+          artworkImage: artworkMap[o.artwork_id]?.image_url || '',
+          artistName: artworkMap[o.artwork_id]?.artist_name || 'Unknown Artist',
+          price: (o.amount_cents || 0) / 100,
+          venueEarnings: (o.venue_commission_cents || 0) / 100,
+          saleDate: o.created_at,
+        }));
+        if (mounted) setSales(shaped);
+      } catch {
+        if (mounted) setSales([]);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+    loadSales();
+    return () => { mounted = false; };
+  }, [user?.id]);
+
+  const totalEarnings = sales.reduce((sum, sale) => sum + sale.venueEarnings, 0);
+  const totalSales = sales.length;
   const averageCommission = safeDivide(totalEarnings, totalSales);
   const averageCommissionDisplay = averageCommission === null ? formatCurrency(0) : formatCurrency(averageCommission);
 
@@ -82,7 +150,7 @@ export function VenueSales({ onNavigate, user }: VenueSalesProps) {
 
         {/* Mobile stacked cards */}
         <div className="sm:hidden divide-y divide-[var(--border)]">
-          {mockSales.map((sale) => (
+          {sales.map((sale) => (
             <div key={sale.id} className="p-4 space-y-2">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-[var(--surface-3)] rounded overflow-hidden flex-shrink-0">
@@ -123,7 +191,7 @@ export function VenueSales({ onNavigate, user }: VenueSalesProps) {
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border)]">
-              {mockSales.map((sale) => (
+              {sales.map((sale) => (
                 <tr key={sale.id} className="transition-colors hover:bg-[var(--surface-3)]">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
@@ -158,7 +226,7 @@ export function VenueSales({ onNavigate, user }: VenueSalesProps) {
           </table>
         </div>
 
-        {mockSales.length === 0 && (
+        {sales.length === 0 && !loading && (
           <EmptyState
             icon={<DollarSign className="w-8 h-8" />}
             title="No sales yet"

@@ -62,29 +62,21 @@ export function VenueWalls() {
           return;
         }
         const user = data.user;
-        console.log('VenueWalls: user:', user, 'role:', user?.user_metadata?.role);
         if (!user) {
-          console.warn('VenueWalls: No user found');
           setAuthError('Please log in to access this page.');
           return;
         }
         if (user.user_metadata?.role !== 'venue') {
-          console.warn('VenueWalls: User is not a venue');
           setAuthError('This page is only available to venue accounts.');
           return;
         }
         const venueId = user?.id;
-        console.log('VenueWalls: venueId:', venueId);
         if (!venueId) {
-          console.warn('VenueWalls: No venue ID found');
           setAuthError('Unable to identify your venue account.');
           return;
         }
-        console.log('VenueWalls: Loading wallspaces for venue:', venueId);
         const items = await apiGet<WallSpace[]>(`/api/venues/${venueId}/wallspaces`);
-        console.log('VenueWalls: API response:', items);
         const wallSpacesArray = Array.isArray(items) ? items : [];
-        console.log('VenueWalls: Setting wallspaces:', wallSpacesArray);
         if (isMounted) setWallSpaces(wallSpacesArray);
         setAuthError(null);
       } catch (err) {
@@ -127,15 +119,6 @@ export function VenueWalls() {
       const venueId = user?.id;
       if (!venueId) throw new Error('Missing venue session');
       
-      console.log('Creating wallspace with:', {
-        name: newWall.name.trim(),
-        width: widthNum,
-        height: heightNum,
-        description: newWall.description.trim(),
-        photos: newWall.photos,
-        venueId
-      });
-      
       const created = await apiPost<WallSpace>(`/api/venues/${venueId}/wallspaces`, {
         name: newWall.name.trim(),
         width: widthNum,
@@ -143,8 +126,6 @@ export function VenueWalls() {
         description: newWall.description.trim(),
         photos: newWall.photos,
       });
-      
-      console.log('Wall space created:', created);
       
       setWallSpaces([created, ...wallSpaces]);
       setNewWall({ name: '', width: '', height: '', description: '', photos: [] });

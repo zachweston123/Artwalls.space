@@ -1,10 +1,20 @@
 import { useState } from 'react';
 import { X, MapPin } from 'lucide-react';
-import { mockWallSpaces } from '../../data/mockData';
+
+interface WallSpaceItem {
+  id: string;
+  name: string;
+  width?: number;
+  height?: number;
+  available: boolean;
+  photos?: string[];
+  location?: string;
+}
 
 interface InviteToApplyModalProps {
   artistName: string;
   venueName: string;
+  wallSpaces?: WallSpaceItem[];
   onSend: (data: InviteData) => void;
   onCancel: () => void;
 }
@@ -15,7 +25,7 @@ export interface InviteData {
   message: string;
 }
 
-export function InviteToApplyModal({ artistName, venueName, onSend, onCancel }: InviteToApplyModalProps) {
+export function InviteToApplyModal({ artistName, venueName, wallSpaces = [], onSend, onCancel }: InviteToApplyModalProps) {
   const [formData, setFormData] = useState<InviteData>({
     wallspaceId: '',
     duration: 90,
@@ -33,7 +43,7 @@ export function InviteToApplyModal({ artistName, venueName, onSend, onCancel }: 
     onSend(formData);
   };
 
-  const selectedWallspace = mockWallSpaces.find(w => w.id === formData.wallspaceId);
+  const selectedWallspace = wallSpaces.find(w => w.id === formData.wallspaceId);
 
   // Template message
   const templateMessage = `Hi ${artistName},\n\nWe'd love to feature your work at ${venueName}. Your artistic style would be a great fit for our space and community.\n\nWe're inviting you to apply for a ${formData.duration}-day display. Please let us know if you're interested!\n\nLooking forward to potentially working together.`;
@@ -99,7 +109,7 @@ export function InviteToApplyModal({ artistName, venueName, onSend, onCancel }: 
               </button>
 
               {/* Specific Wallspaces */}
-              {mockWallSpaces.filter(w => w.available).slice(0, 3).map((wall) => (
+              {wallSpaces.filter(w => w.available).slice(0, 3).map((wall) => (
                 <button
                   key={wall.id}
                   type="button"

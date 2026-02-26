@@ -25,7 +25,8 @@ export function StudentDiscount({ onNavigate }: StudentDiscountProps) {
   const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
-    loadStudentStatus();
+    // Student features are coming soon - skip API call
+    setLoading(false);
   }, []);
 
   async function loadStudentStatus() {
@@ -68,6 +69,17 @@ export function StudentDiscount({ onNavigate }: StudentDiscountProps) {
 
   return (
     <div className="bg-[var(--bg)] text-[var(--text)]">
+      {/* Coming Soon Notice */}
+      <div className="mb-6 p-4 bg-[var(--surface-2)] border border-[var(--blue)] border-opacity-30 rounded-lg flex items-start gap-3">
+        <Clock className="w-5 h-5 text-[var(--blue)] flex-shrink-0 mt-0.5" />
+        <div>
+          <h4 className="text-sm font-semibold text-[var(--text)]">Coming Soon</h4>
+          <p className="text-xs text-[var(--text-muted)]">
+            Student verification and discount features are under active development. Check back soon!
+          </p>
+        </div>
+      </div>
+
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
           <GraduationCap className="w-8 h-8 text-[var(--blue)]" />

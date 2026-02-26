@@ -1,11 +1,25 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Check, X, Clock, Calendar, MapPin } from 'lucide-react';
-import { mockApplications } from '../../data/mockData';
-import type { Application } from '../../data/mockData';
+import { supabase } from '../../lib/supabase';
 import { DisplayDurationSelector } from '../scheduling/DisplayDurationSelector';
 
+interface Application {
+  id: string;
+  artworkId: string;
+  artworkTitle: string;
+  artistName: string;
+  artworkImage: string;
+  venueId: string;
+  venueName: string;
+  status: 'pending' | 'approved' | 'rejected';
+  appliedDate: string;
+  approvedDuration?: number;
+  approvedDate?: string;
+}
+
 export function VenueApplications() {
-  const [applications, setApplications] = useState<Application[]>(mockApplications);
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
   const [showApprovalModal, setShowApprovalModal] = useState(false);
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
@@ -20,6 +34,56 @@ export function VenueApplications() {
     startDate: new Date(),
     installTimeOption: 'standard',
   });
+
+  // Load real applications from Supabase
+  useEffect(() => {
+    let isMounted = true;
+    async function loadApplications() {
+      try {
+        const { data: authData } = await supabase.auth.getUser();
+        const venueId = authData?.user?.id;
+        if (!venueId) { setLoading(false); return; }
+
+        // Query artworks submitted to this venue
+        const { data: appData } = await supabase
+          .from('artworks')
+          .select(`
+            id,
+            title,
+            image_url,
+            status,
+            artist_id,
+            created_at,
+            artists(name)
+          `)
+          .eq('venue_id', venueId)
+          .in('status', ['pending', 'active', 'rejected'])
+          .order('created_at', { ascending: false });
+
+        if (isMounted && appData) {
+          const mapped: Application[] = appData.map((a: any) => ({
+            id: a.id,
+            artworkId: a.id,
+            artworkTitle: a.title || 'Untitled',
+            artistName: a.artists?.name || 'Unknown Artist',
+            artworkImage: a.image_url || '',
+            venueId: venueId,
+            venueName: '',
+            status: a.status === 'active' ? 'approved' : a.status === 'rejected' ? 'rejected' : 'pending',
+            appliedDate: a.created_at || new Date().toISOString(),
+          }));
+          setApplications(mapped);
+        }
+      } catch (err) {
+        console.error('Failed to load applications:', err);
+        if (isMounted) setApplications([]);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+    loadApplications();
+    return () => { isMounted = false; };
+  }, []);
 
   const filteredApplications = applications.filter(
     app => filter === 'all' || app.status === filter
@@ -40,23 +104,44 @@ export function VenueApplications() {
     }
   };
 
-  const confirmApproval = () => {
+  const confirmApproval = async () => {
     if (!selectedApplication) return;
     
-    setApplications(applications.map(app =>
-      app.id === selectedApplication.id 
-        ? { ...app, status: 'approved' as const, approvedDuration: approvalData.duration, approvedDate: new Date().toISOString() } 
-        : app
-    ));
+    // Persist to Supabase: update artwork status to 'active'
+    try {
+      await supabase
+        .from('artworks')
+        .update({ status: 'active' })
+        .eq('id', selectedApplication.artworkId);
+
+      setApplications(applications.map(app =>
+        app.id === selectedApplication.id 
+          ? { ...app, status: 'approved' as const, approvedDuration: approvalData.duration, approvedDate: new Date().toISOString() } 
+          : app
+      ));
+    } catch (err) {
+      console.error('Failed to approve application:', err);
+    }
     
     setShowApprovalModal(false);
     setSelectedApplication(null);
   };
 
-  const handleReject = (id: string) => {
-    setApplications(applications.map(app =>
-      app.id === id ? { ...app, status: 'rejected' as const } : app
-    ));
+  const handleReject = async (id: string) => {
+    try {
+      const app = applications.find(a => a.id === id);
+      if (app) {
+        await supabase
+          .from('artworks')
+          .update({ status: 'rejected' })
+          .eq('id', app.artworkId);
+      }
+      setApplications(applications.map(app =>
+        app.id === id ? { ...app, status: 'rejected' as const } : app
+      ));
+    } catch (err) {
+      console.error('Failed to reject application:', err);
+    }
   };
 
   const getStatusBadge = (status: string) => {
