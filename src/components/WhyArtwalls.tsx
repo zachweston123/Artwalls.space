@@ -88,7 +88,10 @@ export function WhyArtwalls({ userRole, onNavigate, onBack }: WhyArtwalksProps) 
         </div>
       </section>
 
-      {/* How It Works - 3 Step Strip */}
+      {/* How It Works - 3 Step Strip
+          Canonical "How Artwalls Works" section — describes the buy-flow
+          (QR → scan → payout). The homepage uses "Getting Started" for
+          onboarding steps to avoid duplicate naming. Keep these distinct. */}
       <section className="py-12 sm:py-16 px-4 bg-[var(--surface)]">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-2xl font-bold text-center mb-12 text-[var(--text)]">

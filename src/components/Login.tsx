@@ -1,9 +1,17 @@
+/**
+ * Login.tsx — Artwalls public landing + auth form.
+ *
+ * Removed duplicate role selectors (hero quick-picks vs. Choose Your Path cards);
+ * removed duplicate step lists (in-card 3-step vs. page-level steps section);
+ * standardised "How it works" naming — homepage uses "Getting Started" for
+ * onboarding steps; WhyArtwalls keeps "How Artwalls Works" for the buy-flow.
+ */
+
 import { useState, useEffect } from 'react';
-import { Palette, Store, MapPin, Image, DollarSign, Users, Star, Shield, ArrowRight, ChevronRight } from 'lucide-react';
+import { Palette, Store, MapPin, Image, DollarSign, Users, Star, Shield, ChevronRight } from 'lucide-react';
 import { SEO } from './SEO';
 import { FreshnessProof } from './shared/FreshnessProof';
 import { FoundingStorySection } from './FoundingStorySection';
-import { Button } from './ui/button';
 import type { User, UserRole } from '../App';
 import { trackAnalyticsEvent } from '../lib/analytics';
 
@@ -305,30 +313,6 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
                 </button>
               </div>
             </div>
-
-            {/* Right: role quick-picks (visual teaser) */}
-            <div className="hidden lg:flex flex-col gap-4">
-              <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--border)] p-6 flex items-center gap-4 hover:border-[var(--blue)] transition-colors cursor-pointer" onClick={() => setSelectedRole('artist')} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedRole('artist'); } }}>
-                <div className="w-12 h-12 rounded-full bg-[var(--blue-muted)] flex items-center justify-center shrink-0">
-                  <Palette className="w-6 h-6 text-[var(--blue)]" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-[var(--text)]">I'm an Artist</p>
-                  <p className="text-xs text-[var(--text-muted)]">Get placed in venues, sell directly to buyers</p>
-                </div>
-                <ArrowRight className="w-5 h-5 text-[var(--text-muted)] ml-auto shrink-0" />
-              </div>
-              <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--border)] p-6 flex items-center gap-4 hover:border-[var(--green)] transition-colors cursor-pointer" onClick={() => setSelectedRole('venue')} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedRole('venue'); } }}>
-                <div className="w-12 h-12 rounded-full bg-[var(--green-muted)] flex items-center justify-center shrink-0">
-                  <Store className="w-6 h-6 text-[var(--green)]" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-[var(--text)]">I'm a Venue</p>
-                  <p className="text-xs text-[var(--text-muted)]">Host art for free, earn on every sale</p>
-                </div>
-                <ArrowRight className="w-5 h-5 text-[var(--text-muted)] ml-auto shrink-0" />
-              </div>
-            </div>
           </div>
         </section>
 
@@ -360,27 +344,19 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
                     <p className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
                       Publish your work, apply to local venues, and sell directly to buyers — all from one dashboard.
                     </p>
-                    <p className="text-xs text-[var(--blue)] mt-2 font-medium">Subscribers keep up to 85% of every sale</p>
+                    <p className="text-xs text-[var(--blue)] mt-2 font-medium">Take home up to 85% per sale</p>
                   </div>
                   <span className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-[var(--blue)] text-[var(--on-blue)] text-sm font-medium group-hover:bg-[var(--blue-hover)] transition-colors">
                     Continue as Artist — Free
                   </span>
                 </div>
-                {/* 3-step quick-start */}
-                <div className="mt-5 pt-5 border-t border-[var(--border)]">
-                  <div className="flex flex-col gap-2.5 text-xs text-[var(--text-muted)]">
-                    {[
-                      { n: '1', t: 'Create your profile' },
-                      { n: '2', t: 'Publish 1 artwork' },
-                      { n: '3', t: 'Apply to a venue or call' },
-                    ].map((s) => (
-                      <div key={s.n} className="flex items-center gap-2">
-                        <span className="w-5 h-5 rounded-full bg-[var(--blue-muted)] text-[var(--blue)] flex items-center justify-center text-[10px] font-bold shrink-0">{s.n}</span>
-                        {s.t}
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                {/* Benefit bullets */}
+                <ul className="mt-5 pt-5 border-t border-[var(--border)] space-y-2 text-xs text-[var(--text-muted)]">
+                  <li className="flex items-center gap-2"><MapPin className="w-3.5 h-3.5 text-[var(--blue)] shrink-0" />Get placed on real walls in cafés, offices, and restaurants</li>
+                  <li className="flex items-center gap-2"><DollarSign className="w-3.5 h-3.5 text-[var(--blue)] shrink-0" />Sell via QR codes — take home up to 85% per sale</li>
+                  <li className="flex items-center gap-2"><Image className="w-3.5 h-3.5 text-[var(--blue)] shrink-0" />Build a portfolio visible to venues and collectors</li>
+                  <li className="flex items-center gap-2"><Star className="w-3.5 h-3.5 text-[var(--blue)] shrink-0" />Track placements, payouts, and reviews in one dashboard</li>
+                </ul>
                 <a
                   href="/why-artwalls"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); onNavigate?.('why-artwalls-artist'); }}
@@ -413,21 +389,13 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
                     Continue as Venue — Free Forever
                   </span>
                 </div>
-                {/* 3-step quick-start */}
-                <div className="mt-5 pt-5 border-t border-[var(--border)]">
-                  <div className="flex flex-col gap-2.5 text-xs text-[var(--text-muted)]">
-                    {[
-                      { n: '1', t: 'Create your venue' },
-                      { n: '2', t: 'Add 1 wall space' },
-                      { n: '3', t: 'Post a call for art' },
-                    ].map((s) => (
-                      <div key={s.n} className="flex items-center gap-2">
-                        <span className="w-5 h-5 rounded-full bg-[var(--green-muted)] text-[var(--green)] flex items-center justify-center text-[10px] font-bold shrink-0">{s.n}</span>
-                        {s.t}
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                {/* Benefit bullets */}
+                <ul className="mt-5 pt-5 border-t border-[var(--border)] space-y-2 text-xs text-[var(--text-muted)]">
+                  <li className="flex items-center gap-2"><Image className="w-3.5 h-3.5 text-[var(--green)] shrink-0" />Transform blank walls into rotating art galleries</li>
+                  <li className="flex items-center gap-2"><Users className="w-3.5 h-3.5 text-[var(--green)] shrink-0" />Attract art-loving customers and increase foot traffic</li>
+                  <li className="flex items-center gap-2"><DollarSign className="w-3.5 h-3.5 text-[var(--green)] shrink-0" />Earn a venue commission on every artwork sold</li>
+                  <li className="flex items-center gap-2"><Shield className="w-3.5 h-3.5 text-[var(--green)] shrink-0" />Scheduling, install support, and damage protection included</li>
+                </ul>
                 <a
                   href="/venues"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); onNavigate?.('why-artwalls-venue'); }}
@@ -447,12 +415,15 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
           isLoggedIn={false}
         />
 
-        {/* ── How It Works ────────────────────────────────────── */}
+        {/* ── Getting Started (onboarding steps) ─────────────── */}
         <section className="px-6 py-14 sm:py-20">
           <div className="max-w-5xl mx-auto">
-            <h2 className="text-xl sm:text-2xl font-semibold text-[var(--text)] text-center mb-10 font-display tracking-tight">
-              How Artwalls Works
+            <h2 className="text-xl sm:text-2xl font-semibold text-[var(--text)] text-center mb-3 font-display tracking-tight">
+              Getting Started
             </h2>
+            <p className="text-[var(--text-muted)] text-sm sm:text-base max-w-md mx-auto text-center mb-10">
+              From sign-up to your first placement in three steps.
+            </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Artist path */}
               <div className="bg-[var(--surface-1)] rounded-2xl p-6 border border-[var(--border)]">
@@ -513,7 +484,7 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
                   {[
                     { icon: <Image className="w-4 h-4 text-[var(--blue)]" />, text: 'Build a professional portfolio visible to venues and collectors' },
                     { icon: <MapPin className="w-4 h-4 text-[var(--blue)]" />, text: 'Get your art on real walls in cafés, offices, and restaurants' },
-                    { icon: <DollarSign className="w-4 h-4 text-[var(--blue)]" />, text: 'Sell directly via QR codes — keep 85%+ of every sale' },
+                    { icon: <DollarSign className="w-4 h-4 text-[var(--blue)]" />, text: 'Sell directly via QR codes — take home up to 85% per sale' },
                     { icon: <Star className="w-4 h-4 text-[var(--blue)]" />, text: 'Gain exposure, build your reputation, and grow your career' },
                   ].map((item, i) => (
                     <li key={i} className="flex items-start gap-3">
@@ -552,7 +523,6 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
     );
   }
 
-  const accentColor = selectedRole === 'artist' ? 'blue' : 'green';
   const ringClass = selectedRole === 'artist' ? 'focus:ring-[var(--focus)]' : 'focus:ring-[var(--green)]';
   const inputClass = `w-full px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] placeholder:text-[var(--text-muted)]/60 focus:outline-none focus:ring-2 ${ringClass} transition-shadow text-sm`;
 
