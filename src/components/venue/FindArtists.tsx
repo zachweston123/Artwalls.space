@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Search, MapPin, Filter, Users } from 'lucide-react';
+import { useEffect, useState, useRef, useCallback } from 'react';
+import { Search, MapPin, Filter, Users, AlertCircle } from 'lucide-react';
 import { LabelChip } from '../LabelChip';
 import { apiGet } from '../../lib/api';
 import { PageHeroHeader } from '../PageHeroHeader';
@@ -11,6 +11,18 @@ interface FindArtistsProps {
   onViewProfile: (artistId: string) => void;
   onNavigate?: (page: string) => void;
 }
+
+type ArtistCard = {
+  id: string;
+  name: string;
+  avatar?: string;
+  location: string;
+  bio: string;
+  artTypes: string[];
+  openToNew: boolean;
+  portfolioCount: number;
+  isFoundingArtist: boolean;
+};
 
 export function FindArtists({ onInviteArtist, onViewProfile, onNavigate }: FindArtistsProps) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -42,62 +54,136 @@ export function FindArtists({ onInviteArtist, onViewProfile, onNavigate }: FindA
     setSearchQuery('');
   };
 
-  const [artists, setArtists] = useState<any[]>([]);
+  const [artists, setArtists] = useState<ArtistCard[]>([]);
   const [venueCity, setVenueCity] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const venueCityRef = useRef<string>('');
+  const venueCityLoaded = useRef(false);
 
-  // Debounce search
+  // Load venue city once on mount
   useEffect(() => {
-    let isMounted = true;
-    const timeout = setTimeout(async () => {
-      await loadArtists();
-    }, 500);
-
-    async function loadArtists() {
+    let cancelled = false;
+    (async () => {
       try {
-        // Load venue profile to determine local city (only once if not loaded)
-        let city = venueCity;
-        if (!city && !venueCity) {
-          const me = await apiGet<{ role: string; profile: { id: string; city?: string | null } }>('/api/profile/me');
-          city = (me?.profile?.city || '').trim();
-          if (isMounted) setVenueCity(city);
+        const me = await apiGet<{ role: string; profile: { id: string; city?: string | null } }>('/api/profile/me');
+        const city = (me?.profile?.city || '').trim();
+        if (!cancelled) {
+          venueCityRef.current = city;
+          venueCityLoaded.current = true;
+          setVenueCity(city);
         }
-
-        let path = '/api/artists';
-        const params = new URLSearchParams();
-        if (city) params.append('city', city);
-        if (searchQuery.trim()) params.append('q', searchQuery.trim());
-
-        if (Array.from(params).length > 0) {
-          path += `?${params.toString()}`;
+      } catch (err) {
+        console.warn('[FindArtists] Could not load venue profile:', err);
+        if (!cancelled) {
+          venueCityLoaded.current = true;
+          setVenueCity('');
         }
-
-        const resp = await apiGet<{ artists: Array<{ id: string; name?: string | null; profile_photo_url?: string | null; location?: string }> }>(
-          path
-        );
-        const apiArtists = resp?.artists || [];
-        const shaped = apiArtists.map((a) => ({
-          id: a.id,
-          name: a.name || 'Artist',
-          avatar: a.profile_photo_url || undefined,
-          location: a.location || city || 'Local',
-          bio: (a as any).bio || '',
-          artTypes: Array.isArray((a as any).artTypes) ? (a as any).artTypes : [],
-          openToNew: (a as any).is_live !== false,
-          portfolioCount: (a as any).portfolioCount || 0,
-          isFoundingArtist: !!(a as any).isFoundingArtist,
-        }));
-        if (isMounted) setArtists(shaped);
-      } catch {
-        if (isMounted) setArtists([]);
       }
-    }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
-    // Initial load is covered by debounce
-    return () => {
-      isMounted = false;
-      clearTimeout(timeout);
-    };
-  }, [searchQuery]); // Re-run when searchQuery changes
+  // Fetch artists (debounced on searchQuery, triggered by venueCity changes)
+  const loadArtists = useCallback(async (city: string, query: string) => {
+    try {
+      setLoading(true);
+      setFetchError(null);
+
+      let path = '/api/artists';
+      const params = new URLSearchParams();
+      if (city) params.append('city', city);
+      if (query.trim()) params.append('q', query.trim());
+      if (params.toString()) path += `?${params.toString()}`;
+
+      const resp = await apiGet<{
+        artists: Array<{
+          id: string;
+          name?: string | null;
+          profilePhotoUrl?: string | null;
+          location?: string;
+          bio?: string;
+          artTypes?: string[];
+          is_live?: boolean;
+          portfolioCount?: number;
+          isFoundingArtist?: boolean;
+        }>;
+        _meta?: { cityFilter: string | null; nameFilter: string | null; totalReturned: number };
+      }>(path);
+
+      const apiArtists = resp?.artists || [];
+
+      // Dev-only diagnostics
+      if (import.meta.env?.DEV && resp?._meta) {
+        console.log('[FindArtists] API meta:', resp._meta);
+      }
+
+      const shaped: ArtistCard[] = apiArtists.map((a) => ({
+        id: a.id,
+        name: a.name || 'Artist',
+        avatar: a.profilePhotoUrl || undefined,
+        location: a.location || city || 'Local',
+        bio: a.bio || '',
+        artTypes: Array.isArray(a.artTypes) ? a.artTypes : [],
+        openToNew: a.is_live !== false,
+        portfolioCount: a.portfolioCount || 0,
+        isFoundingArtist: !!a.isFoundingArtist,
+      }));
+
+      setArtists(shaped);
+
+      // If city filter returned 0 and there was no text search, retry
+      // without city to show all artists as a fallback
+      if (shaped.length === 0 && city && !query.trim()) {
+        const fallbackResp = await apiGet<{
+          artists: Array<{
+            id: string;
+            name?: string | null;
+            profilePhotoUrl?: string | null;
+            location?: string;
+            bio?: string;
+            artTypes?: string[];
+            is_live?: boolean;
+            portfolioCount?: number;
+            isFoundingArtist?: boolean;
+          }>;
+        }>('/api/artists');
+        const fallbackArtists = fallbackResp?.artists || [];
+        if (fallbackArtists.length > 0) {
+          setArtists(fallbackArtists.map((a) => ({
+            id: a.id,
+            name: a.name || 'Artist',
+            avatar: a.profilePhotoUrl || undefined,
+            location: a.location || 'Nearby',
+            bio: a.bio || '',
+            artTypes: Array.isArray(a.artTypes) ? a.artTypes : [],
+            openToNew: a.is_live !== false,
+            portfolioCount: a.portfolioCount || 0,
+            isFoundingArtist: !!a.isFoundingArtist,
+          })));
+          setFetchError(`No artists found in ${city}. Showing all discoverable artists instead.`);
+        }
+      }
+    } catch (err) {
+      console.error('[FindArtists] Fetch error:', err);
+      setFetchError('Could not load artists. Please try again.');
+      setArtists([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Debounce search queries; trigger on venueCity loaded
+  useEffect(() => {
+    // Wait for venue city to load before first fetch
+    if (!venueCityLoaded.current) return;
+
+    const timeout = setTimeout(() => {
+      loadArtists(venueCity, searchQuery);
+    }, searchQuery ? 400 : 0); // immediate on mount, debounced on typing
+
+    return () => clearTimeout(timeout);
+  }, [searchQuery, venueCity, loadArtists]);
 
   const hasActiveFilters = filters.artTypes.length > 0 || filters.openToNew || searchQuery;
 
@@ -226,15 +312,47 @@ export function FindArtists({ onInviteArtist, onViewProfile, onNavigate }: FindA
         )}
       </div>
 
-      {/* Results Count */}
+      {/* Results Count + diagnostics */}
       <div className="flex items-center justify-between mb-6">
         <p className="text-sm text-[var(--text-muted)]">
-          Showing artists in {venueCity || 'your area'} · {filteredArtists.length} results
+          {loading ? 'Loading artists…' : (
+            <>Showing artists{venueCity ? ` near ${venueCity}` : ''} · {filteredArtists.length} results</>
+          )}
         </p>
+        {!venueCity && !loading && (
+          <div className="flex items-center gap-1.5 text-xs text-amber-600 bg-amber-500/10 px-3 py-1.5 rounded-full">
+            <AlertCircle className="w-3.5 h-3.5" />
+            <span>No location set — showing all artists</span>
+          </div>
+        )}
       </div>
 
+      {/* Info banner for fallback results */}
+      {fetchError && (
+        <div className="mb-4 px-4 py-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-sm text-amber-700 dark:text-amber-400 flex items-start gap-2">
+          <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+          <span>{fetchError}</span>
+        </div>
+      )}
+
       {/* Artists Grid */}
-      {filteredArtists.length > 0 ? (
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)] animate-pulse">
+              <div className="flex gap-4 mb-4">
+                <div className="w-20 h-20 rounded-full bg-[var(--surface-3)]" />
+                <div className="flex-1 space-y-3">
+                  <div className="h-5 bg-[var(--surface-3)] rounded w-2/3" />
+                  <div className="h-3 bg-[var(--surface-3)] rounded w-1/3" />
+                </div>
+              </div>
+              <div className="h-3 bg-[var(--surface-3)] rounded w-full mb-2" />
+              <div className="h-3 bg-[var(--surface-3)] rounded w-4/5" />
+            </div>
+          ))}
+        </div>
+      ) : filteredArtists.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {filteredArtists.map((artist) => (
             <div
@@ -336,9 +454,29 @@ export function FindArtists({ onInviteArtist, onViewProfile, onNavigate }: FindA
       ) : (
         <EmptyState
           icon={<Users className="w-8 h-8" />}
-          title="No artists found"
-          description={hasActiveFilters ? 'Try adjusting filters to see more artists.' : 'Check back soon as new artists join the platform.'}
-          primaryAction={{ label: 'Adjust filters', onClick: () => setShowFilters(true) }}
+          title={
+            !venueCity
+              ? 'No discoverable artists yet'
+              : searchQuery
+                ? `No artists matching "${searchQuery}"`
+                : hasActiveFilters
+                  ? 'No artists match your filters'
+                  : `No artists found near ${venueCity}`
+          }
+          description={
+            !venueCity
+              ? 'Set your venue location in your profile so we can show nearby artists.'
+              : hasActiveFilters
+                ? 'Try adjusting or clearing your filters to see more artists.'
+                : 'Check back soon as new artists join the platform, or try searching by name.'
+          }
+          primaryAction={
+            !venueCity && onNavigate
+              ? { label: 'Set venue location', onClick: () => onNavigate('venue-profile') }
+              : hasActiveFilters
+                ? { label: 'Clear filters', onClick: clearFilters }
+                : { label: 'Show filters', onClick: () => setShowFilters(true) }
+          }
           secondaryAction={onNavigate ? { label: 'Improve venue profile', onClick: () => onNavigate('venue-profile') } : undefined}
         />
       )}

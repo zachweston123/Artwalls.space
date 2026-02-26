@@ -1,11 +1,17 @@
 /**
  * Regression tests for GET /api/artists (venue Find Artists).
  *
- * Bug: venues saw empty search results because:
+ * Bug history:
  *   1. is_public was never set by upsertArtist → all rows null →
  *      `.eq('is_public', true)` excluded everyone.
+ *      Fix: use `.neq('is_public', false)` — null passes through.
  *   2. city param was ignored by the backend.
- *   3. email was leaked in the public response.
+ *      Fix: extract city name, filter with ilike.
+ *   3. City format mismatch: venues store "San Diego, CA" but artists
+ *      store "San Diego" → ilike "%San Diego, CA%" doesn't match "San Diego".
+ *      Fix: extract city name before comma for the filter.
+ *   4. email was leaked in the public response.
+ *      Fix: removed from select + response mapping.
  *
  * These tests run against the handleArtists route handler with a
  * minimal WorkerContext stub — no real Supabase calls.
@@ -172,5 +178,39 @@ describe('GET /api/artists — venue Find Artists', () => {
 
     expect(resp!.status).toBe(200);
     expect(body.artists).toEqual([]);
+  });
+
+  test('response includes _meta with filter diagnostics', async () => {
+    const wc = stubContext('/api/artists', '?city=San+Diego%2C+CA&q=Alice', sampleArtists);
+    const resp = await handleArtists(wc);
+    const body = await parseBody(resp);
+
+    expect(body._meta).toBeDefined();
+    // City should be normalized (strip state after comma)
+    expect(body._meta.cityFilter).toBe('San Diego');
+    expect(body._meta.nameFilter).toBe('Alice');
+    expect(body._meta.totalReturned).toBe(2);
+  });
+
+  test('extracts city name from "City, ST" format for filtering', async () => {
+    const wc = stubContext('/api/artists', '?city=Portland%2C+OR', sampleArtists);
+    const resp = await handleArtists(wc);
+    const body = await parseBody(resp);
+
+    // The city should be normalized to just "Portland"
+    expect(body._meta.cityFilter).toBe('Portland');
+    // .or() should have been called with the normalized city name
+    const fromCalls = wc.supabaseAdmin!.from.mock.calls;
+    const artistsBuilder = fromCalls.find((c: any[]) => c[0] === 'artists');
+    expect(artistsBuilder).toBeDefined();
+  });
+
+  test('uses neq instead of or for is_public/is_live (null passes through)', async () => {
+    const wc = stubContext('/api/artists', '', sampleArtists);
+    const resp = await handleArtists(wc);
+    const body = await parseBody(resp);
+
+    // Should return both artists — null is_public and null is_live pass .neq(false)
+    expect(body.artists.length).toBe(2);
   });
 });

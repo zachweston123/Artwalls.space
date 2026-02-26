@@ -161,7 +161,12 @@ export async function handleArtists(wc: WorkerContext): Promise<Response | null>
   if (url.pathname === '/api/artists' && method === 'GET') {
     if (!supabaseAdmin) return json({ error: 'Supabase not configured' }, { status: 500 });
     const q = (url.searchParams.get('q') || '').trim();
-    const city = (url.searchParams.get('city') || '').trim();
+    const rawCity = (url.searchParams.get('city') || '').trim();
+
+    // Normalize city: venues store "San Diego, CA" but artists may store
+    // just "San Diego" in city_primary. Extract the city name (before comma)
+    // so the ilike filter can match both "San Diego" and "San Diego, CA".
+    const cityName = rawCity.includes(',') ? rawCity.split(',')[0].trim() : rawCity;
     
     // Select only safe public fields — no email, no Stripe IDs, no payout info
     let query = supabaseAdmin
@@ -170,16 +175,19 @@ export async function handleArtists(wc: WorkerContext): Promise<Response | null>
       .order('name', { ascending: true })
       .limit(50);
 
-    // Treat null is_public as visible (artists who haven't explicitly opted out).
-    // upsertArtist does not set is_public, so most rows are null.
-    query = query.or('is_public.eq.true,is_public.is.null');
+    // Visibility: treat null is_public as visible (upsertArtist never sets
+    // is_public, so most rows are null). Exclude only explicit opt-outs.
+    query = query.neq('is_public', false);
 
-    // Allow discovery of active artists; if is_live is null, still include for visibility
-    query = query.or('is_live.eq.true,is_live.is.null');
+    // Liveness: treat null is_live as live (same reasoning — upsertArtist
+    // defaults is_live to true but some older rows may be null).
+    query = query.neq('is_live', false);
 
-    // City filter — match against primary or secondary city
-    if (city) {
-      query = query.or(`city_primary.ilike.%${city}%,city_secondary.ilike.%${city}%`);
+    // City filter — match the extracted city name against primary or
+    // secondary city. Using just the city name (without state) ensures
+    // "San Diego" matches both "San Diego" and "San Diego, CA".
+    if (cityName) {
+      query = query.or(`city_primary.ilike.%${cityName}%,city_secondary.ilike.%${cityName}%`);
     }
     
     // Search by name only (never expose email in search)
@@ -188,7 +196,10 @@ export async function handleArtists(wc: WorkerContext): Promise<Response | null>
     }
     
     const { data, error } = await query;
-    if (error) return json({ error: error.message }, { status: 500 });
+    if (error) {
+      console.error('[GET /api/artists] Query error:', error.message);
+      return json({ error: error.message }, { status: 500 });
+    }
 
     // Fetch artwork counts for all returned artist IDs
     const artistIds = (data || []).map(a => a.id);
@@ -219,7 +230,16 @@ export async function handleArtists(wc: WorkerContext): Promise<Response | null>
       portfolioCount: artworkCounts[a.id] || 0,
       isFoundingArtist: !!(a as any).is_founding_artist,
     }));
-    return json({ artists });
+
+    // Include metadata so the frontend can diagnose empty results
+    return json({
+      artists,
+      _meta: {
+        cityFilter: cityName || null,
+        nameFilter: q || null,
+        totalReturned: artists.length,
+      },
+    });
   }
 
   // ── Artist analytics aggregation ──

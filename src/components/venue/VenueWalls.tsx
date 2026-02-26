@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, X, Frame, Upload, Image as ImageIcon, Pencil, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, X, Frame, Upload, Image as ImageIcon, Pencil, ChevronLeft, ChevronRight, CheckCircle, Loader2 } from 'lucide-react';
 import { apiGet, apiPost } from '../../lib/api';
 import { supabase } from '../../lib/supabase';
 import { uploadWallspacePhoto } from '../../lib/storage';
@@ -44,9 +44,12 @@ export function VenueWalls() {
   });
   const [editSubmitting, setEditSubmitting] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
+  const [editSuccess, setEditSuccess] = useState(false);
   const [editUploadingPhoto, setEditUploadingPhoto] = useState(false);
   const [editUploadError, setEditUploadError] = useState<string | null>(null);
   const [photoIndex, setPhotoIndex] = useState<Record<string, number>>({});
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [toggleError, setToggleError] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -157,13 +160,18 @@ export function VenueWalls() {
   };
 
   const toggleAvailability = async (id: string) => {
+    setTogglingId(id);
+    setToggleError(null);
     try {
       const target = wallSpaces.find(w => w.id === id);
       const nextAvailable = !target?.available;
       await apiPost(`/api/wallspaces/${id}`, { available: nextAvailable }, { 'X-HTTP-Method-Override': 'PATCH' });
-      setWallSpaces(wallSpaces.map(wall => wall.id === id ? { ...wall, available: Boolean(nextAvailable) } : wall));
-    } catch (err) {
+      setWallSpaces((prev) => prev.map(wall => wall.id === id ? { ...wall, available: Boolean(nextAvailable) } : wall));
+    } catch (err: any) {
       console.error(err);
+      setToggleError(err?.message || 'Failed to update wall status. Please try again.');
+    } finally {
+      setTogglingId(null);
     }
   };
 
@@ -230,6 +238,7 @@ export function VenueWalls() {
       available: Boolean(wall.available),
     });
     setEditError(null);
+    setEditSuccess(false);
     setEditUploadError(null);
   };
 
@@ -272,10 +281,15 @@ export function VenueWalls() {
       });
 
       setWallSpaces((prev) => prev.map((w) => (w.id === updated.id ? { ...w, ...updated } : w)));
-      setEditingWall(null);
+      setEditSuccess(true);
+      setEditSubmitting(false);
+      // Close modal after brief success indicator
+      setTimeout(() => {
+        setEditingWall(null);
+        setEditSuccess(false);
+      }, 1200);
     } catch (err: any) {
-      setEditError(err?.message || 'Failed to update wall space');
-    } finally {
+      setEditError(err?.message || 'Failed to update wall space. Check your connection and try again.');
       setEditSubmitting(false);
     }
   };
@@ -297,10 +311,10 @@ export function VenueWalls() {
       )}
 
       {editingWall && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 sm:p-6 overflow-y-auto">
-          <div className="bg-[var(--surface-1)] text-[var(--text)] rounded-2xl p-6 sm:p-8 max-w-2xl w-full border border-[var(--border)]">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl">Edit Wall Space</h2>
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 sm:p-6">
+          <div className="bg-[var(--surface-1)] text-[var(--text)] rounded-2xl max-w-xl w-full border border-[var(--border)] flex flex-col max-h-[90vh]">
+            <div className="flex items-center justify-between p-5 sm:p-6 border-b border-[var(--border)] flex-shrink-0">
+              <h2 className="text-xl font-semibold">Edit Wall Space</h2>
               <button
                 onClick={() => setEditingWall(null)}
                 className="p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
@@ -310,7 +324,14 @@ export function VenueWalls() {
               </button>
             </div>
 
-            <form onSubmit={handleEditSubmit} className="space-y-6">
+            <form onSubmit={handleEditSubmit} className="flex flex-col flex-1 min-h-0">
+            <div className="overflow-y-auto flex-1 p-5 sm:p-6 space-y-5">
+              {editSuccess && (
+                <div className="px-4 py-3 bg-green-500/10 border border-green-500/30 rounded-lg text-green-600 text-sm flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 flex-shrink-0" />
+                  Wall space saved successfully!
+                </div>
+              )}
               {editError && (
                 <div className="px-4 py-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-600 text-sm">
                   {editError}
@@ -427,7 +448,9 @@ export function VenueWalls() {
                 )}
               </div>
 
-              <div className="flex gap-3 pt-4">
+              </div>{/* end scrollable content */}
+
+              <div className="flex gap-3 p-5 sm:p-6 border-t border-[var(--border)] flex-shrink-0">
                 <button
                   type="button"
                   onClick={() => setEditingWall(null)}
@@ -438,10 +461,16 @@ export function VenueWalls() {
                 </button>
                 <button
                   type="submit"
-                  disabled={editSubmitting}
-                  className="flex-1 px-4 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed"
+                  disabled={editSubmitting || editSuccess}
+                  className="flex-1 px-4 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  {editSubmitting ? 'Saving...' : 'Save Changes'}
+                  {editSubmitting ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</>
+                  ) : editSuccess ? (
+                    <><CheckCircle className="w-4 h-4" /> Saved!</>
+                  ) : (
+                    'Save Changes'
+                  )}
                 </button>
               </div>
             </form>
@@ -463,10 +492,10 @@ export function VenueWalls() {
       />
 
       {showAddForm && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 sm:p-6 overflow-y-auto">
-          <div className="bg-[var(--surface-1)] text-[var(--text)] rounded-2xl p-6 sm:p-8 max-w-2xl w-full border border-[var(--border)]">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl">Add New Wall Space</h2>
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 sm:p-6">
+          <div className="bg-[var(--surface-1)] text-[var(--text)] rounded-2xl max-w-xl w-full border border-[var(--border)] flex flex-col max-h-[90vh]">
+            <div className="flex items-center justify-between p-5 sm:p-6 border-b border-[var(--border)] flex-shrink-0">
+              <h2 className="text-xl font-semibold">Add New Wall Space</h2>
               <button
                 onClick={() => setShowAddForm(false)}
                 className="p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
@@ -476,7 +505,8 @@ export function VenueWalls() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+            <div className="overflow-y-auto flex-1 p-5 sm:p-6 space-y-5">
               {submitError && (
                 <div className="px-4 py-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-600 text-sm">
                   {submitError}
@@ -581,7 +611,9 @@ export function VenueWalls() {
                 )}
               </div>
 
-              <div className="flex gap-3 pt-4">
+              </div>{/* end scrollable content */}
+
+              <div className="flex gap-3 p-5 sm:p-6 border-t border-[var(--border)] flex-shrink-0">
                 <button
                   type="button"
                   onClick={() => {
@@ -596,9 +628,13 @@ export function VenueWalls() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex-1 px-4 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="flex-1 px-4 py-2 bg-[var(--green)] text-[var(--accent-contrast)] rounded-lg hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  {submitting ? 'Adding...' : 'Add Wall Space'}
+                  {submitting ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" /> Adding…</>
+                  ) : (
+                    'Add Wall Space'
+                  )}
                 </button>
               </div>
             </form>
@@ -705,13 +741,18 @@ export function VenueWalls() {
                   <div className="flex gap-3">
                     <button
                       onClick={() => toggleAvailability(wall.id)}
-                      className={`flex-1 px-4 py-2 rounded-lg transition-colors ${
+                      disabled={togglingId === wall.id}
+                      className={`flex-1 px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed ${
                         wall.available
                           ? 'bg-[var(--surface-2)] text-[var(--text)] hover:bg-[var(--surface-3)]'
                           : 'bg-[var(--green)] text-[var(--accent-contrast)] hover:opacity-90'
                       }`}
                     >
-                      {wall.available ? 'Mark as Occupied' : 'Mark as Available'}
+                      {togglingId === wall.id ? (
+                        <><Loader2 className="w-4 h-4 animate-spin" /> Updating…</>
+                      ) : (
+                        wall.available ? 'Mark as Occupied' : 'Mark as Available'
+                      )}
                     </button>
                     <button
                       onClick={() => openEditForm(wall)}
@@ -720,6 +761,9 @@ export function VenueWalls() {
                       Edit details
                     </button>
                   </div>
+                  {toggleError && togglingId === null && (
+                    <p className="text-xs text-red-500 mt-1">{toggleError}</p>
+                  )}
                 </div>
               </div>
             </div>
