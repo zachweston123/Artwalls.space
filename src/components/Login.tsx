@@ -92,6 +92,10 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
     setIsLoading(true);
 
     try {
+      // Persist the role the user already selected so it survives the OAuth
+      // redirect round-trip.  The onAuth callback in App.tsx reads this back.
+      localStorage.setItem('pendingOAuthRole', selectedRole);
+
       const { supabase } = await import('../lib/supabase');
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -106,6 +110,7 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
 
       if (error) throw error;
     } catch (err: any) {
+      localStorage.removeItem('pendingOAuthRole');
       setErrorMessage(err?.message || 'Google sign-in failed.');
       setIsLoading(false);
     }

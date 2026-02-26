@@ -226,6 +226,15 @@ export default function App() {
 
     supabase.auth.getSession().then(({ data }) => {
       if (!isMounted) return;
+
+      // On /auth/callback the PKCE exchange just completed and the session
+      // is brand-new.  Let AuthCallback own the flow — it will read the
+      // pending role, provision the profile, and call onAuth().  Processing
+      // the session here would race and bypass role selection for new users.
+      if (typeof window !== 'undefined' && window.location.pathname === '/auth/callback') {
+        return;
+      }
+
       const nextUser = userFromSupabase(data.session?.user);
       if (nextUser) {
         setCurrentUser(nextUser);
@@ -254,6 +263,13 @@ export default function App() {
         console.log('[Auth] onAuthStateChange:', event, session?.user?.id, 'role:', session?.user?.user_metadata?.role);
       }
 
+      // On /auth/callback, the AuthCallback component owns the entire flow.
+      // Don't set currentUser or show role selection here — it races with
+      // the onAuth() callback and causes the broken-dashboard bug.
+      if (typeof window !== 'undefined' && window.location.pathname === '/auth/callback') {
+        return;
+      }
+
       // Handle OAuth sign-up - need role selection
       if (event === 'SIGNED_IN' && session?.user) {
         const userRole = (session.user.user_metadata?.role as UserRole) || null;
@@ -269,12 +285,7 @@ export default function App() {
       const nextUser = userFromSupabase(session?.user);
       setCurrentUser(nextUser);
       // Only reset page for logout; preserve all other pages during auth updates.
-      // Skip page changes while on /auth/callback — the AuthCallback component
-      // handles its own routing after processing the OAuth tokens.
       setCurrentPage((prevPage) => {
-        if (typeof window !== 'undefined' && window.location.pathname === '/auth/callback') {
-          return prevPage; // Let AuthCallback handle routing
-        }
         if (!nextUser) {
           localStorage.removeItem('currentPage');
           const pageFromPath = getPageFromPath(window.location.pathname);
@@ -825,19 +836,85 @@ export default function App() {
       <Suspense fallback={<PageLoader />}>
         <AuthCallback
           onAuth={() => {
-            // Session is now established. Re-read it and route to dashboard.
-            // The onAuthStateChange listener will also fire, but we do an
-            // explicit read here to ensure we don't race.
-            supabase.auth.getSession().then(({ data }) => {
-              const user = userFromSupabase(data.session?.user);
-              if (user) {
-                setCurrentUser(user);
-                setCurrentPage(defaultDashboardForRole(user.role));
-              } else {
-                // User signed in via Google but has no role yet —
-                // onAuthStateChange will show the role selection modal.
+            // Session is now established.  The initial useEffect and
+            // onAuthStateChange both skip processing on /auth/callback,
+            // so this is the single canonical handler.
+            supabase.auth.getSession().then(async ({ data }) => {
+              const supaUser = data.session?.user;
+              if (!supaUser) {
                 setCurrentPage('login');
+                return;
               }
+
+              const existingRole = (supaUser.user_metadata?.role as string) || null;
+
+              // ── Returning user (already has a role) ───────────────────
+              if (existingRole) {
+                const appUser = userFromSupabase(supaUser);
+                if (appUser) {
+                  setCurrentUser(appUser);
+                  setCurrentPage(defaultDashboardForRole(appUser.role));
+                }
+                return;
+              }
+
+              // ── New user — consume the pending role ───────────────────
+              const pendingRole = localStorage.getItem('pendingOAuthRole') as UserRole | null;
+              localStorage.removeItem('pendingOAuthRole');
+
+              if (pendingRole === 'artist' || pendingRole === 'venue') {
+                // Apply role to Supabase user metadata
+                const displayName =
+                  (supaUser.user_metadata?.name as string) ||
+                  supaUser.email?.split('@')[0] || 'User';
+
+                try {
+                  const { data: updateData } = await supabase.auth.updateUser({
+                    data: { role: pendingRole, name: displayName },
+                  });
+                  // Use the refreshed user object so downstream handlers
+                  // (profile completion) can read the up-to-date metadata.
+                  if (updateData?.user) {
+                    Object.assign(supaUser, { user_metadata: updateData.user.user_metadata });
+                  }
+                } catch (e) {
+                  console.warn('[onAuth] Failed to set role metadata', e);
+                }
+
+                // Provision profile (creates artist/venue row)
+                try {
+                  await apiPost('/api/profile/provision', {});
+                } catch (e) {
+                  console.warn('[onAuth] Profile provision failed', e);
+                }
+
+                trackAnalyticsEvent('role_selected', { role: pendingRole, source: 'google_oauth' });
+                trackAnalyticsEvent('auth_complete', { action: 'signup', method: 'google', role: pendingRole });
+
+                const appUser: User = {
+                  id: supaUser.id,
+                  name: displayName,
+                  email: supaUser.email || '',
+                  role: pendingRole,
+                };
+
+                // Check if phone is missing — show profile completion
+                const hasPhone = supaUser.user_metadata?.phone;
+                if (!hasPhone) {
+                  setGoogleUser(supaUser);
+                  setShowProfileCompletion(true);
+                  // Keep appUser ready — profile completion will call setCurrentUser
+                  setCurrentUser(appUser);
+                } else {
+                  setCurrentUser(appUser);
+                  setCurrentPage(defaultDashboardForRole(pendingRole));
+                }
+                return;
+              }
+
+              // No pending role stored — show role selection modal
+              setGoogleUser(supaUser);
+              setShowGoogleRoleSelection(true);
             });
           }}
           onNavigate={handleNavigate}

@@ -78,6 +78,9 @@ export function VenuesLandingPage({ onNavigate, onLogin, viewerRole = null }: Ve
     setIsLoading(true);
 
     try {
+      // Coming from the venue landing page, the intended role is always 'venue'.
+      localStorage.setItem('pendingOAuthRole', 'venue');
+
       const { supabase } = await import('../lib/supabase');
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -92,6 +95,7 @@ export function VenuesLandingPage({ onNavigate, onLogin, viewerRole = null }: Ve
 
       if (error) throw error;
     } catch (err: unknown) {
+      localStorage.removeItem('pendingOAuthRole');
       setErrorMessage(getErrorMessage(err) || 'Google sign-in failed.');
       setIsLoading(false);
     }
