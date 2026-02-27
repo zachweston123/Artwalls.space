@@ -1,4 +1,4 @@
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { supabase } from './lib/supabase';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { apiPost } from './lib/api';
@@ -93,11 +93,21 @@ export default function App() {
   const [showGoogleRoleSelection, setShowGoogleRoleSelection] = useState(false);
   const [googleUser, setGoogleUser] = useState<SupabaseUser | null>(null);
   const [showProfileCompletion, setShowProfileCompletion] = useState(false);
+
+  // Ref mirror so the onAuthStateChange closure (empty deps) can read
+  // the latest value without a stale closure.
+  const oauthFlowActiveRef = useRef(false);
   const [pendingPhoneNumber, setPendingPhoneNumber] = useState<string | null>(null);
   const [artistOnboarding, setArtistOnboarding] = useState<{ completed: boolean; step: number | null } | null>(null);
   const [roleMismatch, setRoleMismatch] = useState<{ current: 'artist' | 'venue'; required: 'artist' | 'venue' } | null>(null);
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const [artistSubscriptionTier, setArtistSubscriptionTier] = useState<'free' | 'starter' | 'growth' | 'pro'>('free');
+
+  // Keep the ref in sync with state so the onAuthStateChange closure
+  // always sees the current value.
+  useEffect(() => {
+    oauthFlowActiveRef.current = showProfileCompletion || showGoogleRoleSelection;
+  }, [showProfileCompletion, showGoogleRoleSelection]);
 
   const ARTIST_ONBOARDING_SNOOZE_KEY = 'artistOnboardingSkipUntil';
 
@@ -280,6 +290,13 @@ export default function App() {
           setShowGoogleRoleSelection(true);
           return;
         }
+      }
+
+      // Don't clobber state while profile-completion or role-selection
+      // modals are active — those flows own the user lifecycle.
+      // (Read from ref because this closure captures the initial state.)
+      if (oauthFlowActiveRef.current) {
+        return;
       }
       
       const nextUser = userFromSupabase(session?.user);
@@ -660,8 +677,10 @@ export default function App() {
       }
 
       // Now proceed to dashboard — trust server-assigned admin role
-      const rawRole = googleUser.user_metadata?.role as UserRole;
-      const effectiveRole: UserRole = rawRole === 'admin' ? 'admin' : rawRole;
+      const rawRole = (googleUser.user_metadata?.role as string) || null;
+      const effectiveRole: UserRole = rawRole === 'admin' ? 'admin'
+        : rawRole === 'venue' ? 'venue'
+        : 'artist';
       const user: User = {
         id: googleUser.id,
         name: googleUser.user_metadata?.name || googleUser.email?.split('@')[0] || 'User',
@@ -687,8 +706,10 @@ export default function App() {
       setShowProfileCompletion(false);
       
       // Proceed without phone number — trust server-assigned admin role
-      const rawRole = googleUser.user_metadata?.role as UserRole;
-      const effectiveRole: UserRole = rawRole === 'admin' ? 'admin' : rawRole;
+      const rawRole = (googleUser.user_metadata?.role as string) || null;
+      const effectiveRole: UserRole = rawRole === 'admin' ? 'admin'
+        : rawRole === 'venue' ? 'venue'
+        : 'artist';
       const user: User = {
         id: googleUser.id,
         name: googleUser.user_metadata?.name || googleUser.email?.split('@')[0] || 'User',
@@ -903,8 +924,9 @@ export default function App() {
                 if (!hasPhone) {
                   setGoogleUser(supaUser);
                   setShowProfileCompletion(true);
-                  // Keep appUser ready — profile completion will call setCurrentUser
-                  setCurrentUser(appUser);
+                  // Do NOT set currentUser yet — ProfileCompletion needs to
+                  // render first.  handleProfileCompletionSubmit / Skip will
+                  // set currentUser once the user proceeds.
                 } else {
                   setCurrentUser(appUser);
                   setCurrentPage(defaultDashboardForRole(pendingRole));
@@ -1045,6 +1067,89 @@ export default function App() {
     return <Suspense fallback={<PageLoader />}><PurchasePage artworkId={artworkId} onBack={() => setCurrentPage('login')} onNavigate={handleNavigate} /></Suspense>;
   }
 
+  // ── Profile Completion — must render before !currentUser guard ─────
+  // Shown after Google OAuth when the user has no phone number.
+  // Placed here so it renders even if onAuthStateChange has already set
+  // currentUser (race condition).
+  if (showProfileCompletion && googleUser) {
+    return (
+      <ProfileCompletion
+        email={googleUser.email || ''}
+        userName={googleUser.user_metadata?.name || googleUser.email?.split('@')[0] || 'User'}
+        onComplete={handleProfileCompletionSubmit}
+        onSkip={handleProfileCompletionSkip}
+      />
+    );
+  }
+
+  // ── Google Role Selection — must render before !currentUser guard ──
+  // Shown when a Google OAuth user has no pending role and no stored role.
+  if (showGoogleRoleSelection && googleUser) {
+    return (
+      <div className="min-h-svh bg-gradient-to-br from-[var(--bg)] via-[var(--surface)] to-[var(--bg)] flex items-center justify-center px-4 py-12">
+        <div className="w-full max-w-2xl">
+          <div className="fixed inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-10 left-10 w-72 h-72 bg-[var(--blue)]/10 rounded-full blur-3xl"></div>
+            <div className="absolute bottom-10 right-10 w-72 h-72 bg-[var(--green)]/10 rounded-full blur-3xl"></div>
+          </div>
+          <div className="relative z-10">
+            <div className="text-center mb-12">
+              <h1 className="text-3xl sm:text-4xl font-bold text-[var(--text)] mb-4">Welcome to Artwalls!</h1>
+              <p className="text-xl text-[var(--text-muted)]">Tell us about yourself to get started</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto mb-8">
+              <button
+                onClick={() => handleGoogleRoleSelection('artist')}
+                className="group bg-[var(--blue-muted)] rounded-2xl p-8 border-2 border-[var(--blue)] hover:brightness-95 transition-all active:scale-[0.98] cursor-pointer"
+              >
+                <div className="flex flex-col items-center text-center gap-4">
+                  <div>
+                    <h2 className="text-2xl font-bold text-[var(--blue)] mb-2">I'm an Artist</h2>
+                    <p className="text-sm text-[var(--text-muted)] leading-relaxed">
+                      Create a beautiful portfolio, reach galleries and venues, and sell your artwork directly to collectors.
+                    </p>
+                  </div>
+                  <div className="mt-4 px-4 py-2 bg-[var(--blue)]/20 rounded-lg">
+                    <p className="text-xs font-semibold text-[var(--blue)]">Get Started</p>
+                  </div>
+                </div>
+              </button>
+              <button
+                onClick={() => handleGoogleRoleSelection('venue')}
+                className="group bg-[var(--green-muted)] rounded-2xl p-8 border-2 border-[var(--green)] hover:brightness-95 transition-all active:scale-[0.98] cursor-pointer"
+              >
+                <div className="flex flex-col items-center text-center gap-4">
+                  <div>
+                    <h2 className="text-2xl font-bold text-[var(--green)] mb-2">I'm a Venue</h2>
+                    <p className="text-sm text-[var(--text-muted)] leading-relaxed">
+                      Display rotating artworks in your space, support local artists, and grow your venue's unique character.
+                    </p>
+                  </div>
+                  <div className="mt-4 px-4 py-2 bg-[var(--green)]/20 rounded-lg">
+                    <p className="text-xs font-semibold text-[var(--green)]">Get Started</p>
+                  </div>
+                </div>
+              </button>
+            </div>
+            <div className="text-center mt-12 space-y-3">
+              <button
+                onClick={() => {
+                  setShowGoogleRoleSelection(false);
+                  setGoogleUser(null);
+                  setCurrentPage('login');
+                }}
+                className="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition"
+              >
+                ← Back to login
+              </button>
+              <p className="text-xs text-[var(--text-muted)]">You can change your role later in settings</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!currentUser) {
     const isMarketingPage = marketingPages.has(currentPage);
     const isLegalPage = legalPages.has(currentPage);
@@ -1114,91 +1219,8 @@ export default function App() {
       );
     }
 
-    // Profile Completion - Full Page
-    if (showProfileCompletion && googleUser) {
-      return (
-        <ProfileCompletion
-          email={googleUser.email || ''}
-          userName={googleUser.user_metadata?.name || googleUser.email?.split('@')[0] || 'User'}
-          onComplete={handleProfileCompletionSubmit}
-          onSkip={handleProfileCompletionSkip}
-        />
-      );
-    }
-
-    // Google Role Selection - Full Page
-    if (showGoogleRoleSelection && googleUser) {
-      return (
-        <div className="min-h-svh bg-gradient-to-br from-[var(--bg)] via-[var(--surface)] to-[var(--bg)] flex items-center justify-center px-4 py-12">
-          <div className="w-full max-w-2xl">
-            {/* Background decorative elements */}
-            <div className="fixed inset-0 overflow-hidden pointer-events-none">
-              <div className="absolute top-10 left-10 w-72 h-72 bg-[var(--blue)]/10 rounded-full blur-3xl"></div>
-              <div className="absolute bottom-10 right-10 w-72 h-72 bg-[var(--green)]/10 rounded-full blur-3xl"></div>
-            </div>
-
-            <div className="relative z-10">
-              <div className="text-center mb-12">
-                <h1 className="text-3xl sm:text-4xl font-bold text-[var(--text)] mb-4">Welcome to Artwalls!</h1>
-                <p className="text-xl text-[var(--text-muted)]">Tell us about yourself to get started</p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto mb-8">
-                {/* Artist Card */}
-                <button
-                  onClick={() => handleGoogleRoleSelection('artist')}
-                  className="group bg-[var(--blue-muted)] rounded-2xl p-8 border-2 border-[var(--blue)] hover:brightness-95 transition-all active:scale-[0.98] cursor-pointer"
-                >
-                  <div className="flex flex-col items-center text-center gap-4">
-                    <div>
-                      <h2 className="text-2xl font-bold text-[var(--blue)] mb-2">I'm an Artist</h2>
-                      <p className="text-sm text-[var(--text-muted)] leading-relaxed">
-                        Create a beautiful portfolio, reach galleries and venues, and sell your artwork directly to collectors.
-                      </p>
-                    </div>
-                    <div className="mt-4 px-4 py-2 bg-[var(--blue)]/20 rounded-lg">
-                      <p className="text-xs font-semibold text-[var(--blue)]">Get Started</p>
-                    </div>
-                  </div>
-                </button>
-
-                {/* Venue Card */}
-                <button
-                  onClick={() => handleGoogleRoleSelection('venue')}
-                  className="group bg-[var(--green-muted)] rounded-2xl p-8 border-2 border-[var(--green)] hover:brightness-95 transition-all active:scale-[0.98] cursor-pointer"
-                >
-                  <div className="flex flex-col items-center text-center gap-4">
-                    <div>
-                      <h2 className="text-2xl font-bold text-[var(--green)] mb-2">I'm a Venue</h2>
-                      <p className="text-sm text-[var(--text-muted)] leading-relaxed">
-                        Display rotating artworks in your space, support local artists, and grow your venue's unique character.
-                      </p>
-                    </div>
-                    <div className="mt-4 px-4 py-2 bg-[var(--green)]/20 rounded-lg">
-                      <p className="text-xs font-semibold text-[var(--green)]">Get Started</p>
-                    </div>
-                  </div>
-                </button>
-              </div>
-
-              <div className="text-center mt-12 space-y-3">
-                <button
-                  onClick={() => {
-                    setShowGoogleRoleSelection(false);
-                    setGoogleUser(null);
-                    setCurrentPage('login');
-                  }}
-                  className="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition"
-                >
-                  ← Back to login
-                </button>
-                <p className="text-xs text-[var(--text-muted)]">You can change your role later in settings</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
+    // Profile Completion and Google Role Selection are now rendered
+    // above the !currentUser guard to avoid race conditions.
 
     return (
       <PublicLayout onNavigate={handleNavigate} currentPage="login" hideNav hideFooter={false}>
