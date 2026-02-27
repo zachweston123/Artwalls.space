@@ -382,7 +382,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                   }`}
                 >
                   {/* Header */}
-                  <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-start justify-between mb-5">
                     <div>
                       <h3 className="text-lg font-bold text-[var(--text)]">{plan.name}</h3>
                       <p className="text-sm text-[var(--text-muted)] mt-0.5">{plan.tagline}</p>
@@ -393,7 +393,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                   </div>
 
                   {/* Price */}
-                  <div className="mb-5">
+                  <div className="mb-6">
                     <span className="text-3xl font-bold text-[var(--text)]">
                       {plan.price === 0 ? 'Free' : `$${plan.price}`}
                     </span>
@@ -403,7 +403,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                   </div>
 
                   {/* Take-home stat */}
-                  <div className="bg-[var(--surface-3)]/50 border border-[var(--border)] rounded-xl p-4 mb-5 text-center">
+                  <div className="bg-[var(--surface-3)]/50 border border-[var(--border)] rounded-xl p-4 mb-6 text-center">
                     <div className="text-3xl font-extrabold text-[var(--blue)] leading-none">{plan.takeHome}%</div>
                     <div className="text-xs text-[var(--text-muted)] mt-1.5">
                       {PRICING_COPY.takeHomeLabel} {PRICING_COPY.takeHomeSubtext}
@@ -411,19 +411,19 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                   </div>
 
                   {/* Limits row */}
-                  <div className="grid grid-cols-2 gap-3 mb-5">
-                    <div className="bg-[var(--surface-2)] rounded-lg p-2.5 text-center">
-                      <div className="text-sm font-semibold text-[var(--text)]">{plan.artworks}</div>
-                      <div className="text-xs text-[var(--text-muted)]">Artworks</div>
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-6">
+                    <div className="flex flex-col items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface-2)]/80 px-3 py-3">
+                      <div className="text-base font-semibold leading-none text-[var(--text)]">{plan.artworks}</div>
+                      <div className="text-xs text-[var(--text-muted)] mt-1.5">Artworks</div>
                     </div>
-                    <div className="bg-[var(--surface-2)] rounded-lg p-2.5 text-center">
-                      <div className="text-sm font-semibold text-[var(--text)]">{plan.activeDisplays}</div>
-                      <div className="text-xs text-[var(--text-muted)]">Displays</div>
+                    <div className="flex flex-col items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface-2)]/80 px-3 py-3">
+                      <div className="text-base font-semibold leading-none text-[var(--text)]">{plan.activeDisplays}</div>
+                      <div className="text-xs text-[var(--text-muted)] mt-1.5">Displays</div>
                     </div>
                   </div>
 
                   {/* Features */}
-                  <ul className="space-y-2.5 mb-6 flex-1">
+                  <ul className="space-y-3 mb-7 flex-1">
                     {plan.features.map((feature, index) => (
                       <li key={index} className="flex items-start gap-2.5 text-sm">
                         <Check className="w-4 h-4 text-[var(--green)] flex-shrink-0 mt-0.5" />
@@ -814,16 +814,16 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
         <h2 className="text-xl font-semibold mb-6 text-center text-[var(--text)] font-display tracking-tight">Compare All Plans</h2>
 
         <div className="rounded-2xl overflow-hidden border border-[var(--border)] bg-[var(--surface-2)]">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[760px]">
+          <div className="w-full overflow-x-auto">
+            <table className="w-full min-w-[900px]">
               <thead>
-                <tr>
-                  <th className="text-left text-sm font-semibold px-6 py-4 text-[var(--text-muted)]">Feature</th>
+                <tr className="border-b border-[var(--border)]">
+                  <th className="text-left text-sm font-semibold px-5 py-5 md:px-6 text-[var(--text-muted)]">Feature</th>
                   {plans.map((p) => (
-                    <th key={p.id} className="text-center px-6 py-4">
-                      <div className="flex flex-col gap-0.5">
+                    <th key={p.id} className="text-center px-5 py-5 md:px-6">
+                      <div className="flex flex-col gap-1">
                         <span className={`text-sm font-semibold ${p.popular ? 'text-[var(--text)]' : 'text-[var(--text-muted)]'}`}>{p.name}</span>
-                        <span className="text-xs font-medium text-[var(--blue)]">{p.takeHome}% take-home</span>
+                        <span className="text-xs font-medium text-[var(--blue)] mt-0.5">{p.takeHome}% take-home</span>
                       </div>
                     </th>
                   ))}
@@ -840,11 +840,11 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                   { label: 'Priority visibility', values: ['—', '—', '✓', '✓✓'] },
                   { label: 'Protection plan', values: ['$5/art/mo', '$5/art/mo', '$3/art/mo', 'FREE'] },
                   { label: 'Max coverage/claim', values: ['$100', '$100', '$150', '$200'] },
-                ].map((row) => (
-                  <tr key={row.label}>
-                    <td className="px-6 py-3.5 text-sm font-medium whitespace-nowrap text-[var(--text)]">{row.label}</td>
+                ].map((row, i, arr) => (
+                  <tr key={row.label} className={`${i < arr.length - 1 ? 'border-b border-[var(--border)]/50' : ''} ${i % 2 === 1 ? 'bg-[var(--surface-1)]/40' : ''}`}>
+                    <td className="px-5 py-4 md:px-6 text-sm leading-relaxed font-medium whitespace-nowrap text-[var(--text)]">{row.label}</td>
                     {row.values.map((val, j) => (
-                      <td key={j} className="text-center px-6 py-3.5 text-sm tabular-nums text-[var(--text)]">
+                      <td key={j} className="text-center px-5 py-4 md:px-6 text-sm leading-relaxed tabular-nums text-[var(--text-muted)]">
                         {val}
                       </td>
                     ))}
