@@ -136,7 +136,7 @@ export function AccountStatusPanel({
           </CardAction>
         </CardHeader>
 
-        <CardContent className="pb-0">
+        <CardContent>
           <div className="space-y-3">
             {/* Artworks usage */}
             <div className="flex items-center justify-between py-1">
@@ -180,9 +180,9 @@ export function AccountStatusPanel({
           </div>
         </CardContent>
 
-        {/* Upgrade CTA — sits directly below usage metrics */}
+        {/* Upgrade CTA */}
         {plan !== 'pro' && (
-          <CardFooter className="px-6 pt-4 pb-6">
+          <CardFooter className="pt-4">
             <button
               onClick={() => onNavigate('plans-pricing')}
               className={`w-full py-3 rounded-xl text-sm font-semibold transition-colors ${
@@ -224,7 +224,7 @@ export function AccountStatusPanel({
           )}
         </CardHeader>
 
-        <CardContent className="pb-0">
+        <CardContent>
           {payoutLoading ? (
             <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -271,9 +271,9 @@ export function AccountStatusPanel({
           )}
         </CardContent>
 
-        {/* CTA — visually separated from content above */}
+        {/* CTA */}
         {!payoutLoading && (
-          <CardFooter className="px-6 pt-4 pb-6 gap-3">
+          <CardFooter className="pt-4 gap-3">
             {!isPayoutReady ? (
               <button
                 onClick={startOnboarding}
