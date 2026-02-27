@@ -340,9 +340,24 @@ export default function App() {
         .from(table)
         .select('agreement_accepted_at')
         .eq('id', currentUser.id)
-        .single();
-        
-      if (!error && data?.agreement_accepted_at) {
+        .maybeSingle();
+
+      if (error) {
+        // Query failed (e.g. RLS or schema issue) — don't block sign-in,
+        // re-check on next render cycle.
+        console.warn('Agreement check failed', error.message);
+        return;
+      }
+
+      if (!data) {
+        // Row doesn't exist yet (profile provision still in-flight).
+        // Don't set hasAcceptedAgreement=false yet — that would show
+        // the banner before the row is created. Re-check in 2s.
+        setTimeout(() => checkAgreementStatus(), 2000);
+        return;
+      }
+
+      if (data.agreement_accepted_at) {
         setHasAcceptedAgreement(true);
       } else {
         setHasAcceptedAgreement(false);
@@ -380,7 +395,7 @@ export default function App() {
             .from('artists')
             .select('subscription_tier')
             .eq('id', currentUser.id)
-            .single();
+            .maybeSingle();
           if (!error && data?.subscription_tier && mounted) {
             const tier = data.subscription_tier as string;
             if (tier === 'starter' || tier === 'growth' || tier === 'pro') {
@@ -435,7 +450,7 @@ export default function App() {
         .from('artists')
         .select('onboarding_completed,onboarding_step')
         .eq('id', currentUser.id)
-        .single();
+        .maybeSingle();
 
       if (!isActive) return;
       if (error) {
@@ -443,9 +458,18 @@ export default function App() {
         return;
       }
 
+      if (!data) {
+        // Row doesn't exist yet (profile provision in-flight).
+        // Treat as "completed" to avoid sending a brand-new user
+        // to onboarding before their profile row is created.
+        // The next mount / page change will re-query.
+        setArtistOnboarding({ completed: true, step: null });
+        return;
+      }
+
       setArtistOnboarding({
-        completed: !!data?.onboarding_completed,
-        step: data?.onboarding_step ?? 1,
+        completed: !!data.onboarding_completed,
+        step: data.onboarding_step ?? 1,
       });
     }
 
@@ -609,11 +633,16 @@ export default function App() {
 
       if (error) throw error;
 
-      // Provision profile
-      try {
-        await apiPost('/api/profile/provision', {});
-      } catch (e) {
-        console.warn('Profile provision failed', e);
+      // Provision profile — retry once on failure
+      let provisioned = false;
+      for (let attempt = 0; attempt < 2 && !provisioned; attempt++) {
+        try {
+          if (attempt > 0) await new Promise(r => setTimeout(r, 1500));
+          await apiPost('/api/profile/provision', {});
+          provisioned = true;
+        } catch (e) {
+          console.warn(`Profile provision attempt ${attempt + 1} failed`, e);
+        }
       }
 
       // Update local state — trust server-assigned role in user_metadata
@@ -902,11 +931,18 @@ export default function App() {
                   console.warn('[onAuth] Failed to set role metadata', e);
                 }
 
-                // Provision profile (creates artist/venue row)
-                try {
-                  await apiPost('/api/profile/provision', {});
-                } catch (e) {
-                  console.warn('[onAuth] Profile provision failed', e);
+                // Provision profile (creates artist/venue row).
+                // Retry once after a short delay if the first attempt fails
+                // — the downstream hooks query the row immediately.
+                let provisioned = false;
+                for (let attempt = 0; attempt < 2 && !provisioned; attempt++) {
+                  try {
+                    if (attempt > 0) await new Promise(r => setTimeout(r, 1500));
+                    await apiPost('/api/profile/provision', {});
+                    provisioned = true;
+                  } catch (e) {
+                    console.warn(`[onAuth] Profile provision attempt ${attempt + 1} failed`, e);
+                  }
                 }
 
                 trackAnalyticsEvent('role_selected', { role: pendingRole, source: 'google_oauth' });
