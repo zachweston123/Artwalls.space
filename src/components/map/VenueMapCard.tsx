@@ -7,6 +7,7 @@
 
 import { MapPin, CheckCircle, Store, ExternalLink } from 'lucide-react';
 import type { MapVenue } from '../../lib/venueMap';
+import { VenueImage } from '../shared/VenueImage';
 
 interface VenueMapCardProps {
   venue: MapVenue;
@@ -43,24 +44,13 @@ export function VenueMapCard({
     >
       <div className="flex gap-3">
         {/* Cover photo / fallback icon */}
-        <div
-          className="shrink-0 w-16 h-16 rounded-lg overflow-hidden flex items-center justify-center"
-          style={{ background: 'var(--surface-2)' }}
-        >
-          {venue.coverPhotoUrl ? (
-            <img
-              src={venue.coverPhotoUrl}
-              alt={venue.name}
-              className="w-full h-full object-cover"
-              loading="lazy"
-            />
-          ) : (
-            <Store
-              className="w-6 h-6"
-              style={{ color: 'var(--text-muted)' }}
-            />
-          )}
-        </div>
+        <VenueImage
+          src={venue.coverPhotoUrl}
+          alt={venue.name}
+          venueId={venue.id}
+          size="sm"
+          className="shrink-0 rounded-lg"
+        />
 
         {/* Content */}
         <div className="min-w-0 flex-1">

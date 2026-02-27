@@ -3,6 +3,7 @@ import { MapPin, Users, X, Image as ImageIcon } from 'lucide-react';
 import { apiGet } from '../../lib/api';
 import { supabase } from '../../lib/supabase';
 import { getVenueImageUrl } from '../../lib/venueImage';
+import { VenueImage } from '../shared/VenueImage';
 
 interface SimpleArtwork {
   id: string;
@@ -115,23 +116,13 @@ export function ArtistVenues() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {(venues.length ? venues : []).map((venue) => (
           <div key={venue.id} className="bg-[var(--surface-1)] rounded-xl overflow-hidden border border-[var(--border)] hover:shadow-lg transition-shadow">
-            <div className="h-48 bg-[var(--surface-3)] overflow-hidden">
-              {venue.imageUrl ? (
-                <img
-                  src={venue.imageUrl}
-                  alt={venue.name}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    console.warn(`[ArtistVenues] Image failed for venue ${venue.id}:`, venue.imageUrl);
-                    (e.target as HTMLImageElement).style.display = 'none';
-                  }}
-                />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-[var(--surface-2)] to-[var(--surface-3)] flex items-center justify-center">
-                  <MapPin className="w-10 h-10 text-[var(--text-muted)] opacity-40" />
-                </div>
-              )}
-            </div>
+            <VenueImage
+              src={venue.imageUrl}
+              alt={venue.name}
+              venueId={venue.id}
+              size="md"
+              className="bg-[var(--surface-3)]"
+            />
             <div className="p-6">
               <div className="flex items-start justify-between mb-3">
                 <div>

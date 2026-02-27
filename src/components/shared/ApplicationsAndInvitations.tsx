@@ -7,6 +7,7 @@ import { DisplayDurationSelector } from '../scheduling/DisplayDurationSelector';
 import { createVenueBooking, API_BASE } from '../../lib/api';
 import { supabase } from '../../lib/supabase';
 import { PageHeroHeader } from '../PageHeroHeader';
+import { VenueImage } from './VenueImage';
 
 interface ApplicationsAndInvitationsProps {
   userRole: 'artist' | 'venue';
@@ -563,10 +564,18 @@ export function ApplicationsAndInvitations({ userRole, onBack, defaultTab = 'app
                       <div key={item.id} className="bg-[var(--surface-1)] border border-[var(--border)] rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow">
                         <div className="grid md:grid-cols-[220px_minmax(0,1fr)]">
                           <div className="relative h-48 md:h-full bg-[var(--surface-2)]">
-                            {imageUrl ? (
+                            {isInvite ? (
+                              <VenueImage
+                                src={imageUrl}
+                                alt={title || 'Venue invitation'}
+                                venueId={invite?.id}
+                                size="md"
+                                className="absolute inset-0 h-full"
+                              />
+                            ) : imageUrl ? (
                               <img
                                 src={imageUrl}
-                                alt={title || (isInvite ? 'Venue invitation' : 'Artwork application')}
+                                alt={title || 'Artwork application'}
                                 className="absolute inset-0 w-full h-full object-cover"
                               />
                             ) : (

@@ -8,6 +8,7 @@ import type { User } from '../../App';
 import { supabase } from '../../lib/supabase';
 import { SocialLinks } from '../shared/SocialLinks';
 import { VenueArtGuidelines } from './VenueArtGuidelines';
+import { VenueImage } from '../shared/VenueImage';
 
 interface VenueProfileViewProps {
   isOwnProfile: boolean;
@@ -167,23 +168,12 @@ export function VenueProfileView({
       {/* Cover Photo & Header */}
       <div className="bg-[var(--surface-1)] rounded-xl overflow-hidden border border-[var(--border)] mb-6">
         {/* Cover Photo */}
-        <div className="h-64 bg-[var(--surface-2)] overflow-hidden">
-          {venue.coverPhoto ? (
-            <img
-              src={venue.coverPhoto}
-              alt={venue.name}
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                console.warn(`[VenueProfileView] Image failed for venue ${venue.id}:`, venue.coverPhoto);
-                (e.target as HTMLImageElement).style.display = 'none';
-              }}
-            />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-[var(--surface-2)] to-[var(--surface-3)] flex items-center justify-center">
-              <MapPin className="w-12 h-12 text-[var(--text-muted)] opacity-40" />
-            </div>
-          )}
-        </div>
+        <VenueImage
+          src={venue.coverPhoto}
+          alt={venue.name}
+          venueId={venue.id}
+          size="lg"
+        />
 
         {/* Header Info */}
         <div className="p-6">

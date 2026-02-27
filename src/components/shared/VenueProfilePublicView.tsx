@@ -12,6 +12,7 @@
 
 import { MapPin, CheckCircle, Store } from 'lucide-react';
 import { SocialLinks } from './SocialLinks';
+import { VenueImage } from './VenueImage';
 
 // ── Shared venue-data shape (camelCase, already normalised) ──
 
@@ -76,19 +77,14 @@ export function VenueProfilePublicView(props: VenueProfilePublicViewProps) {
           <button
             type="button"
             onClick={onViewProfile}
-            className="w-14 h-14 rounded-lg overflow-hidden border border-[var(--border)] bg-[var(--surface-2)] flex-shrink-0 hover:ring-2 hover:ring-[var(--green)] transition-all cursor-pointer"
+            className="rounded-lg border border-[var(--border)] flex-shrink-0 hover:ring-2 hover:ring-[var(--green)] transition-all cursor-pointer overflow-hidden"
           >
-            {venue.coverPhotoUrl ? (
-              <img
-                src={venue.coverPhotoUrl}
-                alt={venue.name}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-xs font-bold text-[var(--text-muted)]">
-                <Store className="w-5 h-5" />
-              </div>
-            )}
+            <VenueImage
+              src={venue.coverPhotoUrl}
+              alt={venue.name}
+              venueId={venue.id}
+              size="xs"
+            />
           </button>
 
           <div className="flex-1 min-w-0">
@@ -152,19 +148,12 @@ export function VenueProfilePublicView(props: VenueProfilePublicViewProps) {
   return (
     <section className="bg-[var(--surface-1)] rounded-xl border border-[var(--border)] overflow-hidden">
       {/* Cover photo */}
-      {venue.coverPhotoUrl ? (
-        <div className="h-48 sm:h-64 w-full overflow-hidden">
-          <img
-            src={venue.coverPhotoUrl}
-            alt={venue.name}
-            className="w-full h-full object-cover"
-          />
-        </div>
-      ) : (
-        <div className="h-32 sm:h-40 w-full bg-gradient-to-br from-[var(--green-muted)] to-[var(--surface-2)] flex items-center justify-center">
-          <Store className="w-16 h-16 text-[var(--green)] opacity-50" />
-        </div>
-      )}
+      <VenueImage
+        src={venue.coverPhotoUrl}
+        alt={venue.name}
+        venueId={venue.id}
+        size="xl"
+      />
 
       <div className="p-6 sm:p-8">
         {/* Name + verified badge */}

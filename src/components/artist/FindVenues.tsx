@@ -7,6 +7,7 @@ import { resolveArtistSubscription } from '../../lib/subscription';
 import { PageHeroHeader } from '../PageHeroHeader';
 import { FoundingVenueBadge } from '../venue/FoundingVenueBadge';
 import { getVenueImageUrl } from '../../lib/venueImage';
+import { VenueImage } from '../shared/VenueImage';
 
 interface FindVenuesProps {
   onViewVenue: (venueId: string) => void;
@@ -403,26 +404,14 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
                 onClick={() => onViewVenue(venue.id)}
                 className="w-full"
               >
-                <div className="h-48 bg-[var(--surface-3)] overflow-hidden">
-                  {venue.coverPhoto ? (
-                    <img
-                      src={venue.coverPhoto}
-                      alt={venue.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                      loading="lazy"
-                      decoding="async"
-                      onError={(e) => {
-                        console.warn(`[FindVenues] Image failed for venue ${venue.id}:`, venue.coverPhoto);
-                        (e.target as HTMLImageElement).style.display = 'none';
-                        (e.target as HTMLImageElement).parentElement?.classList.add('venue-img-fallback');
-                      }}
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-[var(--surface-2)] to-[var(--surface-3)] flex items-center justify-center">
-                      <Frame className="w-10 h-10 text-[var(--text-muted)] opacity-40" />
-                    </div>
-                  )}
-                </div>
+                <VenueImage
+                  src={venue.coverPhoto}
+                  alt={venue.name}
+                  venueId={venue.id}
+                  size="md"
+                  className="bg-[var(--surface-3)]"
+                  hoverScale
+                />
               </button>
 
               <div className="p-6">
