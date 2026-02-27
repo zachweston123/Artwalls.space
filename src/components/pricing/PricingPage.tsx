@@ -1,9 +1,8 @@
-import { Check, Sparkles, Shield, TrendingUp, Zap, Calculator, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Check, Shield, TrendingUp, Zap, Calculator, Loader2, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { apiPost } from '../../lib/api';
 import { PRICING_COPY } from '../../lib/feeCopy';
 import { trackEvent } from '../../lib/trackEvent';
-import { PageHeroHeader } from '../PageHeroHeader';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 import { EarningsComparisonBlurb } from './EarningsComparisonBlurb';
 import { FoundingArtistBanner } from '../artist/FoundingArtistBanner';
@@ -331,229 +330,147 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
   }
 
   return (
-    <div className="bg-[var(--bg)] pb-16">
-      {/* Hero Header */}
-      <PageHeroHeader
-        title="Plans & Pricing"
-        subtitle="Keep more of every sale. Upgrade anytime as your art business grows."
-        center
-      />
+    <div className="bg-[var(--bg)] min-h-screen">
+      {/* ═══════ HERO ═══════ */}
+      <section className="pt-12 md:pt-16 pb-8">
+        <div className="max-w-6xl mx-auto px-6 md:px-8 text-center">
+          <h1 className="text-3xl md:text-4xl font-semibold text-[var(--text)] font-display tracking-tight leading-tight">
+            Plans & Pricing
+          </h1>
+          <p className="mt-3 text-base text-[var(--text-muted)] leading-relaxed max-w-xl mx-auto">
+            Keep more of every sale. Upgrade anytime as your art business grows.
+          </p>
+        </div>
+      </section>
 
-      <EarningsComparisonBlurb variant="pricing" />
+      {/* Gallery comparison blurb */}
+      <div className="max-w-6xl mx-auto px-6 md:px-8">
+        <EarningsComparisonBlurb variant="pricing" />
+      </div>
 
       {/* Founding Artist promotional banner */}
-      <div className="max-w-4xl mx-auto px-2 sm:px-4 lg:px-1">
+      <div className="max-w-6xl mx-auto px-6 md:px-8 mb-10">
         <FoundingArtistBanner variant="pricing" />
       </div>
 
-      {/* ── Tier Picker — "How many active artworks?" ──────── */}
-      <div className="max-w-2xl mx-auto px-4 mb-10">
-        <p className="text-center text-sm text-[var(--text-muted)] mb-3">How many active artworks do you want?</p>
-        <div className="flex items-center justify-center gap-2 flex-wrap">
-          {([
-            { label: '1', plan: 'free' as const },
-            { label: 'Up to 10', plan: 'starter' as const },
-            { label: 'Up to 30', plan: 'growth' as const },
-            { label: 'Unlimited', plan: 'pro' as const },
-          ]).map(({ label, plan: pickPlan }) => (
-            <button
-              key={pickPlan}
-              onClick={() => {
-                // Scroll to the matching plan card
-                const el = document.getElementById(`plan-card-${pickPlan}`);
-                el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                el?.classList.add('ring-2', 'ring-[var(--accent)]');
-                setTimeout(() => el?.classList.remove('ring-2', 'ring-[var(--accent)]'), 2000);
-              }}
-              className={`px-4 py-2 rounded-full text-sm font-medium border transition-all ${
-                pickPlan === currentPlan
-                  ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
-                  : 'bg-[var(--surface-1)] text-[var(--text)] border-[var(--border)] hover:border-[var(--accent)] hover:text-[var(--accent)]'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* ── "Who it's for" blocks ─────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10 px-2 sm:px-4 lg:px-1">
-        {([
-          {
-            id: 'free',
-            title: 'Free',
-            bestFor: 'Best for trying Artwalls',
-            situations: [
-              'You want to test the waters with 1 artwork',
-              'You\'re curious if local venues will accept your work',
-              'You want to see how the QR-to-sale flow works',
-            ],
-            outcome: 'You\'ll have a live artwork in a venue within your first week.',
-          },
-          {
-            id: 'starter',
-            title: 'Starter',
-            bestFor: 'Best for emerging artists',
-            situations: [
-              'You have 2\u201310 pieces ready to show',
-              'You\'re applying to a few venues in your city',
-              'You want to keep 80% instead of 60% per sale',
-            ],
-            outcome: 'You\'ll have art in multiple venues and sales rolling in.',
-          },
-          {
-            id: 'growth',
-            title: 'Growth',
-            bestFor: 'Best for active, full-time artists',
-            situations: [
-              'You\'re juggling 10\u201330 artworks across venues',
-              'You need priority visibility to get picked first',
-              'You want unlimited venue applications',
-            ],
-            outcome: 'You\'ll be a go-to artist for venues in your area.',
-          },
-          {
-            id: 'pro',
-            title: 'Pro',
-            bestFor: 'Best for high-volume professionals',
-            situations: [
-              'You have an extensive catalog and multiple shows',
-              'You want free damage protection on every piece',
-              'You\'re ready for featured placement and maximum earnings',
-            ],
-            outcome: 'You\'ll run your art business end-to-end from one dashboard.',
-          },
-        ]).map((tier) => (
-          <div
-            key={tier.id}
-            className="bg-[var(--surface-1)] border border-[var(--border)] rounded-xl p-4 hover:shadow-sm transition-shadow"
-          >
-            <p className="text-xs font-semibold text-[var(--accent)] mb-1">{tier.title}</p>
-            <p className="text-sm font-medium text-[var(--text)] mb-2">{tier.bestFor}</p>
-            <ul className="space-y-1.5 mb-3">
-              {tier.situations.map((s, i) => (
-                <li key={i} className="flex items-start gap-2 text-xs text-[var(--text-muted)]">
-                  <Check className="w-3.5 h-3.5 text-[var(--accent)] shrink-0 mt-0.5" />
-                  <span>{s}</span>
-                </li>
-              ))}
-            </ul>
-            <p className="text-xs text-[var(--text)] font-medium border-t border-[var(--border)] pt-2">
-              \u2192 {tier.outcome}
-            </p>
-          </div>
-        ))}
-      </div>
-
-      {/* ── Plan Cards ─────────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 lg:gap-8 mb-12 px-2 sm:px-4 lg:px-1">
-        {plans.map((plan) => {
-          const Icon = plan.icon;
-          return (
-            <div
-              key={plan.id}
-              id={`plan-card-${plan.id}`}
-              className={`relative ${plan.popular ? 'pt-3' : ''}`}
-            >
-              {/* "Most Popular" badge — sits in the outer wrapper so it's never clipped */}
-              {plan.popular && (
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 bg-[var(--accent)] text-white px-4 py-1 rounded-full text-xs font-bold whitespace-nowrap shadow-md">
-                  Most Popular
-                </div>
-              )}
+      {/* ═══════ PRICING GRID ═══════ */}
+      <section className="max-w-6xl mx-auto px-6 md:px-8 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 xl:gap-8">
+          {plans.map((plan) => {
+            const Icon = plan.icon;
+            return (
               <div
-                className={`bg-[var(--surface-1)] rounded-xl border shadow-sm p-5 sm:p-6 flex flex-col h-full transition-all duration-200 ${
-                  plan.popular
-                    ? 'border-[var(--accent)] ring-2 ring-[var(--accent)]/25 shadow-lg lg:scale-[1.03]'
-                    : 'border-[var(--border)] hover:ring-2 hover:ring-[var(--blue)]/20 hover:shadow-md'
-                } focus-within:ring-2 focus-within:ring-[var(--blue)]/30`}
+                key={plan.id}
+                id={`plan-card-${plan.id}`}
+                className={`relative flex flex-col ${plan.popular ? 'xl:-mt-2 xl:mb-2' : ''}`}
               >
-
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-[var(--text)]">{plan.name}</h3>
-                  <p className="text-xs text-[var(--text-muted)] mt-0.5">{plan.tagline}</p>
-                </div>
-                <Icon className="w-7 h-7 text-[var(--accent)] flex-shrink-0" />
-              </div>
-
-              {/* ★ PRIMARY VALUE — Take Home % */}
-              <div className="bg-[var(--surface-3)] border border-[var(--border)] rounded-lg p-3 mb-4 text-center">
-                <div className="text-3xl font-extrabold text-[var(--accent)] leading-tight">{plan.takeHome}%</div>
-                <div className="text-xs text-[var(--text-muted)] mt-0.5">{PRICING_COPY.takeHomeLabel} {PRICING_COPY.takeHomeSubtext}</div>
-              </div>
-
-              {/* Price */}
-              <div className="mb-4 text-center">
-                <span className="text-2xl font-bold text-[var(--text)]">{plan.price === 0 ? 'Free' : `$${plan.price}`}</span>
-                <span className="text-[var(--text-muted)] ml-1 text-sm">{plan.period}</span>
-              </div>
-
-              {/* Secondary — Limits */}
-              <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
-                <div className="bg-[var(--surface-1)] rounded-md p-2 text-center border border-[var(--border)]">
-                  <div className="font-semibold text-[var(--text)]">{plan.artworks}</div>
-                  <div className="text-[var(--text-muted)]">Artworks</div>
-                </div>
-                <div className="bg-[var(--surface-1)] rounded-md p-2 text-center border border-[var(--border)]">
-                  <div className="font-semibold text-[var(--text)]">{plan.activeDisplays}</div>
-                  <div className="text-[var(--text-muted)]">Displays</div>
-                </div>
-              </div>
-
-              {/* Secondary — Platform fee label */}
-              <div className="text-xs text-center text-[var(--text-muted)] mb-3">
-                Platform + Processing: <span className="font-semibold text-[var(--text)]">{plan.platformFee}</span>
-              </div>
-
-              {/* Features */}
-              <ul className="space-y-2 mb-6 flex-1">
-                {plan.features.map((feature, index) => (
-                  <li key={index} className="flex items-start gap-2 text-sm">
-                    <Check className="w-4 h-4 text-[var(--accent)] flex-shrink-0 mt-0.5" />
-                    <span className="text-[var(--text)]">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-
-              {/* CTA */}
-              <button
-                onClick={() => {
-                  // Free card "Manage Subscription" for paid users → open billing portal
-                  if (plan.id === 'free' && currentPlan !== 'free') {
-                    openBillingPortal();
-                  } else {
-                    startSubscription(plan.id as PlanId);
-                  }
-                }}
-                disabled={plan.disabled || subscribing === plan.id}
-                className={`w-full py-3 rounded-lg transition-colors text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] ${
-                  plan.disabled
-                    ? 'bg-[var(--surface-3)] text-[var(--text-muted)] cursor-not-allowed border border-[var(--border)]'
-                    : plan.popular
-                    ? 'bg-[var(--accent)] text-[var(--accent-contrast)] shadow-md hover:brightness-95'
-                    : 'bg-[var(--surface-3)] text-[var(--text)] hover:bg-[var(--surface-2)] border border-[var(--border)]'
-                }`}
-              >
-                {subscribing === plan.id ? (
-                  <span className="inline-flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Processing…
-                  </span>
-                ) : (
-                  plan.cta
+                {/* "Most Popular" badge */}
+                {plan.popular && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+                    <span className="inline-flex items-center gap-1 bg-[var(--blue)] text-[var(--on-blue)] px-4 py-1 rounded-full text-xs font-bold whitespace-nowrap shadow-sm">
+                      <Sparkles className="w-3 h-3" />
+                      Most Popular
+                    </span>
+                  </div>
                 )}
-              </button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
 
-      <div className="max-w-4xl mx-auto mb-12">
-        <div className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-5 sm:p-6">
-          <Accordion type="single" collapsible>
+                <div
+                  className={`flex flex-col h-full rounded-2xl border shadow-sm p-6 md:p-7 transition-all duration-200 ${
+                    plan.popular
+                      ? 'bg-[var(--surface-1)] border-[var(--blue)] ring-1 ring-[var(--blue)]/30 shadow-md'
+                      : 'bg-[var(--surface-1)] border-[var(--border)] hover:shadow-md hover:border-[var(--blue)]/30'
+                  }`}
+                >
+                  {/* Header */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h3 className="text-lg font-bold text-[var(--text)]">{plan.name}</h3>
+                      <p className="text-sm text-[var(--text-muted)] mt-0.5">{plan.tagline}</p>
+                    </div>
+                    <div className="w-9 h-9 rounded-lg bg-[var(--surface-3)] flex items-center justify-center flex-shrink-0">
+                      <Icon className="w-5 h-5 text-[var(--blue)]" />
+                    </div>
+                  </div>
+
+                  {/* Price */}
+                  <div className="mb-5">
+                    <span className="text-3xl font-bold text-[var(--text)]">
+                      {plan.price === 0 ? 'Free' : `$${plan.price}`}
+                    </span>
+                    {plan.price > 0 && (
+                      <span className="text-sm text-[var(--text-muted)] ml-1">/mo</span>
+                    )}
+                  </div>
+
+                  {/* Take-home stat */}
+                  <div className="bg-[var(--surface-3)]/50 border border-[var(--border)] rounded-xl p-4 mb-5 text-center">
+                    <div className="text-3xl font-extrabold text-[var(--blue)] leading-none">{plan.takeHome}%</div>
+                    <div className="text-xs text-[var(--text-muted)] mt-1.5">
+                      {PRICING_COPY.takeHomeLabel} {PRICING_COPY.takeHomeSubtext}
+                    </div>
+                  </div>
+
+                  {/* Limits row */}
+                  <div className="grid grid-cols-2 gap-3 mb-5">
+                    <div className="bg-[var(--surface-2)] rounded-lg p-2.5 text-center">
+                      <div className="text-sm font-semibold text-[var(--text)]">{plan.artworks}</div>
+                      <div className="text-xs text-[var(--text-muted)]">Artworks</div>
+                    </div>
+                    <div className="bg-[var(--surface-2)] rounded-lg p-2.5 text-center">
+                      <div className="text-sm font-semibold text-[var(--text)]">{plan.activeDisplays}</div>
+                      <div className="text-xs text-[var(--text-muted)]">Displays</div>
+                    </div>
+                  </div>
+
+                  {/* Features */}
+                  <ul className="space-y-2.5 mb-6 flex-1">
+                    {plan.features.map((feature, index) => (
+                      <li key={index} className="flex items-start gap-2.5 text-sm">
+                        <Check className="w-4 h-4 text-[var(--green)] flex-shrink-0 mt-0.5" />
+                        <span className="text-[var(--text-muted)]">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  {/* CTA */}
+                  <button
+                    onClick={() => {
+                      if (plan.id === 'free' && currentPlan !== 'free') {
+                        openBillingPortal();
+                      } else {
+                        startSubscription(plan.id as PlanId);
+                      }
+                    }}
+                    disabled={plan.disabled || subscribing === plan.id}
+                    className={`w-full h-11 rounded-xl text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] ${
+                      plan.disabled
+                        ? 'bg-[var(--surface-3)] text-[var(--text-muted)] cursor-not-allowed border border-[var(--border)]'
+                        : plan.popular
+                        ? 'bg-[var(--blue)] text-[var(--on-blue)] hover:bg-[var(--blue-hover)] shadow-sm'
+                        : 'bg-[var(--surface-1)] text-[var(--text)] border border-[var(--border)] hover:bg-[var(--surface-3)]'
+                    }`}
+                  >
+                    {subscribing === plan.id ? (
+                      <span className="inline-flex items-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Processing…
+                      </span>
+                    ) : (
+                      plan.cta
+                    )}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ═══════ HOW PAYOUTS WORK ═══════ */}
+      <section className="max-w-6xl mx-auto px-6 md:px-8 mb-12">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-[var(--surface-2)] rounded-2xl border border-[var(--border)] p-5 sm:p-6">
+            <Accordion type="single" collapsible>
             <AccordionItem value="payouts">
               <AccordionTrigger>How payouts work</AccordionTrigger>
               <AccordionContent>
@@ -572,31 +489,35 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
               </AccordionContent>
             </AccordionItem>
           </Accordion>
+          </div>
         </div>
-      </div>
+      </section>
 
-      {/* Manage Subscription */}
-      <div className="text-center mb-12 bg-[var(--surface-2)] rounded-xl p-5 sm:p-6 border border-[var(--border)] max-w-2xl mx-auto">
+      {/* ═══════ MANAGE SUBSCRIPTION ═══════ */}
+      <section className="max-w-6xl mx-auto px-6 md:px-8 mb-12">
+        <div className="max-w-2xl mx-auto bg-[var(--surface-2)] rounded-2xl p-5 sm:p-6 border border-[var(--border)] text-center">
           <p className="text-sm text-[var(--text)]">
-          💡 You can upgrade or downgrade your plan anytime. Changes take effect at the start of your next billing cycle.
-        </p>
-        <div className="mt-4 flex items-center justify-center gap-3">
-          <button
-            onClick={openBillingPortal}
-            disabled={managingPortal}
-            className={`px-6 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] hover:bg-[var(--surface-3)] transition-colors ${managingPortal ? 'opacity-70 cursor-not-allowed' : ''}`}
-          >
-            {managingPortal ? 'Opening Billing Portal…' : 'Manage Subscription'}
-          </button>
+            💡 You can upgrade or downgrade your plan anytime. Changes take effect at the start of your next billing cycle.
+          </p>
+          <div className="mt-4 flex items-center justify-center gap-3">
+            <button
+              onClick={openBillingPortal}
+              disabled={managingPortal}
+              className={`h-11 px-6 rounded-xl border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] text-sm font-medium hover:bg-[var(--surface-3)] transition-colors ${managingPortal ? 'opacity-70 cursor-not-allowed' : ''}`}
+            >
+              {managingPortal ? 'Opening Billing Portal…' : 'Manage Subscription'}
+            </button>
+          </div>
+          {error && (
+            <p className="text-sm text-[var(--danger)] mt-2">{error}</p>
+          )}
         </div>
-        {error && (
-          <p className="text-sm text-[var(--danger)] mt-2">{error}</p>
-        )}
-      </div>
+      </section>
 
-      {/* Earnings Calculator */}
-      <div className="max-w-4xl mx-auto mb-12">
-        <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl p-5 sm:p-8">
+      {/* ═══════ EARNINGS CALCULATOR ═══════ */}
+      <section className="max-w-6xl mx-auto px-6 md:px-8 mb-12">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-2xl p-5 sm:p-8">
           <h2 className="text-xl sm:text-2xl mb-2 text-[var(--text)] flex items-center gap-3">
             <Calculator className="w-6 h-6" />
             Earnings Calculator
@@ -752,26 +673,28 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
               </div>
             );
           })()}
+          </div>
         </div>
-      </div>
+      </section>
 
-      {/* Protection Plan Details */}
-      <div className="max-w-4xl mx-auto mb-12">
-        <button
-          onClick={() => setShowProtectionDetails(!showProtectionDetails)}
-          className="w-full bg-[var(--surface-2)] rounded-xl border border-[var(--border)] p-6 text-left hover:shadow-md transition-shadow"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-[var(--surface-3)] rounded-lg flex items-center justify-center">
-              <Shield className="w-6 h-6 text-[var(--accent)]" />
-              </div>
-              <div>
-                <h2 className="text-xl mb-1 text-[var(--text)]">Artwork Protection Plan Details</h2>
-                <p className="text-sm text-[var(--text-muted)]">
-                  Learn about coverage, requirements, and exclusions
-                </p>
-              </div>
+      {/* ═══════ PROTECTION PLAN DETAILS ═══════ */}
+      <section className="max-w-6xl mx-auto px-6 md:px-8 mb-12">
+        <div className="max-w-4xl mx-auto">
+          <button
+            onClick={() => setShowProtectionDetails(!showProtectionDetails)}
+            className="w-full bg-[var(--surface-2)] rounded-2xl border border-[var(--border)] p-6 text-left hover:shadow-md transition-shadow"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-[var(--surface-3)] rounded-lg flex items-center justify-center">
+                  <Shield className="w-5 h-5 text-[var(--blue)]" />
+                </div>
+                <div>
+                  <h2 className="text-base font-semibold text-[var(--text)]">Artwork Protection Plan Details</h2>
+                  <p className="text-sm text-[var(--text-muted)]">
+                    Learn about coverage, requirements, and exclusions
+                  </p>
+                </div>
             </div>
             <div className="text-[var(--text-muted)]">
               {showProtectionDetails ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
@@ -780,25 +703,25 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
         </button>
 
         {showProtectionDetails && (
-          <div className="bg-[var(--surface-2)] rounded-xl border border-[var(--border)] border-t-0 p-6 mt-0">
+          <div className="bg-[var(--surface-2)] rounded-2xl rounded-t-none border border-[var(--border)] border-t-0 p-6 mt-0">
             <div className="space-y-6">
               {/* What's Covered */}
               <div>
-                <h3 className="text-base mb-3 text-[var(--text)]">What's Covered</h3>
-                <p className="text-sm text-[var(--text)] mb-3">
+                <h3 className="text-sm font-semibold mb-3 text-[var(--text)]">What's Covered</h3>
+                <p className="text-sm text-[var(--text-muted)] mb-3">
                   The Artwork Protection Plan helps reimburse you for certain covered incidents while your artwork is displayed through Artwalls placements:
                 </p>
-                <ul className="space-y-2 text-sm text-[var(--text)]">
+                <ul className="space-y-2 text-sm text-[var(--text-muted)]">
                   <li className="flex items-start gap-2">
-                    <Check className="w-4 h-4 text-[var(--accent)] flex-shrink-0 mt-0.5" />
+                    <Check className="w-4 h-4 text-[var(--green)] flex-shrink-0 mt-0.5" />
                     <span>Accidental damage (spills, bumps, falls)</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <Check className="w-4 h-4 text-[var(--accent)] flex-shrink-0 mt-0.5" />
+                    <Check className="w-4 h-4 text-[var(--green)] flex-shrink-0 mt-0.5" />
                     <span>Theft or vandalism</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <Check className="w-4 h-4 text-[var(--accent)] flex-shrink-0 mt-0.5" />
+                    <Check className="w-4 h-4 text-[var(--green)] flex-shrink-0 mt-0.5" />
                     <span>Environmental damage (within venue safety guidelines)</span>
                   </li>
                 </ul>
@@ -883,24 +806,24 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
             </div>
           </div>
         )}
-      </div>
+        </div>
+      </section>
 
-      {/* Feature Comparison */}
-      <div className="max-w-6xl mx-auto mb-12">
-        <h2 className="text-xl sm:text-2xl mb-6 text-center text-[var(--text)]">Compare All Plans</h2>
+      {/* ═══════ COMPARE ALL PLANS ═══════ */}
+      <section className="max-w-6xl mx-auto px-6 md:px-8 mb-12">
+        <h2 className="text-xl font-semibold mb-6 text-center text-[var(--text)] font-display tracking-tight">Compare All Plans</h2>
 
-        {/* Comparison table — single surface, zebra + subtle dividers via CSS */}
-        <div className="compareTable rounded-2xl overflow-hidden" style={{ border: '1px solid var(--border)', background: 'var(--surface-2)' }}>
+        <div className="rounded-2xl overflow-hidden border border-[var(--border)] bg-[var(--surface-2)]">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[760px]">
               <thead>
                 <tr>
-                  <th className="text-left text-sm font-semibold" style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>Feature</th>
+                  <th className="text-left text-sm font-semibold px-6 py-4 text-[var(--text-muted)]">Feature</th>
                   {plans.map((p) => (
-                    <th key={p.id} className="text-center" style={{ color: 'var(--text-muted)' }}>
-                      <div className="plan-header-stack">
-                        <span className="text-sm sm:text-base font-semibold" style={{ color: p.popular ? 'var(--text)' : undefined, lineHeight: 1, whiteSpace: 'nowrap' }}>{p.name}</span>
-                        <span className="text-xs sm:text-sm font-medium" style={{ color: 'var(--accent)', lineHeight: 1, whiteSpace: 'nowrap' }}>{p.takeHome}% take-home</span>
+                    <th key={p.id} className="text-center px-6 py-4">
+                      <div className="flex flex-col gap-0.5">
+                        <span className={`text-sm font-semibold ${p.popular ? 'text-[var(--text)]' : 'text-[var(--text-muted)]'}`}>{p.name}</span>
+                        <span className="text-xs font-medium text-[var(--blue)]">{p.takeHome}% take-home</span>
                       </div>
                     </th>
                   ))}
@@ -919,9 +842,9 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                   { label: 'Max coverage/claim', values: ['$100', '$100', '$150', '$200'] },
                 ].map((row) => (
                   <tr key={row.label}>
-                    <td className="px-6 py-4 text-sm font-medium whitespace-nowrap" style={{ color: 'var(--text)' }}>{row.label}</td>
+                    <td className="px-6 py-3.5 text-sm font-medium whitespace-nowrap text-[var(--text)]">{row.label}</td>
                     {row.values.map((val, j) => (
-                      <td key={j} className="text-center px-6 py-4 text-sm tabular-nums" style={{ color: 'var(--text)' }}>
+                      <td key={j} className="text-center px-6 py-3.5 text-sm tabular-nums text-[var(--text)]">
                         {val}
                       </td>
                     ))}
@@ -931,41 +854,43 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
             </table>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* FAQ */}
-      <div className="max-w-3xl mx-auto">
-        <h2 className="text-xl sm:text-2xl mb-6 text-center text-[var(--text)]">Frequently Asked Questions</h2>
-        <div className="flex flex-col gap-6">
-          {[
-            {
-              q: 'Can I upgrade or downgrade anytime?',
-              a: "Yes — change your plan at any time from your account settings. Upgrades take effect immediately and you'll be prorated. Downgrades take effect at the start of your next billing cycle.",
-            },
-            {
-              q: 'Can I cancel anytime?',
-              a: "Absolutely. There are no long-term contracts. Cancel from your account settings and you'll keep access through the end of your current billing period.",
-            },
-            {
-              q: 'What does \"Platform + Processing\" mean?',
-              a: "Every sale has two fees: the platform fee (which decreases as you upgrade) and a fixed 4.5% payment processing fee charged by Stripe. For example, on the Growth plan, the platform fee is just 2% — so the total taken from a sale is 6.5%. The rest goes to you and the venue.",
-            },
-            {
-              q: 'How does the Protection Plan work?',
-              a: 'The Protection Plan covers accidental damage, theft, and vandalism while your artwork is displayed through Artwalls. Coverage caps vary by plan ($100–$200 per claim). Pro members get it free — everyone else can add it per artwork.',
-            },
-            {
-              q: 'When do I get paid?',
-              a: 'Payouts are processed through Stripe Connect. Once you connect your bank account, earnings are deposited on a rolling basis — typically within 2–7 business days after a sale.',
-            },
-          ].map((faq) => (
-            <div key={faq.q} className="rounded-2xl p-5 sm:p-6" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
-              <h3 className="text-sm sm:text-base mb-2 font-semibold" style={{ color: 'var(--text)' }}>{faq.q}</h3>
-              <p className="text-[13px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>{faq.a}</p>
-            </div>
-          ))}
+      {/* ═══════ FAQ ═══════ */}
+      <section className="max-w-6xl mx-auto px-6 md:px-8 pb-16">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-xl font-semibold mb-6 text-center text-[var(--text)] font-display tracking-tight">Frequently Asked Questions</h2>
+          <div className="flex flex-col gap-4">
+            {[
+              {
+                q: 'Can I upgrade or downgrade anytime?',
+                a: "Yes — change your plan at any time from your account settings. Upgrades take effect immediately and you'll be prorated. Downgrades take effect at the start of your next billing cycle.",
+              },
+              {
+                q: 'Can I cancel anytime?',
+                a: "Absolutely. There are no long-term contracts. Cancel from your account settings and you'll keep access through the end of your current billing period.",
+              },
+              {
+                q: 'What does \"Platform + Processing\" mean?',
+                a: "Every sale has two fees: the platform fee (which decreases as you upgrade) and a fixed 4.5% payment processing fee charged by Stripe. For example, on the Growth plan, the platform fee is just 2% — so the total taken from a sale is 6.5%. The rest goes to you and the venue.",
+              },
+              {
+                q: 'How does the Protection Plan work?',
+                a: 'The Protection Plan covers accidental damage, theft, and vandalism while your artwork is displayed through Artwalls. Coverage caps vary by plan ($100–$200 per claim). Pro members get it free — everyone else can add it per artwork.',
+              },
+              {
+                q: 'When do I get paid?',
+                a: 'Payouts are processed through Stripe Connect. Once you connect your bank account, earnings are deposited on a rolling basis — typically within 2–7 business days after a sale.',
+              },
+            ].map((faq) => (
+              <div key={faq.q} className="rounded-2xl p-5 sm:p-6 bg-[var(--surface-2)] border border-[var(--border)]">
+                <h3 className="text-sm font-semibold mb-2 text-[var(--text)]">{faq.q}</h3>
+                <p className="text-sm leading-relaxed text-[var(--text-muted)]">{faq.a}</p>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 }
