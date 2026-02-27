@@ -293,7 +293,7 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
         />
 
         {/* ═══ 1) Hero ══════════════════════════════════════════ */}
-        <section className="pt-24 md:pt-28 lg:pt-32 pb-16 md:pb-20 lg:pb-24">
+        <section className="pt-28 sm:pt-32 md:pt-36 lg:pt-40 pb-16 md:pb-20 lg:pb-24">
           <div className="max-w-6xl mx-auto px-6 md:px-8">
             <div className="max-w-3xl mx-auto text-center space-y-6">
               <h1 className="text-4xl md:text-5xl font-semibold text-[var(--text)] font-display tracking-tight leading-tight">
@@ -359,7 +359,10 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
                   <p className="text-base text-[var(--text-muted)] leading-relaxed">
                     Publish your work, apply to local venues, and sell directly to buyers.
                   </p>
-                  <span className="inline-flex items-center gap-1 px-5 py-2.5 rounded-xl bg-[var(--blue)] text-[var(--on-blue)] text-sm font-medium group-hover:bg-[var(--blue-hover)] transition-colors">
+                </div>
+
+                <div className="flex justify-center mt-6 mb-2">
+                  <span className="inline-flex items-center justify-center gap-2 h-11 px-6 whitespace-nowrap rounded-xl bg-[var(--blue)] text-[var(--on-blue)] text-sm font-medium group-hover:bg-[var(--blue-hover)] transition-colors">
                     Continue as Artist — Free
                   </span>
                 </div>
@@ -399,7 +402,10 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
                   <p className="text-base text-[var(--text-muted)] leading-relaxed">
                     List your walls, receive artist applications, and earn a commission on every sale.
                   </p>
-                  <span className="inline-flex items-center gap-1 px-5 py-2.5 rounded-xl bg-[var(--green)] text-[var(--accent-contrast)] text-sm font-medium group-hover:brightness-95 transition-all">
+                </div>
+
+                <div className="flex justify-center mt-6 mb-2">
+                  <span className="inline-flex items-center justify-center gap-2 h-11 px-6 whitespace-nowrap rounded-xl bg-[var(--green)] text-[var(--accent-contrast)] text-sm font-medium group-hover:brightness-95 transition-all">
                     Continue as Venue — Free Forever
                   </span>
                 </div>
