@@ -116,9 +116,9 @@ export function FreshnessProof({
   if (!loading && !hasData) return null;
 
   return (
-    <section className="px-6 py-10 sm:py-14">
+    <section className="px-4 sm:px-6 lg:px-8 py-16 md:py-20">
       <div className="max-w-5xl mx-auto">
-        <h2 className="text-lg sm:text-xl font-semibold text-[var(--text)] text-center mb-8 font-display tracking-tight">
+        <h2 className="text-lg sm:text-xl font-semibold text-[var(--text)] text-center mb-10 font-display tracking-tight">
           {heading}
         </h2>
 
@@ -130,8 +130,8 @@ export function FreshnessProof({
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Newest Venues */}
             {venues.length > 0 && (
-              <div className="bg-[var(--surface-1)] rounded-xl p-5 border border-[var(--border)]">
-                <h3 className="text-sm font-semibold text-[var(--green)] mb-3 flex items-center gap-2">
+              <div className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)]">
+                <h3 className="text-sm font-semibold text-[var(--green)] mb-4 flex items-center gap-2">
                   <Store className="w-4 h-4" /> New Venues
                 </h3>
                 <ul className="space-y-2">
@@ -150,8 +150,8 @@ export function FreshnessProof({
 
             {/* Newest Artists */}
             {artists.length > 0 && (
-              <div className="bg-[var(--surface-1)] rounded-xl p-5 border border-[var(--border)]">
-                <h3 className="text-sm font-semibold text-[var(--blue)] mb-3 flex items-center gap-2">
+              <div className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)]">
+                <h3 className="text-sm font-semibold text-[var(--blue)] mb-4 flex items-center gap-2">
                   <Palette className="w-4 h-4" /> New Artists
                 </h3>
                 <ul className="space-y-2">
@@ -170,8 +170,8 @@ export function FreshnessProof({
 
             {/* Newest Calls */}
             {calls.length > 0 && (
-              <div className="bg-[var(--surface-1)] rounded-xl p-5 border border-[var(--border)]">
-                <h3 className="text-sm font-semibold text-[var(--text)] mb-3 flex items-center gap-2">
+              <div className="bg-[var(--surface-1)] rounded-xl p-6 border border-[var(--border)]">
+                <h3 className="text-sm font-semibold text-[var(--text)] mb-4 flex items-center gap-2">
                   <Megaphone className="w-4 h-4" /> Open Calls
                 </h3>
                 <ul className="space-y-2">
@@ -189,7 +189,7 @@ export function FreshnessProof({
 
         {/* Soft language — no vanity numbers */}
         {hasData && (
-          <p className="text-center text-xs text-[var(--text-muted)] mt-6 flex items-center justify-center gap-1">
+          <p className="text-center text-xs text-[var(--text-muted)] mt-8 flex items-center justify-center gap-1">
             <Sparkles className="w-3 h-3" /> New artists and venues joining every week
           </p>
         )}

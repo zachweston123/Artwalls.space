@@ -24,10 +24,10 @@ export function Section({
 }: SectionProps) {
   const py =
     size === 'hero'
-      ? 'pt-20 pb-16 md:pt-28 md:pb-20 lg:pt-32 lg:pb-24'
+      ? 'pt-24 pb-16 sm:pt-28 sm:pb-20 md:pt-32 md:pb-24 lg:pt-36 lg:pb-28'
       : size === 'sm'
-        ? 'py-10 md:py-14'
-        : 'py-16 md:py-20 lg:py-24';
+        ? 'py-12 md:py-16'
+        : 'py-16 md:py-24 lg:py-28';
 
   return (
     <section

@@ -77,12 +77,12 @@ export function FoundingStorySection({
         {/* ── Story ──────────────────────────────────────────── */}
         <h2
           id="founding-story-heading"
-          className="text-2xl sm:text-3xl font-bold text-[var(--text)] mb-6 font-display tracking-tight leading-snug"
+          className="text-2xl sm:text-3xl font-bold text-[var(--text)] mb-8 font-display tracking-tight leading-snug"
         >
           Artwalls started at a local bagel shop in my hometown.
         </h2>
 
-        <div className="space-y-4 text-base sm:text-lg text-[var(--text-muted)] leading-relaxed">
+        <div className="space-y-5 text-base sm:text-lg text-[var(--text-muted)] leading-relaxed">
           <p>
             Before I left for university, I had my photography up on the wall
             there. It wasn't a big gallery moment, but it worked: people saw the
@@ -108,7 +108,7 @@ export function FoundingStorySection({
         </div>
 
         {/* ── CTAs ───────────────────────────────────────────── */}
-        <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
           {/* Artist CTA */}
           <div className="flex flex-col">
             <button
@@ -118,7 +118,7 @@ export function FoundingStorySection({
               <Palette className="w-5 h-5 shrink-0" />
               Start your first placement
             </button>
-            <p className="mt-2 text-xs sm:text-sm text-[var(--text-muted)] text-center">
+            <p className="mt-3 text-xs sm:text-sm text-[var(--text-muted)] text-center">
               Get seen in real spaces&nbsp;— start with one piece.
             </p>
           </div>
@@ -132,7 +132,7 @@ export function FoundingStorySection({
               <Store className="w-5 h-5 shrink-0" />
               Post a call for art
             </button>
-            <p className="mt-2 text-xs sm:text-sm text-[var(--text-muted)] text-center">
+            <p className="mt-3 text-xs sm:text-sm text-[var(--text-muted)] text-center">
               Free for venues. Low effort. High vibe.
             </p>
           </div>
