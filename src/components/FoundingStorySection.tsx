@@ -70,7 +70,7 @@ export function FoundingStorySection({
 
   return (
     <section
-      className="py-16 md:py-24 lg:py-28"
+      className="py-14 md:py-20 lg:py-24"
       aria-labelledby="founding-story-heading"
     >
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">

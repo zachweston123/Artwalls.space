@@ -3,27 +3,26 @@
  *
  * Theme-congruent: ONE page background (--bg) everywhere. Visual separation
  * comes from elevated card surfaces (--surface-1 + border + shadow-sm), not
- * alternating section backgrounds. Section wrappers are purely for spacing
- * (py rhythm) and never set a bg colour. Works identically in light & dark.
+ * alternating section backgrounds. Subtle border-t dividers mark section
+ * transitions. Works identically in light & dark.
  *
  * Spacing scale (matches Plans & Pricing page rhythm):
- *   Section padding:  py-16 md:py-24 lg:py-28  (hero: pt-24→lg:pt-36)
- *   Section headers:  mb-4 (title) + mb-12 (subtitle→content)
+ *   Hero:             pt-16 sm:pt-20 lg:pt-24  /  pb-14 md:pb-20 lg:pb-24
+ *   Section padding:  py-14 md:py-20 lg:py-24
+ *   Section headers:  space-y-3 (title + subhead) + mb-10 md:mb-14 → content
  *   Card padding:     p-6 md:p-8
  *   Card internals:   space-y-5 (content), space-y-4 (bullet lists)
- *   CTA rows:         gap-3 md:gap-4, mt-8–12 from preceding content
- *   Value prop items:  space-y-6, w-9 h-9 icon boxes
+ *   CTA rows:         gap-3 md:gap-4, mt-8–10 from preceding content
+ *   Section dividers:  border-t border-[var(--border)]/40
  */
 
 import { useState, useEffect } from 'react';
-import { Palette, Store, MapPin, Image, DollarSign, Users, Star, Shield, ChevronRight } from 'lucide-react';
+import { Palette, Store, MapPin, Image, DollarSign, Shield, ChevronRight } from 'lucide-react';
 import { SEO } from './SEO';
 import { FreshnessProof } from './shared/FreshnessProof';
 import { FoundingStorySection } from './FoundingStorySection';
 import type { User, UserRole } from '../App';
 import { trackAnalyticsEvent } from '../lib/analytics';
-import { Section } from './public/Section';
-import { Container } from './public/Container';
 
 // Google OAuth icon component
 const GoogleIcon = () => (
@@ -282,7 +281,7 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
 
   if (!selectedRole) {
     return (
-      <div className="min-h-svh bg-[var(--bg)]">
+      <div className="min-h-svh bg-[var(--bg)] text-[var(--text)]">
         <SEO
           title="Artwalls — Art on Every Wall"
           description="Artwalls connects local artists with cafés, restaurants, and venues to display, rotate, and sell artwork on real walls. Find wall space near you."
@@ -292,14 +291,14 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
           canonical="https://artwalls.space/"
         />
 
-        {/* ── Hero ────────────────────────────────────────────── */}
-        <Section size="hero">
-          <Container>
+        {/* ═══ A) Hero ══════════════════════════════════════════ */}
+        <section className="pt-16 sm:pt-20 lg:pt-24 pb-14 md:pb-20 lg:pb-24">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-2xl mx-auto text-center">
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[var(--text)] font-display tracking-tight leading-tight">
                 Art on Every Wall
               </h1>
-              <p className="mt-6 text-base sm:text-lg text-[var(--text-muted)] leading-relaxed max-w-prose mx-auto">
+              <p className="mt-5 md:mt-6 text-base sm:text-lg text-[var(--text-muted)] leading-relaxed max-w-prose mx-auto">
                 The easiest way for artists to get placed in real venues&nbsp;— and for venues to host art without the hassle.
               </p>
               <div className="mt-8 md:mt-10 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 md:gap-4">
@@ -320,23 +319,25 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
               </div>
               <button
                 onClick={() => onNavigate?.('why-artwalls-artist')}
-                className="mt-6 md:mt-8 inline-flex items-center gap-1 text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors focus-visible:ring-2 focus-visible:ring-[var(--focus)] rounded-md outline-none"
+                className="mt-5 md:mt-6 inline-flex items-center gap-1 text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors focus-visible:ring-2 focus-visible:ring-[var(--focus)] rounded-md outline-none"
               >
                 Learn more <ChevronRight className="w-3.5 h-3.5" />
               </button>
             </div>
-          </Container>
-        </Section>
+          </div>
+        </section>
 
-        {/* ── Choose Your Path ───────────────────────────────── */}
-        <Section>
-          <Container size="narrow">
-            <h2 className="text-xl sm:text-2xl font-semibold text-[var(--text)] text-center mb-4 font-display tracking-tight leading-tight">
-              Choose Your Path
-            </h2>
-            <p className="text-[var(--text-muted)] text-sm sm:text-base max-w-md mx-auto text-center mb-12 leading-relaxed">
-              Whether you make art or host it — you can be live in under 10&nbsp;minutes.
-            </p>
+        {/* ═══ B) Choose Your Path ══════════════════════════════ */}
+        <section className="py-14 md:py-20 lg:py-24 border-t border-[var(--border)]/40">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center space-y-3 mb-10 md:mb-14">
+              <h2 className="text-xl sm:text-2xl font-semibold text-[var(--text)] font-display tracking-tight leading-tight">
+                Choose Your Path
+              </h2>
+              <p className="text-[var(--text-muted)] text-sm sm:text-base max-w-md mx-auto leading-relaxed">
+                Whether you make art or host it — you can be live in under 10&nbsp;minutes.
+              </p>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
               {/* Artist card */}
@@ -357,15 +358,17 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
                       Publish your work, apply to local venues, and sell directly to buyers.
                     </p>
                   </div>
-                  <span className="inline-flex items-center gap-1 px-5 py-2.5 rounded-xl bg-[var(--blue)] text-[var(--on-blue)] text-sm font-medium group-hover:bg-[var(--blue-hover)] transition-colors">
+                  <span className="inline-flex items-center gap-1 px-5 py-2.5 rounded-xl bg-[var(--blue)] text-[var(--on-blue)] text-sm font-medium group-hover:bg-[var(--blue-hover)] transition-colors mt-1">
                     Continue as Artist — Free
                   </span>
                 </div>
+
                 <ul className="mt-8 pt-6 border-t border-[var(--border)] space-y-4 text-sm text-[var(--text-muted)]">
                   <li className="flex items-start gap-3"><MapPin className="w-4 h-4 text-[var(--blue)] shrink-0 mt-0.5" />Get placed on real walls in cafés, restaurants, and offices</li>
                   <li className="flex items-start gap-3"><DollarSign className="w-4 h-4 text-[var(--blue)] shrink-0 mt-0.5" />Sell via QR codes — take home up to 85% per sale</li>
                   <li className="flex items-start gap-3"><Image className="w-4 h-4 text-[var(--blue)] shrink-0 mt-0.5" />Build a portfolio visible to venues and collectors</li>
                 </ul>
+
                 <a
                   href="/why-artwalls"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); onNavigate?.('why-artwalls-artist'); }}
@@ -393,15 +396,17 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
                       List your walls, receive artist applications, and earn a commission on every sale.
                     </p>
                   </div>
-                  <span className="inline-flex items-center gap-1 px-5 py-2.5 rounded-xl bg-[var(--green)] text-[var(--accent-contrast)] text-sm font-medium group-hover:brightness-95 transition-all">
+                  <span className="inline-flex items-center gap-1 px-5 py-2.5 rounded-xl bg-[var(--green)] text-[var(--accent-contrast)] text-sm font-medium group-hover:brightness-95 transition-all mt-1">
                     Continue as Venue — Free Forever
                   </span>
                 </div>
+
                 <ul className="mt-8 pt-6 border-t border-[var(--border)] space-y-4 text-sm text-[var(--text-muted)]">
                   <li className="flex items-start gap-3"><Image className="w-4 h-4 text-[var(--green)] shrink-0 mt-0.5" />Transform blank walls into rotating art galleries</li>
                   <li className="flex items-start gap-3"><DollarSign className="w-4 h-4 text-[var(--green)] shrink-0 mt-0.5" />Earn a commission on every artwork sold from your walls</li>
                   <li className="flex items-start gap-3"><Shield className="w-4 h-4 text-[var(--green)] shrink-0 mt-0.5" />Scheduling, install support, and damage protection included</li>
                 </ul>
+
                 <a
                   href="/venues"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); onNavigate?.('why-artwalls-venue'); }}
@@ -411,29 +416,25 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
                 </a>
               </div>
             </div>
-          </Container>
-        </Section>
+          </div>
+        </section>
 
-        {/* ── Founding Story + First-Win CTAs ─────────────────── */}
-        <FoundingStorySection
-          onSelectRole={(role) => setSelectedRole(role)}
-          onNavigate={onNavigate}
-          isLoggedIn={false}
-        />
+        {/* ═══ C) Getting Started ═══════════════════════════════ */}
+        <section className="py-14 md:py-20 lg:py-24 border-t border-[var(--border)]/40">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center space-y-3 mb-10 md:mb-14">
+              <h2 className="text-xl sm:text-2xl font-semibold text-[var(--text)] font-display tracking-tight leading-tight">
+                Getting Started
+              </h2>
+              <p className="text-[var(--text-muted)] text-sm sm:text-base max-w-md mx-auto leading-relaxed">
+                From sign-up to your first placement in three steps.
+              </p>
+            </div>
 
-        {/* ── Getting Started (onboarding steps) ─────────────── */}
-        <Section>
-          <Container size="narrow">
-            <h2 className="text-xl sm:text-2xl font-semibold text-[var(--text)] text-center mb-4 font-display tracking-tight leading-tight">
-              Getting Started
-            </h2>
-            <p className="text-[var(--text-muted)] text-sm sm:text-base max-w-md mx-auto text-center mb-12 leading-relaxed">
-              From sign-up to your first placement in three steps.
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
               {/* Artist path */}
               <div className="bg-[var(--surface-1)] rounded-2xl p-6 md:p-8 border border-[var(--border)] shadow-sm">
-                <h3 className="text-base font-semibold text-[var(--blue)] mb-8 flex items-center gap-2 font-display">
+                <h3 className="text-base font-semibold text-[var(--blue)] mb-6 flex items-center gap-2 font-display">
                   <Palette className="w-5 h-5" /> For Artists
                 </h3>
                 <div className="space-y-5">
@@ -452,9 +453,10 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
                   ))}
                 </div>
               </div>
+
               {/* Venue path */}
               <div className="bg-[var(--surface-1)] rounded-2xl p-6 md:p-8 border border-[var(--border)] shadow-sm">
-                <h3 className="text-base font-semibold text-[var(--green)] mb-8 flex items-center gap-2 font-display">
+                <h3 className="text-base font-semibold text-[var(--green)] mb-6 flex items-center gap-2 font-display">
                   <Store className="w-5 h-5" /> For Venues
                 </h3>
                 <div className="space-y-5">
@@ -474,59 +476,24 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
                 </div>
               </div>
             </div>
-          </Container>
-        </Section>
+          </div>
+        </section>
 
-        {/* ── Value Props ─────────────────────────────────────── */}
-        <Section>
-          <Container>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-20">
-              {/* Artists column */}
-              <div>
-                <h3 className="text-lg font-semibold text-[var(--blue)] mb-8 font-display flex items-center gap-2">
-                  <Palette className="w-5 h-5" /> For Artists
-                </h3>
-                <ul className="space-y-6 text-sm text-[var(--text-muted)] leading-relaxed">
-                  {[
-                    { icon: <Image className="w-4 h-4 text-[var(--blue)]" />, text: 'Build a professional portfolio visible to venues and collectors' },
-                    { icon: <MapPin className="w-4 h-4 text-[var(--blue)]" />, text: 'Get your art on real walls in cafés, offices, and restaurants' },
-                    { icon: <DollarSign className="w-4 h-4 text-[var(--blue)]" />, text: 'Sell directly via QR codes — take home up to 85% per sale' },
-                    { icon: <Star className="w-4 h-4 text-[var(--blue)]" />, text: 'Gain exposure, build your reputation, and grow your career' },
-                  ].map((item, i) => (
-                    <li key={i} className="flex items-start gap-3">
-                      <span className="mt-0.5 shrink-0 w-9 h-9 rounded-lg bg-[var(--blue-muted)] flex items-center justify-center">{item.icon}</span>
-                      <span className="pt-1.5">{item.text}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              {/* Venues column */}
-              <div>
-                <h3 className="text-lg font-semibold text-[var(--green)] mb-8 font-display flex items-center gap-2">
-                  <Store className="w-5 h-5" /> For Venues
-                </h3>
-                <ul className="space-y-6 text-sm text-[var(--text-muted)] leading-relaxed">
-                  {[
-                    { icon: <Image className="w-4 h-4 text-[var(--green)]" />, text: 'Transform blank walls into rotating art galleries — for free' },
-                    { icon: <Users className="w-4 h-4 text-[var(--green)]" />, text: 'Attract art-loving customers and increase foot traffic' },
-                    { icon: <DollarSign className="w-4 h-4 text-[var(--green)]" />, text: 'Earn a commission on every artwork sold from your walls' },
-                    { icon: <Shield className="w-4 h-4 text-[var(--green)]" />, text: 'Full scheduling, install/deinstall support, and damage protection' },
-                  ].map((item, i) => (
-                    <li key={i} className="flex items-start gap-3">
-                      <span className="mt-0.5 shrink-0 w-9 h-9 rounded-lg bg-[var(--green-muted)] flex items-center justify-center">{item.icon}</span>
-                      <span className="pt-1.5">{item.text}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </Container>
-        </Section>
-
-        {/* ── Freshness Proof ─────────────────────────────────── */}
-        <div className="pb-16 md:pb-24">
-          <FreshnessProof modules={['venues', 'artists']} limit={4} heading="Growing every week" />
+        {/* ═══ D) Founding Story + CTAs ═════════════════════════ */}
+        <div className="border-t border-[var(--border)]/40">
+          <FoundingStorySection
+            onSelectRole={(role) => setSelectedRole(role)}
+            onNavigate={onNavigate}
+            isLoggedIn={false}
+          />
         </div>
+
+        {/* ═══ E) Freshness Proof ═══════════════════════════════ */}
+        <section className="py-14 md:py-20 lg:py-24 border-t border-[var(--border)]/40">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <FreshnessProof modules={['venues', 'artists']} limit={4} heading="Growing every week" />
+          </div>
+        </section>
       </div>
     );
   }
