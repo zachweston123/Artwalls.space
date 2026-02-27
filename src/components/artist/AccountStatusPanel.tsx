@@ -182,7 +182,7 @@ export function AccountStatusPanel({
 
         {/* Upgrade CTA */}
         {plan !== 'pro' && (
-          <CardFooter className="pt-4">
+          <CardFooter>
             <button
               onClick={() => onNavigate('plans-pricing')}
               className={`w-full py-3 rounded-xl text-sm font-semibold transition-colors ${
@@ -273,7 +273,7 @@ export function AccountStatusPanel({
 
         {/* CTA */}
         {!payoutLoading && (
-          <CardFooter className="pt-4 gap-3">
+          <CardFooter className="gap-3">
             {!isPayoutReady ? (
               <button
                 onClick={startOnboarding}
