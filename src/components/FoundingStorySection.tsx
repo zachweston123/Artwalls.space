@@ -70,19 +70,19 @@ export function FoundingStorySection({
 
   return (
     <section
-      className="py-14 md:py-20 lg:py-24"
+      className="py-16 md:py-20 lg:py-24"
       aria-labelledby="founding-story-heading"
     >
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-2xl mx-auto px-6 md:px-8">
         {/* ── Story ──────────────────────────────────────────── */}
         <h2
           id="founding-story-heading"
-          className="text-2xl md:text-3xl font-semibold text-[var(--text)] font-display tracking-tight leading-tight mb-6 md:mb-8"
+          className="text-2xl md:text-3xl font-semibold text-[var(--text)] font-display tracking-tight leading-tight mb-6"
         >
           Artwalls started at a local bagel shop in my hometown.
         </h2>
 
-        <div className="space-y-5 md:space-y-6 text-base md:text-lg text-[var(--text-muted)] leading-relaxed">
+        <div className="space-y-6 text-base md:text-lg text-[var(--text-muted)] leading-relaxed">
           <p>
             Before I left for university, I had my photography up on the wall
             there. It wasn't a big gallery moment, but it worked: people saw the
@@ -111,7 +111,7 @@ export function FoundingStorySection({
         </div>
 
         {/* ── CTAs ───────────────────────────────────────────── */}
-        <div className="mt-10 md:mt-12 grid grid-cols-1 sm:grid-cols-2 gap-5 md:gap-6">
+        <div className="mt-10 flex flex-col sm:flex-row gap-6 justify-center">
           {/* Artist CTA */}
           <div className="flex flex-col items-center space-y-2">
             <button
