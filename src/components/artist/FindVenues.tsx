@@ -6,6 +6,7 @@ import { apiGet } from '../../lib/api';
 import { resolveArtistSubscription } from '../../lib/subscription';
 import { PageHeroHeader } from '../PageHeroHeader';
 import { FoundingVenueBadge } from '../venue/FoundingVenueBadge';
+import { getVenueImageUrl } from '../../lib/venueImage';
 
 interface FindVenuesProps {
   onViewVenue: (venueId: string) => void;
@@ -116,7 +117,7 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
             id: v.id,
             name: v.name || 'Venue',
             type: v.type || 'Other',
-            coverPhoto: (v as any).coverPhotoUrl || null,
+            coverPhoto: getVenueImageUrl(v as Record<string, unknown>) || null,
             location: (v as any).city || 'Unknown Location',
             bio: (v as any).bio || '',
             labels: v.labels || [],
@@ -410,6 +411,11 @@ export function FindVenues({ onViewVenue, onViewWallspaces }: FindVenuesProps) {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                       loading="lazy"
                       decoding="async"
+                      onError={(e) => {
+                        console.warn(`[FindVenues] Image failed for venue ${venue.id}:`, venue.coverPhoto);
+                        (e.target as HTMLImageElement).style.display = 'none';
+                        (e.target as HTMLImageElement).parentElement?.classList.add('venue-img-fallback');
+                      }}
                     />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-[var(--surface-2)] to-[var(--surface-3)] flex items-center justify-center">

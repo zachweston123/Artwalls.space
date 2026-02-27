@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { MapPin, Users, X, Image as ImageIcon } from 'lucide-react';
 import { apiGet } from '../../lib/api';
 import { supabase } from '../../lib/supabase';
+import { getVenueImageUrl } from '../../lib/venueImage';
 
 interface SimpleArtwork {
   id: string;
@@ -69,7 +70,7 @@ export function ArtistVenues() {
           city: v.city || null,
           availableSpaces: (v as any).availableSpaces || 0,
           wallSpaces: (v as any).wallSpaces || 0,
-          imageUrl: (v as any).coverPhotoUrl || null,
+          imageUrl: getVenueImageUrl(v as Record<string, unknown>) || null,
           address: v.city || 'Local area',
           description: (v as any).bio || '',
         }));
@@ -120,6 +121,10 @@ export function ArtistVenues() {
                   src={venue.imageUrl}
                   alt={venue.name}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    console.warn(`[ArtistVenues] Image failed for venue ${venue.id}:`, venue.imageUrl);
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
                 />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-[var(--surface-2)] to-[var(--surface-3)] flex items-center justify-center">

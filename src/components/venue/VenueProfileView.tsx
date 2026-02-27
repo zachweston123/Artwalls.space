@@ -173,6 +173,10 @@ export function VenueProfileView({
               src={venue.coverPhoto}
               alt={venue.name}
               className="w-full h-full object-cover"
+              onError={(e) => {
+                console.warn(`[VenueProfileView] Image failed for venue ${venue.id}:`, venue.coverPhoto);
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-[var(--surface-2)] to-[var(--surface-3)] flex items-center justify-center">
