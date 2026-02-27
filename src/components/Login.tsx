@@ -312,7 +312,7 @@ export function Login({ onLogin, onNavigate, defaultRole, lockRole = false, refe
                   Explore Art Near You
                 </a>
                 <button
-                  onClick={() => onNavigate?.('login')}
+                  onClick={() => setSelectedRole('artist')}
                   className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-[var(--border)] bg-[var(--surface-1)] text-[var(--text)] font-medium hover:bg-[var(--surface-2)] transition-colors text-sm sm:text-base focus-visible:ring-2 focus-visible:ring-[var(--focus)] outline-none"
                 >
                   Log In
