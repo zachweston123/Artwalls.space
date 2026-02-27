@@ -238,9 +238,9 @@ export default function App() {
       if (!isMounted) return;
 
       // On /auth/callback the PKCE exchange just completed and the session
-      // is brand-new.  Let AuthCallback own the flow — it will read the
-      // pending role, provision the profile, and call onAuth().  Processing
-      // the session here would race and bypass role selection for new users.
+      // is brand-new.  Let AuthCallback own the flow — it handles role
+      // bootstrap internally and calls onAuthComplete() when done.
+      // Processing the session here would race with AuthCallback.
       if (typeof window !== 'undefined' && window.location.pathname === '/auth/callback') {
         return;
       }
@@ -282,8 +282,8 @@ export default function App() {
       }
 
       // On /auth/callback, the AuthCallback component owns the entire flow.
-      // Don't set currentUser or show role selection here — it races with
-      // the onAuth() callback and causes the broken-dashboard bug.
+      // Don't set currentUser or show role selection here — AuthCallback
+      // handles all role bootstrap and calls onAuthComplete when done.
       if (typeof window !== 'undefined' && window.location.pathname === '/auth/callback') {
         return;
       }
@@ -895,129 +895,50 @@ export default function App() {
   // Direct-route override for OAuth callback page.
   // MUST be before the !currentUser guard — the session doesn't exist yet
   // when Google redirects back; this page establishes it.
+  //
+  // The AuthCallback component is FULLY SELF-CONTAINED:
+  //   1. Exchanges the PKCE code for a session (exchangeCodeForSession)
+  //   2. Cleans the URL
+  //   3. Reads pendingOAuthRole and does role bootstrap (updateUser + provision)
+  //   4. Calls onAuthComplete with the fully-formed result
+  //
+  // This eliminates the race condition where getSession() + onAuthStateChange
+  // could abort the fetch for artist flows (which have heavier bootstrap).
   if (pathname === '/auth/callback') {
     return (
       <Suspense fallback={<PageLoader />}>
         <AuthCallback
-          onAuth={() => {
-            // ── CRITICAL: Lock the OAuth flow ref IMMEDIATELY ────────
-            // This runs synchronously before any awaits.  It prevents
-            // onAuthStateChange (which fires when updateUser triggers
-            // USER_UPDATED) from calling setCurrentUser before the
-            // artist/venue row is provisioned.  Without this guard the
-            // downstream effects (agreement check, subscription tier,
-            // onboarding, syncProfile) fire before the DB row exists,
-            // causing cascading failures — especially for artists
-            // which have MORE downstream effects than venues.
-            oauthFlowActiveRef.current = true;
-            console.log('[onAuth] 🔒 OAuth flow started, ref locked');
-
-            // Session is now established.  The initial useEffect and
-            // onAuthStateChange both skip processing on /auth/callback,
-            // so this is the single canonical handler.
-            supabase.auth.getSession().then(async ({ data }) => {
-              const supaUser = data.session?.user;
-              if (!supaUser) {
-                console.warn('[onAuth] No session user — redirecting to login');
-                oauthFlowActiveRef.current = false;
-                setCurrentPage('login');
-                return;
-              }
-
-              console.log('[onAuth] Session user:', supaUser.id, 'role:', supaUser.user_metadata?.role);
-              const existingRole = (supaUser.user_metadata?.role as string) || null;
-
-              // ── Returning user (already has a role) ───────────────────
-              if (existingRole) {
-                console.log('[onAuth] Returning user with role:', existingRole);
-                const appUser = userFromSupabase(supaUser);
-                if (appUser) {
-                  // Unlock BEFORE setting currentUser so downstream effects
-                  // (syncProfile, agreement check) can run normally.
-                  oauthFlowActiveRef.current = false;
-                  setCurrentUser(appUser);
-                  setCurrentPage(defaultDashboardForRole(appUser.role));
-                }
-                return;
-              }
-
-              // ── New user — consume the pending role ───────────────────
-              const pendingRole = localStorage.getItem('pendingOAuthRole') as UserRole | null;
-              localStorage.removeItem('pendingOAuthRole');
-
-              if (pendingRole === 'artist' || pendingRole === 'venue') {
-                console.log('[onAuth] New user — applying pending role:', pendingRole);
-                // Apply role to Supabase user metadata
-                const displayName =
-                  (supaUser.user_metadata?.name as string) ||
-                  supaUser.email?.split('@')[0] || 'User';
-
-                try {
-                  // Note: updateUser fires onAuthStateChange with USER_UPDATED.
-                  // oauthFlowActiveRef is already true, so the handler will skip it.
-                  const { data: updateData } = await supabase.auth.updateUser({
-                    data: { role: pendingRole, name: displayName },
-                  });
-                  // Use the refreshed user object so downstream handlers
-                  // (profile completion) can read the up-to-date metadata.
-                  if (updateData?.user) {
-                    Object.assign(supaUser, { user_metadata: updateData.user.user_metadata });
-                  }
-                  console.log('[onAuth] ✅ Role metadata set to:', pendingRole);
-                } catch (e) {
-                  console.warn('[onAuth] Failed to set role metadata', e);
-                }
-
-                // Provision profile (creates artist/venue row).
-                // Retry once after a short delay if the first attempt fails
-                // — the downstream hooks query the row immediately.
-                let provisioned = false;
-                for (let attempt = 0; attempt < 2 && !provisioned; attempt++) {
-                  try {
-                    if (attempt > 0) await new Promise(r => setTimeout(r, 1500));
-                    await apiPost('/api/profile/provision', {});
-                    provisioned = true;
-                  } catch (e) {
-                    console.warn(`[onAuth] Profile provision attempt ${attempt + 1} failed`, e);
-                  }
-                }
-
-                trackAnalyticsEvent('role_selected', { role: pendingRole, source: 'google_oauth' });
-                trackAnalyticsEvent('auth_complete', { action: 'signup', method: 'google', role: pendingRole });
-
-                const appUser: User = {
-                  id: supaUser.id,
-                  name: displayName,
-                  email: supaUser.email || '',
-                  role: pendingRole,
-                };
-
-                // Check if phone is missing — show profile completion
-                const hasPhone = supaUser.user_metadata?.phone;
-                if (!hasPhone) {
-                  console.log('[onAuth] Phone missing — showing profile completion');
-                  setGoogleUser(supaUser);
-                  setShowProfileCompletion(true);
-                  // oauthFlowActiveRef stays true (synced via useEffect from
-                  // showProfileCompletion) — prevents downstream effects
-                  // until profile completion finishes.
-                } else {
-                  console.log('[onAuth] ✅ Phone exists — routing to dashboard');
-                  // Unlock BEFORE setting currentUser so downstream effects run.
-                  oauthFlowActiveRef.current = false;
-                  setCurrentUser(appUser);
-                  setCurrentPage(defaultDashboardForRole(pendingRole));
-                }
-                return;
-              }
-
-              // No pending role stored — show role selection modal.
-              // oauthFlowActiveRef stays true (synced via useEffect from
-              // showGoogleRoleSelection).
-              console.log('[onAuth] No pending role — showing role selection');
-              setGoogleUser(supaUser);
-              setShowGoogleRoleSelection(true);
+          onAuthComplete={(result) => {
+            console.log('[onAuthComplete] Received result:', {
+              userId: result.user.id,
+              role: result.user.role,
+              needsPhone: result.needsPhoneCompletion,
+              needsRole: result.needsRoleSelection,
             });
+
+            // ── Role selection needed (no pending role was stored) ───────
+            if (result.needsRoleSelection) {
+              oauthFlowActiveRef.current = true;
+              setGoogleUser(result.supabaseUser);
+              setShowGoogleRoleSelection(true);
+              return;
+            }
+
+            // ── Phone completion needed (new user, no phone) ────────────
+            if (result.needsPhoneCompletion) {
+              oauthFlowActiveRef.current = true;
+              setGoogleUser(result.supabaseUser);
+              setShowProfileCompletion(true);
+              // Don't set currentUser yet — profile completion will handle it.
+              return;
+            }
+
+            // ── Ready to go — set user and navigate to dashboard ────────
+            // All bootstrap (role metadata + profile provision) is already
+            // done inside AuthCallback. Just set state and navigate.
+            oauthFlowActiveRef.current = false;
+            setCurrentUser(result.user);
+            setCurrentPage(defaultDashboardForRole(result.user.role));
           }}
           onNavigate={handleNavigate}
         />
