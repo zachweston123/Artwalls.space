@@ -466,33 +466,6 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
         </div>
       </section>
 
-      {/* ═══════ HOW PAYOUTS WORK ═══════ */}
-      <section className="max-w-6xl mx-auto px-6 md:px-8 mb-12">
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-[var(--surface-2)] rounded-2xl border border-[var(--border)] p-5 sm:p-6">
-            <Accordion type="single" collapsible>
-            <AccordionItem value="payouts">
-              <AccordionTrigger>How payouts work</AccordionTrigger>
-              <AccordionContent>
-                <div className="text-sm text-[var(--text-muted)] space-y-3">
-                  <p>We handle the checkout process and automatically pay both the venue and you. Your take-home percentage is based on the price you set for your artwork.</p>
-                  <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-lg p-4">
-                    <p className="text-xs uppercase tracking-wide text-[var(--text-muted)]">Example (Starter, $200 list price)</p>
-                    <ul className="mt-2 space-y-1">
-                      <li className="flex justify-between"><span>Artist take-home (80%)</span><span>$160.00</span></li>
-                      <li className="flex justify-between"><span>Venue commission (15%)</span><span>$30.00</span></li>
-                      <li className="flex justify-between"><span>Platform remainder</span><span>$10.00</span></li>
-                    </ul>
-                    <p className="mt-2 text-xs text-[var(--text-muted)]">Buyer fees appear at checkout and support platform operations.</p>
-                  </div>
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-          </div>
-        </div>
-      </section>
-
       {/* ═══════ MANAGE SUBSCRIPTION ═══════ */}
       <section className="max-w-6xl mx-auto px-6 md:px-8 mb-12">
         <div className="max-w-2xl mx-auto bg-[var(--surface-2)] rounded-2xl p-5 sm:p-6 border border-[var(--border)] text-center">
@@ -818,7 +791,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
             <table className="w-full min-w-[900px]">
               <thead>
                 <tr className="border-b border-[var(--border)]">
-                  <th className="text-left text-sm font-semibold px-5 py-5 md:px-6 text-[var(--text-muted)]">Feature</th>
+                  <th className="text-left text-sm font-semibold pl-6 pr-4 py-5 md:pl-8 md:pr-6 text-[var(--text-muted)]">Feature</th>
                   {plans.map((p) => (
                     <th key={p.id} className="text-center px-5 py-5 md:px-6">
                       <div className="flex flex-col gap-1">
@@ -842,7 +815,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                   { label: 'Max coverage/claim', values: ['$100', '$100', '$150', '$200'] },
                 ].map((row, i, arr) => (
                   <tr key={row.label} className={`${i < arr.length - 1 ? 'border-b border-[var(--border)]/50' : ''} ${i % 2 === 1 ? 'bg-[var(--surface-1)]/40' : ''}`}>
-                    <td className="px-5 py-4 md:px-6 text-sm leading-relaxed font-medium whitespace-nowrap text-[var(--text)]">{row.label}</td>
+                    <td className="pl-6 pr-4 py-4 md:pl-8 md:pr-6 text-sm leading-relaxed font-medium whitespace-nowrap text-[var(--text)]">{row.label}</td>
                     {row.values.map((val, j) => (
                       <td key={j} className="text-center px-5 py-4 md:px-6 text-sm leading-relaxed tabular-nums text-[var(--text-muted)]">
                         {val}
@@ -852,6 +825,33 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════ HOW PAYOUTS WORK ═══════ */}
+      <section className="max-w-6xl mx-auto px-6 md:px-8 mt-12 mb-12">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-[var(--surface-2)] rounded-2xl border border-[var(--border)] p-5 sm:p-6">
+            <Accordion type="single" collapsible>
+            <AccordionItem value="payouts">
+              <AccordionTrigger>How payouts work</AccordionTrigger>
+              <AccordionContent>
+                <div className="text-sm text-[var(--text-muted)] space-y-3">
+                  <p>We handle the checkout process and automatically pay both the venue and you. Your take-home percentage is based on the price you set for your artwork.</p>
+                  <div className="bg-[var(--surface-1)] border border-[var(--border)] rounded-lg p-4">
+                    <p className="text-xs uppercase tracking-wide text-[var(--text-muted)]">Example (Starter, $200 list price)</p>
+                    <ul className="mt-2 space-y-1">
+                      <li className="flex justify-between"><span>Artist take-home (80%)</span><span>$160.00</span></li>
+                      <li className="flex justify-between"><span>Venue commission (15%)</span><span>$30.00</span></li>
+                      <li className="flex justify-between"><span>Platform remainder</span><span>$10.00</span></li>
+                    </ul>
+                    <p className="mt-2 text-xs text-[var(--text-muted)]">Buyer fees appear at checkout and support platform operations.</p>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
           </div>
         </div>
       </section>
