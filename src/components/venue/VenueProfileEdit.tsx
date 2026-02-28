@@ -214,6 +214,10 @@ export function VenueProfileEdit({ initialData, onSave, onCancel, isSaving = fal
                 src={formData.coverPhoto}
                 alt="Cover"
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  console.warn('[VenueProfileEdit] Cover photo failed to load:', formData.coverPhoto);
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
               />
             </div>
             <button

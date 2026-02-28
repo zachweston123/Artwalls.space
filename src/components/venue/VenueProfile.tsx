@@ -7,6 +7,7 @@ import { PageHeroHeader } from '../PageHeroHeader';
 import { formatCurrency } from '../../utils/format';
 import { SocialLinks } from '../shared/SocialLinks';
 import { VenueArtGuidelines } from './VenueArtGuidelines';
+import { VenueImage } from '../shared/VenueImage';
 
 interface VenueProfileProps {
   onNavigate: (page: string) => void;
@@ -399,20 +400,17 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
         {/* Profile Information Card */}
         <div className="lg:col-span-2 bg-[var(--surface-1)] rounded-xl border border-[var(--border)] overflow-hidden">
           {/* Cover Photo Banner */}
-          {profile.coverPhoto ? (
-            <div className="relative h-48 sm:h-56 w-full">
-              <img
-                src={profile.coverPhoto}
-                alt="Venue cover"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-            </div>
-          ) : (
-            <div className="h-32 sm:h-40 w-full bg-gradient-to-br from-[var(--green-muted)] to-[var(--surface-2)] flex items-center justify-center">
-              <Store className="w-16 h-16 text-[var(--green)] opacity-50" />
-            </div>
-          )}
+          <div className="relative">
+            <VenueImage
+              src={profile.coverPhoto}
+              alt={profile.name || 'Venue cover'}
+              venueId={venueId || undefined}
+              size="xl"
+            />
+            {profile.coverPhoto && (
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
+            )}
+          </div>
 
           <div className="p-6">
             <div className="flex items-start justify-between mb-6">
