@@ -35,6 +35,8 @@ export interface VenueProfileData {
   instagramHandle?: string;
   /** Opt-in to appear on the public venue map */
   isParticipating?: boolean;
+  /** Enable a public waitlist for this venue */
+  waitlistEnabled?: boolean;
 }
 
 export function VenueProfileEdit({ initialData, onSave, onCancel, isSaving = false, saveError }: VenueProfileEditProps) {
@@ -54,6 +56,7 @@ export function VenueProfileEdit({ initialData, onSave, onCancel, isSaving = fal
     website: initialData?.website ?? '',
     instagramHandle: initialData?.instagramHandle ?? '',
     isParticipating: initialData?.isParticipating ?? false,
+    waitlistEnabled: initialData?.waitlistEnabled ?? false,
   });
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -542,6 +545,28 @@ export function VenueProfileEdit({ initialData, onSave, onCancel, isSaving = fal
             <p className="text-xs text-[var(--text-muted)]">
               {formData.labels.length} selected • Help artists find the right fit
             </p>
+          </section>
+
+          {/* Artist Applications */}
+          <section>
+            <h3 className="text-sm font-semibold text-[var(--text)] mb-3">Artist Applications</h3>
+            <div className="p-4 bg-[var(--surface-2)] rounded-lg border border-[var(--border)]">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.waitlistEnabled ?? false}
+                  onChange={(e) => setFormData({ ...formData, waitlistEnabled: e.target.checked })}
+                  className="mt-0.5 w-4 h-4 rounded border-[var(--border)] accent-[var(--blue)]"
+                />
+                <div>
+                  <span className="text-sm font-semibold text-[var(--text)]">Enable waitlist</span>
+                  <p className="text-xs text-[var(--text-muted)] mt-0.5">
+                    When your venue is full, artists can join a waitlist instead of being turned away.
+                    You can invite waitlisted artists to formally apply when a spot opens up.
+                  </p>
+                </div>
+              </label>
+            </div>
           </section>
 
           {/* Info Box */}

@@ -171,4 +171,5 @@ export interface UpsertVenuePayload {
   instagramHandle?: string | null;
   artGuidelines?: string | null;
   preferredStyles?: string[] | null;
+  waitlistEnabled?: boolean | null;
 }

@@ -47,6 +47,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       features: [
         '1 active artwork',
         '1 active display',
+        '2 venue applications/mo',
         'Basic QR code generation',
         'Weekly payouts',
       ],
@@ -73,6 +74,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       features: [
         'Up to 10 artworks',
         '4 active displays',
+        '5 venue applications/mo',
         'Priority support',
         'Standard payouts',
       ],
@@ -99,7 +101,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       features: [
         'Up to 30 artworks',
         '10 active displays',
-        'Unlimited venue applications',
+        'Unlimited applications & waitlists',
         'Priority visibility in search',
       ],
       activeDisplays: 10,
@@ -125,6 +127,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
       features: [
         'Unlimited artworks',
         'Unlimited active displays',
+        'Unlimited applications & waitlists',
         'Free Artwork Protection',
         'Featured artist eligibility',
       ],
@@ -808,7 +811,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                   { label: 'Artworks listed', values: ['1', '10', '30', 'Unlimited'] },
                   { label: 'Active displays', values: ['1', '4', '10', 'Unlimited'] },
                   { label: 'Extra display fee', values: ['N/A', '$5/mo', '$4/mo', '—'] },
-                  { label: 'Venue applications/mo', values: ['1', '3', 'Unlimited', 'Unlimited'] },
+                  { label: 'Venue applications/mo', values: ['2', '5', 'Unlimited', 'Unlimited'] },
                   { label: 'Sales analytics', values: ['—', 'Basic', 'Advanced', 'Advanced'] },
                   { label: 'Priority visibility', values: ['—', '—', '✓', '✓✓'] },
                   { label: 'Protection plan', values: ['$5/art/mo', '$5/art/mo', '$3/art/mo', 'FREE'] },

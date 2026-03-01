@@ -14,6 +14,7 @@ import {
   ArtistAnalytics,
   ApplicationsAndInvitations,
   FindVenues,
+  ArtistRequests,
   VenueProfileView,
   VenueWallsPublic,
   ArtistInvites,
@@ -81,6 +82,7 @@ export function ArtistPages({
         <VenueWallsPublic venueId={selectedVenueId || undefined} onBack={() => onNavigate('artist-venues')} />
       )}
       {currentPage === 'artist-applications' && <ApplicationsAndInvitations userRole="artist" onBack={() => onNavigate('artist-profile')} />}
+      {currentPage === 'artist-requests' && <ArtistRequests user={currentUser} onNavigate={onNavigate} />}
       {currentPage === 'artist-invites' && (
         <ArtistInvites 
           onApply={(inviteId) => onNavigate('artist-applications')}

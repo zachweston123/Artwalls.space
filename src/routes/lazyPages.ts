@@ -23,6 +23,7 @@ export const ArtistAnalytics = lazy(() => import('../components/artist/ArtistAna
 export const ArtistOnboardingWizard = lazy(() => import('../components/onboarding/ArtistOnboardingWizard').then(m => ({ default: m.ArtistOnboardingWizard })));
 export const CuratedSets = lazy(() => import('../components/artist/CuratedSets').then(m => ({ default: m.CuratedSets })));
 export const FindVenues = lazy(() => import('../components/artist/FindVenues').then(m => ({ default: m.FindVenues })));
+export const ArtistRequests = lazy(() => import('../components/artist/ArtistRequests').then(m => ({ default: m.ArtistRequests })));
 
 // ─── Venue ─────────────────────────────────────────────────────────────────────
 export const VenueDashboard = lazy(() => import('../components/venue/VenueDashboard').then(m => ({ default: m.VenueDashboard })));
@@ -43,6 +44,7 @@ export const VenuePartnerKitEmbedded = lazy(() => import('../components/venue/Ve
 export const VenueSetupWizard = lazy(() => import('../components/venue/VenueSetupWizard').then(m => ({ default: m.VenueSetupWizard })));
 export const VenueHostingPolicy = lazy(() => import('../components/venue/VenueHostingPolicy').then(m => ({ default: m.VenueHostingPolicy })));
 export const VenueApplication = lazy(() => import('../components/venue/VenueApplication').then(m => ({ default: m.VenueApplication })));
+export const VenueRequests = lazy(() => import('../components/venue/VenueRequests').then(m => ({ default: m.VenueRequests })));
 export const ReferralProgram = lazy(() => import('../components/venue/ReferralProgram').then(m => ({ default: m.ReferralProgram })));
 export const VenueCalls = lazy(() => import('../components/venue/VenueCalls').then(m => ({ default: m.VenueCalls })));
 export const VenueCallDetail = lazy(() => import('../components/venue/VenueCallDetail').then(m => ({ default: m.VenueCallDetail })));

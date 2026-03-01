@@ -12,4 +12,5 @@ export { handleVenues } from './venues';
 export { handleArtworks } from './artworks';
 export { handlePublic } from './public';
 export { handleVenueInvites } from './venue-invites';
+export { handleVenueRequests } from './venue-requests';
 export { handleMisc } from './misc';

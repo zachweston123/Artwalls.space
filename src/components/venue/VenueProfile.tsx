@@ -53,6 +53,7 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
     wallSpaces: number;
     activeDisplays: number;
     isParticipating: boolean;
+    waitlistEnabled: boolean;
     installWindow: { day: string; time: string };
   }>({
     name: '',
@@ -72,6 +73,7 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
     wallSpaces: 0,
     activeDisplays: 0,
     isParticipating: false,
+    waitlistEnabled: false,
     installWindow: {
       day: 'Not set',
       time: 'Add your install window in Settings',
@@ -98,7 +100,7 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
       try {
         const { data: venueData } = await supabase
           .from('venues')
-          .select('cover_photo_url, city, bio, labels, address, address_lat, address_lng, is_participating')
+          .select('cover_photo_url, city, bio, labels, address, address_lat, address_lng, is_participating, waitlist_enabled')
           .eq('id', user.id)
           .single();
 
@@ -126,6 +128,7 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
             website: socialData.website || prev.website,
             instagram: socialData.instagram_handle || prev.instagram,
             isParticipating: Boolean(venueData.is_participating),
+            waitlistEnabled: Boolean(venueData.waitlist_enabled),
           }));
         }
 
@@ -174,6 +177,7 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
           addressLng: data.addressLng,
           website: data.website,
           instagramHandle: data.instagramHandle,
+          waitlistEnabled: data.waitlistEnabled,
         });
       } catch (apiErr) {
         console.warn('API update failed, falling back to direct database update:', apiErr);
@@ -215,6 +219,9 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
       // if the migration hasn't been applied yet.
       if (data.isParticipating !== undefined) {
         updateData.is_participating = data.isParticipating;
+      }
+      if (data.waitlistEnabled !== undefined) {
+        updateData.waitlist_enabled = data.waitlistEnabled;
       }
       // Auto-compute city_slug from city
       if (data.city) {
@@ -264,6 +271,7 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
         website: data.website || prev.website,
         instagram: data.instagramHandle || prev.instagram,
         isParticipating: data.isParticipating ?? prev.isParticipating,
+        waitlistEnabled: data.waitlistEnabled ?? prev.waitlistEnabled,
       }));
       setIsEditing(false);
     } catch (err: any) {
@@ -346,6 +354,7 @@ export function VenueProfile({ onNavigate, startInEdit = false }: VenueProfilePr
             website: profile.website,
             instagramHandle: profile.instagram,
             isParticipating: profile.isParticipating,
+            waitlistEnabled: profile.waitlistEnabled,
           }}
           onSave={handleSave}
           onCancel={() => { setIsEditing(false); setSaveError(null); }}

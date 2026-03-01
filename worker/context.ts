@@ -389,6 +389,7 @@ export function createWorkerContext(
     if (venue.instagramHandle !== undefined && venue.instagramHandle !== null) payload.instagram_handle = venue.instagramHandle;
     if (venue.artGuidelines !== undefined) payload.art_guidelines = venue.artGuidelines;
     if (venue.preferredStyles !== undefined) payload.preferred_styles = venue.preferredStyles;
+    if (typeof venue.waitlistEnabled === 'boolean') payload.waitlist_enabled = venue.waitlistEnabled;
     const { data, error } = await supabaseAdmin.from('venues').upsert(payload, { onConflict: 'id' }).select('*').single();
     if (error) {
       console.error('[upsertVenue] Error:', error.message, error.code, (error as any).hint);

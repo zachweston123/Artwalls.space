@@ -115,7 +115,7 @@ export async function handleVenues(wc: WorkerContext): Promise<Response | null> 
 
     let query = supabaseAdmin
       .from('venues')
-      .select('id,name,type,labels,default_venue_fee_bps,city,bio,cover_photo_url,verified,created_at,is_founding,founding_end,featured_until,art_guidelines,preferred_styles')
+      .select('id,name,type,labels,default_venue_fee_bps,city,bio,cover_photo_url,verified,created_at,is_founding,founding_end,featured_until,art_guidelines,preferred_styles,waitlist_enabled')
       .eq('suspended', false)
       .order('name', { ascending: true })
       .limit(50);
@@ -164,6 +164,7 @@ export async function handleVenues(wc: WorkerContext): Promise<Response | null> 
       featuredUntil: (v as any).featured_until || null,
       preferredStyles: (v as any).preferred_styles || [],
       artGuidelines: (v as any).art_guidelines || null,
+      waitlistEnabled: (v as any).waitlist_enabled === true,
     }));
 
     // Sort: featured/founding venues appear first, then by name
@@ -241,7 +242,7 @@ export async function handleVenues(wc: WorkerContext): Promise<Response | null> 
 
     const { data, error } = await supabaseAdmin
       .from('venues')
-      .select('id,name,type,cover_photo_url,address,city,bio,labels,verified,founded_year,website,instagram_handle')
+      .select('id,name,type,cover_photo_url,address,city,bio,labels,verified,founded_year,website,instagram_handle,waitlist_enabled')
       .eq('id', venueId)
       .maybeSingle();
 
@@ -261,6 +262,7 @@ export async function handleVenues(wc: WorkerContext): Promise<Response | null> 
       foundedYear: data.founded_year || null,
       websiteUrl: data.website || null,
       instagramHandle: data.instagram_handle || null,
+      waitlistEnabled: data.waitlist_enabled === true,
     });
   }
 

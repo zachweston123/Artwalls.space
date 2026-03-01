@@ -24,6 +24,7 @@ import {
   handleArtworks,
   handlePublic,
   handleVenueInvites,
+  handleVenueRequests,
   handleMisc,
 } from './routes';
 
@@ -38,6 +39,7 @@ const ROUTE_HANDLERS: RouteHandler[] = [
   handleStripe,      // /api/stripe/*
   handleArtists,     // /api/artists/dismiss-*, /api/stats/artist, /api/public/artists (listing)
   handleVenues,      // /api/stats/venue, /api/public/venues, /api/venues/*
+  handleVenueRequests,// /api/venues/:id/requests, /api/me/requests
   handleArtworks,    // /api/artworks/*, /api/public/artworks
   handlePublic,      // /api/public/artists/:slug (detail), /api/public/sets/*
   handleVenueInvites,// /api/venue-invites/*, /api/referrals/*, /api/announcements, /api/support/*

@@ -29,6 +29,7 @@ import {
   CuratedSetsMarketplace,
   FindArtists,
   ArtistProfileView,
+  VenueRequests,
 } from './lazyPages';
 
 export interface VenuePagesProps {
@@ -59,6 +60,7 @@ export function VenuePages({
       {currentPage === 'venue-calls' && <VenueCalls user={currentUser} onViewCall={(callId) => onNavigate('venue-call-detail', { callId })} />}
       {currentPage === 'venue-call-detail' && selectedCallId && <VenueCallDetail callId={selectedCallId} onBack={() => onNavigate('venue-calls')} />}
       {currentPage === 'venue-applications' && <ApplicationsAndInvitations userRole="venue" onBack={() => onNavigate('venue-dashboard')} />}
+      {currentPage === 'venue-requests' && <VenueRequests user={currentUser} onNavigate={onNavigate} />}
       {currentPage === 'venue-current' && <VenueCurrentArtWithScheduling />}
       {currentPage === 'venue-sales' && <VenueSales user={currentUser} onNavigate={onNavigate} />}
       {currentPage === 'venue-analytics' && <VenueAnalytics user={currentUser} />}

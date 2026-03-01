@@ -161,6 +161,7 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
         { id: 'artist-artworks', label: 'My Artworks' },
         { id: 'artist-curated-sets', label: 'Curated Sets' },
         { id: 'artist-applications', label: 'Applications' },
+        { id: 'artist-requests', label: 'My Requests' },
         { id: 'artist-invites', label: 'Invitations' },
         { id: 'artist-invite-venue', label: 'Invite a Venue' },
       ]
@@ -170,6 +171,7 @@ export function Navigation({ user, onNavigate, onLogout, currentPage, onMenuClic
         { id: 'venue-curated-sets', label: 'Curated Sets' },
         { id: 'venue-walls', label: 'My Walls' },
         { id: 'venue-applications', label: 'Applications' },
+        { id: 'venue-requests', label: 'Requests & Waitlist' },
         { id: 'venue-current', label: 'Current Art' },
       ];
 
