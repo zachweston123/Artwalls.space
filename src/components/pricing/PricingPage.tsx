@@ -794,12 +794,12 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
             <table className="w-full min-w-[900px]">
               <thead>
                 <tr className="border-b border-[var(--border)]">
-                  <th className="text-left text-sm font-semibold pl-8 pr-4 py-5 md:pl-10 md:pr-6 text-[var(--text-muted)]">Feature</th>
+                  <th className="text-left text-sm font-semibold pl-8 pr-4 py-6 md:pl-10 md:pr-6 text-[var(--text-muted)]">Feature</th>
                   {plans.map((p) => (
-                    <th key={p.id} className="text-center px-5 py-5 md:px-6">
-                      <div className="flex flex-col gap-1">
+                    <th key={p.id} className="text-center px-5 py-6 md:px-6">
+                      <div className="flex flex-col items-center gap-1.5">
                         <span className={`text-sm font-semibold ${p.popular ? 'text-[var(--text)]' : 'text-[var(--text-muted)]'}`}>{p.name}</span>
-                        <span className="text-xs font-medium text-[var(--blue)] mt-0.5">{p.takeHome}% take-home</span>
+                        <span className="text-xs font-medium text-[var(--blue)]">{p.takeHome}% take-home</span>
                       </div>
                     </th>
                   ))}
