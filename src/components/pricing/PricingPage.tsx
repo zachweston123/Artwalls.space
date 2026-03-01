@@ -794,7 +794,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
             <table className="w-full min-w-[900px]">
               <thead>
                 <tr className="border-b border-[var(--border)]">
-                  <th className="text-left text-sm font-semibold pl-6 pr-4 py-5 md:pl-8 md:pr-6 text-[var(--text-muted)]">Feature</th>
+                  <th className="text-left text-sm font-semibold pl-8 pr-4 py-5 md:pl-10 md:pr-6 text-[var(--text-muted)]">Feature</th>
                   {plans.map((p) => (
                     <th key={p.id} className="text-center px-5 py-5 md:px-6">
                       <div className="flex flex-col gap-1">
@@ -818,7 +818,7 @@ export function PricingPage({ onNavigate, currentPlan = 'free' }: PricingPagePro
                   { label: 'Max coverage/claim', values: ['$100', '$100', '$150', '$200'] },
                 ].map((row, i, arr) => (
                   <tr key={row.label} className={`${i < arr.length - 1 ? 'border-b border-[var(--border)]/50' : ''} ${i % 2 === 1 ? 'bg-[var(--surface-1)]/40' : ''}`}>
-                    <td className="pl-6 pr-4 py-4 md:pl-8 md:pr-6 text-sm leading-relaxed font-medium whitespace-nowrap text-[var(--text)]">{row.label}</td>
+                    <td className="pl-8 pr-4 py-4 md:pl-10 md:pr-6 text-sm leading-relaxed font-medium whitespace-nowrap text-[var(--text)]">{row.label}</td>
                     {row.values.map((val, j) => (
                       <td key={j} className="text-center px-5 py-4 md:px-6 text-sm leading-relaxed tabular-nums text-[var(--text-muted)]">
                         {val}
